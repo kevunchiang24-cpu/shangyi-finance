@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>財務管理系統 - 尚益資產</title>
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#1b2434" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="尚益財務" />
+<style>
+  :root{
+    --navy:#1b2434; --navy-hover:#242f45; --cream:#efece3; --white:#ffffff;
+    --ink:#20242e; --muted:#8b8f9b; --border:#e3ded2;
+    --green:#15803d; --red:#dc2626; --blue:#2563eb; --teal:#0f9488; --amber:#b45309;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--cream);color:var(--ink);}
+  #app{display:flex;min-height:100vh;}
+
+  /* Login */
+  #login-screen{min-height:100vh;width:100%;display:flex;align-items:center;justify-content:center;background:var(--navy);}
+  .login-box{background:#fff;border-radius:16px;padding:36px 34px;width:100%;max-width:380px;}
+  .login-logo{width:44px;height:44px;border-radius:12px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:19px;margin-bottom:16px;}
+  .login-box h2{margin:0 0 4px 0;font-size:20px;}
+  .login-box p.sub{color:var(--muted);font-size:13px;margin:0 0 22px 0;}
+  .login-box .field{margin-bottom:14px;}
+  .login-box .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;}
+  .login-box .field input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:14px;}
+  .login-error{background:#fce8e8;color:var(--red);font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:14px;}
+  .login-msg{background:#e6f4ea;color:var(--green);font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:14px;}
+  .login-submit{width:100%;padding:12px;border:none;border-radius:9px;background:var(--navy);color:#fff;font-weight:700;font-size:14px;cursor:pointer;margin-top:4px;}
+  .login-forgot{display:block;text-align:center;margin-top:14px;font-size:12.5px;color:var(--blue);cursor:pointer;}
+  .pending-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--cream);}
+  .pending-box{background:#fff;border-radius:16px;padding:40px;max-width:420px;text-align:center;}
+  .pending-box h2{margin:0 0 10px 0;}
+  .pending-box p{color:var(--muted);font-size:14px;line-height:1.7;}
+
+  /* Sidebar */
+  #sidebar{width:230px;background:var(--navy);color:#c7cbd6;flex-shrink:0;display:flex;flex-direction:column;padding:20px 14px;}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 20px 8px;border-bottom:1px solid #2a3448;margin-bottom:14px;}
+  .brand-logo{width:34px;height:34px;border-radius:9px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:16px;}
+  .brand-text .t1{color:#fff;font-weight:700;font-size:14.5px;}
+  .brand-text .t2{color:#8891a3;font-size:11.5px;}
+  .nav-group-label{font-size:10.5px;letter-spacing:.08em;color:#5c6479;padding:6px 10px;margin-top:6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;cursor:pointer;font-size:14px;color:#c7cbd6;margin-bottom:2px;}
+  .nav-item:hover{background:var(--navy-hover);}
+  .nav-item.active{background:#2f3b54;color:#fff;font-weight:600;}
+  .nav-icon{width:18px;text-align:center;font-size:14px;}
+  .sidebar-footer{margin-top:auto;padding:14px 10px 0 10px;border-top:1px solid #2a3448;}
+  .user-chip{font-size:12.5px;color:#dfe2ea;margin-bottom:2px;word-break:break-all;}
+  .role-chip{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:100px;margin-top:6px;margin-bottom:10px;}
+  .role-chip.admin{background:#3a2f14;color:#f0b23a;}
+  .role-chip.editor{background:#12312a;color:#4ade80;}
+  .role-chip.viewer{background:#2a2f3d;color:#9aa1b5;}
+  .logout-btn{width:100%;padding:8px;border-radius:8px;border:1px solid #2f3b54;background:transparent;color:#c7cbd6;cursor:pointer;font-size:12.5px;}
+
+  /* Main */
+  #main{flex:1;padding:34px 40px;max-width:1400px;}
+  .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;gap:16px;flex-wrap:wrap;}
+  .page-title{font-size:23px;font-weight:700;margin:0 0 4px 0;}
+  .page-sub{color:var(--muted);font-size:13.5px;margin:0;}
+  .btn{border:none;border-radius:8px;padding:9px 16px;font-size:13.5px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;}
+  .btn.primary{background:var(--navy);color:#fff;}
+  .btn.primary:hover{background:#2a3550;}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--ink);}
+  .btn.ghost:hover{background:#f5f2ea;}
+  .btn.sm{padding:6px 11px;font-size:12.5px;}
+
+  .card{background:var(--white);border-radius:14px;padding:22px;border:1px solid var(--border);}
+  .grid{display:grid;gap:16px;}
+  .grid-2{grid-template-columns:1fr 1fr;}
+  .grid-3{grid-template-columns:1fr 1fr 1fr;}
+  .stat-label{color:var(--muted);font-size:13px;margin-bottom:8px;}
+  .stat-value{font-size:26px;font-weight:700;}
+  .stat-value.green{color:var(--green);}
+  .stat-value.red{color:var(--red);}
+  .stat-value.blue{color:var(--blue);}
+
+  .tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+  .tab-btn{padding:9px 16px;border-radius:9px;border:1px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer;font-size:13.5px;font-weight:600;}
+  .tab-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+  .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .chip{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);font-size:13px;cursor:pointer;}
+  .chip.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+  .filter-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px;}
+  .filter-field{display:flex;flex-direction:column;gap:5px;}
+  .filter-field label{font-size:12px;color:var(--muted);}
+  .filter-field select, .filter-field input{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;background:#fdfcf9;min-width:130px;}
+  .search-input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:var(--white);}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:12px;border-bottom:1px solid #f0ede4;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .table-wrap{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;overflow-x:auto;}
+  .table-wrap .empty{padding:60px 20px;text-align:center;color:var(--muted);font-size:13.5px;}
+  .amount-pos{color:var(--green);font-weight:600;}
+  .amount-neg{color:var(--red);font-weight:600;}
+  .badge{display:inline-block;padding:3px 9px;border-radius:100px;font-size:11.5px;font-weight:600;}
+  .badge.income{background:#e6f4ea;color:var(--green);}
+  .badge.expense{background:#fce8e8;color:var(--red);}
+  .badge.pending{background:#fff4e0;color:var(--amber);}
+  .badge.active{background:#e6f4ea;color:var(--green);}
+  .badge.resigned{background:#efece4;color:var(--muted);}
+  .row-actions{display:flex;gap:6px;}
+  .icon-btn{background:transparent;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:4px 6px;border-radius:6px;}
+  .icon-btn:hover{background:#f2efe6;color:var(--ink);}
+  .edited-note{font-size:11px;color:var(--muted);}
+
+  .bar-chart{display:flex;align-items:flex-end;gap:10px;height:210px;padding:10px 4px 0 4px;}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;}
+  .bar-pair{display:flex;align-items:flex-end;gap:3px;height:170px;}
+  .bar{width:9px;border-radius:3px 3px 0 0;}
+  .bar.income-bar{background:var(--green);}
+  .bar.expense-bar{background:var(--red);}
+  .bar-col .m-label{font-size:11px;color:var(--muted);margin-top:2px;}
+  .legend{display:flex;gap:16px;font-size:12.5px;color:var(--muted);margin-bottom:8px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  .cat-row{display:flex;align-items:center;gap:12px;padding:9px 0;}
+  .cat-row .name{width:100px;font-size:13px;flex-shrink:0;}
+  .cat-row .track{flex:1;height:8px;background:#f0ede4;border-radius:6px;overflow:hidden;}
+  .cat-row .fill{height:100%;border-radius:6px;}
+  .cat-row .val{width:96px;text-align:right;font-size:12.5px;color:var(--muted);flex-shrink:0;}
+
+  .cat-card{border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+  .cat-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .cat-card-head h4{margin:0;font-size:14.5px;}
+  .sub-chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .sub-chip{display:flex;align-items:center;gap:6px;background:#f5f2ea;border-radius:100px;padding:5px 6px 5px 12px;font-size:12.5px;}
+  .sub-chip button{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 5px;}
+  .add-sub-chip{border:1px dashed var(--border);background:transparent;border-radius:100px;padding:5px 12px;font-size:12.5px;color:var(--muted);cursor:pointer;}
+
+  select#year-select{padding:9px 14px;border:1px solid var(--border);border-radius:9px;background:var(--white);font-size:13.5px;}
+  select.role-select{padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;}
+
+  #modal-overlay{position:fixed;inset:0;background:rgba(20,22,28,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  #modal-box{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .modal-head h3{margin:0;font-size:16.5px;}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font-size:13px;}
+  .field span{color:var(--muted);font-size:12.5px;}
+  .field input, .field select, .field textarea{padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:inherit;background:#fdfcf9;}
+  .field textarea{min-height:64px;resize:vertical;}
+  .field.checkbox{flex-direction:row;align-items:center;gap:8px;}
+  .field.checkbox input{width:16px;height:16px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px;}
+  .confirm-text{font-size:14px;line-height:1.6;margin-bottom:20px;}
+  .card-head-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .card-head-row h3{margin:0;font-size:15px;}
+  .card-head-row .hint{font-size:12px;color:var(--muted);font-weight:400;}
+
+  /* Mobile top bar */
+  #mobile-topbar{display:none;}
+  .sidebar-backdrop{display:none;}
+
+  @media (max-width:900px){
+    #app{flex-direction:column;}
+    #mobile-topbar{
+      display:flex;align-items:center;justify-content:space-between;
+      background:var(--navy);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:60;
+    }
+    #mobile-topbar .mt-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px;}
+    #hamburger-btn{background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;padding:2px 8px;}
+    #sidebar{
+      position:fixed;top:0;left:0;bottom:0;width:250px;z-index:80;
+      transform:translateX(-100%);transition:transform .2s ease;overflow-y:auto;
+    }
+    #sidebar.open{transform:translateX(0);}
+    .sidebar-backdrop{
+      display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:70;
+    }
+    .sidebar-backdrop.open{display:block;}
+    .sidebar-footer{display:block;}
+    #main{padding:18px;}
+    .grid-3{grid-template-columns:1fr;}
+    .grid-2{grid-template-columns:1fr;}
+    .page-header{flex-direction:column;align-items:stretch;}
+    .filter-row{flex-direction:column;align-items:stretch;}
+    .filter-field select, .filter-field input{min-width:0;width:100%;}
+    table{font-size:12.5px;}
+    th, td{padding:9px 8px;}
+    .login-box{padding:28px 22px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">載入中…</div>
+<div id="modal-overlay"><div id="modal-box"></div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, onSnapshot, collection, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
+  authDomain: "shangyiloan-financial.firebaseapp.com",
+  projectId: "shangyiloan-financial",
+  storageBucket: "shangyiloan-financial.firebasestorage.app",
+  messagingSenderId: "622583676341",
+  appId: "1:622583676341:web:5b6c7d405cb3b98d6b2dfc"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+/* ---------------- State ---------------- */
+const todayStr = () => new Date().toISOString().slice(0,10);
+const nowYear = new Date().getFullYear();
+function uid(){ return 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function money(n){ n = Number(n)||0; return 'NT$' + Math.round(n).toLocaleString('zh-TW'); }
+function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escAttr(s){ return escHtml(s); }
+function sum(list){ return list.reduce((a,t)=>a+(Number(t.amount)||0),0); }
+function stamp(obj){ return { ...obj, _by: APP.userEmail || '', _at: new Date().toISOString() }; }
+function editedLabel(item){
+  if(!item || !item._by) return '—';
+  const d = item._at ? new Date(item._at) : null;
+  const dateStr = d ? d.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+  return `<span class="edited-note">${escHtml(item._by)}${dateStr?(' · '+dateStr):''}</span>`;
+}
+
+const defaultCategories = () => ({
+  expense: [
+    {id:uid(), name:'薪資支出', subs:[]},{id:uid(), name:'廣告行銷', subs:[]},
+    {id:uid(), name:'房租水電', subs:[]},{id:uid(), name:'佣金支出', subs:[]},{id:uid(), name:'其他支出', subs:[]}
+  ],
+  income: [
+    {id:uid(), name:'貸款仲介收入', subs:[]},{id:uid(), name:'估價服務收入', subs:[]},{id:uid(), name:'其他收入', subs:[]}
+  ]
+});
+
+const APP = {
+  user:null, userEmail:'', role:null, users:[], authError:'', authMsg:'',
+  view:'dashboard', year:nowYear, settingsTab:'company', hrTab:'employees',
+  showResigned:false, txTab:'list', txFilter:{type:'all',main:'all',start:'',end:''},
+  vendorSearch:'', reportYear:nowYear, reportRange:null,
+  data:{
+    company:{name:'',taxId:'',phone:'',address:''}, assets:[], liabilities:[],
+    categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[]
+  }
+};
+function canEdit(){ return APP.role==='admin' || APP.role==='editor'; }
+function isAdmin(){ return APP.role==='admin'; }
+
+/* ---------------- Firestore sync ---------------- */
+let unsubs = [];
+function subscribeAll(){
+  unsubs.push(onSnapshot(doc(db,'appdata','company'), snap=>{
+    const d = snap.data() || {};
+    APP.data.company = d.info || {name:'',taxId:'',phone:'',address:''};
+    APP.data.assets = d.assets || []; APP.data.liabilities = d.liabilities || [];
+    render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','categories'), snap=>{
+    const d = snap.data();
+    APP.data.categories = (d && d.expense) ? d : defaultCategories();
+    render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','transactions'), snap=>{
+    const d = snap.data();
+    APP.data.transactions = (d && d.list) || [];
+    render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','hr'), snap=>{
+    const d = snap.data();
+    APP.data.hr = d || {employees:[],collaborators:[],history:[]};
+    render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','vendors'), snap=>{
+    const d = snap.data();
+    APP.data.vendors = (d && d.list) || [];
+    render();
+  }));
+  unsubs.push(onSnapshot(collection(db,'users'), snap=>{
+    APP.users = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    const me = APP.users.find(u=>u.id===APP.user.uid);
+    APP.role = me ? me.role : 'pending';
+    render();
+  }));
+}
+function unsubscribeAll(){ unsubs.forEach(u=>u()); unsubs=[]; }
+
+function saveCompany(){ return setDoc(doc(db,'appdata','company'), {info:APP.data.company, assets:APP.data.assets, liabilities:APP.data.liabilities}); }
+function saveCategories(){ return setDoc(doc(db,'appdata','categories'), APP.data.categories); }
+function saveTransactions(){ return setDoc(doc(db,'appdata','transactions'), {list:APP.data.transactions}); }
+function saveHR(){ return setDoc(doc(db,'appdata','hr'), APP.data.hr); }
+function saveVendors(){ return setDoc(doc(db,'appdata','vendors'), {list:APP.data.vendors}); }
+
+/* ---------------- Auth ---------------- */
+onAuthStateChanged(auth, async (user)=>{
+  if(user){
+    APP.user = user; APP.userEmail = user.email;
+    const uref = doc(db,'users',user.uid);
+    const usnap = await getDoc(uref);
+    if(!usnap.exists()){
+      await setDoc(uref, { email:user.email, role:'pending', createdAt:new Date().toISOString() });
+    }
+    subscribeAll();
+    renderRoot();
+  } else {
+    unsubscribeAll();
+    APP.user=null; APP.role=null; APP.users=[];
+    renderRoot();
+  }
+});
+
+/* ---------------- Root render ---------------- */
+function renderRoot(){
+  const root = document.getElementById('app');
+  if(!APP.user){
+    root.innerHTML = loginHTML();
+    return;
+  }
+  if(APP.role===null){
+    root.innerHTML = `<div class="pending-screen"><div class="pending-box">載入帳號資料中…</div></div>`;
+    return;
+  }
+  if(APP.role==='pending'){
+    root.innerHTML = pendingHTML();
+    return;
+  }
+  root.innerHTML = shellHTML();
+  render();
+}
+function loginHTML(){
+  return `
+  <div id="login-screen"><div class="login-box">
+    <div class="login-logo">財</div>
+    <h2>財務管理系統</h2>
+    <p class="sub">尚益資產 · 內部登入</p>
+    ${APP.authError ? `<div class="login-error">${escHtml(APP.authError)}</div>` : ''}
+    ${APP.authMsg ? `<div class="login-msg">${escHtml(APP.authMsg)}</div>` : ''}
+    <form id="login-form">
+      <div class="field"><label>電子郵件</label><input type="email" name="email" required autocomplete="username"/></div>
+      <div class="field"><label>密碼</label><input type="password" name="password" required autocomplete="current-password"/></div>
+      <button type="submit" class="login-submit">登入</button>
+    </form>
+    <span class="login-forgot" id="forgot-link">忘記密碼？</span>
+  </div></div>`;
+}
+function pendingHTML(){
+  return `<div class="pending-screen"><div class="pending-box">
+    <h2>帳號已建立</h2>
+    <p>你的帳號（${escHtml(APP.userEmail)}）正在等待管理員設定使用權限，請聯絡管理員協助開通後再登入。</p>
+    <button class="btn ghost" id="pending-logout" style="margin-top:16px;">登出</button>
+  </div></div>`;
+}
+function shellHTML(){
+  const roleLabel = {admin:'管理員', editor:'一般編輯', viewer:'唯讀'}[APP.role] || APP.role;
+  return `
+  <div id="mobile-topbar">
+    <button id="hamburger-btn" aria-label="選單">☰</button>
+    <div class="mt-brand"><div class="brand-logo" style="width:26px;height:26px;font-size:12px;">財</div>尚益資產財務系統</div>
+    <div style="width:26px;"></div>
+  </div>
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+  <div id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">財</div>
+      <div class="brand-text"><div class="t1">財務管理系統</div><div class="t2">尚益資產 · 內部工具</div></div>
+    </div>
+    <div class="nav-group-label">DASHBOARD</div>
+    <div class="nav-item" data-action="nav" data-view="dashboard"><span class="nav-icon">▦</span>總覽</div>
+    <div class="nav-item" data-action="nav" data-view="transactions"><span class="nav-icon">≣</span>收支明細</div>
+    <div class="nav-item" data-action="nav" data-view="reports"><span class="nav-icon">▤</span>財報</div>
+    <div class="nav-item" data-action="nav" data-view="settings"><span class="nav-icon">⚙</span>設定</div>
+    <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">☺</span>人事管理</div>
+    <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">▣</span>廠商管理</div>
+    ${isAdmin() ? `<div class="nav-item" data-action="nav" data-view="users"><span class="nav-icon">🔑</span>帳號管理</div>` : ''}
+    <div class="sidebar-footer">
+      <div class="user-chip">${escHtml(APP.userEmail)}</div>
+      <span class="role-chip ${APP.role}">${roleLabel}</span>
+      <button class="logout-btn" id="logout-btn">登出</button>
+    </div>
+  </div>
+  <div id="main"></div>`;
+}
+
+/* ================= DASHBOARD ================= */
+function dashboardHTML(){
+  const year = APP.year;
+  const txYear = APP.data.transactions.filter(t=>t.date && t.date.slice(0,4)===String(year));
+  const totalIncome = sum(txYear.filter(t=>t.type==='income'));
+  const totalExpense = sum(txYear.filter(t=>t.type==='expense'));
+  const now = new Date();
+  const isCurYear = year===now.getFullYear();
+  const curMonthStr = String(year)+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const monthTx = isCurYear ? txYear.filter(t=>t.date.slice(0,7)===curMonthStr) : [];
+  const monthIncome = sum(monthTx.filter(t=>t.type==='income'));
+  const monthExpense = sum(monthTx.filter(t=>t.type==='expense'));
+
+  const monthly = Array.from({length:12},(_,i)=>{
+    const mStr = String(year)+'-'+String(i+1).padStart(2,'0');
+    const mi = sum(txYear.filter(t=>t.date.slice(0,7)===mStr && t.type==='income'));
+    const me = sum(txYear.filter(t=>t.date.slice(0,7)===mStr && t.type==='expense'));
+    return {m:i+1, mi, me};
+  });
+  const maxVal = Math.max(1, ...monthly.map(m=>Math.max(m.mi,m.me)));
+  const barsHtml = monthly.map(m=>{
+    const hi = Math.round((m.mi/maxVal)*170);
+    const he = Math.round((m.me/maxVal)*170);
+    return `<div class="bar-col"><div class="bar-pair">
+      <div class="bar income-bar" style="height:${hi}px" title="收入 ${money(m.mi)}"></div>
+      <div class="bar expense-bar" style="height:${he}px" title="支出 ${money(m.me)}"></div>
+    </div><div class="m-label">${m.m}月</div></div>`;
+  }).join('');
+
+  function catBreakdown(type){
+    const txs = txYear.filter(t=>t.type===type);
+    const total = sum(txs) || 1;
+    const map = {};
+    txs.forEach(t=>{ map[t.mainCategory] = (map[t.mainCategory]||0) + Number(t.amount||0); });
+    const rows = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+    if(rows.length===0) return `<div class="table-wrap"><div class="empty">尚無資料</div></div>`;
+    const color = type==='expense' ? 'var(--red)' : 'var(--green)';
+    return rows.map(([name,val])=>{
+      const pct = Math.round((val/total)*100);
+      return `<div class="cat-row"><div class="name">${escHtml(name)}</div>
+        <div class="track"><div class="fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="val">${money(val)} · ${pct}%</div></div>`;
+    }).join('');
+  }
+
+  const yearOptions = [];
+  for(let y=nowYear-3; y<=nowYear+1; y++) yearOptions.push(`<option value="${y}" ${y===year?'selected':''}>${y} 年度</option>`);
+
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">總覽</h1><p class="page-sub">財務狀況一目瞭然</p></div>
+      <select id="year-select">${yearOptions.join('')}</select>
+    </div>
+    <div class="grid grid-2" style="margin-bottom:16px;">
+      <div class="card"><div class="stat-label">${year} 年度總收入</div><div class="stat-value green">${money(totalIncome)}</div></div>
+      <div class="card"><div class="stat-label">${year} 年度總支出</div><div class="stat-value red">${money(totalExpense)}</div></div>
+    </div>
+    <div class="grid grid-3" style="margin-bottom:16px;">
+      <div class="card"><div class="stat-label">當月收入</div><div class="stat-value green">${money(monthIncome)}</div></div>
+      <div class="card"><div class="stat-label">當月支出</div><div class="stat-value red">${money(monthExpense)}</div></div>
+      <div class="card"><div class="stat-label">當月結餘</div><div class="stat-value blue">${money(monthIncome-monthExpense)}</div></div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-head-row"><h3>月度收支</h3></div>
+      <div class="legend"><span><span class="dot" style="background:var(--green)"></span>收入</span><span><span class="dot" style="background:var(--red)"></span>支出</span></div>
+      ${txYear.length===0 ? `<div class="empty" style="padding:60px 0;">尚無資料，請先新增收支記錄</div>` : `<div class="bar-chart">${barsHtml}</div>`}
+    </div>
+    <div class="grid grid-2">
+      <div class="card"><div class="card-head-row"><h3>支出分類</h3></div>${catBreakdown('expense')}</div>
+      <div class="card"><div class="card-head-row"><h3>收入分類</h3></div>${catBreakdown('income')}</div>
+    </div>
+  `;
+}
+
+/* ================= TRANSACTIONS ================= */
+function transactionsHTML(){
+  const f = APP.txFilter;
+  let list = APP.data.transactions.filter(t => APP.txTab==='pending' ? t.pending : !t.pending);
+  if(f.type!=='all') list = list.filter(t=>t.type===f.type);
+  if(f.main!=='all') list = list.filter(t=>t.mainCategory===f.main);
+  if(f.start) list = list.filter(t=>t.date>=f.start);
+  if(f.end) list = list.filter(t=>t.date<=f.end);
+  list = list.slice().sort((a,b)=> b.date.localeCompare(a.date));
+
+  const allCats = [...APP.data.categories.expense, ...APP.data.categories.income];
+  const mainOptions = allCats.map(c=>`<option value="${escAttr(c.name)}" ${f.main===c.name?'selected':''}>${escHtml(c.name)}</option>`).join('');
+  const editCol = canEdit() ? '<th></th>' : '';
+
+  const rows = list.map(t=>`
+    <tr>
+      <td>${t.date}</td>
+      <td><span class="badge ${t.type}">${t.type==='income'?'收入':'支出'}</span></td>
+      <td>${escHtml(t.mainCategory)}${t.subCategory?('<div style="color:var(--muted);font-size:12px;">'+escHtml(t.subCategory)+'</div>'):''}</td>
+      <td>${escHtml(t.vendor||'—')}</td>
+      <td class="${t.type==='income'?'amount-pos':'amount-neg'}">${t.type==='income'?'+':'-'}${money(t.amount)}</td>
+      <td>${t.pending?'<span class="badge pending">待處理</span>':''}</td>
+      <td>${editedLabel(t)}</td>
+      ${canEdit() ? `<td><div class="row-actions">
+        <button class="icon-btn" data-action="edit-tx" data-id="${t.id}">編輯</button>
+        <button class="icon-btn" data-action="delete-tx" data-id="${t.id}">刪除</button>
+      </div></td>` : ''}
+    </tr>`).join('');
+
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">收支明細</h1><p class="page-sub">記錄每一筆收入與支出</p></div>
+      ${canEdit() ? `<button class="btn primary" data-action="open-tx-modal">＋ 新增記錄</button>` : ''}
+    </div>
+    <div class="tabs">
+      <button class="tab-btn ${APP.txTab==='list'?'active':''}" data-action="tx-tab" data-tab="list">收支明細</button>
+      <button class="tab-btn ${APP.txTab==='pending'?'active':''}" data-action="tx-tab" data-tab="pending">待處理</button>
+    </div>
+    <div class="filter-row">
+      <div class="filter-field"><label>類型</label>
+        <select data-filter="type"><option value="all" ${f.type==='all'?'selected':''}>全部</option>
+        <option value="income" ${f.type==='income'?'selected':''}>收入</option>
+        <option value="expense" ${f.type==='expense'?'selected':''}>支出</option></select></div>
+      <div class="filter-field"><label>主分類</label>
+        <select data-filter="main"><option value="all" ${f.main==='all'?'selected':''}>全部分類</option>${mainOptions}</select></div>
+      <div class="filter-field"><label>開始日期</label><input type="date" data-filter="start" value="${f.start}"/></div>
+      <div class="filter-field"><label>結束日期</label><input type="date" data-filter="end" value="${f.end}"/></div>
+    </div>
+    <div class="table-wrap">
+      ${list.length===0 ? `<div class="empty">尚無記錄${canEdit()?'，點右上角「新增記錄」開始':''}</div>` : `
+      <table><thead><tr><th>日期</th><th>類型</th><th>分類</th><th>對象</th><th>金額</th><th>狀態</th><th>最後編輯</th>${editCol}</tr></thead>
+      <tbody>${rows}</tbody></table>`}
+    </div>
+  `;
+}
+
+/* ================= REPORTS ================= */
+function getPresetRange(preset, year){
+  const pad = n => String(n).padStart(2,'0');
+  const y = year;
+  if(preset==='thisMonth'){
+    const now = new Date();
+    const s = `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;
+    const last = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    return {start:s, end:`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(last)}`, label:'本月'};
+  }
+  if(preset==='lastMonth'){
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    const last = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    return {start:`${d.getFullYear()}-${pad(d.getMonth()+1)}-01`, end:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(last)}`, label:'上月'};
+  }
+  const qMap = { q1:[1,3], q2:[4,6], q3:[7,9], q4:[10,12] };
+  if(qMap[preset]){
+    const [m1,m2] = qMap[preset];
+    const lastDay = new Date(y, m2, 0).getDate();
+    return {start:`${y}-${pad(m1)}-01`, end:`${y}-${pad(m2)}-${pad(lastDay)}`, label:preset.toUpperCase()};
+  }
+  if(preset==='thisYear') return {start:`${y}-01-01`, end:`${y}-12-31`, label:`${y} 全年`};
+  if(preset==='lastYear') return {start:`${y-1}-01-01`, end:`${y-1}-12-31`, label:`${y-1} 全年`};
+  return null;
+}
+function reportsHTML(){
+  const year = APP.reportYear;
+  const presets = [
+    {key:'thisMonth',label:'本月'},{key:'lastMonth',label:'上月'},
+    {key:'q1',label:'Q1'},{key:'q2',label:'Q2'},{key:'q3',label:'Q3'},{key:'q4',label:'Q4'},
+    {key:'thisYear',label:year+' 全年'},{key:'lastYear',label:(year-1)+' 全年'}
+  ];
+  const activePreset = APP.reportRange && APP.reportRange.presetKey;
+  const chips = presets.map(p=>`<button class="chip ${activePreset===p.key?'active':''}" data-action="report-preset" data-preset="${p.key}">${p.label}</button>`).join('');
+  const start = APP.reportRange ? APP.reportRange.start : '';
+  const end = APP.reportRange ? APP.reportRange.end : '';
+
+  let resultHtml = '';
+  if(APP.reportRange && APP.reportRange.generated){
+    const s = APP.reportRange.start, e = APP.reportRange.end;
+    const txs = APP.data.transactions.filter(t=>t.date>=s && t.date<=e);
+    const inc = sum(txs.filter(t=>t.type==='income'));
+    const exp = sum(txs.filter(t=>t.type==='expense'));
+    function breakdown(type){
+      const list = txs.filter(t=>t.type===type);
+      const map = {};
+      list.forEach(t=>{ map[t.mainCategory]=(map[t.mainCategory]||0)+Number(t.amount||0); });
+      const rows = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+      if(rows.length===0) return `<tr><td colspan="2" style="color:var(--muted);text-align:center;padding:20px;">無資料</td></tr>`;
+      return rows.map(([n,v])=>`<tr><td>${escHtml(n)}</td><td style="text-align:right;">${money(v)}</td></tr>`).join('');
+    }
+    resultHtml = `
+      <div class="grid grid-3" style="margin:20px 0 16px 0;">
+        <div class="card"><div class="stat-label">總收入</div><div class="stat-value green">${money(inc)}</div></div>
+        <div class="card"><div class="stat-label">總支出</div><div class="stat-value red">${money(exp)}</div></div>
+        <div class="card"><div class="stat-label">淨損益</div><div class="stat-value ${inc-exp>=0?'blue':'red'}">${money(inc-exp)}</div></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="card"><h3 style="margin-top:0;">收入明細</h3><table><tbody>${breakdown('income')}</tbody></table></div>
+        <div class="card"><h3 style="margin-top:0;">支出明細</h3><table><tbody>${breakdown('expense')}</tbody></table></div>
+      </div>`;
+  }
+  return `
+    <div class="page-header"><div><h1 class="page-title">財報</h1><p class="page-sub">選取期間生成完整財務報告</p></div></div>
+    <div class="card">
+      <div class="chip-row">${chips}</div>
+      <div class="filter-row" style="border:none;padding:0;margin-bottom:0;">
+        <div class="filter-field"><label>開始日期</label><input type="date" id="report-start" value="${start}"/></div>
+        <div class="filter-field"><label>結束日期</label><input type="date" id="report-end" value="${end}"/></div>
+        <button class="btn primary" data-action="generate-report">生成財報</button>
+      </div>
+    </div>
+    ${resultHtml}
+  `;
+}
+
+/* ================= SETTINGS ================= */
+function settingsHTML(){
+  const tab = APP.settingsTab;
+  const c = APP.data.company;
+  const assetsTotal = sum(APP.data.assets);
+  const liabTotal = sum(APP.data.liabilities);
+  const editable = canEdit();
+
+  let body = '';
+  if(tab==='company'){
+    const assetRows = APP.data.assets.map(a=>`<tr><td>${escHtml(a.name)}</td><td style="text-align:right;">${money(a.amount)}</td><td>${editedLabel(a)}</td>
+      ${editable?`<td><button class="icon-btn" data-action="delete-asset" data-kind="assets" data-id="${a.id}">刪除</button></td>`:''}</tr>`).join('');
+    const liabRows = APP.data.liabilities.map(a=>`<tr><td>${escHtml(a.name)}</td><td style="text-align:right;">${money(a.amount)}</td><td>${editedLabel(a)}</td>
+      ${editable?`<td><button class="icon-btn" data-action="delete-asset" data-kind="liabilities" data-id="${a.id}">刪除</button></td>`:''}</tr>`).join('');
+    body = `
+      <div class="card">
+        <div class="card-head-row"><h3>公司基本資料</h3><span class="hint">將套用於薪資單等文件</span></div>
+        <form id="company-form">
+          <div class="grid grid-2">
+            <label class="field"><span>公司名稱</span><input type="text" name="name" placeholder="例：尚益資產有限公司" value="${escAttr(c.name)}" ${editable?'':'disabled'}/></label>
+            <label class="field"><span>統一編號</span><input type="text" name="taxId" value="${escAttr(c.taxId)}" ${editable?'':'disabled'}/></label>
+            <label class="field"><span>公司電話</span><input type="text" name="phone" value="${escAttr(c.phone)}" ${editable?'':'disabled'}/></label>
+            <label class="field"><span>公司地址</span><input type="text" name="address" value="${escAttr(c.address)}" ${editable?'':'disabled'}/></label>
+          </div>
+          ${editable?`<div class="modal-actions" style="justify-content:flex-start;"><button type="submit" class="btn primary">儲存</button></div>`:''}
+        </form>
+      </div>
+      <div class="grid grid-3" style="margin:16px 0;">
+        <div class="card"><div class="stat-label">資產總計</div><div class="stat-value green">${money(assetsTotal)}</div></div>
+        <div class="card"><div class="stat-label">負債總計</div><div class="stat-value red">${money(liabTotal)}</div></div>
+        <div class="card"><div class="stat-label">淨資產</div><div class="stat-value blue">${money(assetsTotal-liabTotal)}</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-head-row"><h3>現金與流動資產</h3>${editable?`<button class="btn ghost sm" data-action="open-asset-modal" data-kind="assets">＋ 新增</button>`:''}</div>
+        ${APP.data.assets.length===0 ? `<div class="empty">尚無資料</div>` : `<table><tbody>${assetRows}</tbody></table>`}
+      </div>
+      <div class="card">
+        <div class="card-head-row"><h3>負債</h3>${editable?`<button class="btn ghost sm" data-action="open-asset-modal" data-kind="liabilities">＋ 新增</button>`:''}</div>
+        ${APP.data.liabilities.length===0 ? `<div class="empty">尚無負債記錄</div>` : `<table><tbody>${liabRows}</tbody></table>`}
+      </div>`;
+  } else {
+    const kind = tab;
+    const cats = APP.data.categories[kind];
+    body = `
+      <div class="card-head-row"><h3 style="font-size:15px;">${kind==='expense'?'支出分類':'收入分類'}</h3>
+        ${editable?`<button class="btn primary sm" data-action="open-category-modal" data-kind="${kind}">＋ 新增分類</button>`:''}</div>
+      ${cats.map(cat=>`
+        <div class="cat-card">
+          <div class="cat-card-head"><h4>${escHtml(cat.name)}</h4>
+            ${editable?`<button class="icon-btn" data-action="delete-category" data-kind="${kind}" data-id="${cat.id}">刪除分類</button>`:''}</div>
+          <div class="sub-chip-row">
+            ${cat.subs.map(s=>`<span class="sub-chip">${escHtml(s.name)}${editable?`<button data-action="delete-subcategory" data-kind="${kind}" data-catid="${cat.id}" data-subid="${s.id}">✕</button>`:''}</span>`).join('')}
+            ${editable?`<button class="add-sub-chip" data-action="open-subcategory-modal" data-kind="${kind}" data-catid="${cat.id}">＋ 子分類</button>`:''}
+          </div>
+        </div>`).join('') || `<div class="table-wrap"><div class="empty">尚無分類</div></div>`}`;
+  }
+  return `
+    <div class="page-header"><div><h1 class="page-title">設定</h1><p class="page-sub">自訂收支分類，主分類下可建立多個子分類</p></div></div>
+    <div class="tabs">
+      <button class="tab-btn ${tab==='company'?'active':''}" data-action="settings-tab" data-tab="company">公司資料</button>
+      <button class="tab-btn ${tab==='expense'?'active':''}" data-action="settings-tab" data-tab="expense">支出分類</button>
+      <button class="tab-btn ${tab==='income'?'active':''}" data-action="settings-tab" data-tab="income">收入分類</button>
+    </div>
+    ${body}`;
+}
+
+/* ================= HR ================= */
+function hrHTML(){
+  const tab = APP.hrTab;
+  const editable = canEdit();
+  let body = '';
+  if(tab==='employees'){
+    let emps = APP.data.hr.employees;
+    if(!APP.showResigned) emps = emps.filter(e=>e.status!=='resigned');
+    const rows = emps.map(e=>`
+      <tr><td>${escHtml(e.name)}</td><td>${escHtml(e.title||'—')}</td><td>${money(e.salary)}</td><td>${e.startDate||'—'}</td>
+      <td><span class="badge ${e.status==='resigned'?'resigned':'active'}">${e.status==='resigned'?'離職':'在職'}</span></td>
+      <td>${editedLabel(e)}</td>
+      ${editable?`<td><div class="row-actions">
+        <button class="icon-btn" data-action="edit-employee" data-id="${e.id}">編輯</button>
+        <button class="icon-btn" data-action="delete-employee" data-id="${e.id}">刪除</button>
+      </div></td>`:''}</tr>`).join('');
+    body = `
+      <div class="page-header" style="margin-bottom:14px;"><div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn ghost sm" data-action="toggle-resigned">${APP.showResigned?'隱藏離職':'顯示離職'}</button>
+          ${editable?`<button class="btn primary" data-action="open-employee-modal">＋ 新增員工</button>`:''}
+        </div></div>
+      <div class="table-wrap">
+        ${emps.length===0 ? `<div class="empty">尚無員工資料</div>` :
+        `<table><thead><tr><th>姓名</th><th>職稱</th><th>月薪</th><th>到職日</th><th>狀態</th><th>最後編輯</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+      </div>`;
+  } else if(tab==='collaborators'){
+    const cols = APP.data.hr.collaborators;
+    const rows = cols.map(c=>`
+      <tr><td>${escHtml(c.name)}</td><td>${escHtml(c.type||'—')}</td><td>${escHtml(c.contact||'—')}</td><td>${escHtml(c.rate||'—')}</td>
+      <td>${editedLabel(c)}</td>
+      ${editable?`<td><div class="row-actions">
+        <button class="icon-btn" data-action="edit-collab" data-id="${c.id}">編輯</button>
+        <button class="icon-btn" data-action="delete-collab" data-id="${c.id}">刪除</button>
+      </div></td>`:''}</tr>`).join('');
+    body = `
+      <div class="page-header" style="margin-bottom:14px;"><div></div>${editable?`<button class="btn primary" data-action="open-collab-modal">＋ 新增合作對象</button>`:''}</div>
+      <div class="table-wrap">
+        ${cols.length===0 ? `<div class="empty">尚無合作對象資料</div>` :
+        `<table><thead><tr><th>名稱</th><th>類型</th><th>聯絡方式</th><th>分潤/費率</th><th>最後編輯</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+      </div>`;
+  } else {
+    const hist = APP.data.hr.history.slice().sort((a,b)=>b.date.localeCompare(a.date));
+    const rows = hist.map(h=>`
+      <tr><td>${h.date}</td><td>${escHtml(h.name)}</td><td>${escHtml(h.event)}</td><td>${escHtml(h.note||'—')}</td>
+      ${editable?`<td><button class="icon-btn" data-action="delete-history" data-id="${h.id}">刪除</button></td>`:''}</tr>`).join('');
+    body = `
+      <div class="page-header" style="margin-bottom:14px;"><div></div>${editable?`<button class="btn primary" data-action="open-history-modal">＋ 新增紀錄</button>`:''}</div>
+      <div class="table-wrap">
+        ${hist.length===0 ? `<div class="empty">尚無人員歷史資料</div>` :
+        `<table><thead><tr><th>日期</th><th>姓名</th><th>事項</th><th>備註</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+      </div>`;
+  }
+  return `
+    <div class="page-header"><div><h1 class="page-title">人事管理</h1><p class="page-sub">員工薪資設定與合作對象勞報單管理</p></div></div>
+    <div class="tabs">
+      <button class="tab-btn ${tab==='employees'?'active':''}" data-action="hr-tab" data-tab="employees">員工</button>
+      <button class="tab-btn ${tab==='collaborators'?'active':''}" data-action="hr-tab" data-tab="collaborators">合作對象</button>
+      <button class="tab-btn ${tab==='history'?'active':''}" data-action="hr-tab" data-tab="history">人員歷史資料</button>
+    </div>
+    ${body}`;
+}
+
+/* ================= VENDORS ================= */
+function vendorsHTML(){
+  const q = APP.vendorSearch.trim().toLowerCase();
+  let list = APP.data.vendors;
+  if(q) list = list.filter(v => (v.name||'').toLowerCase().includes(q) || (v.contact||'').toLowerCase().includes(q) || (v.taxId||'').toLowerCase().includes(q));
+  const editable = canEdit();
+  const rows = list.map(v=>`
+    <tr><td>${escHtml(v.name)}</td><td>${escHtml(v.contact||'—')}</td><td>${escHtml(v.phone||'—')}</td><td>${escHtml(v.taxId||'—')}</td>
+    <td>${editedLabel(v)}</td>
+    ${editable?`<td><div class="row-actions">
+      <button class="icon-btn" data-action="edit-vendor" data-id="${v.id}">編輯</button>
+      <button class="icon-btn" data-action="delete-vendor" data-id="${v.id}">刪除</button>
+    </div></td>`:''}</tr>`).join('');
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">廠商管理</h1><p class="page-sub">建立廠商資料庫，收支明細可快速帶入廠商資訊</p></div>
+      ${editable?`<button class="btn primary" data-action="open-vendor-modal">＋ 新增廠商</button>`:''}
+    </div>
+    <input class="search-input" id="vendor-search" placeholder="搜尋廠商名稱、聯絡人、統編…" value="${escAttr(APP.vendorSearch)}" style="margin-bottom:16px;"/>
+    <div class="table-wrap">
+      ${list.length===0 ? `<div class="empty">${APP.data.vendors.length===0?'尚無廠商資料':'找不到符合的廠商'}</div>` :
+      `<table><thead><tr><th>廠商名稱</th><th>聯絡人</th><th>電話</th><th>統編</th><th>最後編輯</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+    </div>`;
+}
+
+/* ================= USERS (admin) ================= */
+function usersHTML(){
+  const rows = APP.users.map(u=>{
+    const roleSelect = u.id===APP.user.uid
+      ? `<span class="role-chip ${u.role}">${({admin:'管理員',editor:'一般編輯',viewer:'唯讀',pending:'待設定'})[u.role]||u.role}（你自己，無法修改）</span>`
+      : `<select class="role-select" data-user-role data-uid="${u.id}">
+          <option value="pending" ${u.role==='pending'?'selected':''}>待設定</option>
+          <option value="viewer" ${u.role==='viewer'?'selected':''}>唯讀</option>
+          <option value="editor" ${u.role==='editor'?'selected':''}>一般編輯</option>
+          <option value="admin" ${u.role==='admin'?'selected':''}>管理員</option>
+        </select>`;
+    return `<tr><td>${escHtml(u.email)}</td><td>${roleSelect}</td><td>${u.createdAt?new Date(u.createdAt).toLocaleString('zh-TW'):'—'}</td></tr>`;
+  }).join('');
+  return `
+    <div class="page-header"><div><h1 class="page-title">帳號管理</h1><p class="page-sub">設定合夥人的登入權限（管理員可全部操作／一般編輯可新增修改／唯讀只能檢視）</p></div></div>
+    <div class="card" style="margin-bottom:16px;">
+      <p style="font-size:13px;color:var(--muted);line-height:1.7;margin:0;">
+      新夥伴要加入時：先請你（管理員）在 Firebase 後台「Authentication」新增他的信箱與密碼，接著請他用該帳密登入這個網站一次，登入後他的帳號就會出現在下方清單，狀態是「待設定」，此時再回來這裡把他的權限改成合適的選項即可。</p>
+    </div>
+    <div class="table-wrap">
+      ${rows.length===0?`<div class="empty">目前沒有其他帳號</div>`:
+      `<table><thead><tr><th>Email</th><th>權限</th><th>建立時間</th></tr></thead><tbody>${rows}</tbody></table>`}
+    </div>`;
+}
+
+/* ---------------- Router render ---------------- */
+function render(){
+  document.querySelectorAll('.nav-item').forEach(el=>{ el.classList.toggle('active', el.dataset.view===APP.view); });
+  const main = document.getElementById('main');
+  if(!main) return;
+  if(APP.view==='dashboard') main.innerHTML = dashboardHTML();
+  else if(APP.view==='transactions') main.innerHTML = transactionsHTML();
+  else if(APP.view==='reports') main.innerHTML = reportsHTML();
+  else if(APP.view==='settings') main.innerHTML = settingsHTML();
+  else if(APP.view==='hr') main.innerHTML = hrHTML();
+  else if(APP.view==='vendors') main.innerHTML = vendorsHTML();
+  else if(APP.view==='users' && isAdmin()) main.innerHTML = usersHTML();
+  else { APP.view='dashboard'; main.innerHTML = dashboardHTML(); }
+}
+
+/* ---------------- Modal system ---------------- */
+let modalOnSubmit = null;
+function openModal(title, bodyHtml, formId, onSubmit){
+  modalOnSubmit = onSubmit;
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-head"><h3>${escHtml(title)}</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <form id="${formId}">${bodyHtml}
+      <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button><button type="submit" class="btn primary">儲存</button></div>
+    </form>`;
+}
+function closeModal(){ document.getElementById('modal-overlay').style.display = 'none'; modalOnSubmit = null; }
+function openConfirm(message, onConfirm){
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-head"><h3>確認刪除</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <div class="confirm-text">${escHtml(message)}</div>
+    <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button>
+    <button type="button" class="btn primary" id="confirm-yes-btn" style="background:var(--red);">刪除</button></div>`;
+  document.getElementById('confirm-yes-btn').addEventListener('click', ()=>{ closeModal(); onConfirm(); });
+}
+
+function openAssetModal(kind, existing){
+  const a = existing || {name:'', amount:''};
+  openModal(existing?'編輯項目':'新增項目', `
+    <label class="field"><span>名稱</span><input name="name" type="text" required value="${escAttr(a.name)}"/></label>
+    <label class="field"><span>金額</span><input name="amount" type="number" min="0" step="1" required value="${a.amount}"/></label>
+  `, 'asset-form', (data)=>{
+    const list = APP.data[kind];
+    if(existing){ Object.assign(existing, stamp({name:data.name, amount:Number(data.amount)})); }
+    else list.push(stamp({id:uid(), name:data.name, amount:Number(data.amount)}));
+    saveCompany();
+  });
+}
+function openCategoryModal(kind){
+  openModal('新增分類', `<label class="field"><span>分類名稱</span><input name="name" type="text" required/></label>`, 'category-form', (data)=>{
+    APP.data.categories[kind].push({id:uid(), name:data.name, subs:[]});
+    saveCategories();
+  });
+}
+function openSubCategoryModal(kind, catId){
+  openModal('新增子分類', `<label class="field"><span>子分類名稱</span><input name="name" type="text" required/></label>`, 'subcategory-form', (data)=>{
+    const cat = APP.data.categories[kind].find(c=>c.id===catId);
+    if(cat) cat.subs.push({id:uid(), name:data.name});
+    saveCategories();
+  });
+}
+function openEmployeeModal(existing){
+  const e = existing || {name:'',title:'',salary:'',startDate:todayStr(),status:'active'};
+  openModal(existing?'編輯員工':'新增員工', `
+    <label class="field"><span>姓名</span><input name="name" type="text" required value="${escAttr(e.name)}"/></label>
+    <label class="field"><span>職稱</span><input name="title" type="text" value="${escAttr(e.title)}"/></label>
+    <label class="field"><span>月薪</span><input name="salary" type="number" min="0" step="1" value="${e.salary}"/></label>
+    <label class="field"><span>到職日</span><input name="startDate" type="date" value="${e.startDate}"/></label>
+    <label class="field"><span>狀態</span><select name="status">
+      <option value="active" ${e.status==='active'?'selected':''}>在職</option>
+      <option value="resigned" ${e.status==='resigned'?'selected':''}>離職</option></select></label>
+  `, 'employee-form', (data)=>{
+    data.salary = Number(data.salary)||0;
+    if(existing){
+      const wasActive = existing.status!=='resigned';
+      Object.assign(existing, stamp(data));
+      if(wasActive && data.status==='resigned') APP.data.hr.history.push({id:uid(), date:todayStr(), name:existing.name, event:'離職', note:''});
+    } else {
+      APP.data.hr.employees.push(stamp({id:uid(), ...data}));
+    }
+    saveHR();
+  });
+}
+function openCollabModal(existing){
+  const c = existing || {name:'',type:'',contact:'',rate:''};
+  openModal(existing?'編輯合作對象':'新增合作對象', `
+    <label class="field"><span>名稱</span><input name="name" type="text" required value="${escAttr(c.name)}"/></label>
+    <label class="field"><span>類型</span><input name="type" type="text" placeholder="例：仲介 / 代書 / 業務代理" value="${escAttr(c.type)}"/></label>
+    <label class="field"><span>聯絡方式</span><input name="contact" type="text" value="${escAttr(c.contact)}"/></label>
+    <label class="field"><span>分潤 / 費率</span><input name="rate" type="text" placeholder="例：成交金額 5%" value="${escAttr(c.rate)}"/></label>
+  `, 'collab-form', (data)=>{
+    if(existing) Object.assign(existing, stamp(data));
+    else APP.data.hr.collaborators.push(stamp({id:uid(), ...data}));
+    saveHR();
+  });
+}
+function openHistoryModal(){
+  openModal('新增人員歷史紀錄', `
+    <label class="field"><span>日期</span><input name="date" type="date" required value="${todayStr()}"/></label>
+    <label class="field"><span>姓名</span><input name="name" type="text" required/></label>
+    <label class="field"><span>事項</span><input name="event" type="text" placeholder="例：調薪 / 職稱異動 / 離職" required/></label>
+    <label class="field"><span>備註</span><textarea name="note"></textarea></label>
+  `, 'history-form', (data)=>{ APP.data.hr.history.push(stamp({id:uid(), ...data})); saveHR(); });
+}
+function openVendorModal(existing){
+  const v = existing || {name:'',contact:'',phone:'',taxId:'',note:''};
+  openModal(existing?'編輯廠商':'新增廠商', `
+    <label class="field"><span>廠商名稱</span><input name="name" type="text" required value="${escAttr(v.name)}"/></label>
+    <label class="field"><span>聯絡人</span><input name="contact" type="text" value="${escAttr(v.contact)}"/></label>
+    <label class="field"><span>電話</span><input name="phone" type="text" value="${escAttr(v.phone)}"/></label>
+    <label class="field"><span>統一編號</span><input name="taxId" type="text" value="${escAttr(v.taxId)}"/></label>
+    <label class="field"><span>備註</span><textarea name="note">${escHtml(v.note)}</textarea></label>
+  `, 'vendor-form', (data)=>{
+    if(existing) Object.assign(existing, stamp(data));
+    else APP.data.vendors.push(stamp({id:uid(), ...data}));
+    saveVendors();
+  });
+}
+function openTransactionModal(existing){
+  const t = existing || {date:todayStr(), type:'expense', mainCategory:'', subCategory:'', amount:'', vendor:'', note:'', pending:false};
+  function catOptions(type){
+    return APP.data.categories[type].map(c=>`<option value="${escAttr(c.name)}" ${c.name===t.mainCategory?'selected':''}>${escHtml(c.name)}</option>`).join('');
+  }
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-head"><h3>${existing?'編輯紀錄':'新增紀錄'}</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <form id="tx-form">
+      <label class="field"><span>日期</span><input type="date" name="date" value="${t.date}" required/></label>
+      <label class="field"><span>類型</span><select name="type" id="tx-type-select">
+        <option value="expense" ${t.type==='expense'?'selected':''}>支出</option>
+        <option value="income" ${t.type==='income'?'selected':''}>收入</option></select></label>
+      <label class="field"><span>主分類</span><select name="mainCategory" id="tx-main-select">${catOptions(t.type)}</select></label>
+      <label class="field"><span>子分類 / 說明</span><input type="text" name="subCategory" value="${escAttr(t.subCategory||'')}"/></label>
+      <label class="field"><span>金額</span><input type="number" name="amount" min="0" step="1" value="${t.amount}" required/></label>
+      <label class="field"><span>廠商 / 對象</span><input type="text" name="vendor" value="${escAttr(t.vendor||'')}"/></label>
+      <label class="field"><span>備註</span><textarea name="note">${escHtml(t.note||'')}</textarea></label>
+      <label class="field checkbox"><input type="checkbox" name="pending" ${t.pending?'checked':''}/><span>標記為待處理</span></label>
+      <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button><button type="submit" class="btn primary">儲存</button></div>
+    </form>`;
+  document.getElementById('tx-type-select').addEventListener('change', (e)=>{
+    document.getElementById('tx-main-select').innerHTML = catOptions(e.target.value);
+  });
+  document.getElementById('tx-form').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = {
+      date: fd.get('date'), type: fd.get('type'), mainCategory: fd.get('mainCategory'),
+      subCategory: fd.get('subCategory'), amount: Number(fd.get('amount'))||0,
+      vendor: fd.get('vendor'), note: fd.get('note'), pending: fd.get('pending')==='on'
+    };
+    if(existing) Object.assign(existing, stamp(data));
+    else APP.data.transactions.push(stamp({id:uid(), ...data}));
+    saveTransactions(); closeModal();
+  });
+}
+
+/* ---------------- Mobile sidebar ---------------- */
+function openSidebar(){
+  const sb = document.getElementById('sidebar'); const bd = document.getElementById('sidebar-backdrop');
+  if(sb) sb.classList.add('open'); if(bd) bd.classList.add('open');
+}
+function closeSidebar(){
+  const sb = document.getElementById('sidebar'); const bd = document.getElementById('sidebar-backdrop');
+  if(sb) sb.classList.remove('open'); if(bd) bd.classList.remove('open');
+}
+
+/* ---------------- PWA service worker ---------------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+
+/* ---------------- Event delegation ---------------- */
+document.addEventListener('click', (e)=>{
+  const el = e.target.closest('[data-action]');
+  if(el){
+    const action = el.dataset.action;
+    if(action==='nav'){ APP.view = el.dataset.view; render(); closeSidebar(); return; }
+    if(action==='close-modal'){ closeModal(); return; }
+    if(action==='tx-tab'){ APP.txTab = el.dataset.tab; render(); return; }
+    if(action==='open-tx-modal'){ openTransactionModal(null); return; }
+    if(action==='edit-tx'){ const t = APP.data.transactions.find(x=>x.id===el.dataset.id); if(t) openTransactionModal(t); return; }
+    if(action==='delete-tx'){
+      openConfirm('確定要刪除這筆收支紀錄嗎？此動作無法復原。', ()=>{
+        APP.data.transactions = APP.data.transactions.filter(x=>x.id!==el.dataset.id); saveTransactions();
+      }); return;
+    }
+    if(action==='report-preset'){
+      const r = getPresetRange(el.dataset.preset, APP.reportYear);
+      APP.reportRange = { ...r, presetKey: el.dataset.preset, generated:false }; render(); return;
+    }
+    if(action==='generate-report'){
+      const s = document.getElementById('report-start').value;
+      const en = document.getElementById('report-end').value;
+      if(!s || !en) return;
+      APP.reportRange = { start:s, end:en, generated:true, presetKey: APP.reportRange?APP.reportRange.presetKey:null };
+      render(); return;
+    }
+    if(action==='settings-tab'){ APP.settingsTab = el.dataset.tab; render(); return; }
+    if(action==='open-asset-modal'){ openAssetModal(el.dataset.kind, null); return; }
+    if(action==='delete-asset'){
+      openConfirm('確定要刪除這筆資料嗎？', ()=>{
+        APP.data[el.dataset.kind] = APP.data[el.dataset.kind].filter(x=>x.id!==el.dataset.id); saveCompany();
+      }); return;
+    }
+    if(action==='open-category-modal'){ openCategoryModal(el.dataset.kind); return; }
+    if(action==='delete-category'){
+      openConfirm('刪除分類將不會刪除已使用該分類的收支紀錄，確定刪除？', ()=>{
+        const kind = el.dataset.kind;
+        APP.data.categories[kind] = APP.data.categories[kind].filter(c=>c.id!==el.dataset.id); saveCategories();
+      }); return;
+    }
+    if(action==='open-subcategory-modal'){ openSubCategoryModal(el.dataset.kind, el.dataset.catid); return; }
+    if(action==='delete-subcategory'){
+      const cat = APP.data.categories[el.dataset.kind].find(c=>c.id===el.dataset.catid);
+      if(cat){ cat.subs = cat.subs.filter(s=>s.id!==el.dataset.subid); saveCategories(); }
+      return;
+    }
+    if(action==='hr-tab'){ APP.hrTab = el.dataset.tab; render(); return; }
+    if(action==='toggle-resigned'){ APP.showResigned = !APP.showResigned; render(); return; }
+    if(action==='open-employee-modal'){ openEmployeeModal(null); return; }
+    if(action==='edit-employee'){ const emp = APP.data.hr.employees.find(x=>x.id===el.dataset.id); if(emp) openEmployeeModal(emp); return; }
+    if(action==='delete-employee'){
+      openConfirm('確定要刪除這位員工的資料嗎？', ()=>{
+        APP.data.hr.employees = APP.data.hr.employees.filter(x=>x.id!==el.dataset.id); saveHR();
+      }); return;
+    }
+    if(action==='open-collab-modal'){ openCollabModal(null); return; }
+    if(action==='edit-collab'){ const c = APP.data.hr.collaborators.find(x=>x.id===el.dataset.id); if(c) openCollabModal(c); return; }
+    if(action==='delete-collab'){
+      openConfirm('確定要刪除這筆合作對象資料嗎？', ()=>{
+        APP.data.hr.collaborators = APP.data.hr.collaborators.filter(x=>x.id!==el.dataset.id); saveHR();
+      }); return;
+    }
+    if(action==='open-history-modal'){ openHistoryModal(); return; }
+    if(action==='delete-history'){ APP.data.hr.history = APP.data.hr.history.filter(x=>x.id!==el.dataset.id); saveHR(); return; }
+    if(action==='open-vendor-modal'){ openVendorModal(null); return; }
+    if(action==='edit-vendor'){ const v = APP.data.vendors.find(x=>x.id===el.dataset.id); if(v) openVendorModal(v); return; }
+    if(action==='delete-vendor'){
+      openConfirm('確定要刪除這筆廠商資料嗎？', ()=>{
+        APP.data.vendors = APP.data.vendors.filter(x=>x.id!==el.dataset.id); saveVendors();
+      }); return;
+    }
+  }
+  if(e.target.id==='hamburger-btn'){ openSidebar(); return; }
+  if(e.target.id==='sidebar-backdrop'){ closeSidebar(); return; }
+  if(e.target.id==='logout-btn' || e.target.id==='pending-logout'){ signOut(auth); return; }
+  if(e.target.id==='forgot-link'){
+    const emailInput = document.querySelector('#login-form input[name="email"]');
+    const email = emailInput ? emailInput.value.trim() : '';
+    if(!email){ APP.authError='請先在上方輸入你的電子郵件，再點一次「忘記密碼」'; renderRoot(); return; }
+    sendPasswordResetEmail(auth, email).then(()=>{
+      APP.authError=''; APP.authMsg='已寄出密碼重設信，請至信箱查收'; renderRoot();
+    }).catch(err=>{ APP.authMsg=''; APP.authError='寄送失敗：'+err.message; renderRoot(); });
+    return;
+  }
+});
+
+document.addEventListener('change', (e)=>{
+  if(e.target.id==='year-select'){ APP.year = Number(e.target.value); render(); return; }
+  if(e.target.dataset && e.target.dataset.filter){ APP.txFilter[e.target.dataset.filter] = e.target.value; render(); return; }
+  if(e.target.dataset && e.target.dataset.userRole!==undefined){
+    const uidTarget = e.target.dataset.uid;
+    updateDoc(doc(db,'users',uidTarget), { role: e.target.value });
+    return;
+  }
+});
+document.addEventListener('input', (e)=>{
+  if(e.target.id==='vendor-search'){
+    APP.vendorSearch = e.target.value;
+    const focusVal = e.target.value;
+    render();
+    const input = document.getElementById('vendor-search');
+    if(input){ input.focus(); input.value = focusVal; input.setSelectionRange(focusVal.length, focusVal.length); }
+  }
+});
+document.addEventListener('submit', (e)=>{
+  if(e.target.id==='login-form'){
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    APP.authError=''; APP.authMsg='';
+    signInWithEmailAndPassword(auth, fd.get('email'), fd.get('password')).catch(err=>{
+      APP.authError = '登入失敗，請確認帳號密碼是否正確';
+      renderRoot();
+    });
+    return;
+  }
+  if(e.target.id==='company-form'){
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    APP.data.company = { name:fd.get('name'), taxId:fd.get('taxId'), phone:fd.get('phone'), address:fd.get('address') };
+    saveCompany(); return;
+  }
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form'].includes(e.target.id)){
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = {};
+    fd.forEach((v,k)=>{ data[k]=v; });
+    if(modalOnSubmit) modalOnSubmit(data);
+    closeModal();
+  }
+});
+</script>
+</body>
+</html>
