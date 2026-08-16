@@ -287,8 +287,9 @@ function subscribeAll(){
   unsubs.push(onSnapshot(collection(db,'users'), snap=>{
     APP.users = snap.docs.map(d=>({id:d.id, ...d.data()}));
     const me = APP.users.find(u=>u.id===APP.user.uid);
+    const prevRole = APP.role;
     APP.role = me ? me.role : 'pending';
-    render();
+    if(APP.role !== prevRole) renderRoot(); else render();
   }));
 }
 function unsubscribeAll(){ unsubs.forEach(u=>u()); unsubs=[]; }
