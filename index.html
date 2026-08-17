@@ -310,9 +310,15 @@ const APP = {
   showResigned:false, txTab:'list', txFilter:{type:'all',main:'all',start:'',end:'',search:''},
   vendorSearch:'', reportYear:nowYear, reportRange:null, reportCompareMode:'none',
   chatOpen:false, chatLoading:false, chatMessages:[],
+  casesTab:'ad', caseAdFilter:{status:'all', month:''}, caseChannelFilter:{status:'all', month:''},
+  progressTab:'ad', progressAdFilter:{status:'all', month:''}, progressChannelFilter:{status:'all', month:''},
   data:{
     company:{name:'',taxId:'',phone:'',address:''}, assets:[], liabilities:[],
-    categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[]
+    categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
+    progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[],
+    caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000,
+      planOptions:['醫美','JET','電腦','裕富','維力','21','亞太','二線、商品'],
+      staffOptions:['煌','全','熙','傑','秉','耿','琪','曾','希'] }
   }
 };
 const AI_WORKER_URL = 'https://shangyi-finance-ai.kevunchiang24.workers.dev';
@@ -348,6 +354,36 @@ function subscribeAll(){
     APP.data.vendors = (d && d.list) || [];
     render();
   }));
+  unsubs.push(onSnapshot(doc(db,'appdata','progressAd'), snap=>{
+    const d = snap.data();
+    APP.data.progressAd = (d && d.list) || [];
+    render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','progressChannel'), snap=>{
+    const d = snap.data();
+    APP.data.progressChannel = (d && d.list) || [];
+    render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','casesAd'), snap=>{
+    const d = snap.data();
+    APP.data.casesAd = (d && d.list) || [];
+    render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','casesChannel'), snap=>{
+    const d = snap.data();
+    APP.data.casesChannel = (d && d.list) || [];
+    render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','adSpend'), snap=>{
+    const d = snap.data();
+    APP.data.adSpend = (d && d.list) || [];
+    render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','caseSettings'), snap=>{
+    const d = snap.data();
+    if(d) APP.data.caseSettings = d;
+    render();
+  }));
   unsubs.push(onSnapshot(collection(db,'users'), snap=>{
     APP.users = snap.docs.map(d=>({id:d.id, ...d.data()}));
     const me = APP.users.find(u=>u.id===APP.user.uid);
@@ -363,6 +399,12 @@ function saveCategories(){ return setDoc(doc(db,'appdata','categories'), APP.dat
 function saveTransactions(){ return setDoc(doc(db,'appdata','transactions'), {list:APP.data.transactions}); }
 function saveHR(){ return setDoc(doc(db,'appdata','hr'), APP.data.hr); }
 function saveVendors(){ return setDoc(doc(db,'appdata','vendors'), {list:APP.data.vendors}); }
+function saveProgressAd(){ return setDoc(doc(db,'appdata','progressAd'), {list:APP.data.progressAd}); }
+function saveProgressChannel(){ return setDoc(doc(db,'appdata','progressChannel'), {list:APP.data.progressChannel}); }
+function saveCasesAd(){ return setDoc(doc(db,'appdata','casesAd'), {list:APP.data.casesAd}); }
+function saveCasesChannel(){ return setDoc(doc(db,'appdata','casesChannel'), {list:APP.data.casesChannel}); }
+function saveAdSpend(){ return setDoc(doc(db,'appdata','adSpend'), {list:APP.data.adSpend}); }
+function saveCaseSettings(){ return setDoc(doc(db,'appdata','caseSettings'), APP.data.caseSettings); }
 
 /* ---------------- Auth ---------------- */
 onAuthStateChanged(auth, async (user)=>{
@@ -444,6 +486,8 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="settings"><span class="nav-icon">⚙</span>設定</div>
     <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">☺</span>人事管理</div>
     <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">▣</span>廠商管理</div>
+    <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
+    <div class="nav-item" data-action="nav" data-view="cases"><span class="nav-icon">📋</span>獲利報表</div>
     ${isAdmin() ? `<div class="nav-item" data-action="nav" data-view="users"><span class="nav-icon">🔑</span>帳號管理</div>` : ''}
     <div class="sidebar-footer">
       <div class="user-chip">${escHtml(APP.userEmail)}</div>
@@ -911,6 +955,35 @@ function settingsHTML(){
         <div class="card-head-row"><h3>負債</h3>${editable?`<button class="btn ghost sm" data-action="open-asset-modal" data-kind="liabilities">＋ 新增</button>`:''}</div>
         ${APP.data.liabilities.length===0 ? `<div class="empty">尚無負債記錄</div>` : `<table><tbody>${liabRows}</tbody></table>`}
       </div>`;
+  } else if(tab==='caseParams'){
+    const cs = APP.data.caseSettings;
+    body = `
+      <div class="card">
+        <div class="card-head-row"><h3>案件分潤參數</h3><span class="hint">套用於「業務案件」的自動試算公式，僅管理員可調整</span></div>
+        <form id="case-settings-form">
+          <div class="grid grid-2">
+            <label class="field"><span>業務獎金比例（%）</span><input type="number" step="0.1" name="businessBonusRate" value="${(cs.businessBonusRate*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>小江獎金門檻件數（當月第幾件開始跳比例）</span><input type="number" name="xiaojiangThreshold" value="${cs.xiaojiangThreshold}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>小江獎金比例－門檻內（%）</span><input type="number" step="0.1" name="xiaojiangRateBelow" value="${(cs.xiaojiangRateBelow*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>小江獎金比例－門檻外（%）</span><input type="number" step="0.1" name="xiaojiangRateAbove" value="${(cs.xiaojiangRateAbove*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>每月固定成本（人事＋房租＋客戶呆帳）</span><input type="number" name="fixedCost" value="${cs.fixedCost}" ${isAdmin()?'':'disabled'}/></label>
+          </div>
+          ${isAdmin()?`<div class="modal-actions" style="justify-content:flex-start;"><button type="submit" class="btn primary">儲存</button></div>`:`<p style="color:var(--muted);font-size:12.5px;">只有管理員能調整這些參數。</p>`}
+        </form>
+        <p style="color:var(--muted);font-size:12px;line-height:1.7;margin-top:14px;">這些參數只影響「自動試算」的預設值。任何一筆案件都可以在編輯時勾選「手動調整」，用實際談好的金額覆蓋公式結果，不受這裡的參數限制。</p>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="card-head-row"><h3>送件方案選項</h3>${isAdmin()?`<button class="btn ghost sm" data-action="open-case-option-modal" data-kind="planOptions">＋ 新增選項</button>`:''}</div>
+        <div class="sub-chip-row">
+          ${cs.planOptions.map(p=>`<span class="sub-chip">${escHtml(p)}${isAdmin()?`<button data-action="delete-case-option" data-kind="planOptions" data-value="${escAttr(p)}">✕</button>`:''}</span>`).join('') || '<span style="color:var(--muted);font-size:12.5px;">尚無選項</span>'}
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="card-head-row"><h3>業務／介紹人選項</h3>${isAdmin()?`<button class="btn ghost sm" data-action="open-case-option-modal" data-kind="staffOptions">＋ 新增選項</button>`:''}</div>
+        <div class="sub-chip-row">
+          ${cs.staffOptions.map(p=>`<span class="sub-chip">${escHtml(p)}${isAdmin()?`<button data-action="delete-case-option" data-kind="staffOptions" data-value="${escAttr(p)}">✕</button>`:''}</span>`).join('') || '<span style="color:var(--muted);font-size:12.5px;">尚無選項</span>'}
+        </div>
+      </div>`;
   } else {
     const kind = tab;
     const cats = APP.data.categories[kind];
@@ -933,6 +1006,7 @@ function settingsHTML(){
       <button class="tab-btn ${tab==='company'?'active':''}" data-action="settings-tab" data-tab="company">公司資料</button>
       <button class="tab-btn ${tab==='expense'?'active':''}" data-action="settings-tab" data-tab="expense">支出分類</button>
       <button class="tab-btn ${tab==='income'?'active':''}" data-action="settings-tab" data-tab="income">收入分類</button>
+      ${isAdmin()?`<button class="tab-btn ${tab==='caseParams'?'active':''}" data-action="settings-tab" data-tab="caseParams">案件分潤參數</button>`:''}
     </div>
     ${body}`;
 }
@@ -1061,8 +1135,316 @@ function render(){
   else if(APP.view==='settings') main.innerHTML = settingsHTML();
   else if(APP.view==='hr') main.innerHTML = hrHTML();
   else if(APP.view==='vendors') main.innerHTML = vendorsHTML();
+  else if(APP.view==='cases') main.innerHTML = casesHTML();
+  else if(APP.view==='progress') main.innerHTML = progressHTML();
   else if(APP.view==='users' && isAdmin()) main.innerHTML = usersHTML();
   else { APP.view='dashboard'; main.innerHTML = dashboardHTML(); }
+}
+
+/* ================= CASES (業務案件) ================= */
+const STATUS_OPTIONS = ['教照會','等照會','複查','補資料','保人','對保','卡件','撥款完成','婉拒','客拒'];
+const STATUS_DONE = ['撥款完成'];
+const STATUS_CLOSED = ['婉拒','客拒'];
+function statusBadgeClass(s){
+  if(STATUS_DONE.includes(s)) return 'active';
+  if(STATUS_CLOSED.includes(s)) return 'resigned';
+  return 'pending';
+}
+function monthKey(dateStr){ return dateStr ? dateStr.slice(0,7) : ''; }
+function selectOptionsHtml(list, current){
+  const opts = list.slice();
+  if(current && !opts.includes(current)) opts.unshift(current);
+  return `<option value="">請選擇</option>` + opts.map(o=>`<option value="${escAttr(o)}" ${o===current?'selected':''}>${escHtml(o)}</option>`).join('');
+}
+function calcBusinessBonus(afterCost){ return Math.round((Number(afterCost)||0) * APP.data.caseSettings.businessBonusRate); }
+function calcXiaojiangBonus(afterCost, ordinalInMonth){
+  const cs = APP.data.caseSettings;
+  const rate = ordinalInMonth <= cs.xiaojiangThreshold ? cs.xiaojiangRateBelow : cs.xiaojiangRateAbove;
+  return Math.round((Number(afterCost)||0) * rate);
+}
+function adCaseOrdinal(caseId, dateStr){
+  const mk = monthKey(dateStr);
+  const sameMonth = APP.data.casesAd.filter(c=>monthKey(c.date)===mk).slice().sort((a,b)=> a.date===b.date ? (a._createdSeq||0)-(b._createdSeq||0) : a.date.localeCompare(b.date));
+  const idx = sameMonth.findIndex(c=>c.id===caseId);
+  return idx>=0 ? idx+1 : sameMonth.length+1;
+}
+function recalcAdCase(c){
+  const ordinal = adCaseOrdinal(c.id, c.date);
+  if(!c.businessBonusOverride) c.businessBonus = calcBusinessBonus(c.afterCost);
+  if(!c.xiaojiangBonusOverride) c.xiaojiangBonus = calcXiaojiangBonus(c.afterCost, ordinal);
+  if(!c.companyProfitOverride) c.companyProfit = (Number(c.afterCost)||0) - (Number(c.businessBonus)||0) - (Number(c.xiaojiangBonus)||0);
+  return c;
+}
+function recalcChannelCase(c){
+  if(!c.companyProfitOverride) c.companyProfit = (Number(c.afterCost)||0) - (Number(c.partnerProfit)||0);
+  return c;
+}
+
+function overrideTag(isOverride){
+  return isOverride ? `<span class="badge pending" style="margin-left:6px;">已手動調整</span>` : '';
+}
+
+function progressHTML(){
+  const tab = APP.progressTab;
+  const body = tab==='ad' ? progressAdView() : progressChannelView();
+  return `
+    <div class="page-header"><div><h1 class="page-title">進度追蹤</h1><p class="page-sub">廣告客與直客／通路案件的送件進度，與獲利報表各自獨立</p></div></div>
+    <div class="tabs">
+      <button class="tab-btn ${tab==='ad'?'active':''}" data-action="progress-tab" data-tab="ad">廣告客進度</button>
+      <button class="tab-btn ${tab==='channel'?'active':''}" data-action="progress-tab" data-tab="channel">直客／通路進度</button>
+    </div>
+    ${body}
+  `;
+}
+
+function casesHTML(){
+  const tab = APP.casesTab;
+  let body = '';
+  if(tab==='ad') body = adCasesView();
+  else if(tab==='channel') body = channelCasesView();
+  else body = adSpendView();
+  return `
+    <div class="page-header"><div><h1 class="page-title">獲利報表</h1><p class="page-sub">廣告線與業務／通路線的獲利試算，與進度追蹤各自獨立</p></div></div>
+    <div class="tabs">
+      <button class="tab-btn ${tab==='ad'?'active':''}" data-action="cases-tab" data-tab="ad">廣告線獲利報表</button>
+      <button class="tab-btn ${tab==='channel'?'active':''}" data-action="cases-tab" data-tab="channel">通路線獲利報表</button>
+      <button class="tab-btn ${tab==='adspend'?'active':''}" data-action="cases-tab" data-tab="adspend">廣告支出報表</button>
+    </div>
+    ${body}
+  `;
+}
+
+function progressAdView(){
+  const editable = canEdit();
+  const f = APP.progressAdFilter;
+  let list = APP.data.progressAd.slice();
+  if(f.status!=='all') list = list.filter(c=>c.status===f.status);
+  if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
+  list.sort((a,b)=> b.date.localeCompare(a.date));
+  const monthOptions = Array.from(new Set(APP.data.progressAd.map(c=>monthKey(c.date)))).filter(Boolean).sort().reverse();
+
+  const rows = list.map(c=>`
+    <tr>
+      <td>${c.date}</td>
+      <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
+      <td>${escHtml(c.plan||'—')}</td>
+      <td>${escHtml(c.staff||'—')}</td>
+      <td><span class="badge ${statusBadgeClass(c.status)}">${escHtml(c.status||'—')}</span></td>
+      <td style="max-width:220px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.note||'—')}</td>
+      <td>${editedLabel(c)}</td>
+      ${editable?`<td><div class="row-actions">
+        <button class="icon-btn" data-action="edit-progress-ad" data-id="${c.id}">編輯</button>
+        <button class="icon-btn" data-action="delete-progress-ad" data-id="${c.id}">刪除</button>
+      </div></td>`:''}
+    </tr>`).join('');
+
+  return `
+    <div class="page-header" style="margin-bottom:14px;"><div></div>${editable?`<button class="btn primary" data-action="open-progress-ad-modal">＋ 新增案件</button>`:''}</div>
+    <div class="filter-row">
+      <div class="filter-field"><label>狀態</label>
+        <select data-case-filter="pad-status"><option value="all" ${f.status==='all'?'selected':''}>全部</option>
+        ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${f.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="filter-field"><label>月份</label>
+        <select data-case-filter="pad-month"><option value="">全部</option>
+        ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+    </div>
+    <div class="table-wrap">
+      ${list.length===0?`<div class="empty">尚無案件資料</div>`:`
+      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>業務</th><th>狀態</th><th>備註</th><th>最後編輯</th>${editable?'<th></th>':''}</tr></thead>
+      <tbody>${rows}</tbody></table>`}
+    </div>
+  `;
+}
+
+function progressChannelView(){
+  const editable = canEdit();
+  const f = APP.progressChannelFilter;
+  let list = APP.data.progressChannel.slice();
+  if(f.status!=='all') list = list.filter(c=>c.status===f.status);
+  if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
+  list.sort((a,b)=> b.date.localeCompare(a.date));
+  const monthOptions = Array.from(new Set(APP.data.progressChannel.map(c=>monthKey(c.date)))).filter(Boolean).sort().reverse();
+
+  const rows = list.map(c=>`
+    <tr>
+      <td>${c.date}</td>
+      <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
+      <td>${escHtml(c.plan||'—')}</td>
+      <td>${escHtml(c.referrer||'—')}</td>
+      <td><span class="badge ${statusBadgeClass(c.status)}">${escHtml(c.status||'—')}</span></td>
+      <td style="max-width:200px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.note||'—')}</td>
+      <td>${editedLabel(c)}</td>
+      ${editable?`<td><div class="row-actions">
+        <button class="icon-btn" data-action="edit-progress-channel" data-id="${c.id}">編輯</button>
+        <button class="icon-btn" data-action="delete-progress-channel" data-id="${c.id}">刪除</button>
+      </div></td>`:''}
+    </tr>`).join('');
+
+  return `
+    <div class="page-header" style="margin-bottom:14px;"><div></div>${editable?`<button class="btn primary" data-action="open-progress-channel-modal">＋ 新增案件</button>`:''}</div>
+    <div class="filter-row">
+      <div class="filter-field"><label>狀態</label>
+        <select data-case-filter="pch-status"><option value="all" ${f.status==='all'?'selected':''}>全部</option>
+        ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${f.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="filter-field"><label>月份</label>
+        <select data-case-filter="pch-month"><option value="">全部</option>
+        ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+    </div>
+    <div class="table-wrap">
+      ${list.length===0?`<div class="empty">尚無案件資料</div>`:`
+      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>介紹人</th><th>狀態</th><th>備註</th><th>最後編輯</th>${editable?'<th></th>':''}</tr></thead>
+      <tbody>${rows}</tbody></table>`}
+    </div>
+  `;
+}
+
+function adCasesView(){
+  const editable = canEdit();
+  const f = APP.caseAdFilter;
+  let list = APP.data.casesAd.slice();
+  if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
+  list.sort((a,b)=> b.date.localeCompare(a.date));
+  const monthOptions = Array.from(new Set(APP.data.casesAd.map(c=>monthKey(c.date)))).filter(Boolean).sort().reverse();
+
+  const totalProfit = sum(list.map(c=>({amount:c.companyProfit})));
+
+  const rows = list.map(c=>`
+    <tr>
+      <td>${c.date}</td>
+      <td>${escHtml(c.customer)}</td>
+      <td>${escHtml(c.plan||'—')}</td>
+      <td>${escHtml(c.staff||'—')}</td>
+      <td>${money(c.afterCost)}</td>
+      <td>${money(c.businessBonus)}${overrideTag(c.businessBonusOverride)}</td>
+      <td>${money(c.xiaojiangBonus)}${overrideTag(c.xiaojiangBonusOverride)}</td>
+      <td class="amount-pos">${money(c.companyProfit)}</td>
+      <td>${c.bonusPaid?'<span class="badge active">已發放</span>':'<span class="badge pending">未發放</span>'}</td>
+      <td>${c.linkedTxId ? '<span class="badge active">已轉收支</span>' : (editable ? `<button class="btn ghost sm" data-action="post-ad-case" data-id="${c.id}">轉入收支明細</button>` : '')}</td>
+      ${editable?`<td><div class="row-actions">
+        <button class="icon-btn" data-action="edit-ad-case" data-id="${c.id}">編輯</button>
+        <button class="icon-btn" data-action="delete-ad-case" data-id="${c.id}">刪除</button>
+      </div></td>`:''}
+    </tr>`).join('');
+
+  return `
+    <div class="page-header" style="margin-bottom:14px;">
+      <div></div>
+      ${editable?`<button class="btn primary" data-action="open-ad-case-modal">＋ 新增獲利紀錄</button>`:''}
+    </div>
+    <div class="filter-row">
+      <div class="filter-field"><label>月份</label>
+        <select data-case-filter="ad-month"><option value="">全部</option>
+        ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+    </div>
+    <div class="tx-summary-bar">
+      <div class="item">案件數<b>${list.length} 筆</b></div>
+      <div class="item">公司利潤合計<b class="green">${money(totalProfit)}</b></div>
+    </div>
+    <div class="table-wrap">
+      ${list.length===0?`<div class="empty">尚無獲利資料</div>`:`
+      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>業務</th><th>扣除成本後</th><th>業務獎金</th><th>小江獎金</th><th>公司利潤</th><th>獎金</th><th></th>${editable?'<th></th>':''}</tr></thead>
+      <tbody>${rows}</tbody></table>`}
+    </div>
+  `;
+}
+
+function channelCasesView(){
+  const editable = canEdit();
+  const f = APP.caseChannelFilter;
+  let list = APP.data.casesChannel.slice();
+  if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
+  list.sort((a,b)=> b.date.localeCompare(a.date));
+  const monthOptions = Array.from(new Set(APP.data.casesChannel.map(c=>monthKey(c.date)))).filter(Boolean).sort().reverse();
+  const totalProfit = sum(list.map(c=>({amount:c.companyProfit})));
+
+  const rows = list.map(c=>`
+    <tr>
+      <td>${c.date}</td>
+      <td>${escHtml(c.customer)}</td>
+      <td>${escHtml(c.plan||'—')}</td>
+      <td><span class="badge ${c.source==='直客'?'income':'expense'}">${escHtml(c.source||'—')}</span></td>
+      <td>${escHtml(c.referrer||'—')}</td>
+      <td>${money(c.afterCost)}</td>
+      <td>${money(c.partnerProfit)}</td>
+      <td class="amount-pos">${money(c.companyProfit)}</td>
+      <td>${c.linkedTxId ? '<span class="badge active">已轉收支</span>' : (editable ? `<button class="btn ghost sm" data-action="post-channel-case" data-id="${c.id}">轉入收支明細</button>` : '')}</td>
+      ${editable?`<td><div class="row-actions">
+        <button class="icon-btn" data-action="edit-channel-case" data-id="${c.id}">編輯</button>
+        <button class="icon-btn" data-action="delete-channel-case" data-id="${c.id}">刪除</button>
+      </div></td>`:''}
+    </tr>`).join('');
+
+  return `
+    <div class="page-header" style="margin-bottom:14px;">
+      <div></div>
+      ${editable?`<button class="btn primary" data-action="open-channel-case-modal">＋ 新增獲利紀錄</button>`:''}
+    </div>
+    <div class="filter-row">
+      <div class="filter-field"><label>月份</label>
+        <select data-case-filter="channel-month"><option value="">全部</option>
+        ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+    </div>
+    <div class="tx-summary-bar">
+      <div class="item">案件數<b>${list.length} 筆</b></div>
+      <div class="item">公司利潤合計<b class="green">${money(totalProfit)}</b></div>
+    </div>
+    <div class="table-wrap">
+      ${list.length===0?`<div class="empty">尚無獲利資料</div>`:`
+      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>來源</th><th>介紹人</th><th>扣除成本後</th><th>業務或通路利潤</th><th>公司利潤</th><th></th>${editable?'<th></th>':''}</tr></thead>
+      <tbody>${rows}</tbody></table>`}
+    </div>
+  `;
+}
+
+function adSpendView(){
+  const editable = canEdit();
+  const list = APP.data.adSpend.slice().sort((a,b)=>b.month.localeCompare(a.month));
+  const cs = APP.data.caseSettings;
+
+  const rows = list.map(a=>{
+    const adCasesInMonth = APP.data.casesAd.filter(c=>monthKey(c.date)===a.month);
+    const chCasesInMonth = APP.data.casesChannel.filter(c=>monthKey(c.date)===a.month);
+    const adProfit = sum(adCasesInMonth.map(c=>({amount:c.companyProfit})));
+    const chProfit = sum(chCasesInMonth.map(c=>({amount:c.companyProfit})));
+    const adNet = adProfit - Number(a.spend||0);
+    const roi = Number(a.spend||0)===0 ? 0 : (adNet - Number(a.spend||0)) / Number(a.spend||0);
+    const totalNet = (adProfit + chProfit) - Number(a.spend||0);
+    const finalNet = totalNet - cs.fixedCost;
+    const cpc = a.messages ? (Number(a.spend||0)/Number(a.messages)) : 0;
+    const cpa = a.approved ? (Number(a.spend||0)/Number(a.approved)) : 0;
+    const approveRate = a.submitted ? (Number(a.approved||0)/Number(a.submitted)) : 0;
+    const submitRate = a.messages ? (Number(a.submitted||0)/Number(a.messages)) : 0;
+    return `<tr>
+      <td>${a.month}</td>
+      <td>${money(a.spend)}</td>
+      <td>${a.messages||'—'}</td>
+      <td>${a.submitted||'—'}</td>
+      <td>${a.approved||'—'}</td>
+      <td>${cpc?money(cpc):'—'}</td>
+      <td>${cpa?money(cpa):'—'}</td>
+      <td>${approveRate?(approveRate*100).toFixed(1)+'%':'—'}</td>
+      <td>${submitRate?(submitRate*100).toFixed(1)+'%':'—'}</td>
+      <td class="${adNet>=0?'amount-pos':'amount-neg'}">${money(adNet)}</td>
+      <td>${(roi*100).toFixed(1)}%</td>
+      <td class="${finalNet>=0?'amount-pos':'amount-neg'}">${money(finalNet)}</td>
+      ${editable?`<td><div class="row-actions">
+        <button class="icon-btn" data-action="edit-adspend" data-id="${a.id}">編輯</button>
+        <button class="icon-btn" data-action="delete-adspend" data-id="${a.id}">刪除</button>
+      </div></td>`:''}
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="page-header" style="margin-bottom:14px;">
+      <div><p class="hint" style="color:var(--muted);font-size:12.5px;">每月填入投放金額與私訊/送件/核准數，廣告淨利、ROI、最終淨利會自動用「業務案件-廣告線」的公司利潤加總計算，此區塊公式固定，不開放手動調整。</p></div>
+      ${editable?`<button class="btn primary" data-action="open-adspend-modal">＋ 新增月份資料</button>`:''}
+    </div>
+    <div class="table-wrap">
+      ${list.length===0?`<div class="empty">尚無資料</div>`:`
+      <table><thead><tr><th>月份</th><th>投放金額</th><th>私訊數</th><th>送件數</th><th>核准數</th><th>CPC</th><th>CPA</th><th>核准率</th><th>送件率</th><th>廣告淨利</th><th>ROI</th><th>最終淨利</th>${editable?'<th></th>':''}</tr></thead>
+      <tbody>${rows}</tbody></table>`}
+    </div>
+  `;
 }
 
 /* ---------------- Modal system ---------------- */
@@ -1250,6 +1632,214 @@ function renderAiImportPreview(rows){
     closeModal();
   });
 }
+function openCaseOptionModal(kind){
+  const label = kind==='planOptions' ? '送件方案' : '業務／介紹人';
+  openModal(`新增${label}選項`, `<label class="field"><span>${label}名稱</span><input name="value" type="text" required/></label>`, 'case-option-form', (data)=>{
+    if(data.value && !APP.data.caseSettings[kind].includes(data.value)){
+      APP.data.caseSettings[kind].push(data.value);
+      saveCaseSettings();
+    }
+  });
+}
+
+function openProgressAdModal(existing){
+  const c = existing || {date:todayStr(), customer:'', phone:'', plan:'', staff:'', status:'教照會', note:''};
+  openModal(existing?'編輯進度（廣告客）':'新增案件（廣告客）', `
+    <label class="field"><span>日期</span><input type="date" name="date" value="${c.date}" required/></label>
+    <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
+    <label class="field"><span>電話</span><input type="text" name="phone" value="${escAttr(c.phone)}"/></label>
+    <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
+    <label class="field"><span>負責業務</span><select name="staff">${selectOptionsHtml(APP.data.caseSettings.staffOptions, c.staff)}</select></label>
+    <label class="field"><span>送件狀態</span><select name="status">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></label>
+    <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
+  `, 'progress-ad-form', (data)=>{
+    if(existing) Object.assign(existing, stamp(data));
+    else APP.data.progressAd.push(stamp({id:uid(), ...data}));
+    saveProgressAd();
+  });
+}
+function openProgressChannelModal(existing){
+  const c = existing || {date:todayStr(), customer:'', phone:'', plan:'', source:'通路', referrer:'', status:'教照會', note:''};
+  openModal(existing?'編輯進度（直客／通路）':'新增案件（直客／通路）', `
+    <label class="field"><span>日期</span><input type="date" name="date" value="${c.date}" required/></label>
+    <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
+    <label class="field"><span>電話</span><input type="text" name="phone" value="${escAttr(c.phone)}"/></label>
+    <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
+    <label class="field"><span>來源</span><select name="source"><option value="通路" ${c.source==='通路'?'selected':''}>通路</option><option value="直客" ${c.source==='直客'?'selected':''}>直客</option></select></label>
+    <label class="field"><span>介紹人</span><select name="referrer">${selectOptionsHtml(APP.data.caseSettings.staffOptions, c.referrer)}</select></label>
+    <label class="field"><span>送件狀態</span><select name="status">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></label>
+    <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
+  `, 'progress-channel-form', (data)=>{
+    if(existing) Object.assign(existing, stamp(data));
+    else APP.data.progressChannel.push(stamp({id:uid(), ...data}));
+    saveProgressChannel();
+  });
+}
+
+function openAdCaseModal(existing){
+  const c = existing || {date:todayStr(), customer:'', plan:'', staff:'', afterCost:'', businessBonus:0, businessBonusOverride:false, xiaojiangBonus:0, xiaojiangBonusOverride:false, companyProfit:0, note:'', bonusPaid:false};
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-head"><h3>${existing?'編輯獲利紀錄':'新增獲利紀錄'}（廣告線）</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <form id="ad-case-form">
+      <div class="grid grid-2">
+        <label class="field"><span>日期</span><input type="date" name="date" id="ac-date" value="${c.date}" required/></label>
+        <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
+        <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
+        <label class="field"><span>負責業務</span><select name="staff">${selectOptionsHtml(APP.data.caseSettings.staffOptions, c.staff)}</select></label>
+      </div>
+      <label class="field"><span>扣除成本後金額</span><input type="number" id="ac-afterCost" name="afterCost" value="${c.afterCost}" required/></label>
+      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <span style="font-size:12.5px;color:var(--muted);">業務獎金（自動＝扣除成本後 × ${(APP.data.caseSettings.businessBonusRate*100).toFixed(0)}%）</span>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;"><input type="checkbox" id="ac-bb-override" ${c.businessBonusOverride?'checked':''}/>手動調整</label>
+        </div>
+        <input type="number" id="ac-businessBonus" value="${c.businessBonus}" ${c.businessBonusOverride?'':'readonly'} style="margin-top:6px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"/>
+      </div>
+      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <span style="font-size:12.5px;color:var(--muted);">小江獎金（自動＝當月前${APP.data.caseSettings.xiaojiangThreshold}件${(APP.data.caseSettings.xiaojiangRateBelow*100).toFixed(0)}%，之後${(APP.data.caseSettings.xiaojiangRateAbove*100).toFixed(0)}%）</span>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;"><input type="checkbox" id="ac-xj-override" ${c.xiaojiangBonusOverride?'checked':''}/>手動調整</label>
+        </div>
+        <input type="number" id="ac-xiaojiangBonus" value="${c.xiaojiangBonus}" ${c.xiaojiangBonusOverride?'':'readonly'} style="margin-top:6px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"/>
+      </div>
+      <label class="field"><span>公司利潤（自動＝扣除成本後 − 業務獎金 − 小江獎金）</span>
+        <div id="ac-companyProfit-display" style="font-size:18px;font-weight:700;color:var(--blue);">${money(c.companyProfit||0)}</div>
+      </label>
+      <label class="field checkbox"><input type="checkbox" name="bonusPaid" ${c.bonusPaid?'checked':''}/><span>獎金發放完成</span></label>
+      <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
+      <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button><button type="submit" class="btn primary">儲存</button></div>
+    </form>`;
+
+  function recalcPreview(){
+    const afterCost = Number(document.getElementById('ac-afterCost').value)||0;
+    const bbOverride = document.getElementById('ac-bb-override').checked;
+    const xjOverride = document.getElementById('ac-xj-override').checked;
+    const bbInput = document.getElementById('ac-businessBonus');
+    const xjInput = document.getElementById('ac-xiaojiangBonus');
+    bbInput.readOnly = !bbOverride;
+    xjInput.readOnly = !xjOverride;
+    if(!bbOverride) bbInput.value = calcBusinessBonus(afterCost);
+    if(!xjOverride){
+      const dateVal = document.getElementById('ac-date').value || todayStr();
+      const ordinal = existing ? adCaseOrdinal(existing.id, dateVal) : (APP.data.casesAd.filter(cc=>monthKey(cc.date)===monthKey(dateVal)).length + 1);
+      xjInput.value = calcXiaojiangBonus(afterCost, ordinal);
+    }
+    const bb = Number(bbInput.value)||0;
+    const xj = Number(xjInput.value)||0;
+    document.getElementById('ac-companyProfit-display').textContent = money(afterCost - bb - xj);
+  }
+  ['ac-afterCost','ac-businessBonus','ac-xiaojiangBonus'].forEach(id=>document.getElementById(id).addEventListener('input', recalcPreview));
+  ['ac-bb-override','ac-xj-override'].forEach(id=>document.getElementById(id).addEventListener('change', recalcPreview));
+
+  document.getElementById('ad-case-form').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const afterCost = Number(fd.get('afterCost'))||0;
+    const businessBonusOverride = document.getElementById('ac-bb-override').checked;
+    const xiaojiangBonusOverride = document.getElementById('ac-xj-override').checked;
+    const businessBonus = Number(document.getElementById('ac-businessBonus').value)||0;
+    const xiaojiangBonus = Number(document.getElementById('ac-xiaojiangBonus').value)||0;
+    const companyProfit = afterCost - businessBonus - xiaojiangBonus;
+    const data = {
+      date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'),
+      staff: fd.get('staff'), afterCost, businessBonus, businessBonusOverride,
+      xiaojiangBonus, xiaojiangBonusOverride, companyProfit, bonusPaid: fd.get('bonusPaid')==='on', note: fd.get('note')
+    };
+    if(existing) Object.assign(existing, stamp(data));
+    else APP.data.casesAd.push(stamp({id:uid(), _createdSeq:Date.now(), linkedTxId:null, ...data}));
+    saveCasesAd(); closeModal();
+  });
+}
+
+function openChannelCaseModal(existing){
+  const c = existing || {date:todayStr(), customer:'', plan:'', source:'通路', referrer:'', afterCost:'', partnerProfit:'', companyProfit:0, note:''};
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-head"><h3>${existing?'編輯獲利紀錄':'新增獲利紀錄'}（業務／通路線）</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <form id="channel-case-form">
+      <div class="grid grid-2">
+        <label class="field"><span>日期</span><input type="date" name="date" value="${c.date}" required/></label>
+        <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
+        <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
+        <label class="field"><span>來源</span><select name="source"><option value="通路" ${c.source==='通路'?'selected':''}>通路</option><option value="直客" ${c.source==='直客'?'selected':''}>直客</option></select></label>
+        <label class="field"><span>介紹人</span><select name="referrer">${selectOptionsHtml(APP.data.caseSettings.staffOptions, c.referrer)}</select></label>
+      </div>
+      <label class="field"><span>扣除成本後金額</span><input type="number" id="cc-afterCost" value="${c.afterCost}" required/></label>
+      <label class="field"><span>業務或通路利潤（人工判斷，無固定公式）</span><input type="number" id="cc-partnerProfit" value="${c.partnerProfit}"/></label>
+      <label class="field"><span>公司利潤（自動＝扣除成本後 − 業務或通路利潤）</span>
+        <div id="cc-companyProfit-display" style="font-size:18px;font-weight:700;color:var(--blue);">${money(c.companyProfit||0)}</div>
+      </label>
+      <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
+      <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button><button type="submit" class="btn primary">儲存</button></div>
+    </form>`;
+  function recalc(){
+    const ac = Number(document.getElementById('cc-afterCost').value)||0;
+    const pp = Number(document.getElementById('cc-partnerProfit').value)||0;
+    document.getElementById('cc-companyProfit-display').textContent = money(ac-pp);
+  }
+  document.getElementById('cc-afterCost').addEventListener('input', recalc);
+  document.getElementById('cc-partnerProfit').addEventListener('input', recalc);
+  document.getElementById('channel-case-form').addEventListener('submit',(e)=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const afterCost = Number(document.getElementById('cc-afterCost').value)||0;
+    const partnerProfit = Number(document.getElementById('cc-partnerProfit').value)||0;
+    const data = {
+      date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'),
+      source: fd.get('source'), referrer: fd.get('referrer'),
+      afterCost, partnerProfit, companyProfit: afterCost-partnerProfit, note: fd.get('note')
+    };
+    if(existing) Object.assign(existing, stamp(data));
+    else APP.data.casesChannel.push(stamp({id:uid(), linkedTxId:null, ...data}));
+    saveCasesChannel(); closeModal();
+  });
+}
+
+function openAdSpendModal(existing){
+  const a = existing || {month:new Date().toISOString().slice(0,7), spend:'', messages:'', submitted:'', approved:'', note:''};
+  openModal(existing?'編輯月份廣告資料':'新增月份廣告資料', `
+    <label class="field"><span>月份</span><input type="month" name="month" value="${a.month}" required/></label>
+    <label class="field"><span>投放金額</span><input type="number" name="spend" value="${a.spend}" required/></label>
+    <label class="field"><span>私訊數</span><input type="number" name="messages" value="${a.messages}"/></label>
+    <label class="field"><span>送件數</span><input type="number" name="submitted" value="${a.submitted}"/></label>
+    <label class="field"><span>核准數</span><input type="number" name="approved" value="${a.approved}"/></label>
+    <label class="field"><span>備註</span><textarea name="note">${escHtml(a.note||'')}</textarea></label>
+  `, 'adspend-form', (data)=>{
+    data.spend=Number(data.spend)||0; data.messages=Number(data.messages)||0; data.submitted=Number(data.submitted)||0; data.approved=Number(data.approved)||0;
+    if(existing) Object.assign(existing, stamp(data));
+    else APP.data.adSpend.push(stamp({id:uid(), ...data}));
+    saveAdSpend();
+  });
+}
+
+function postAdCaseToTransactions(caseId){
+  const c = APP.data.casesAd.find(x=>x.id===caseId);
+  if(!c || c.linkedTxId) return;
+  if(!APP.data.categories.income.find(cat=>cat.name==='案件利潤-廣告')){
+    APP.data.categories.income.push({id:uid(), name:'案件利潤-廣告', subs:[]});
+    saveCategories();
+  }
+  const tx = stamp({ id:uid(), date:c.date, type:'income', mainCategory:'案件利潤-廣告', subCategory:c.plan||'',
+    amount:Number(c.companyProfit)||0, vendor:c.customer||'', note:`案件公司利潤自動轉入（業務:${c.staff||''}）`, pending:false });
+  APP.data.transactions.push(tx);
+  c.linkedTxId = tx.id;
+  saveTransactions(); saveCasesAd();
+}
+function postChannelCaseToTransactions(caseId){
+  const c = APP.data.casesChannel.find(x=>x.id===caseId);
+  if(!c || c.linkedTxId) return;
+  if(!APP.data.categories.income.find(cat=>cat.name==='案件利潤-通路')){
+    APP.data.categories.income.push({id:uid(), name:'案件利潤-通路', subs:[]});
+    saveCategories();
+  }
+  const tx = stamp({ id:uid(), date:c.date, type:'income', mainCategory:'案件利潤-通路', subCategory:c.plan||'',
+    amount:Number(c.companyProfit)||0, vendor:c.customer||'', note:`案件公司利潤自動轉入（介紹人:${c.referrer||''}）`, pending:false });
+  APP.data.transactions.push(tx);
+  c.linkedTxId = tx.id;
+  saveTransactions(); saveCasesChannel();
+}
+
 function openTransactionModal(existing){
   const t = existing || {date:todayStr(), type:'expense', mainCategory:'', subCategory:'', amount:'', vendor:'', note:'', pending:false};
   function catOptions(type){
@@ -1480,6 +2070,53 @@ document.addEventListener('click', (e)=>{
         APP.data.vendors = APP.data.vendors.filter(x=>x.id!==el.dataset.id); saveVendors();
       }); return;
     }
+    if(action==='open-case-option-modal'){ openCaseOptionModal(el.dataset.kind); return; }
+    if(action==='delete-case-option'){
+      const kind = el.dataset.kind, val = el.dataset.value;
+      openConfirm(`確定要刪除「${val}」這個選項嗎？已使用過這個選項的舊案件資料不會被清除。`, ()=>{
+        APP.data.caseSettings[kind] = APP.data.caseSettings[kind].filter(x=>x!==val);
+        saveCaseSettings();
+      }); return;
+    }
+    if(action==='progress-tab'){ APP.progressTab = el.dataset.tab; render(); return; }
+    if(action==='cases-tab'){ APP.casesTab = el.dataset.tab; render(); return; }
+    if(action==='open-progress-ad-modal'){ openProgressAdModal(null); return; }
+    if(action==='edit-progress-ad'){ const c = APP.data.progressAd.find(x=>x.id===el.dataset.id); if(c) openProgressAdModal(c); return; }
+    if(action==='delete-progress-ad'){
+      openConfirm('確定要刪除這筆進度資料嗎？', ()=>{
+        APP.data.progressAd = APP.data.progressAd.filter(x=>x.id!==el.dataset.id); saveProgressAd();
+      }); return;
+    }
+    if(action==='open-progress-channel-modal'){ openProgressChannelModal(null); return; }
+    if(action==='edit-progress-channel'){ const c = APP.data.progressChannel.find(x=>x.id===el.dataset.id); if(c) openProgressChannelModal(c); return; }
+    if(action==='delete-progress-channel'){
+      openConfirm('確定要刪除這筆進度資料嗎？', ()=>{
+        APP.data.progressChannel = APP.data.progressChannel.filter(x=>x.id!==el.dataset.id); saveProgressChannel();
+      }); return;
+    }
+    if(action==='open-ad-case-modal'){ openAdCaseModal(null); return; }
+    if(action==='edit-ad-case'){ const c = APP.data.casesAd.find(x=>x.id===el.dataset.id); if(c) openAdCaseModal(c); return; }
+    if(action==='delete-ad-case'){
+      openConfirm('確定要刪除這筆案件資料嗎？', ()=>{
+        APP.data.casesAd = APP.data.casesAd.filter(x=>x.id!==el.dataset.id); saveCasesAd();
+      }); return;
+    }
+    if(action==='post-ad-case'){ postAdCaseToTransactions(el.dataset.id); return; }
+    if(action==='open-channel-case-modal'){ openChannelCaseModal(null); return; }
+    if(action==='edit-channel-case'){ const c = APP.data.casesChannel.find(x=>x.id===el.dataset.id); if(c) openChannelCaseModal(c); return; }
+    if(action==='delete-channel-case'){
+      openConfirm('確定要刪除這筆案件資料嗎？', ()=>{
+        APP.data.casesChannel = APP.data.casesChannel.filter(x=>x.id!==el.dataset.id); saveCasesChannel();
+      }); return;
+    }
+    if(action==='post-channel-case'){ postChannelCaseToTransactions(el.dataset.id); return; }
+    if(action==='open-adspend-modal'){ openAdSpendModal(null); return; }
+    if(action==='edit-adspend'){ const a = APP.data.adSpend.find(x=>x.id===el.dataset.id); if(a) openAdSpendModal(a); return; }
+    if(action==='delete-adspend'){
+      openConfirm('確定要刪除這筆月份資料嗎？', ()=>{
+        APP.data.adSpend = APP.data.adSpend.filter(x=>x.id!==el.dataset.id); saveAdSpend();
+      }); return;
+    }
   }
   if(e.target.id==='hamburger-btn'){ openSidebar(); return; }
   if(e.target.id==='sidebar-backdrop'){ closeSidebar(); return; }
@@ -1530,6 +2167,16 @@ document.addEventListener('change', (e)=>{
     }
     return;
   }
+  if(e.target.dataset && e.target.dataset.caseFilter){
+    const key = e.target.dataset.caseFilter;
+    if(key==='pad-status') APP.progressAdFilter.status = e.target.value;
+    else if(key==='pad-month') APP.progressAdFilter.month = e.target.value;
+    else if(key==='pch-status') APP.progressChannelFilter.status = e.target.value;
+    else if(key==='pch-month') APP.progressChannelFilter.month = e.target.value;
+    else if(key==='ad-month') APP.caseAdFilter.month = e.target.value;
+    else if(key==='channel-month') APP.caseChannelFilter.month = e.target.value;
+    render(); return;
+  }
   if(e.target.id==='year-select'){ APP.year = Number(e.target.value); render(); return; }
   if(e.target.dataset && e.target.dataset.filter){ APP.txFilter[e.target.dataset.filter] = e.target.value; render(); return; }
   if(e.target.dataset && e.target.dataset.userRole!==undefined){
@@ -1575,13 +2222,26 @@ document.addEventListener('submit', (e)=>{
     });
     return;
   }
+  if(e.target.id==='case-settings-form'){
+    e.preventDefault();
+    if(!isAdmin()) return;
+    const fd = new FormData(e.target);
+    APP.data.caseSettings = {
+      businessBonusRate: (Number(fd.get('businessBonusRate'))||0)/100,
+      xiaojiangThreshold: Number(fd.get('xiaojiangThreshold'))||0,
+      xiaojiangRateBelow: (Number(fd.get('xiaojiangRateBelow'))||0)/100,
+      xiaojiangRateAbove: (Number(fd.get('xiaojiangRateAbove'))||0)/100,
+      fixedCost: Number(fd.get('fixedCost'))||0
+    };
+    saveCaseSettings(); return;
+  }
   if(e.target.id==='company-form'){
     e.preventDefault();
     const fd = new FormData(e.target);
     APP.data.company = { name:fd.get('name'), taxId:fd.get('taxId'), phone:fd.get('phone'), address:fd.get('address') };
     saveCompany(); return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form'].includes(e.target.id)){
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = {};
