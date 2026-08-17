@@ -531,7 +531,10 @@ function transactionsHTML(){
   return `
     <div class="page-header">
       <div><h1 class="page-title">收支明細</h1><p class="page-sub">記錄每一筆收入與支出</p></div>
-      ${canEdit() ? `<button class="btn primary" data-action="open-tx-modal">＋ 新增記錄</button>` : ''}
+      ${canEdit() ? `<div style="display:flex;gap:8px;">
+        <button class="btn ghost" data-action="open-ai-import-modal">🤖 AI 貼上匯入</button>
+        <button class="btn primary" data-action="open-tx-modal">＋ 新增記錄</button>
+      </div>` : ''}
     </div>
     <div class="tabs">
       <button class="tab-btn ${APP.txTab==='list'?'active':''}" data-action="tx-tab" data-tab="list">收支明細</button>
@@ -930,6 +933,86 @@ function openVendorModal(existing){
     saveVendors();
   });
 }
+function buildTxRowHtml(r, idx){
+  const allCatsExp = APP.data.categories.expense.map(c=>c.name);
+  const allCatsInc = APP.data.categories.income.map(c=>c.name);
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #f0ede4;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    <input type="date" class="ai-row-field" data-key="date" value="${r.date||todayStr()}" style="width:126px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <select class="ai-row-field ai-row-type" data-key="type" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+      <option value="expense" ${r.type==='income'?'':'selected'}>支出</option>
+      <option value="income" ${r.type==='income'?'selected':''}>收入</option>
+    </select>
+    <select class="ai-row-field ai-row-cat" data-key="mainCategory" style="padding:4px;flex:1;min-width:90px;border:1px solid var(--border);border-radius:6px;">
+      ${(r.type==='income'?allCatsInc:allCatsExp).map(c=>`<option value="${escAttr(c)}" ${c===r.mainCategory?'selected':''}>${escHtml(c)}</option>`).join('')}
+    </select>
+    <input type="number" class="ai-row-field" data-key="amount" value="${Number(r.amount)||0}" style="width:90px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="vendor" value="${escAttr(r.vendor||'')}" placeholder="對象" style="width:90px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+  </div>`;
+}
+function openAiImportModal(){
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-head"><h3>AI 貼上匯入收支</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:0;">把收支相關的文字貼進來（記帳筆記、對話紀錄、收據內容都可以），AI 會幫你整理成一筆筆紀錄，確認後才會真正新增到系統。</p>
+    <textarea id="ai-import-text" style="width:100%;min-height:140px;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;" placeholder="例如：8/15 廣告費 iG投放 1200元&#10;8/16 收到王小明貸款仲介費 15000"></textarea>
+    <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button>
+    <button type="button" class="btn primary" id="ai-import-extract-btn">AI 解析</button></div>
+    <div id="ai-import-result"></div>`;
+  document.getElementById('ai-import-extract-btn').addEventListener('click', async ()=>{
+    const text = document.getElementById('ai-import-text').value.trim();
+    if(!text) return;
+    const btn = document.getElementById('ai-import-extract-btn');
+    btn.disabled = true; btn.textContent = '解析中…';
+    document.getElementById('ai-import-result').innerHTML = '';
+    try{
+      const resp = await fetch(AI_WORKER_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          mode:'extract', text, today: todayStr(),
+          categories: { expense: APP.data.categories.expense.map(c=>c.name), income: APP.data.categories.income.map(c=>c.name) }
+        })
+      });
+      const data = await resp.json();
+      let rows = null;
+      try{
+        let raw = (data.raw || '').trim();
+        raw = raw.replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+        rows = JSON.parse(raw);
+      }catch(e){ rows = null; }
+      if(!rows || !Array.isArray(rows) || rows.length===0){
+        document.getElementById('ai-import-result').innerHTML = `<div class="empty" style="padding:20px;">沒有辨識出可用的收支項目，請調整內容再試一次。</div>`;
+      } else {
+        renderAiImportPreview(rows);
+      }
+    }catch(e){
+      document.getElementById('ai-import-result').innerHTML = `<div class="login-error">解析失敗，請稍後再試一次。</div>`;
+    }
+    btn.disabled = false; btn.textContent = 'AI 解析';
+  });
+}
+function renderAiImportPreview(rows){
+  const box = document.getElementById('ai-import-result');
+  box.innerHTML = `<div id="ai-import-rows" style="margin-top:14px;max-height:260px;overflow-y:auto;">
+    ${rows.map((r,i)=>buildTxRowHtml(r,i)).join('')}
+  </div>
+  <div class="modal-actions"><button type="button" class="btn primary" id="ai-import-confirm-btn">確認新增選取的紀錄</button></div>`;
+  document.getElementById('ai-import-confirm-btn').addEventListener('click', ()=>{
+    const rowEls = document.querySelectorAll('#ai-import-rows .tx-row');
+    let count = 0;
+    rowEls.forEach(rowEl=>{
+      const chk = rowEl.querySelector('.ai-row-check');
+      if(!chk.checked) return;
+      const data = { note:'', pending:false };
+      rowEl.querySelectorAll('.ai-row-field').forEach(f=>{ data[f.dataset.key] = f.value; });
+      data.amount = Number(data.amount) || 0;
+      APP.data.transactions.push(stamp({id:uid(), ...data}));
+      count++;
+    });
+    if(count>0) saveTransactions();
+    closeModal();
+  });
+}
 function openTransactionModal(existing){
   const t = existing || {date:todayStr(), type:'expense', mainCategory:'', subCategory:'', amount:'', vendor:'', note:'', pending:false};
   function catOptions(type){
@@ -1027,10 +1110,22 @@ function renderChat(){
   if(!panel || !box) return;
   panel.classList.toggle('hidden', !APP.chatOpen);
   if(APP.chatMessages.length===0 && !APP.chatLoading){
-    box.innerHTML = `<div class="ai-chat-empty">你可以問任何跟公司財務數據有關的問題，例如「這個月支出比上個月高在哪裡」「今年收入最高的分類是什麼」。</div>`;
+    box.innerHTML = `<div class="ai-chat-empty">你可以問問題（例如「這個月支出比上個月高在哪裡」），也可以直接說要記一筆帳（例如「幫我記一筆 8/15 廣告費 1200」），AI 會列出來讓你確認後才會新增。</div>`;
   } else {
-    box.innerHTML = APP.chatMessages.map(m=>`<div class="ai-msg ${m.role}">${escHtml(m.text)}</div>`).join('')
-      + (APP.chatLoading ? `<div class="ai-msg loading">AI 思考中…</div>` : '');
+    box.innerHTML = APP.chatMessages.map((m,i)=>{
+      if(m.role==='user') return `<div class="ai-msg user">${escHtml(m.text)}</div>`;
+      let inner = `<div class="ai-msg ai">${escHtml(m.text)}`;
+      if(m.pendingTx && m.pendingTx.length>0 && !m.confirmed){
+        inner += `<div id="chat-pending-${i}" style="margin-top:10px;background:#fff;border-radius:8px;padding:8px;">
+          ${m.pendingTx.map((r,j)=>buildTxRowHtml(r,j)).join('')}
+          <button type="button" class="btn primary sm" style="margin-top:6px;width:100%;" data-action="chat-tx-confirm" data-msgidx="${i}">確認新增選取的紀錄</button>
+        </div>`;
+      } else if(m.confirmed){
+        inner += `<div style="margin-top:6px;color:var(--green);font-size:12px;">✓ 已新增 ${m.confirmedCount} 筆紀錄</div>`;
+      }
+      inner += `</div>`;
+      return inner;
+    }).join('') + (APP.chatLoading ? `<div class="ai-msg loading">AI 思考中…</div>` : '');
   }
   box.scrollTop = box.scrollHeight;
 }
@@ -1043,10 +1138,20 @@ async function sendChatMessage(question){
     const resp = await fetch(AI_WORKER_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ question, context: buildFinanceContext() })
+      body: JSON.stringify({
+        question, context: buildFinanceContext(), today: todayStr(),
+        categories: { expense: APP.data.categories.expense.map(c=>c.name), income: APP.data.categories.income.map(c=>c.name) }
+      })
     });
     const data = await resp.json();
-    APP.chatMessages.push({role:'ai', text: data.answer || data.error || '沒有取得回應，請再試一次。'});
+    let text = data.answer || data.error || '沒有取得回應，請再試一次。';
+    let rows = null;
+    const match = text.match(/<transactions>([\s\S]*?)<\/transactions>/i);
+    if(match){
+      try{ rows = JSON.parse(match[1].trim()); }catch(e){ rows = null; }
+      text = text.replace(match[0], '').trim();
+    }
+    APP.chatMessages.push({ role:'ai', text, pendingTx: (rows && Array.isArray(rows) && rows.length>0) ? rows : null });
   }catch(e){
     APP.chatMessages.push({role:'ai', text:'連線失敗，請確認網路連線後再試一次。'});
   }
@@ -1063,6 +1168,7 @@ document.addEventListener('click', (e)=>{
     if(action==='close-modal'){ closeModal(); return; }
     if(action==='tx-tab'){ APP.txTab = el.dataset.tab; render(); return; }
     if(action==='open-tx-modal'){ openTransactionModal(null); return; }
+    if(action==='open-ai-import-modal'){ openAiImportModal(); return; }
     if(action==='edit-tx'){ const t = APP.data.transactions.find(x=>x.id===el.dataset.id); if(t) openTransactionModal(t); return; }
     if(action==='delete-tx'){
       openConfirm('確定要刪除這筆收支紀錄嗎？此動作無法復原。', ()=>{
@@ -1130,6 +1236,29 @@ document.addEventListener('click', (e)=>{
   if(e.target.id==='sidebar-backdrop'){ closeSidebar(); return; }
   if(e.target.id==='ai-chat-toggle'){ APP.chatOpen = !APP.chatOpen; renderChat(); return; }
   if(e.target.id==='ai-chat-close'){ APP.chatOpen = false; renderChat(); return; }
+  const chatConfirmBtn = e.target.closest('[data-action="chat-tx-confirm"]');
+  if(chatConfirmBtn){
+    const msgIdx = Number(chatConfirmBtn.dataset.msgidx);
+    const container = document.getElementById('chat-pending-'+msgIdx);
+    if(container){
+      const rowEls = container.querySelectorAll('.tx-row');
+      let count = 0;
+      rowEls.forEach(rowEl=>{
+        const chk = rowEl.querySelector('.ai-row-check');
+        if(!chk.checked) return;
+        const data = { note:'', pending:false };
+        rowEl.querySelectorAll('.ai-row-field').forEach(f=>{ data[f.dataset.key] = f.value; });
+        data.amount = Number(data.amount) || 0;
+        APP.data.transactions.push(stamp({id:uid(), ...data}));
+        count++;
+      });
+      if(count>0) saveTransactions();
+      APP.chatMessages[msgIdx].confirmed = true;
+      APP.chatMessages[msgIdx].confirmedCount = count;
+      renderChat();
+    }
+    return;
+  }
   if(e.target.id==='logout-btn' || e.target.id==='pending-logout'){ signOut(auth); return; }
   if(e.target.id==='forgot-link'){
     const emailInput = document.querySelector('#login-form input[name="email"]');
@@ -1143,6 +1272,15 @@ document.addEventListener('click', (e)=>{
 });
 
 document.addEventListener('change', (e)=>{
+  if(e.target.classList && e.target.classList.contains('ai-row-type')){
+    const row = e.target.closest('.tx-row');
+    const catSelect = row ? row.querySelector('.ai-row-cat') : null;
+    if(catSelect){
+      const list = e.target.value==='income' ? APP.data.categories.income : APP.data.categories.expense;
+      catSelect.innerHTML = list.map(c=>`<option value="${escAttr(c.name)}">${escHtml(c.name)}</option>`).join('');
+    }
+    return;
+  }
   if(e.target.id==='year-select'){ APP.year = Number(e.target.value); render(); return; }
   if(e.target.dataset && e.target.dataset.filter){ APP.txFilter[e.target.dataset.filter] = e.target.value; render(); return; }
   if(e.target.dataset && e.target.dataset.userRole!==undefined){
