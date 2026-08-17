@@ -1323,7 +1323,7 @@ function buildFinanceContext(){
   }
 
   const recent = APP.data.transactions.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,25)
-    .map(t=>`${t.date} ${t.type==='income'?'收入':'支出'} ${t.mainCategory} ${money(t.amount)}${t.vendor?(' 對象:'+t.vendor):''}`).join('\n');
+    .map(t=>`${t.date} ${t.type==='income'?'收入':'支出'} ${t.mainCategory} ${money(t.amount)}${t.vendor?(' 對象:'+t.vendor):''}${t.note?(' 備註:'+t.note):''}`).join('\n');
 
   const assetsTotal = sum(APP.data.assets);
   const liabTotal = sum(APP.data.liabilities);
