@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="尚益財務" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --navy:#1b2434; --navy-hover:#242f45; --cream:#efece3; --white:#ffffff;
@@ -281,6 +282,7 @@ const db = getFirestore(fbApp);
 /* ---------------- State ---------------- */
 const todayStr = () => new Date().toISOString().slice(0,10);
 const nowYear = new Date().getFullYear();
+const nowMonthKey = todayStr().slice(0,7);
 function uid(){ return 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function money(n){ n = Number(n)||0; return 'NT$' + Math.round(n).toLocaleString('zh-TW'); }
 function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -310,13 +312,13 @@ const APP = {
   showResigned:false, txTab:'list', txFilter:{type:'all',main:'all',start:'',end:'',search:''},
   vendorSearch:'', reportYear:nowYear, reportRange:null, reportCompareMode:'none',
   chatOpen:false, chatLoading:false, chatMessages:[],
-  casesTab:'ad', caseAdFilter:{status:'all', month:''}, caseChannelFilter:{status:'all', month:''},
-  progressTab:'ad', progressAdFilter:{status:'all', month:''}, progressChannelFilter:{status:'all', month:''},
+  casesTab:'ad', caseAdFilter:{status:'all', month:nowMonthKey}, caseChannelFilter:{status:'all', month:nowMonthKey}, dailyBonusDate:'',
+  progressTab:'ad', progressAdFilter:{status:'all', month:nowMonthKey}, progressChannelFilter:{status:'all', month:nowMonthKey},
   data:{
     company:{name:'',taxId:'',phone:'',address:''}, assets:[], liabilities:[],
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[],
-    caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000,
+    caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05,
       planOptions:['醫美','JET','電腦','裕富','維力','21','亞太','二線、商品'],
       staffOptions:['煌','全','熙','傑','秉','耿','琪','曾','希'] }
   }
@@ -967,6 +969,7 @@ function settingsHTML(){
             <label class="field"><span>小江獎金比例－門檻內（%）</span><input type="number" step="0.1" name="xiaojiangRateBelow" value="${(cs.xiaojiangRateBelow*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
             <label class="field"><span>小江獎金比例－門檻外（%）</span><input type="number" step="0.1" name="xiaojiangRateAbove" value="${(cs.xiaojiangRateAbove*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
             <label class="field"><span>每月固定成本（人事＋房租＋客戶呆帳）</span><input type="number" name="fixedCost" value="${cs.fixedCost}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>廣告投手月獎金比例（%，每月5號發放）</span><input type="number" step="0.1" name="pilotBonusRate" value="${(cs.pilotBonusRate*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
           </div>
           ${isAdmin()?`<div class="modal-actions" style="justify-content:flex-start;"><button type="submit" class="btn primary">儲存</button></div>`:`<p style="color:var(--muted);font-size:12.5px;">只有管理員能調整這些參數。</p>`}
         </form>
@@ -1184,11 +1187,58 @@ function overrideTag(isOverride){
   return isOverride ? `<span class="badge pending" style="margin-left:6px;">已手動調整</span>` : '';
 }
 
+function availableYears(...dateArrays){
+  const years = new Set();
+  dateArrays.forEach(arr=>arr.forEach(d=>{ if(d) years.add(String(d).slice(0,4)); }));
+  const list = Array.from(years).sort().reverse();
+  return list.length ? list : [String(new Date().getFullYear())];
+}
+function exportProgressYear(year){
+  const rowsAd = APP.data.progressAd.filter(c=>c.date && c.date.startsWith(year)).map(c=>({
+    日期:c.date, 客戶:c.customer, 電話:c.phone, 方案:c.plan, 業務:c.staff, 狀態:c.status, 備註:c.note
+  }));
+  const rowsCh = APP.data.progressChannel.filter(c=>c.date && c.date.startsWith(year)).map(c=>({
+    日期:c.date, 客戶:c.customer, 電話:c.phone, 方案:c.plan, 來源:c.source, 介紹人:c.referrer, 狀態:c.status, 備註:c.note
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsAd.length?rowsAd:[{提示:'該年度無資料'}]), '廣告客進度');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsCh.length?rowsCh:[{提示:'該年度無資料'}]), '直客通路進度');
+  XLSX.writeFile(wb, `進度追蹤_${year}.xlsx`);
+}
+function exportCasesYear(year){
+  const rowsAd = APP.data.casesAd.filter(c=>c.date && c.date.startsWith(year)).map(c=>({
+    日期:c.date, 客戶:c.customer, 方案:c.plan, 業務:c.staff, 扣除成本後:c.afterCost, 業務獎金:c.businessBonus, 小江獎金:c.xiaojiangBonus, 公司利潤:c.companyProfit, 獎金發放:c.bonusPaid?'是':'否', 備註:c.note
+  }));
+  const rowsCh = APP.data.casesChannel.filter(c=>c.date && c.date.startsWith(year)).map(c=>({
+    日期:c.date, 客戶:c.customer, 方案:c.plan, 來源:c.source, 介紹人:c.referrer, 扣除成本後:c.afterCost, 業務或通路利潤:c.partnerProfit, 公司利潤:c.companyProfit, 備註:c.note
+  }));
+  const rowsSpend = APP.data.adSpend.filter(a=>a.month && a.month.startsWith(year)).map(a=>({
+    月份:a.month, 投放金額:a.spend, 私訊數:a.messages, 送件數:a.submitted, 核准數:a.approved, 備註:a.note
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsAd.length?rowsAd:[{提示:'該年度無資料'}]), '廣告線獲利');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsCh.length?rowsCh:[{提示:'該年度無資料'}]), '通路線獲利');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsSpend.length?rowsSpend:[{提示:'該年度無資料'}]), '廣告支出');
+  XLSX.writeFile(wb, `獲利報表_${year}.xlsx`);
+}
+function openExportModal(mode){
+  const years = mode==='progress'
+    ? availableYears(APP.data.progressAd.map(c=>c.date), APP.data.progressChannel.map(c=>c.date))
+    : availableYears(APP.data.casesAd.map(c=>c.date), APP.data.casesChannel.map(c=>c.date), APP.data.adSpend.map(a=>a.month));
+  openModal('匯出年度資料', `
+    <p style="color:var(--muted);font-size:12.5px;margin-top:0;">匯出後資料仍會留在系統裡，不會被刪除，適合定期備份保存。</p>
+    <label class="field"><span>選擇年度</span><select name="year">${years.map(y=>`<option value="${y}">${y} 年</option>`).join('')}</select></label>
+  `, 'export-year-form', (data)=>{
+    if(mode==='progress') exportProgressYear(data.year); else exportCasesYear(data.year);
+  });
+}
 function progressHTML(){
   const tab = APP.progressTab;
   const body = tab==='ad' ? progressAdView() : progressChannelView();
   return `
-    <div class="page-header"><div><h1 class="page-title">進度追蹤</h1><p class="page-sub">廣告客與直客／通路案件的送件進度，與獲利報表各自獨立</p></div></div>
+    <div class="page-header"><div><h1 class="page-title">進度追蹤</h1><p class="page-sub">廣告客與直客／通路案件的送件進度，與獲利報表各自獨立</p></div>
+      <button class="btn ghost" data-action="open-export-modal" data-mode="progress">📤 匯出年度資料</button>
+    </div>
     <div class="tabs">
       <button class="tab-btn ${tab==='ad'?'active':''}" data-action="progress-tab" data-tab="ad">廣告客進度</button>
       <button class="tab-btn ${tab==='channel'?'active':''}" data-action="progress-tab" data-tab="channel">直客／通路進度</button>
@@ -1202,15 +1252,75 @@ function casesHTML(){
   let body = '';
   if(tab==='ad') body = adCasesView();
   else if(tab==='channel') body = channelCasesView();
+  else if(tab==='daily') body = dailyBonusView();
   else body = adSpendView();
   return `
-    <div class="page-header"><div><h1 class="page-title">獲利報表</h1><p class="page-sub">廣告線與業務／通路線的獲利試算，與進度追蹤各自獨立</p></div></div>
+    <div class="page-header"><div><h1 class="page-title">獲利報表</h1><p class="page-sub">廣告線與業務／通路線的獲利試算，與進度追蹤各自獨立</p></div>
+      <button class="btn ghost" data-action="open-export-modal" data-mode="cases">📤 匯出年度資料</button>
+    </div>
     <div class="tabs">
       <button class="tab-btn ${tab==='ad'?'active':''}" data-action="cases-tab" data-tab="ad">廣告線獲利報表</button>
       <button class="tab-btn ${tab==='channel'?'active':''}" data-action="cases-tab" data-tab="channel">通路線獲利報表</button>
+      <button class="tab-btn ${tab==='daily'?'active':''}" data-action="cases-tab" data-tab="daily">每日獎金發放</button>
       <button class="tab-btn ${tab==='adspend'?'active':''}" data-action="cases-tab" data-tab="adspend">廣告支出報表</button>
     </div>
     ${body}
+  `;
+}
+
+function dailyBonusView(){
+  const d = APP.dailyBonusDate || todayStr();
+  const adToday = APP.data.casesAd.filter(c=>c.date===d);
+  const chToday = APP.data.casesChannel.filter(c=>c.date===d);
+
+  const byStaff = {};
+  let xiaojiangTotal = 0;
+  adToday.forEach(c=>{
+    const key = c.staff || '（未填業務）';
+    if(!byStaff[key]) byStaff[key] = {count:0, businessBonus:0};
+    byStaff[key].count++;
+    byStaff[key].businessBonus += Number(c.businessBonus)||0;
+    xiaojiangTotal += Number(c.xiaojiangBonus)||0;
+  });
+  const byReferrer = {};
+  chToday.forEach(c=>{
+    const key = c.referrer || '（未填介紹人）';
+    if(!byReferrer[key]) byReferrer[key] = {count:0, profit:0};
+    byReferrer[key].count++;
+    byReferrer[key].profit += Number(c.partnerProfit)||0;
+  });
+
+  const businessBonusSum = Object.values(byStaff).reduce((a,v)=>a+v.businessBonus,0);
+  const referrerSum = Object.values(byReferrer).reduce((a,v)=>a+v.profit,0);
+  const grandTotal = businessBonusSum + xiaojiangTotal + referrerSum;
+
+  const staffRows = Object.entries(byStaff).map(([name,v])=>`
+    <tr><td>${escHtml(name)}</td><td>${v.count} 件</td><td class="amount-pos">${money(v.businessBonus)}</td></tr>`).join('');
+  const referrerRows = Object.entries(byReferrer).map(([name,v])=>`
+    <tr><td>${escHtml(name)}</td><td>${v.count} 件</td><td class="amount-pos">${money(v.profit)}</td></tr>`).join('');
+
+  return `
+    <div class="filter-row">
+      <div class="filter-field"><label>日期</label><input type="date" id="daily-bonus-date" value="${d}"/></div>
+    </div>
+    <div class="tx-summary-bar">
+      <div class="item">當日案件數<b>${adToday.length + chToday.length} 筆</b></div>
+      <div class="item">業務獎金合計<b class="green">${money(businessBonusSum)}</b></div>
+      <div class="item">小江獎金合計<b class="green">${money(xiaojiangTotal)}</b></div>
+      <div class="item">通路利潤合計<b class="green">${money(referrerSum)}</b></div>
+      <div class="item">當日應發總額<b class="blue" style="font-size:18px;">${money(grandTotal)}</b></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3 style="margin-top:0;">廣告線 · 業務獎金（依業務彙總）</h3>
+        ${staffRows ? `<table><thead><tr><th>業務</th><th>件數</th><th>獎金合計</th></tr></thead><tbody>${staffRows}</tbody></table>` : `<div class="empty">當日無廣告線案件</div>`}
+        ${adToday.length>0 ? `<p style="color:var(--muted);font-size:12.5px;margin-top:10px;">小江獎金（不分業務，當日合計）：<b style="color:var(--ink);">${money(xiaojiangTotal)}</b></p>` : ''}
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">通路線 · 業務或通路利潤（依介紹人彙總）</h3>
+        ${referrerRows ? `<table><thead><tr><th>介紹人</th><th>件數</th><th>金額合計</th></tr></thead><tbody>${referrerRows}</tbody></table>` : `<div class="empty">當日無通路線案件</div>`}
+      </div>
+    </div>
   `;
 }
 
@@ -1221,7 +1331,7 @@ function progressAdView(){
   if(f.status!=='all') list = list.filter(c=>c.status===f.status);
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
   list.sort((a,b)=> b.date.localeCompare(a.date));
-  const monthOptions = Array.from(new Set(APP.data.progressAd.map(c=>monthKey(c.date)))).filter(Boolean).sort().reverse();
+  const monthOptions = Array.from(new Set([...APP.data.progressAd.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
   const rows = list.map(c=>`
     <tr>
@@ -1229,8 +1339,10 @@ function progressAdView(){
       <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
       <td>${escHtml(c.plan||'—')}</td>
       <td>${escHtml(c.staff||'—')}</td>
-      <td><span class="badge ${statusBadgeClass(c.status)}">${escHtml(c.status||'—')}</span></td>
-      <td style="max-width:220px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.note||'—')}</td>
+      <td><select class="inline-status-select" data-list="progressAd" data-id="${c.id}" ${editable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#e6f4ea':STATUS_CLOSED.includes(c.status)?'#efece4':'#fff4e0'};">
+        ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
+      </select></td>
+      <td><input type="text" class="inline-note-input" data-list="progressAd" data-id="${c.id}" value="${escAttr(c.note||'')}" placeholder="點擊輸入備註" ${editable?'':'readonly'} style="width:100%;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#fdfcf9';"/></td>
       <td>${editedLabel(c)}</td>
       ${editable?`<td><div class="row-actions">
         <button class="icon-btn" data-action="edit-progress-ad" data-id="${c.id}">編輯</button>
@@ -1263,7 +1375,7 @@ function progressChannelView(){
   if(f.status!=='all') list = list.filter(c=>c.status===f.status);
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
   list.sort((a,b)=> b.date.localeCompare(a.date));
-  const monthOptions = Array.from(new Set(APP.data.progressChannel.map(c=>monthKey(c.date)))).filter(Boolean).sort().reverse();
+  const monthOptions = Array.from(new Set([...APP.data.progressChannel.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
   const rows = list.map(c=>`
     <tr>
@@ -1271,8 +1383,10 @@ function progressChannelView(){
       <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
       <td>${escHtml(c.plan||'—')}</td>
       <td>${escHtml(c.referrer||'—')}</td>
-      <td><span class="badge ${statusBadgeClass(c.status)}">${escHtml(c.status||'—')}</span></td>
-      <td style="max-width:200px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.note||'—')}</td>
+      <td><select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" ${editable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#e6f4ea':STATUS_CLOSED.includes(c.status)?'#efece4':'#fff4e0'};">
+        ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
+      </select></td>
+      <td><input type="text" class="inline-note-input" data-list="progressChannel" data-id="${c.id}" value="${escAttr(c.note||'')}" placeholder="點擊輸入備註" ${editable?'':'readonly'} style="width:100%;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#fdfcf9';"/></td>
       <td>${editedLabel(c)}</td>
       ${editable?`<td><div class="row-actions">
         <button class="icon-btn" data-action="edit-progress-channel" data-id="${c.id}">編輯</button>
@@ -1304,7 +1418,7 @@ function adCasesView(){
   let list = APP.data.casesAd.slice();
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
   list.sort((a,b)=> b.date.localeCompare(a.date));
-  const monthOptions = Array.from(new Set(APP.data.casesAd.map(c=>monthKey(c.date)))).filter(Boolean).sort().reverse();
+  const monthOptions = Array.from(new Set([...APP.data.casesAd.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
   const totalProfit = sum(list.map(c=>({amount:c.companyProfit})));
 
@@ -1354,7 +1468,7 @@ function channelCasesView(){
   let list = APP.data.casesChannel.slice();
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
   list.sort((a,b)=> b.date.localeCompare(a.date));
-  const monthOptions = Array.from(new Set(APP.data.casesChannel.map(c=>monthKey(c.date)))).filter(Boolean).sort().reverse();
+  const monthOptions = Array.from(new Set([...APP.data.casesChannel.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
   const totalProfit = sum(list.map(c=>({amount:c.companyProfit})));
 
   const rows = list.map(c=>`
@@ -1404,14 +1518,17 @@ function adSpendView(){
   const rows = list.map(a=>{
     const adCasesInMonth = APP.data.casesAd.filter(c=>monthKey(c.date)===a.month);
     const chCasesInMonth = APP.data.casesChannel.filter(c=>monthKey(c.date)===a.month);
-    const adProfit = sum(adCasesInMonth.map(c=>({amount:c.companyProfit})));
+    const adRevenue = sum(adCasesInMonth.map(c=>({amount:c.companyProfit})));
     const chProfit = sum(chCasesInMonth.map(c=>({amount:c.companyProfit})));
-    const adNet = adProfit - Number(a.spend||0);
-    const roi = Number(a.spend||0)===0 ? 0 : (adNet - Number(a.spend||0)) / Number(a.spend||0);
-    const totalNet = (adProfit + chProfit) - Number(a.spend||0);
-    const finalNet = totalNet - cs.fixedCost;
-    const cpc = a.messages ? (Number(a.spend||0)/Number(a.messages)) : 0;
-    const cpa = a.approved ? (Number(a.spend||0)/Number(a.approved)) : 0;
+    const spend = Number(a.spend||0);
+    const adNetBeforeFixed = adRevenue - spend;
+    const roi = spend===0 ? 0 : (adNetBeforeFixed - spend) / spend;
+    const adTotalNet = adRevenue - cs.fixedCost - spend;
+    const pilotBonus = Math.max(0, adTotalNet) * cs.pilotBonusRate;
+    const adFinalNet = adTotalNet - pilotBonus;
+    const companyFinalNet = adFinalNet + chProfit;
+    const cpc = a.messages ? (spend/Number(a.messages)) : 0;
+    const cpa = a.approved ? (spend/Number(a.approved)) : 0;
     const approveRate = a.submitted ? (Number(a.approved||0)/Number(a.submitted)) : 0;
     const submitRate = a.messages ? (Number(a.submitted||0)/Number(a.messages)) : 0;
     return `<tr>
@@ -1423,10 +1540,12 @@ function adSpendView(){
       <td>${cpc?money(cpc):'—'}</td>
       <td>${cpa?money(cpa):'—'}</td>
       <td>${approveRate?(approveRate*100).toFixed(1)+'%':'—'}</td>
-      <td>${submitRate?(submitRate*100).toFixed(1)+'%':'—'}</td>
-      <td class="${adNet>=0?'amount-pos':'amount-neg'}">${money(adNet)}</td>
       <td>${(roi*100).toFixed(1)}%</td>
-      <td class="${finalNet>=0?'amount-pos':'amount-neg'}">${money(finalNet)}</td>
+      <td>${money(adRevenue)}</td>
+      <td class="${adTotalNet>=0?'amount-pos':'amount-neg'}">${money(adTotalNet)}</td>
+      <td class="amount-neg">${money(pilotBonus)}</td>
+      <td class="${adFinalNet>=0?'amount-pos':'amount-neg'}">${money(adFinalNet)}</td>
+      <td class="${companyFinalNet>=0?'amount-pos':'amount-neg'}" style="font-weight:700;">${money(companyFinalNet)}</td>
       ${editable?`<td><div class="row-actions">
         <button class="icon-btn" data-action="edit-adspend" data-id="${a.id}">編輯</button>
         <button class="icon-btn" data-action="delete-adspend" data-id="${a.id}">刪除</button>
@@ -1436,12 +1555,12 @@ function adSpendView(){
 
   return `
     <div class="page-header" style="margin-bottom:14px;">
-      <div><p class="hint" style="color:var(--muted);font-size:12.5px;">每月填入投放金額與私訊/送件/核准數，廣告淨利、ROI、最終淨利會自動用「業務案件-廣告線」的公司利潤加總計算，此區塊公式固定，不開放手動調整。</p></div>
+      <div><p class="hint" style="color:var(--muted);font-size:12.5px;max-width:640px;">房租＋固定人事成本（${money(cs.fixedCost)}）由廣告線全額吸收；廣告投手月獎金 ＝（廣告線案件利潤加總 − 固定成本 − 廣告投放金額）× ${(cs.pilotBonusRate*100).toFixed(0)}%，於每月 5 號發放，此區塊公式固定不開放手動調整。</p></div>
       ${editable?`<button class="btn primary" data-action="open-adspend-modal">＋ 新增月份資料</button>`:''}
     </div>
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無資料</div>`:`
-      <table><thead><tr><th>月份</th><th>投放金額</th><th>私訊數</th><th>送件數</th><th>核准數</th><th>CPC</th><th>CPA</th><th>核准率</th><th>送件率</th><th>廣告淨利</th><th>ROI</th><th>最終淨利</th>${editable?'<th></th>':''}</tr></thead>
+      <table><thead><tr><th>月份</th><th>投放金額</th><th>私訊數</th><th>送件數</th><th>核准數</th><th>CPC</th><th>CPA</th><th>核准率</th><th>ROI</th><th>廣告線利潤</th><th>廣告總淨利</th><th>投手月獎金(5號發)</th><th>廣告線最終淨利</th><th>全公司最終淨利</th>${editable?'<th></th>':''}</tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
@@ -1666,7 +1785,7 @@ function openProgressChannelModal(existing){
     <label class="field"><span>電話</span><input type="text" name="phone" value="${escAttr(c.phone)}"/></label>
     <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
     <label class="field"><span>來源</span><select name="source"><option value="通路" ${c.source==='通路'?'selected':''}>通路</option><option value="直客" ${c.source==='直客'?'selected':''}>直客</option></select></label>
-    <label class="field"><span>介紹人</span><select name="referrer">${selectOptionsHtml(APP.data.caseSettings.staffOptions, c.referrer)}</select></label>
+    <label class="field"><span>介紹人</span><input type="text" name="referrer" value="${escAttr(c.referrer)}" placeholder="輸入介紹人姓名"/></label>
     <label class="field"><span>送件狀態</span><select name="status">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></label>
     <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
   `, 'progress-channel-form', (data)=>{
@@ -1763,7 +1882,7 @@ function openChannelCaseModal(existing){
         <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
         <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
         <label class="field"><span>來源</span><select name="source"><option value="通路" ${c.source==='通路'?'selected':''}>通路</option><option value="直客" ${c.source==='直客'?'selected':''}>直客</option></select></label>
-        <label class="field"><span>介紹人</span><select name="referrer">${selectOptionsHtml(APP.data.caseSettings.staffOptions, c.referrer)}</select></label>
+        <label class="field"><span>介紹人</span><input type="text" name="referrer" value="${escAttr(c.referrer)}" placeholder="輸入介紹人姓名"/></label>
       </div>
       <label class="field"><span>扣除成本後金額</span><input type="number" id="cc-afterCost" value="${c.afterCost}" required/></label>
       <label class="field"><span>業務或通路利潤（人工判斷，無固定公式）</span><input type="number" id="cc-partnerProfit" value="${c.partnerProfit}"/></label>
@@ -2079,6 +2198,7 @@ document.addEventListener('click', (e)=>{
       }); return;
     }
     if(action==='progress-tab'){ APP.progressTab = el.dataset.tab; render(); return; }
+    if(action==='open-export-modal'){ openExportModal(el.dataset.mode); return; }
     if(action==='cases-tab'){ APP.casesTab = el.dataset.tab; render(); return; }
     if(action==='open-progress-ad-modal'){ openProgressAdModal(null); return; }
     if(action==='edit-progress-ad'){ const c = APP.data.progressAd.find(x=>x.id===el.dataset.id); if(c) openProgressAdModal(c); return; }
@@ -2167,6 +2287,29 @@ document.addEventListener('change', (e)=>{
     }
     return;
   }
+  if(e.target.classList && e.target.classList.contains('inline-status-select')){
+    const listName = e.target.dataset.list, id = e.target.dataset.id;
+    const arr = listName==='progressAd' ? APP.data.progressAd : APP.data.progressChannel;
+    const rec = arr.find(x=>x.id===id);
+    if(rec){
+      rec.status = e.target.value;
+      Object.assign(rec, stamp({}));
+      if(listName==='progressAd') saveProgressAd(); else saveProgressChannel();
+      render();
+    }
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('inline-note-input')){
+    const listName = e.target.dataset.list, id = e.target.dataset.id;
+    const arr = listName==='progressAd' ? APP.data.progressAd : APP.data.progressChannel;
+    const rec = arr.find(x=>x.id===id);
+    if(rec){
+      rec.note = e.target.value;
+      Object.assign(rec, stamp({}));
+      if(listName==='progressAd') saveProgressAd(); else saveProgressChannel();
+    }
+    return;
+  }
   if(e.target.dataset && e.target.dataset.caseFilter){
     const key = e.target.dataset.caseFilter;
     if(key==='pad-status') APP.progressAdFilter.status = e.target.value;
@@ -2177,6 +2320,7 @@ document.addEventListener('change', (e)=>{
     else if(key==='channel-month') APP.caseChannelFilter.month = e.target.value;
     render(); return;
   }
+  if(e.target.id==='daily-bonus-date'){ APP.dailyBonusDate = e.target.value; render(); return; }
   if(e.target.id==='year-select'){ APP.year = Number(e.target.value); render(); return; }
   if(e.target.dataset && e.target.dataset.filter){ APP.txFilter[e.target.dataset.filter] = e.target.value; render(); return; }
   if(e.target.dataset && e.target.dataset.userRole!==undefined){
@@ -2227,11 +2371,13 @@ document.addEventListener('submit', (e)=>{
     if(!isAdmin()) return;
     const fd = new FormData(e.target);
     APP.data.caseSettings = {
+      ...APP.data.caseSettings,
       businessBonusRate: (Number(fd.get('businessBonusRate'))||0)/100,
       xiaojiangThreshold: Number(fd.get('xiaojiangThreshold'))||0,
       xiaojiangRateBelow: (Number(fd.get('xiaojiangRateBelow'))||0)/100,
       xiaojiangRateAbove: (Number(fd.get('xiaojiangRateAbove'))||0)/100,
-      fixedCost: Number(fd.get('fixedCost'))||0
+      fixedCost: Number(fd.get('fixedCost'))||0,
+      pilotBonusRate: (Number(fd.get('pilotBonusRate'))||0)/100
     };
     saveCaseSettings(); return;
   }
@@ -2241,7 +2387,7 @@ document.addEventListener('submit', (e)=>{
     APP.data.company = { name:fd.get('name'), taxId:fd.get('taxId'), phone:fd.get('phone'), address:fd.get('address') };
     saveCompany(); return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form'].includes(e.target.id)){
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = {};
