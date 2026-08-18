@@ -2864,6 +2864,9 @@ function renderChat(){
         </div>`;
       } else if(m.confirmed){
         inner += `<div style="margin-top:6px;color:var(--green);font-size:12px;">✓ 已新增 ${m.confirmedCount} 筆紀錄</div>`;
+        if(m.confirmError){
+          inner += `<div style="margin-top:4px;color:var(--red);font-size:12px;">⚠ ${escHtml(m.confirmError)}</div>`;
+        }
       }
       inner += `</div>`;
       return inner;
@@ -3118,9 +3121,12 @@ document.addEventListener('click', (e)=>{
     const msgIdx = Number(chatConfirmBtn.dataset.msgidx);
     const container = document.getElementById('chat-pending-'+msgIdx);
     if(container){
+      chatConfirmBtn.disabled = true;
+      chatConfirmBtn.textContent = '存檔中…';
       const kind = container.dataset.kind || 'tx';
       const rowEls = container.querySelectorAll('.tx-row');
-      let count = 0;
+      const savePromises = [];
+      let skipped = 0;
       rowEls.forEach(rowEl=>{
         const chk = rowEl.querySelector('.ai-row-check');
         if(!chk.checked) return;
@@ -3129,31 +3135,39 @@ document.addEventListener('click', (e)=>{
         if(kind==='tx'){
           data.note = data.note || ''; data.pending = false;
           data.amount = Number(data.amount) || 0;
-          APP.data.transactions.push(stamp({id:uid(), ...data}));
-          count++;
+          const tx = stamp({id:uid(), ...data});
+          APP.data.transactions.push(tx);
+          savePromises.push(saveTransactions());
         } else if(kind==='personallog'){
           data.customer = data.customer || '';
-          if(!data.customer) return;
+          if(!data.customer){ skipped++; return; }
           data.phone = data.phone || ''; data.source = data.source || ''; data.transferTo = data.transferTo || '';
           data.latestNote = data.latestNote || ''; data.caseStatus = data.caseStatus || ''; data.declineReason = data.declineReason || '';
-          savePersonalProgress(stamp({ id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), ...data }));
-          count++;
+          savePromises.push(savePersonalProgress(stamp({ id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), ...data })));
         } else if(kind==='progresstrack'){
           data.customer = data.customer || '';
-          if(!data.customer) return;
+          if(!data.customer){ skipped++; return; }
           data.phone = data.phone || ''; data.note = data.note || ''; data.status = data.status || '教照會';
           if(data.lineType==='channel'){
-            saveProgressChannelCase(stamp({ id:uid(), date:data.date, customer:data.customer, phone:data.phone, plan:data.plan||'', staff:data.staff||'', source:'通路', referrer:'', status:data.status, note:data.note }));
+            savePromises.push(saveProgressChannelCase(stamp({ id:uid(), date:data.date, customer:data.customer, phone:data.phone, plan:data.plan||'', staff:data.staff||'', source:'通路', referrer:'', status:data.status, note:data.note })));
           } else {
-            saveProgressAdCase(stamp({ id:uid(), date:data.date, customer:data.customer, phone:data.phone, plan:data.plan||'', staff:data.staff||'', status:data.status, note:data.note }));
+            savePromises.push(saveProgressAdCase(stamp({ id:uid(), date:data.date, customer:data.customer, phone:data.phone, plan:data.plan||'', staff:data.staff||'', status:data.status, note:data.note })));
           }
-          count++;
         }
       });
-      if(kind==='tx' && count>0) saveTransactions();
-      APP.chatMessages[msgIdx].confirmed = true;
-      APP.chatMessages[msgIdx].confirmedCount = count;
-      renderChat();
+      Promise.allSettled(savePromises).then(results=>{
+        const succeeded = results.filter(r=>r.status==='fulfilled').length;
+        const failed = results.filter(r=>r.status==='rejected');
+        APP.chatMessages[msgIdx].confirmed = true;
+        APP.chatMessages[msgIdx].confirmedCount = succeeded;
+        if(failed.length>0){
+          const reason = failed[0].reason ? (failed[0].reason.message || String(failed[0].reason)) : '未知錯誤';
+          APP.chatMessages[msgIdx].confirmError = `有 ${failed.length} 筆存檔失敗（原因：${reason}），請確認你有這個操作的權限，或稍後再試一次。`;
+        } else if(succeeded===0 && skipped>0){
+          APP.chatMessages[msgIdx].confirmError = '沒有任何一筆資料完整到能存檔（例如缺少客戶姓名），請檢查欄位內容。';
+        }
+        renderChat();
+      });
     }
     return;
   }
