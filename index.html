@@ -271,7 +271,7 @@ import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, updateDoc
+  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, updateDoc, query, where
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -365,6 +365,7 @@ function canEditProgressRow(){
 /* ---------------- Firestore sync ---------------- */
 let unsubs = [];
 function subscribeAll(){
+  let personalSubsInitialized = false;
   unsubs.push(onSnapshot(doc(db,'appdata','company'), snap=>{
     const d = snap.data() || {};
     APP.data.company = d.info || {name:'',taxId:'',phone:'',address:''};
@@ -399,27 +400,6 @@ function subscribeAll(){
     APP.data.progressChannel = snap.docs.map(d=>({id:d.id, ...d.data()}));
     render();
   }));
-  unsubs.push(onSnapshot(collection(db,'staffBonusLedger'), snap=>{
-    APP.data.staffBonusLedger = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    render();
-  }));
-  unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap=>{
-    APP.staffProfiles = {};
-    snap.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
-    render();
-  }));
-  unsubs.push(onSnapshot(collection(db,'personalProgress'), snap=>{
-    APP.data.personalProgress = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    render();
-  }));
-  unsubs.push(onSnapshot(collection(db,'attendanceRecords'), snap=>{
-    APP.data.attendance = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    render();
-  }));
-  unsubs.push(onSnapshot(collection(db,'personalCalendar'), snap=>{
-    APP.data.calendar = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    render();
-  }));
   unsubs.push(onSnapshot(doc(db,'appdata','casesAd'), snap=>{
     const d = snap.data();
     APP.data.casesAd = (d && d.list) || [];
@@ -445,6 +425,43 @@ function subscribeAll(){
     const me = APP.users.find(u=>u.id===APP.user.uid);
     const prevRole = APP.role;
     APP.role = me ? me.role : 'pending';
+    if(!personalSubsInitialized && APP.role){
+      personalSubsInitialized = true;
+      unsubs.push(onSnapshot(
+        isCore() ? collection(db,'personalProgress') : query(collection(db,'personalProgress'), where('staffUid','==',APP.user.uid)),
+        snap2=>{ APP.data.personalProgress = snap2.docs.map(d=>({id:d.id, ...d.data()})); render(); }
+      ));
+      unsubs.push(onSnapshot(
+        isCore() ? collection(db,'attendanceRecords') : query(collection(db,'attendanceRecords'), where('staffUid','==',APP.user.uid)),
+        snap2=>{ APP.data.attendance = snap2.docs.map(d=>({id:d.id, ...d.data()})); render(); }
+      ));
+      unsubs.push(onSnapshot(
+        isCore() ? collection(db,'personalCalendar') : query(collection(db,'personalCalendar'), where('staffUid','==',APP.user.uid)),
+        snap2=>{ APP.data.calendar = snap2.docs.map(d=>({id:d.id, ...d.data()})); render(); }
+      ));
+      if(isCore()){
+        unsubs.push(onSnapshot(collection(db,'staffBonusLedger'), snap2=>{
+          APP.data.staffBonusLedger = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+          render();
+        }));
+        unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap2=>{
+          APP.staffProfiles = {};
+          snap2.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
+          render();
+        }));
+      } else {
+        const myName = me ? (me.staffName || '') : '';
+        unsubs.push(onSnapshot(query(collection(db,'staffBonusLedger'), where('staffName','==',myName)), snap2=>{
+          APP.data.staffBonusLedger = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+          render();
+        }));
+        unsubs.push(onSnapshot(doc(db,'staffProfiles', APP.user.uid), snap2=>{
+          APP.staffProfiles = {};
+          APP.staffProfiles[APP.user.uid] = snap2.exists() ? snap2.data() : {};
+          render();
+        }));
+      }
+    }
     if(APP.role !== prevRole) renderRoot(); else render();
   }));
 }
