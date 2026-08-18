@@ -6,33 +6,37 @@
 <meta name="robots" content="noindex, nofollow" />
 <title>財務管理系統 - 尚益資產</title>
 <link rel="manifest" href="./manifest.json" />
-<meta name="theme-color" content="#1b2434" />
+<meta name="theme-color" content="#1F4D3D" />
 <link rel="apple-touch-icon" href="./icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="尚益財務" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
-    --navy:#1b2434; --navy-hover:#242f45; --cream:#efece3; --white:#ffffff;
-    --ink:#20242e; --muted:#8b8f9b; --border:#e3ded2;
-    --green:#15803d; --red:#dc2626; --blue:#2563eb; --teal:#0f9488; --amber:#b45309;
+    --navy:#2F5FEA; --navy-hover:#4A78F5; --cream:#F3F5FB; --white:#ffffff;
+    --ink:#1E2433; --muted:#8A93A6; --border:#E7EAF3;
+    --green:#16A34A; --red:#EF4444; --blue:#6366F1; --teal:#7C3AED; --amber:#F59E0B;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--cream);color:var(--ink);}
+  body{margin:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--cream);color:var(--ink);}
+  h1,h2,h3,.page-title,.modal-head h3,.brand-text .t1,.login-box h2{font-weight:800;letter-spacing:-.01em;}
   #app{display:flex;min-height:100vh;}
 
   /* Login */
   #login-screen{min-height:100vh;width:100%;display:flex;align-items:center;justify-content:center;background:var(--navy);}
-  .login-box{background:#fff;border-radius:16px;padding:36px 34px;width:100%;max-width:380px;}
+  .login-box{background:#fff;border-radius:16px;box-shadow:0 12px 32px rgba(47,95,234,.15);padding:36px 34px;width:100%;max-width:380px;}
   .login-logo{width:44px;height:44px;border-radius:12px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:19px;margin-bottom:16px;}
   .login-box h2{margin:0 0 4px 0;font-size:20px;}
   .login-box p.sub{color:var(--muted);font-size:13px;margin:0 0 22px 0;}
   .login-box .field{margin-bottom:14px;}
   .login-box .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;}
   .login-box .field input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-size:14px;}
-  .login-error{background:#fce8e8;color:var(--red);font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:14px;}
-  .login-msg{background:#e6f4ea;color:var(--green);font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:14px;}
+  .login-error{background:#FEE2E2;color:var(--red);font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:14px;}
+  .login-msg{background:#DCFCE7;color:var(--green);font-size:12.5px;padding:9px 12px;border-radius:8px;margin-bottom:14px;}
   .login-submit{width:100%;padding:12px;border:none;border-radius:9px;background:var(--navy);color:#fff;font-weight:700;font-size:14px;cursor:pointer;margin-top:4px;}
   .login-forgot{display:block;text-align:center;margin-top:14px;font-size:12.5px;color:var(--blue);cursor:pointer;}
   .pending-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--cream);}
@@ -41,37 +45,39 @@
   .pending-box p{color:var(--muted);font-size:14px;line-height:1.7;}
 
   /* Sidebar */
-  #sidebar{width:230px;background:var(--navy);color:#c7cbd6;flex-shrink:0;display:flex;flex-direction:column;padding:20px 14px;}
-  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 20px 8px;border-bottom:1px solid #2a3448;margin-bottom:14px;}
+  #sidebar{width:230px;background:var(--navy);color:#FFFFFF;flex-shrink:0;display:flex;flex-direction:column;padding:20px 14px;}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 20px 8px;border-bottom:1px solid #4A78F5;margin-bottom:14px;}
   .brand-logo{width:34px;height:34px;border-radius:9px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:16px;}
   .brand-text .t1{color:#fff;font-weight:700;font-size:14.5px;}
-  .brand-text .t2{color:#8891a3;font-size:11.5px;}
-  .nav-group-label{font-size:10.5px;letter-spacing:.08em;color:#5c6479;padding:6px 10px;margin-top:6px;}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;cursor:pointer;font-size:14px;color:#c7cbd6;margin-bottom:2px;}
-  .nav-item:hover{background:var(--navy-hover);}
-  .nav-item.active{background:#2f3b54;color:#fff;font-weight:600;}
+  .brand-text .t2{color:#DCE6FE;font-size:11.5px;}
+  .nav-group-label{font-size:10.5px;letter-spacing:.08em;color:#C7D4FB;padding:6px 10px;margin-top:6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;color:#FFFFFF;margin-bottom:2px;}
+  .nav-item:hover{background:rgba(255,255,255,.14);}
+  .nav-item.active{background:#FFFFFF;color:var(--navy);font-weight:700;}
   .nav-icon{width:18px;text-align:center;font-size:14px;}
-  .sidebar-footer{margin-top:auto;padding:14px 10px 0 10px;border-top:1px solid #2a3448;}
-  .user-chip{font-size:12.5px;color:#dfe2ea;margin-bottom:2px;word-break:break-all;}
+  .sidebar-footer{margin-top:auto;padding:14px 10px 0 10px;border-top:1px solid #4A78F5;}
+  .user-chip{font-size:12.5px;color:#FFFFFF;margin-bottom:2px;word-break:break-all;}
   .role-chip{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:100px;margin-top:6px;margin-bottom:10px;}
-  .role-chip.admin{background:#3a2f14;color:#f0b23a;}
-  .role-chip.editor{background:#12312a;color:#4ade80;}
-  .role-chip.viewer{background:#2a2f3d;color:#9aa1b5;}
-  .logout-btn{width:100%;padding:8px;border-radius:8px;border:1px solid #2f3b54;background:transparent;color:#c7cbd6;cursor:pointer;font-size:12.5px;}
+  .role-chip.admin{background:rgba(255,255,255,.18);color:#ffffff;}
+  .role-chip.editor{background:rgba(255,255,255,.18);color:#ffffff;}
+  .role-chip.viewer{background:rgba(255,255,255,.18);color:#ffffff;}
+  .role-chip.staffAdmin{background:rgba(255,255,255,.18);color:#ffffff;}
+  .role-chip.staffSales{background:rgba(255,255,255,.18);color:#ffffff;}
+  .logout-btn{width:100%;padding:8px;border-radius:8px;border:1px solid #FFFFFF;background:transparent;color:#FFFFFF;cursor:pointer;font-size:12.5px;}
 
   /* Main */
   #main{flex:1;padding:34px 40px;max-width:1400px;}
   .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;gap:16px;flex-wrap:wrap;}
-  .page-title{font-size:23px;font-weight:700;margin:0 0 4px 0;}
+  .page-title{font-size:23px;font-weight:900;margin:0 0 4px 0;}
   .page-sub{color:var(--muted);font-size:13.5px;margin:0;}
   .btn{border:none;border-radius:8px;padding:9px 16px;font-size:13.5px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;}
   .btn.primary{background:var(--navy);color:#fff;}
-  .btn.primary:hover{background:#2a3550;}
+  .btn.primary:hover{background:#3F66E8;}
   .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--ink);}
-  .btn.ghost:hover{background:#f5f2ea;}
+  .btn.ghost:hover{background:#F3F5FB;}
   .btn.sm{padding:6px 11px;font-size:12.5px;}
 
-  .card{background:var(--white);border-radius:14px;padding:22px;border:1px solid var(--border);}
+  .card{background:var(--white);border-radius:16px;padding:22px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(30,36,51,.04);}
   .grid{display:grid;gap:16px;}
   .grid-2{grid-template-columns:1fr 1fr;}
   .grid-3{grid-template-columns:1fr 1fr 1fr;}
@@ -92,7 +98,7 @@
   .filter-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px;}
   .filter-field{display:flex;flex-direction:column;gap:5px;}
   .filter-field label{font-size:12px;color:var(--muted);}
-  .filter-field select, .filter-field input{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;background:#fdfcf9;min-width:130px;}
+  .filter-field select, .filter-field input{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;background:#F8F9FC;min-width:130px;}
   .search-input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;background:var(--white);}
 
   /* Transactions: summary bar, category tags, grouping, cards */
@@ -103,20 +109,20 @@
   .tx-summary-bar .item b.red{color:var(--red);}
   .cat-tag{display:inline-block;padding:2px 10px;border-radius:100px;font-size:11.5px;font-weight:700;white-space:nowrap;}
   .amount-outlier::after{content:' ⚠';font-size:11px;}
-  .tx-group-row td{background:#f5f2ea !important;font-weight:700;font-size:12.5px;padding:8px 12px !important;border-bottom:1px solid var(--border) !important;}
+  .tx-group-row td{background:#F3F5FB !important;font-weight:700;font-size:12.5px;padding:8px 12px !important;border-bottom:1px solid var(--border) !important;}
   .tx-group-date{margin-right:14px;}
   .tx-group-sub{color:var(--muted);font-weight:400;}
 
   .tx-card-view{display:none;}
   .tx-card-group-date{font-weight:700;font-size:12.5px;color:var(--muted);margin:16px 0 8px 0;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;}
   .tx-card-group-date:first-child{margin-top:0;}
-  .tx-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
-  .tx-card-outlier{border-color:#f0b8b8;}
+  .tx-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+  .tx-card-outlier{border-color:#FCA5A5;}
   .tx-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;}
   .tx-card-top .amt{font-size:15px;font-weight:700;}
   .tx-card-mid{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);flex-wrap:wrap;}
-  .tx-card-note{font-size:12.5px;color:var(--ink);margin-top:8px;background:#faf9f5;padding:7px 9px;border-radius:8px;}
-  .tx-card-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding-top:9px;border-top:1px solid #f0ede4;}
+  .tx-card-note{font-size:12.5px;color:var(--ink);margin-top:8px;background:#F5F7FC;padding:7px 9px;border-radius:8px;}
+  .tx-card-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding-top:9px;border-top:1px solid #EEF1F8;}
 
   @media (max-width:900px){
     .tx-table-view{display:none;}
@@ -135,21 +141,22 @@
 
   table{width:100%;border-collapse:collapse;font-size:13.5px;}
   th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
-  td{padding:12px;border-bottom:1px solid #f0ede4;vertical-align:middle;}
+  td{padding:12px;border-bottom:1px solid #EEF1F8;vertical-align:middle;}
   tr:last-child td{border-bottom:none;}
-  .table-wrap{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;overflow-x:auto;}
+  .table-wrap{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;overflow-x:auto;}
   .table-wrap .empty{padding:60px 20px;text-align:center;color:var(--muted);font-size:13.5px;}
   .amount-pos{color:var(--green);font-weight:600;}
   .amount-neg{color:var(--red);font-weight:600;}
-  .badge{display:inline-block;padding:3px 9px;border-radius:100px;font-size:11.5px;font-weight:600;}
-  .badge.income{background:#e6f4ea;color:var(--green);}
-  .badge.expense{background:#fce8e8;color:var(--red);}
-  .badge.pending{background:#fff4e0;color:var(--amber);}
-  .badge.active{background:#e6f4ea;color:var(--green);}
-  .badge.resigned{background:#efece4;color:var(--muted);}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:11.5px;font-weight:600;border:none;}
+  .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .badge.income{background:#DCFCE7;color:var(--green);}
+  .badge.expense{background:#FEE2E2;color:var(--red);}
+  .badge.pending{background:#FEF3C7;color:var(--amber);}
+  .badge.active{background:#DCFCE7;color:var(--green);}
+  .badge.resigned{background:#F1F2F6;color:var(--muted);}
   .row-actions{display:flex;gap:6px;}
   .icon-btn{background:transparent;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:4px 6px;border-radius:6px;}
-  .icon-btn:hover{background:#f2efe6;color:var(--ink);}
+  .icon-btn:hover{background:#EEF1F8;color:var(--ink);}
   .edited-note{font-size:11px;color:var(--muted);}
 
   .bar-chart{display:flex;align-items:flex-end;gap:10px;height:210px;padding:10px 4px 0 4px;}
@@ -165,15 +172,15 @@
 
   .cat-row{display:flex;align-items:center;gap:12px;padding:9px 0;}
   .cat-row .name{width:100px;font-size:13px;flex-shrink:0;}
-  .cat-row .track{flex:1;height:8px;background:#f0ede4;border-radius:6px;overflow:hidden;}
+  .cat-row .track{flex:1;height:8px;background:#EEF1F8;border-radius:6px;overflow:hidden;}
   .cat-row .fill{height:100%;border-radius:6px;}
   .cat-row .val{width:96px;text-align:right;font-size:12.5px;color:var(--muted);flex-shrink:0;}
 
-  .cat-card{border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+  .cat-card{border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
   .cat-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
   .cat-card-head h4{margin:0;font-size:14.5px;}
   .sub-chip-row{display:flex;flex-wrap:wrap;gap:8px;}
-  .sub-chip{display:flex;align-items:center;gap:6px;background:#f5f2ea;border-radius:100px;padding:5px 6px 5px 12px;font-size:12.5px;}
+  .sub-chip{display:flex;align-items:center;gap:6px;background:#F3F5FB;border-radius:100px;padding:5px 6px 5px 12px;font-size:12.5px;}
   .sub-chip button{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 5px;}
   .add-sub-chip{border:1px dashed var(--border);background:transparent;border-radius:100px;padding:5px 12px;font-size:12.5px;color:var(--muted);cursor:pointer;}
 
@@ -188,17 +195,17 @@
   }
   .ai-chat-panel{
     position:fixed;right:24px;bottom:90px;width:340px;max-width:calc(100vw - 32px);height:440px;max-height:70vh;
-    background:#fff;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.25);z-index:90;
+    background:#fff;border-radius:18px;box-shadow:0 12px 32px rgba(0,0,0,.25);z-index:90;
     display:flex;flex-direction:column;overflow:hidden;
   }
   .ai-chat-panel.hidden{display:none;}
   .ai-chat-header{background:var(--navy);color:#fff;padding:12px 16px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
   .ai-chat-header button{background:transparent;border:none;color:#fff;font-size:15px;cursor:pointer;}
-  .ai-chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#faf9f5;}
+  .ai-chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#F5F7FC;}
   .ai-msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.6;white-space:pre-wrap;}
   .ai-msg.user{align-self:flex-end;background:var(--navy);color:#fff;border-bottom-right-radius:3px;}
-  .ai-msg.ai{align-self:flex-start;background:#eee9dd;color:var(--ink);border-bottom-left-radius:3px;}
-  .ai-msg.loading{align-self:flex-start;background:#eee9dd;color:var(--muted);font-style:italic;}
+  .ai-msg.ai{align-self:flex-start;background:#EEF1FB;color:var(--ink);border-bottom-left-radius:3px;}
+  .ai-msg.loading{align-self:flex-start;background:#EEF1FB;color:var(--muted);font-style:italic;}
   .ai-chat-empty{color:var(--muted);font-size:12.5px;text-align:center;padding:20px 10px;}
   .ai-chat-form{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border);}
   .ai-chat-form input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:20px;font-size:13px;}
@@ -210,7 +217,7 @@
   .modal-head h3{margin:0;font-size:16.5px;}
   .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font-size:13px;}
   .field span{color:var(--muted);font-size:12.5px;}
-  .field input, .field select, .field textarea{padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:inherit;background:#fdfcf9;}
+  .field input, .field select, .field textarea{padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:inherit;background:#F8F9FC;}
   .field textarea{min-height:64px;resize:vertical;}
   .field.checkbox{flex-direction:row;align-items:center;gap:8px;}
   .field.checkbox input{width:16px;height:16px;}
@@ -264,7 +271,7 @@ import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, onSnapshot, collection, updateDoc
+  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -307,17 +314,20 @@ const defaultCategories = () => ({
 });
 
 const APP = {
-  user:null, userEmail:'', role:null, users:[], authError:'', authMsg:'',
+  user:null, userEmail:'', role:null, users:[], authError:'', authMsg:'', staffProfiles:{},
   view:'dashboard', year:nowYear, settingsTab:'company', hrTab:'employees',
-  showResigned:false, txTab:'list', txFilter:{type:'all',main:'all',start:'',end:'',search:''},
+  showResigned:false, txTab:'list', txFilter:{type:'all',main:'all',start:monthBoundsStart(nowMonthKey),end:monthBoundsEnd(nowMonthKey),search:'',month:nowMonthKey},
   vendorSearch:'', reportYear:nowYear, reportRange:null, reportCompareMode:'none',
   chatOpen:false, chatLoading:false, chatMessages:[],
   casesTab:'ad', caseAdFilter:{status:'all', month:nowMonthKey}, caseChannelFilter:{status:'all', month:nowMonthKey}, dailyBonusDate:'',
+  bizToolsTab:'progress', staffOverviewName:'', staffOverviewTab:'log', viewingStaff:null,
+  myLogFilter:{month:nowMonthKey}, attendanceFilter:{month:nowMonthKey},
   progressTab:'ad', progressAdFilter:{status:'all', month:nowMonthKey}, progressChannelFilter:{status:'all', month:nowMonthKey},
   data:{
     company:{name:'',taxId:'',phone:'',address:''}, assets:[], liabilities:[],
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
-    progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[],
+    progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
+    personalProgress:[], attendance:[], calendar:[],
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05,
       planOptions:['醫美','JET','電腦','裕富','維力','21','亞太','二線、商品'],
       staffOptions:['煌','全','熙','傑','秉','耿','琪','曾','希'] }
@@ -326,6 +336,31 @@ const APP = {
 const AI_WORKER_URL = 'https://shangyi-finance-ai.kevunchiang24.workers.dev';
 function canEdit(){ return APP.role==='admin' || APP.role==='editor'; }
 function isAdmin(){ return APP.role==='admin'; }
+function isCore(){ return APP.role==='admin' || APP.role==='editor'; }
+function isStaffAdmin(){ return APP.role==='staffAdmin'; }
+function isStaffSales(){ return APP.role==='staffSales'; }
+function isStaffAny(){ return isStaffAdmin() || isStaffSales(); }
+function myStaffName(){ const me = APP.users.find(u=>u.id===APP.user.uid); return me ? (me.staffName||'') : ''; }
+function displayNameFor(uidVal, fallbackName){
+  const p = APP.staffProfiles[uidVal];
+  return (p && p.displayName) ? p.displayName : fallbackName;
+}
+function avatarHtml(uidVal, name, size){
+  const p = APP.staffProfiles[uidVal];
+  const s = size || 40;
+  if(p && p.avatarDataUrl){
+    return `<img src="${p.avatarDataUrl}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="${escAttr(name)}"/>`;
+  }
+  const initial = (name||'?').charAt(0);
+  const hue = (name||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0) % 360;
+  return `<div style="width:${s}px;height:${s}px;border-radius:50%;background:hsl(${hue},55%,50%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${Math.round(s*0.42)}px;flex-shrink:0;">${escHtml(initial)}</div>`;
+}
+function getStaffUidByName(name){ const u = APP.users.find(x=>x.staffName===name); return u ? u.id : null; }
+function effectiveUid(){ return (isCore() && APP.viewingStaff) ? APP.viewingStaff.uid : APP.user.uid; }
+function effectiveStaffName(){ return (isCore() && APP.viewingStaff) ? APP.viewingStaff.name : myStaffName(); }
+function canEditProgressRow(){
+  return isCore() || isStaffAdmin();
+}
 
 /* ---------------- Firestore sync ---------------- */
 let unsubs = [];
@@ -356,14 +391,33 @@ function subscribeAll(){
     APP.data.vendors = (d && d.list) || [];
     render();
   }));
-  unsubs.push(onSnapshot(doc(db,'appdata','progressAd'), snap=>{
-    const d = snap.data();
-    APP.data.progressAd = (d && d.list) || [];
+  unsubs.push(onSnapshot(collection(db,'progressAdCases'), snap=>{
+    APP.data.progressAd = snap.docs.map(d=>({id:d.id, ...d.data()}));
     render();
   }));
-  unsubs.push(onSnapshot(doc(db,'appdata','progressChannel'), snap=>{
-    const d = snap.data();
-    APP.data.progressChannel = (d && d.list) || [];
+  unsubs.push(onSnapshot(collection(db,'progressChannelCases'), snap=>{
+    APP.data.progressChannel = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }));
+  unsubs.push(onSnapshot(collection(db,'staffBonusLedger'), snap=>{
+    APP.data.staffBonusLedger = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }));
+  unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap=>{
+    APP.staffProfiles = {};
+    snap.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
+    render();
+  }));
+  unsubs.push(onSnapshot(collection(db,'personalProgress'), snap=>{
+    APP.data.personalProgress = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }));
+  unsubs.push(onSnapshot(collection(db,'attendanceRecords'), snap=>{
+    APP.data.attendance = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }));
+  unsubs.push(onSnapshot(collection(db,'personalCalendar'), snap=>{
+    APP.data.calendar = snap.docs.map(d=>({id:d.id, ...d.data()}));
     render();
   }));
   unsubs.push(onSnapshot(doc(db,'appdata','casesAd'), snap=>{
@@ -401,8 +455,19 @@ function saveCategories(){ return setDoc(doc(db,'appdata','categories'), APP.dat
 function saveTransactions(){ return setDoc(doc(db,'appdata','transactions'), {list:APP.data.transactions}); }
 function saveHR(){ return setDoc(doc(db,'appdata','hr'), APP.data.hr); }
 function saveVendors(){ return setDoc(doc(db,'appdata','vendors'), {list:APP.data.vendors}); }
-function saveProgressAd(){ return setDoc(doc(db,'appdata','progressAd'), {list:APP.data.progressAd}); }
-function saveProgressChannel(){ return setDoc(doc(db,'appdata','progressChannel'), {list:APP.data.progressChannel}); }
+function saveProgressAdCase(rec){ return setDoc(doc(db,'progressAdCases', rec.id), rec); }
+function deleteProgressAdCase(id){ return deleteDoc(doc(db,'progressAdCases', id)); }
+function saveProgressChannelCase(rec){ return setDoc(doc(db,'progressChannelCases', rec.id), rec); }
+function deleteProgressChannelCase(id){ return deleteDoc(doc(db,'progressChannelCases', id)); }
+function saveBonusLedgerEntry(entry){ return setDoc(doc(db,'staffBonusLedger', entry.id), entry); }
+function deleteBonusLedgerEntry(id){ return deleteDoc(doc(db,'staffBonusLedger', id)).catch(()=>{}); }
+function saveStaffProfile(uid, data){ return setDoc(doc(db,'staffProfiles', uid), data, {merge:true}); }
+function savePersonalProgress(rec){ return setDoc(doc(db,'personalProgress', rec.id), rec); }
+function deletePersonalProgress(id){ return deleteDoc(doc(db,'personalProgress', id)); }
+function saveAttendance(rec){ return setDoc(doc(db,'attendanceRecords', rec.id), rec); }
+function deleteAttendance(id){ return deleteDoc(doc(db,'attendanceRecords', id)); }
+function saveCalendarEntry(rec){ return setDoc(doc(db,'personalCalendar', rec.id), rec); }
+function deleteCalendarEntry(id){ return deleteDoc(doc(db,'personalCalendar', id)); }
 function saveCasesAd(){ return setDoc(doc(db,'appdata','casesAd'), {list:APP.data.casesAd}); }
 function saveCasesChannel(){ return setDoc(doc(db,'appdata','casesChannel'), {list:APP.data.casesChannel}); }
 function saveAdSpend(){ return setDoc(doc(db,'appdata','adSpend'), {list:APP.data.adSpend}); }
@@ -468,7 +533,10 @@ function pendingHTML(){
   </div></div>`;
 }
 function shellHTML(){
-  const roleLabel = {admin:'管理員', editor:'一般編輯', viewer:'唯讀'}[APP.role] || APP.role;
+  const roleLabel = {admin:'管理員', editor:'一般編輯', viewer:'唯讀', staffAdmin:'行政', staffSales:'業務'}[APP.role] || APP.role;
+  const core = isCore();
+  const staffAny = isStaffAny();
+  const inRoom = core && APP.viewingStaff;
   return `
   <div id="mobile-topbar">
     <button id="hamburger-btn" aria-label="選單">☰</button>
@@ -481,16 +549,47 @@ function shellHTML(){
       <div class="brand-logo">財</div>
       <div class="brand-text"><div class="t1">財務管理系統</div><div class="t2">尚益資產 · 內部工具</div></div>
     </div>
-    <div class="nav-group-label">DASHBOARD</div>
+    ${core ? `
+    <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
     <div class="nav-item" data-action="nav" data-view="dashboard"><span class="nav-icon">▦</span>總覽</div>
+    <div class="nav-group-label">財務</div>
     <div class="nav-item" data-action="nav" data-view="transactions"><span class="nav-icon">≣</span>收支明細</div>
     <div class="nav-item" data-action="nav" data-view="reports"><span class="nav-icon">▤</span>財報</div>
-    <div class="nav-item" data-action="nav" data-view="settings"><span class="nav-icon">⚙</span>設定</div>
-    <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">☺</span>人事管理</div>
-    <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">▣</span>廠商管理</div>
+    <div class="nav-group-label">業務營運</div>
     <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
     <div class="nav-item" data-action="nav" data-view="cases"><span class="nav-icon">📋</span>獲利報表</div>
+    <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
+    <div class="nav-group-label">公司管理</div>
+    <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">☺</span>人事管理</div>
+    <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">▣</span>廠商管理</div>
+    <div class="nav-group-label">系統</div>
+    <div class="nav-item" data-action="nav" data-view="settings"><span class="nav-icon">⚙</span>設定</div>
     ${isAdmin() ? `<div class="nav-item" data-action="nav" data-view="users"><span class="nav-icon">🔑</span>帳號管理</div>` : ''}
+    </div>
+    ${inRoom ? `<button id="toggle-core-nav" style="width:100%;text-align:left;background:transparent;border:none;color:#C7D4FB;font-size:12px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;">☰ 展開完整選單</button>
+    <div style="border-top:1px solid rgba(255,255,255,.15);margin:4px 0 8px 0;"></div>` : ''}
+    ` : ''}
+    ${inRoom ? `
+    <div style="background:rgba(124,58,237,.22);border:1px solid rgba(124,58,237,.45);border-radius:12px;padding:10px 8px;margin:10px 0;">
+      <div class="nav-group-label" style="color:#E9D5FF;">${escHtml(displayNameFor(APP.viewingStaff.uid, APP.viewingStaff.name))} 的房間</div>
+      <div class="nav-item" data-action="nav" data-view="personalDashboard"><span class="nav-icon">📊</span>個人儀表板</div>
+      <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
+      <div class="nav-group-label" style="color:#E9D5FF;">個人空間</div>
+      <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>個人業務進度紀錄</div>
+      <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
+      <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">📅</span>行事曆</div>
+      <div class="nav-item" data-action="exit-staff-room" style="background:rgba(255,255,255,.12);"><span class="nav-icon">←</span>返回業務總覽</div>
+    </div>
+    ` : ''}
+    ${staffAny ? `
+    <div class="nav-item" data-action="nav" data-view="personalDashboard"><span class="nav-icon">📊</span>個人儀表板</div>
+    <div class="nav-group-label">工作項目</div>
+    <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
+    <div class="nav-group-label">個人空間</div>
+    <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>個人業務進度紀錄</div>
+    <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
+    <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">📅</span>行事曆</div>
+    ` : ''}
     <div class="sidebar-footer">
       <div class="user-chip">${escHtml(APP.userEmail)}</div>
       <span class="role-chip ${APP.role}">${roleLabel}</span>
@@ -498,15 +597,16 @@ function shellHTML(){
     </div>
   </div>
   <div id="main"></div>
+  ${core ? `
   <button class="ai-chat-fab" id="ai-chat-toggle">🤖</button>
   <div class="ai-chat-panel hidden" id="ai-chat-panel">
     <div class="ai-chat-header"><span>問 AI · 財務資料</span><button type="button" id="ai-chat-close">✕</button></div>
     <div class="ai-chat-messages" id="ai-chat-messages"></div>
     <form class="ai-chat-form" id="ai-chat-form">
-      <input type="text" id="ai-chat-input" placeholder="問問財務數據，例如：這個月支出比上個月高多少？" autocomplete="off"/>
+      <input type="text" id="ai-chat-input" placeholder="問財務、案件進度、廣告成效，或請它給建議" autocomplete="off"/>
       <button type="submit">送出</button>
     </form>
-  </div>`;
+  </div>` : ''}`;
 }
 
 /* ================= DASHBOARD ================= */
@@ -538,6 +638,35 @@ function dashboardHTML(){
     </div><div class="m-label">${m.m}月</div></div>`;
   }).join('');
 
+  const PIE_COLORS = ['#2F5FEA','#16A34A','#F59E0B','#EF4444','#7C3AED','#0EA5E9','#DB2777','#84CC16','#F97316','#14B8A6'];
+  function pieChartSvg(rows, size){
+    const total = rows.reduce((a,r)=>a+r[1],0) || 1;
+    const cx = size/2, cy = size/2, r = size/2 - 2;
+    let angleStart = -90;
+    if(rows.length===1){
+      return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="${PIE_COLORS[0]}"/></svg>`;
+    }
+    const paths = rows.map(([name,val],i)=>{
+      const pct = val/total;
+      const angleEnd = angleStart + pct*360;
+      const largeArc = (angleEnd-angleStart) > 180 ? 1 : 0;
+      const s = angleStart*Math.PI/180, e = angleEnd*Math.PI/180;
+      const x1 = cx + r*Math.cos(s), y1 = cy + r*Math.sin(s);
+      const x2 = cx + r*Math.cos(e), y2 = cy + r*Math.sin(e);
+      const d = `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
+      angleStart = angleEnd;
+      return `<path d="${d}" fill="${PIE_COLORS[i%PIE_COLORS.length]}"/>`;
+    }).join('');
+    return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">${paths}</svg>`;
+  }
+  function pieLegendHtml(rows, total){
+    return rows.map(([name,val],i)=>{
+      const pct = Math.round((val/total)*100);
+      return `<div class="cat-row"><div class="name" style="width:auto;flex:1;display:flex;align-items:center;gap:6px;">
+        <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${PIE_COLORS[i%PIE_COLORS.length]};flex-shrink:0;"></span>${escHtml(name)}</div>
+        <div class="val" style="width:auto;">${money(val)} · ${pct}%</div></div>`;
+    }).join('');
+  }
   function catBreakdown(type){
     const txs = txYear.filter(t=>t.type===type);
     const total = sum(txs) || 1;
@@ -545,32 +674,86 @@ function dashboardHTML(){
     txs.forEach(t=>{ map[t.mainCategory] = (map[t.mainCategory]||0) + Number(t.amount||0); });
     const rows = Object.entries(map).sort((a,b)=>b[1]-a[1]);
     if(rows.length===0) return `<div class="table-wrap"><div class="empty">尚無資料</div></div>`;
-    const color = type==='expense' ? 'var(--red)' : 'var(--green)';
-    return rows.map(([name,val])=>{
-      const pct = Math.round((val/total)*100);
-      return `<div class="cat-row"><div class="name">${escHtml(name)}</div>
-        <div class="track"><div class="fill" style="width:${pct}%;background:${color}"></div></div>
-        <div class="val">${money(val)} · ${pct}%</div></div>`;
-    }).join('');
+    return `<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+      <div style="flex-shrink:0;">${pieChartSvg(rows, 150)}</div>
+      <div style="flex:1;min-width:180px;">${pieLegendHtml(rows, total)}</div>
+    </div>`;
   }
 
   const yearOptions = [];
   for(let y=nowYear-3; y<=nowYear+1; y++) yearOptions.push(`<option value="${y}" ${y===year?'selected':''}>${y} 年度</option>`);
 
+  /* ---- Layer 1: 本月營運脈動 ---- */
+  const adThisMonth = APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey);
+  const chThisMonth = APP.data.casesChannel.filter(c=>monthKey(c.date)===nowMonthKey);
+  const progressAdThisMonth = APP.data.progressAd.filter(c=>monthKey(c.date)===nowMonthKey);
+  const progressChThisMonth = APP.data.progressChannel.filter(c=>monthKey(c.date)===nowMonthKey);
+  const allProgressThisMonth = [...progressAdThisMonth, ...progressChThisMonth];
+  const disbursedCount = allProgressThisMonth.filter(c=>STATUS_DONE.includes(c.status)).length;
+  const pendingCount = allProgressThisMonth.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
+  const todayLedger = APP.data.staffBonusLedger.filter(e=>e.date===todayStr());
+  const todayBonusTotal = sum(todayLedger.map(e=>({amount:(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0)})));
+
+  /* ---- Layer 3a: 業務排行榜(本月公司利潤) ---- */
+  const profitByStaff = {};
+  adThisMonth.forEach(c=>{ const k=c.staff||'（未填）'; profitByStaff[k]=(profitByStaff[k]||0)+(Number(c.companyProfit)||0); });
+  chThisMonth.forEach(c=>{ const k=c.staff||'（未填）'; profitByStaff[k]=(profitByStaff[k]||0)+(Number(c.companyProfit)||0); });
+  const ranking = Object.entries(profitByStaff).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const rankHtml = ranking.length===0 ? `<div class="empty">本月尚無資料</div>` : ranking.map(([name,val],i)=>`
+    <div class="cat-row"><div class="name">${i+1}. ${escHtml(name)}</div>
+      <div class="track"><div class="fill" style="width:${Math.min(100,Math.round(val/(ranking[0][1]||1)*100))}%;background:var(--blue)"></div></div>
+      <div class="val">${money(val)}</div></div>`).join('');
+
+  /* ---- Layer 3b: 待處理提醒 ---- */
+  const staleThresholdMs = 7*24*60*60*1000;
+  const nowMs = Date.now();
+  function isStale(c){
+    if(STATUS_DONE.includes(c.status) || STATUS_CLOSED.includes(c.status)) return false;
+    const ref = c._at ? new Date(c._at).getTime() : (c.date ? new Date(c.date).getTime() : 0);
+    return ref && (nowMs-ref) > staleThresholdMs;
+  }
+  const staleAd = APP.data.progressAd.filter(isStale);
+  const staleCh = APP.data.progressChannel.filter(isStale);
+  const staleCount = staleAd.length + staleCh.length;
+  const unpaidBonusCases = APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey && !c.bonusPaid);
+  const unpaidBonusTotal = sum(unpaidBonusCases.map(c=>({amount:(Number(c.businessBonus)||0)+(Number(c.xiaojiangBonus)||0)})));
+
   return `
     <div class="page-header">
-      <div><h1 class="page-title">總覽</h1><p class="page-sub">財務狀況一目瞭然</p></div>
+      <div><h1 class="page-title">總覽</h1><p class="page-sub">公司今天的體檢報告</p></div>
       <select id="year-select">${yearOptions.join('')}</select>
     </div>
+
+    <div class="card-head-row" style="margin-top:6px;"><h3 style="font-size:15px;">本月營運脈動</h3></div>
+    <div class="grid grid-3" style="margin-bottom:20px;">
+      <div class="card"><div class="stat-label">本月撥款完成</div><div class="stat-value green">${disbursedCount} 件</div></div>
+      <div class="card"><div class="stat-label">本月處理中案件</div><div class="stat-value blue">${pendingCount} 件</div></div>
+      <div class="card"><div class="stat-label">今日應發獎金</div><div class="stat-value" style="color:var(--teal);">${money(todayBonusTotal)}</div></div>
+    </div>
+
     <div class="grid grid-2" style="margin-bottom:16px;">
       <div class="card"><div class="stat-label">${year} 年度總收入</div><div class="stat-value green">${money(totalIncome)}</div></div>
       <div class="card"><div class="stat-label">${year} 年度總支出</div><div class="stat-value red">${money(totalExpense)}</div></div>
     </div>
-    <div class="grid grid-3" style="margin-bottom:16px;">
+    <div class="grid grid-3" style="margin-bottom:20px;">
       <div class="card"><div class="stat-label">當月收入</div><div class="stat-value green">${money(monthIncome)}</div></div>
       <div class="card"><div class="stat-label">當月支出</div><div class="stat-value red">${money(monthExpense)}</div></div>
       <div class="card"><div class="stat-label">當月結餘</div><div class="stat-value blue">${money(monthIncome-monthExpense)}</div></div>
     </div>
+
+    <div class="grid grid-2" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-head-row"><h3>業務排行榜</h3><span class="hint">本月公司利潤貢獻</span></div>
+        ${rankHtml}
+      </div>
+      <div class="card">
+        <div class="card-head-row"><h3>待處理提醒</h3></div>
+        <div class="cat-row"><div class="name" style="width:auto;flex:1;">案件超過 7 天未更新狀態</div><div class="val" style="width:auto;color:${staleCount>0?'var(--red)':'var(--muted)'};font-weight:700;">${staleCount} 件</div></div>
+        <div class="cat-row"><div class="name" style="width:auto;flex:1;">本月獎金尚未發放</div><div class="val" style="width:auto;color:${unpaidBonusCases.length>0?'var(--amber)':'var(--muted)'};font-weight:700;">${unpaidBonusCases.length} 件 · ${money(unpaidBonusTotal)}</div></div>
+        ${(staleCount===0 && unpaidBonusCases.length===0) ? `<p style="color:var(--muted);font-size:12.5px;margin-top:10px;">目前沒有需要特別留意的事項</p>` : ''}
+      </div>
+    </div>
+
     <div class="card" style="margin-bottom:16px;">
       <div class="card-head-row"><h3>月度收支</h3></div>
       <div class="legend"><span><span class="dot" style="background:var(--green)"></span>收入</span><span><span class="dot" style="background:var(--red)"></span>支出</span></div>
@@ -585,7 +768,7 @@ function dashboardHTML(){
 
 /* ================= TRANSACTIONS ================= */
 function catColor(name){
-  const palette = ['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d','#0f9488','#9333ea'];
+  const palette = ['#8A6A2E','#16a34a','#d97706','#A63A2E','#7c3aed','#0891b2','#db2777','#65a30d','#B8935A','#9333ea'];
   let hash = 0;
   for(let i=0;i<String(name).length;i++){ hash = String(name).charCodeAt(i) + ((hash<<5)-hash); }
   return palette[Math.abs(hash)%palette.length];
@@ -616,6 +799,7 @@ function transactionsHTML(){
 
   const allCats = [...APP.data.categories.expense, ...APP.data.categories.income];
   const mainOptions = allCats.map(c=>`<option value="${escAttr(c.name)}" ${f.main===c.name?'selected':''}>${escHtml(c.name)}</option>`).join('');
+  const txMonthOptions = Array.from(new Set([...APP.data.transactions.map(t=>monthKey(t.date)), nowMonthKey])).filter(Boolean).sort().reverse();
   const editCol = canEdit() ? '<th></th>' : '';
   const colCount = canEdit() ? 8 : 7;
 
@@ -693,6 +877,9 @@ function transactionsHTML(){
     </div>
     <input class="search-input" id="tx-search" placeholder="搜尋分類、對象、備註…" value="${escAttr(f.search||'')}" style="margin-bottom:14px;"/>
     <div class="filter-row">
+      <div class="filter-field"><label>月份</label>
+        <select data-filter="month"><option value="" ${!f.month?'selected':''}>全部月份</option>
+        ${txMonthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
       <div class="filter-field"><label>類型</label>
         <select data-filter="type"><option value="all" ${f.type==='all'?'selected':''}>全部</option>
         <option value="income" ${f.type==='income'?'selected':''}>收入</option>
@@ -785,16 +972,16 @@ function lineChartSVG(months, incomeVals, expenseVals){
   for(let i=0;i<=ticks;i++){
     const y = padT + innerH*(i/ticks);
     const val = Math.round(maxVal*(1-i/ticks));
-    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#eee9dd" stroke-width="1"/>
-      <text x="${padL-6}" y="${y+3}" font-size="10" fill="#8b8f9b" text-anchor="end">${val>=10000?Math.round(val/1000)+'k':val}</text>`;
+    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#EEF1FB" stroke-width="1"/>
+      <text x="${padL-6}" y="${y+3}" font-size="10" fill="#8A8874" text-anchor="end">${val>=10000?Math.round(val/1000)+'k':val}</text>`;
   }
-  const xLabels = months.map((m,i)=>`<text x="${xOf(i)}" y="${h-8}" font-size="10" fill="#8b8f9b" text-anchor="middle">${m.label.slice(5)}</text>`).join('');
-  const incomeDots = incomeVals.map((v,i)=>`<circle cx="${xOf(i)}" cy="${yOf(v)}" r="3" fill="#15803d"/>`).join('');
-  const expenseDots = expenseVals.map((v,i)=>`<circle cx="${xOf(i)}" cy="${yOf(v)}" r="3" fill="#dc2626"/>`).join('');
+  const xLabels = months.map((m,i)=>`<text x="${xOf(i)}" y="${h-8}" font-size="10" fill="#8A8874" text-anchor="middle">${m.label.slice(5)}</text>`).join('');
+  const incomeDots = incomeVals.map((v,i)=>`<circle cx="${xOf(i)}" cy="${yOf(v)}" r="3" fill="#2F6B4F"/>`).join('');
+  const expenseDots = expenseVals.map((v,i)=>`<circle cx="${xOf(i)}" cy="${yOf(v)}" r="3" fill="#A63A2E"/>`).join('');
   return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:220px;">
     ${grid}
-    <polyline points="${ptsStr(incomeVals)}" fill="none" stroke="#15803d" stroke-width="2.5"/>
-    <polyline points="${ptsStr(expenseVals)}" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+    <polyline points="${ptsStr(incomeVals)}" fill="none" stroke="#2F6B4F" stroke-width="2.5"/>
+    <polyline points="${ptsStr(expenseVals)}" fill="none" stroke="#A63A2E" stroke-width="2.5"/>
     ${incomeDots}${expenseDots}
     ${xLabels}
   </svg>`;
@@ -849,16 +1036,16 @@ function reportsHTML(){
           </div>
           <div class="rpt-legend">
             <span><span class="rpt-dot" style="background:var(--navy)"></span>本期</span>
-            <span><span class="rpt-dot" style="background:#c7cbd6"></span>比較期</span>
+            <span><span class="rpt-dot" style="background:#FFFFFF"></span>比較期</span>
           </div>
           <div class="bar-chart" style="height:200px;">
             <div class="bar-col"><div class="bar-pair" style="height:170px;">
               <div class="bar" style="height:${barH(inc)}px;background:var(--green);"></div>
-              <div class="bar" style="height:${barH(cInc)}px;background:#a8d5b5;"></div>
+              <div class="bar" style="height:${barH(cInc)}px;background:#BFD0FB;"></div>
             </div><div class="m-label">收入</div></div>
             <div class="bar-col"><div class="bar-pair" style="height:170px;">
               <div class="bar" style="height:${barH(exp)}px;background:var(--red);"></div>
-              <div class="bar" style="height:${barH(cExp)}px;background:#f0b0b0;"></div>
+              <div class="bar" style="height:${barH(cExp)}px;background:#FCA5A5;"></div>
             </div><div class="m-label">支出</div></div>
           </div>
         </div>`;
@@ -968,7 +1155,7 @@ function settingsHTML(){
             <label class="field"><span>小江獎金門檻件數（當月第幾件開始跳比例）</span><input type="number" name="xiaojiangThreshold" value="${cs.xiaojiangThreshold}" ${isAdmin()?'':'disabled'}/></label>
             <label class="field"><span>小江獎金比例－門檻內（%）</span><input type="number" step="0.1" name="xiaojiangRateBelow" value="${(cs.xiaojiangRateBelow*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
             <label class="field"><span>小江獎金比例－門檻外（%）</span><input type="number" step="0.1" name="xiaojiangRateAbove" value="${(cs.xiaojiangRateAbove*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>每月固定成本（人事＋房租＋客戶呆帳）</span><input type="number" name="fixedCost" value="${cs.fixedCost}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>每月固定成本</span><div style="padding:10px 12px;background:#F5F7FC;border-radius:8px;font-size:12.5px;color:var(--muted);">自 ${nowMonthKey} 起改為自動計算：抓收支明細裡當月「房租水電」＋「薪資支出」兩個分類的實際支出加總，不用手動輸入。</div></label>
             <label class="field"><span>廣告投手月獎金比例（%，每月5號發放）</span><input type="number" step="0.1" name="pilotBonusRate" value="${(cs.pilotBonusRate*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
           </div>
           ${isAdmin()?`<div class="modal-actions" style="justify-content:flex-start;"><button type="submit" class="btn primary">儲存</button></div>`:`<p style="color:var(--muted);font-size:12.5px;">只有管理員能調整這些參數。</p>`}
@@ -982,7 +1169,7 @@ function settingsHTML(){
         </div>
       </div>
       <div class="card" style="margin-top:16px;">
-        <div class="card-head-row"><h3>業務／介紹人選項</h3>${isAdmin()?`<button class="btn ghost sm" data-action="open-case-option-modal" data-kind="staffOptions">＋ 新增選項</button>`:''}</div>
+        <div class="card-head-row"><h3>業務選項</h3>${isAdmin()?`<button class="btn ghost sm" data-action="open-case-option-modal" data-kind="staffOptions">＋ 新增選項</button>`:''}</div>
         <div class="sub-chip-row">
           ${cs.staffOptions.map(p=>`<span class="sub-chip">${escHtml(p)}${isAdmin()?`<button data-action="delete-case-option" data-kind="staffOptions" data-value="${escAttr(p)}">✕</button>`:''}</span>`).join('') || '<span style="color:var(--muted);font-size:12.5px;">尚無選項</span>'}
         </div>
@@ -1104,23 +1291,50 @@ function vendorsHTML(){
 
 /* ================= USERS (admin) ================= */
 function usersHTML(){
+  const roleNames = {admin:'管理員',editor:'一般編輯',viewer:'唯讀',pending:'待設定',staffAdmin:'行政',staffSales:'業務'};
+  const salaryStaff = APP.users.filter(u=>(u.role==='staffAdmin'||u.role==='staffSales') && (APP.staffProfiles[u.id]||{}).baseSalary>0);
+  const unpaidThisMonth = salaryStaff.filter(u=>!((APP.staffProfiles[u.id]||{}).salaryPaidMonths||[]).includes(nowMonthKey));
+  const unpaidTotal = sum(unpaidThisMonth.map(u=>({amount:(APP.staffProfiles[u.id]||{}).baseSalary||0})));
   const rows = APP.users.map(u=>{
-    const roleSelect = u.id===APP.user.uid
-      ? `<span class="role-chip ${u.role}">${({admin:'管理員',editor:'一般編輯',viewer:'唯讀',pending:'待設定'})[u.role]||u.role}（你自己，無法修改）</span>`
+    const isMe = u.id===APP.user.uid;
+    const roleSelect = isMe
+      ? `<span class="role-chip ${u.role}">${roleNames[u.role]||u.role}（你自己，無法修改）</span>`
       : `<select class="role-select" data-user-role data-uid="${u.id}">
           <option value="pending" ${u.role==='pending'?'selected':''}>待設定</option>
           <option value="viewer" ${u.role==='viewer'?'selected':''}>唯讀</option>
           <option value="editor" ${u.role==='editor'?'selected':''}>一般編輯</option>
           <option value="admin" ${u.role==='admin'?'selected':''}>管理員</option>
+          <option value="staffAdmin" ${u.role==='staffAdmin'?'selected':''}>行政</option>
+          <option value="staffSales" ${u.role==='staffSales'?'selected':''}>業務</option>
         </select>`;
-    return `<tr><td>${escHtml(u.email)}</td><td>${roleSelect}</td><td>${u.createdAt?new Date(u.createdAt).toLocaleString('zh-TW'):'—'}</td></tr>`;
+    const showStaffFields = (u.role==='staffAdmin' || u.role==='staffSales') && !isMe;
+    const profile = APP.staffProfiles[u.id] || {};
+    const paidThisMonth = (profile.salaryPaidMonths||[]).includes(nowMonthKey);
+    const staffFieldsHtml = showStaffFields ? `
+      <select class="staff-name-select" data-uid="${u.id}" style="margin-top:6px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;">
+        <option value="">對應姓名</option>
+        ${APP.data.caseSettings.staffOptions.map(s=>`<option value="${escAttr(s)}" ${u.staffName===s?'selected':''}>${escHtml(s)}</option>`).join('')}
+      </select>
+      <input type="number" class="staff-salary-input" data-uid="${u.id}" value="${profile.baseSalary||''}" placeholder="底薪" style="margin-top:6px;margin-left:6px;width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;"/>
+      ${profile.baseSalary>0 ? `<div style="margin-top:6px;"><span class="badge ${paidThisMonth?'active':'pending'}">${nowMonthKey} ${paidThisMonth?'已發放':'未發放'}</span></div>` : ''}
+    ` : '';
+    return `<tr><td>${escHtml(u.email)}</td><td>${roleSelect}${staffFieldsHtml}</td><td>${u.createdAt?new Date(u.createdAt).toLocaleString('zh-TW'):'—'}</td></tr>`;
   }).join('');
   return `
-    <div class="page-header"><div><h1 class="page-title">帳號管理</h1><p class="page-sub">設定合夥人的登入權限（管理員可全部操作／一般編輯可新增修改／唯讀只能檢視）</p></div></div>
+    <div class="page-header"><div><h1 class="page-title">帳號管理</h1><p class="page-sub">管理員／一般編輯可看到全部功能；行政／業務只會看到進度追蹤與業務工具</p></div></div>
     <div class="card" style="margin-bottom:16px;">
       <p style="font-size:13px;color:var(--muted);line-height:1.7;margin:0;">
-      新夥伴要加入時：先請你（管理員）在 Firebase 後台「Authentication」新增他的信箱與密碼，接著請他用該帳密登入這個網站一次，登入後他的帳號就會出現在下方清單，狀態是「待設定」，此時再回來這裡把他的權限改成合適的選項即可。</p>
+      新夥伴要加入時：先請你（管理員）在 Firebase 後台「Authentication」新增他的信箱與密碼，接著請他用該帳密登入這個網站一次，登入後他的帳號就會出現在下方清單，狀態是「待設定」，此時再回來這裡把他的權限改成合適的選項即可。設定成「行政」或「業務」時，記得同時選好「對應姓名」（要跟進度追蹤裡的業務清單一致），否則他將看不到屬於自己的客戶資料。</p>
     </div>
+    ${isAdmin() && salaryStaff.length>0 ? `
+    <div class="card" style="margin-bottom:16px;background:#F5F7FC;">
+      <div class="card-head-row">
+        <h3>本月底薪發放</h3>
+        <span class="hint">${nowMonthKey}　尚未發放 ${unpaidThisMonth.length} 人　合計 ${money(unpaidTotal)}</span>
+      </div>
+      ${unpaidThisMonth.length>0 ? `<button class="btn primary" data-action="pay-monthly-salaries">＋ 發放本月底薪（${unpaidThisMonth.length} 人）</button>` : `<p style="color:var(--muted);font-size:13px;margin:0;">本月底薪都已發放完成。</p>`}
+      <p style="color:var(--muted);font-size:12px;margin-top:10px;">按下去會依每個人設定的底薪金額，在收支明細自動新增一筆「薪資支出」，同一人同一個月不會重複發放。</p>
+    </div>` : ''}
     <div class="table-wrap">
       ${rows.length===0?`<div class="empty">目前沒有其他帳號</div>`:
       `<table><thead><tr><th>Email</th><th>權限</th><th>建立時間</th></tr></thead><tbody>${rows}</tbody></table>`}
@@ -1132,32 +1346,442 @@ function render(){
   document.querySelectorAll('.nav-item').forEach(el=>{ el.classList.toggle('active', el.dataset.view===APP.view); });
   const main = document.getElementById('main');
   if(!main) return;
-  if(APP.view==='dashboard') main.innerHTML = dashboardHTML();
-  else if(APP.view==='transactions') main.innerHTML = transactionsHTML();
-  else if(APP.view==='reports') main.innerHTML = reportsHTML();
-  else if(APP.view==='settings') main.innerHTML = settingsHTML();
-  else if(APP.view==='hr') main.innerHTML = hrHTML();
-  else if(APP.view==='vendors') main.innerHTML = vendorsHTML();
-  else if(APP.view==='cases') main.innerHTML = casesHTML();
+  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard'];
+  if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
+  const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
+  if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
+  else if(APP.view==='transactions' && isCore()) main.innerHTML = transactionsHTML();
+  else if(APP.view==='reports' && isCore()) main.innerHTML = reportsHTML();
+  else if(APP.view==='settings' && isCore()) main.innerHTML = settingsHTML();
+  else if(APP.view==='hr' && isCore()) main.innerHTML = hrHTML();
+  else if(APP.view==='vendors' && isCore()) main.innerHTML = vendorsHTML();
+  else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
+  else if(APP.view==='staffOverview' && isCore()) main.innerHTML = staffOverviewHTML();
   else if(APP.view==='progress') main.innerHTML = progressHTML();
+  else if(APP.view==='personalLog' && roomOk) main.innerHTML = personalLogPageHTML();
+  else if(APP.view==='attendance' && roomOk) main.innerHTML = attendancePageHTML();
+  else if(APP.view==='calendar' && roomOk) main.innerHTML = calendarPageHTML();
+  else if(APP.view==='personalDashboard' && roomOk) main.innerHTML = personalDashboardPageHTML();
   else if(APP.view==='users' && isAdmin()) main.innerHTML = usersHTML();
-  else { APP.view='dashboard'; main.innerHTML = dashboardHTML(); }
+  else { APP.view = isCore() ? 'dashboard' : 'personalDashboard'; main.innerHTML = isCore() ? dashboardHTML() : personalDashboardPageHTML(); }
+}
+
+/* ================= BUSINESS TOOLS (業務工具, for staffAdmin/staffSales) ================= */
+function roomBanner(){
+  const inRoom = isCore() && APP.viewingStaff;
+  if(!inRoom) return '';
+  const disp = displayNameFor(APP.viewingStaff.uid, APP.viewingStaff.name);
+  return `<div class="card" style="margin-bottom:16px;background:#EEF1FB;border-color:var(--navy);">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;">
+        ${avatarHtml(APP.viewingStaff.uid, disp, 32)}
+        <span>你正在檢視 <b>${escHtml(disp)}</b> 的房間，這裡的新增／編輯／刪除會直接套用在他的資料上。</span>
+      </div>
+      <button class="btn ghost sm" data-action="exit-staff-room">← 返回業務總覽</button>
+    </div>
+  </div>`;
+}
+function roomTitleSuffix(){ return (isCore() && APP.viewingStaff) ? '　·　'+escHtml(displayNameFor(APP.viewingStaff.uid, APP.viewingStaff.name)) : ''; }
+
+function personalLogPageHTML(){
+  return `
+    <div class="page-header"><div><h1 class="page-title">個人業務進度紀錄${roomTitleSuffix()}</h1><p class="page-sub">私人開發日誌，不會影響送件進度表或任何報表</p></div></div>
+    ${roomBanner()}
+    ${myProgressLogView()}
+  `;
+}
+function attendancePageHTML(){
+  return `
+    <div class="page-header"><div><h1 class="page-title">出勤請假${roomTitleSuffix()}</h1><p class="page-sub">純記錄用途，不需要簽核</p></div></div>
+    ${roomBanner()}
+    ${myAttendanceView()}
+  `;
+}
+function calendarPageHTML(){
+  return `
+    <div class="page-header"><div><h1 class="page-title">行事曆${roomTitleSuffix()}</h1><p class="page-sub">站內自建，個人提醒用</p></div></div>
+    ${roomBanner()}
+    ${myCalendarView()}
+  `;
+}
+function profileEditCardHtml(){
+  const meUid = effectiveUid();
+  const sysName = effectiveStaffName();
+  const p = APP.staffProfiles[meUid] || {};
+  return `
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <div style="position:relative;">
+          ${avatarHtml(meUid, p.displayName||sysName, 64)}
+          <label style="position:absolute;bottom:-4px;right:-4px;background:var(--navy);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">
+            📷<input type="file" accept="image/*" class="avatar-upload-input" data-uid="${meUid}" style="display:none;"/>
+          </label>
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <label class="field" style="margin:0;"><span>房間顯示名稱（純外觀，不影響資料歸屬）</span>
+            <input type="text" class="display-name-input" data-uid="${meUid}" value="${escAttr(p.displayName||'')}" placeholder="例：小傑、Jack…留空則顯示系統名稱「${escHtml(sysName)}」"/>
+          </label>
+        </div>
+      </div>
+    </div>`;
+}
+function personalDashboardPageHTML(){
+  return `
+    <div class="page-header"><div><h1 class="page-title">個人儀表板${roomTitleSuffix()}</h1><p class="page-sub">本月案件狀態、獎金與行程一目瞭然</p></div></div>
+    ${roomBanner()}
+    ${profileEditCardHtml()}
+    ${myDashboardView()}
+  `;
+}
+
+function myProgressView(){
+  const me = effectiveStaffName();
+  if(!me){
+    return `<div class="table-wrap"><div class="empty">你的帳號還沒有設定「對應業務姓名」，請聯絡管理員在「帳號管理」幫你設定後才能使用。</div></div>`;
+  }
+  const myAd = APP.data.progressAd.filter(c=>c.staff===me);
+  const myCh = APP.data.progressChannel.filter(c=>c.staff===me);
+  const combined = [
+    ...myAd.map(c=>({...c, _type:'ad'})),
+    ...myCh.map(c=>({...c, _type:'channel'}))
+  ].sort((a,b)=> b.date.localeCompare(a.date));
+
+  const byMonth = {};
+  combined.forEach(c=>{ const mk = monthKey(c.date); (byMonth[mk]=byMonth[mk]||[]).push(c); });
+  const months = Object.keys(byMonth).sort().reverse();
+
+  const rows = combined.map(c=>`
+    <tr>
+      <td>${c.date}</td>
+      <td><span class="badge ${c._type==='ad'?'income':'expense'}">${c._type==='ad'?'廣告客':'直客通路'}</span></td>
+      <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
+      <td>${escHtml(c.plan||'—')}</td>
+      <td><span class="badge ${statusBadgeClass(c.status)}">${escHtml(c.status||'—')}</span></td>
+      <td style="max-width:180px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.note||'—')}</td>
+    </tr>`).join('');
+
+  const monthSummary = months.map(m=>{
+    const list = byMonth[m];
+    const done = list.filter(c=>STATUS_DONE.includes(c.status)).length;
+    const closed = list.filter(c=>STATUS_CLOSED.includes(c.status)).length;
+    return `<div class="cat-row"><div class="name">${m}</div><div class="val" style="width:auto;flex:1;text-align:left;">共 ${list.length} 件 · 撥款完成 ${done} 件 · 婉拒/客拒 ${closed} 件</div></div>`;
+  }).join('');
+
+  return `
+    <div class="page-header" style="margin-bottom:14px;">
+      <div><p class="hint" style="color:var(--muted);font-size:12.5px;">這裡只顯示屬於你的正式送件案件（唯讀），狀態與備註由行政統一維護。想記錄自己的開發過程，請用「個人業務進度紀錄」。</p></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn ghost" data-action="open-progress-ad-modal">＋ 新增廣告客</button>
+        <button class="btn primary" data-action="open-progress-channel-modal">＋ 新增直客／通路</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <h3 style="margin-top:0;">逐月處理效率</h3>
+      ${monthSummary || `<div class="empty">尚無資料</div>`}
+    </div>
+    <div class="table-wrap">
+      ${combined.length===0?`<div class="empty">尚無你的客戶資料，點右上角新增</div>`:`
+      <table><thead><tr><th>日期</th><th>類型</th><th>客戶</th><th>方案</th><th>狀態</th><th>備註</th></tr></thead>
+      <tbody>${rows}</tbody></table>`}
+    </div>
+  `;
+}
+
+function myDashboardView(){
+  const me = effectiveStaffName();
+  const meUid = effectiveUid();
+  const profile = APP.staffProfiles[meUid] || {};
+  if(!me){
+    return `<div class="table-wrap"><div class="empty">你的帳號還沒有設定「對應業務姓名」，請聯絡管理員設定後才能看到獎金資料。</div></div>`;
+  }
+  const thisMonth = nowMonthKey;
+  const myEntries = APP.data.staffBonusLedger.filter(e=>e.staffName===me && monthKey(e.date)===thisMonth);
+  const byDay = {};
+  myEntries.forEach(e=>{
+    const total = (Number(e.businessBonus)||0) + (Number(e.xiaojiangBonus)||0);
+    byDay[e.date] = (byDay[e.date]||0) + total;
+  });
+  const days = Object.keys(byDay).sort().reverse();
+  const monthTotal = Object.values(byDay).reduce((a,b)=>a+b,0);
+  const rows = days.map(d=>`<tr><td>${d}</td><td class="amount-pos">${money(byDay[d])}</td></tr>`).join('');
+
+  /* 本月自己的案件狀態統計 */
+  const myAd = APP.data.progressAd.filter(c=>c.staff===me && monthKey(c.date)===thisMonth);
+  const myCh = APP.data.progressChannel.filter(c=>c.staff===me && monthKey(c.date)===thisMonth);
+  const myAll = [...myAd, ...myCh];
+  const myDone = myAll.filter(c=>STATUS_DONE.includes(c.status)).length;
+  const myPending = myAll.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
+  const myClosed = myAll.filter(c=>STATUS_CLOSED.includes(c.status)).length;
+
+  /* 近期行事曆 */
+  const today = todayStr();
+  const upcoming = APP.data.calendar.filter(c=>c.staffUid===meUid && c.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
+
+  return `
+    <div class="card-head-row" style="margin-top:0;"><h3 style="font-size:15px;">本月案件狀態</h3></div>
+    <div class="grid grid-3" style="margin-bottom:20px;">
+      <div class="card"><div class="stat-label">處理中</div><div class="stat-value blue">${myPending} 件</div></div>
+      <div class="card"><div class="stat-label">撥款完成</div><div class="stat-value green">${myDone} 件</div></div>
+      <div class="card"><div class="stat-label">婉拒／客拒</div><div class="stat-value" style="color:var(--muted);">${myClosed} 件</div></div>
+    </div>
+
+    <div class="card-head-row"><h3 style="font-size:15px;">本月收入</h3></div>
+    <div class="grid grid-3" style="margin-bottom:20px;">
+      <div class="card"><div class="stat-label">本月底薪</div><div class="stat-value blue">${money(profile.baseSalary||0)}</div></div>
+      <div class="card"><div class="stat-label">本月獎金累計</div><div class="stat-value green">${money(monthTotal)}</div></div>
+      <div class="card"><div class="stat-label">本月預估總收入</div><div class="stat-value blue" style="font-size:22px;">${money((profile.baseSalary||0)+monthTotal)}</div></div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="table-wrap">
+        ${days.length===0?`<div class="empty">本月尚無獎金紀錄</div>`:`
+        <table><thead><tr><th>日期</th><th>當日獎金</th></tr></thead><tbody>${rows}</tbody></table>`}
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">即將到來的行程</h3>
+        ${upcoming.length===0?`<div class="empty">目前沒有即將到來的行程</div>`:
+        upcoming.map(c=>`<div class="cat-row"><div class="name" style="width:80px;">${c.date}</div><div class="val" style="width:auto;flex:1;text-align:left;color:var(--ink);">${escHtml(c.title)}</div></div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function inlineSelectHtml(id, field, options, current, badgeClass){
+  return `<select class="inline-log-field badge ${badgeClass}" data-id="${id}" data-field="${field}" style="border:none;cursor:pointer;">
+    <option value="">—</option>
+    ${options.map(o=>`<option value="${o}" ${current===o?'selected':''}>${o}</option>`).join('')}
+  </select>`;
+}
+function progressLogRows(list, ownerUid, readOnly){
+  return list.slice().sort((a,b)=> b.date.localeCompare(a.date)).map(c=> readOnly ? `
+    <tr>
+      <td>${c.date}</td>
+      <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
+      <td>${escHtml(c.source||'—')}</td>
+      <td><span class="badge pending">${escHtml(c.dealProduct||'—')}</span></td>
+      <td><span class="badge expense">${escHtml(c.contactStatus||'—')}</span></td>
+      <td>${escHtml(c.transferTo||'—')}</td>
+      <td style="max-width:200px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.latestNote||'—')}</td>
+      <td>${c.caseStatus?`<span class="badge income">${escHtml(c.caseStatus)}</span>`:'—'}</td>
+      <td style="max-width:140px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.declineReason||'—')}</td>
+    </tr>` : `
+    <tr>
+      <td>${c.date}</td>
+      <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
+      <td>${escHtml(c.source||'—')}</td>
+      <td>${inlineSelectHtml(c.id,'dealProduct',DEAL_PRODUCT_OPTIONS,c.dealProduct,'pending')}</td>
+      <td>${inlineSelectHtml(c.id,'contactStatus',CONTACT_STATUS_OPTIONS,c.contactStatus,'expense')}</td>
+      <td>${escHtml(c.transferTo||'—')}</td>
+      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="latestNote" value="${escAttr(c.latestNote||'')}" placeholder="點擊輸入備註" style="width:100%;min-width:160px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
+      <td>${inlineSelectHtml(c.id,'caseStatus',LOG_CASE_STATUS_OPTIONS,c.caseStatus,'income')}</td>
+      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="declineReason" value="${escAttr(c.declineReason||'')}" placeholder="—" style="width:100%;min-width:110px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
+      <td><div class="row-actions">
+        <button class="icon-btn" data-action="edit-personal-log" data-id="${c.id}">編輯</button>
+        <button class="icon-btn" data-action="delete-personal-log" data-id="${c.id}">刪除</button>
+      </div></td>
+    </tr>`).join('');
+}
+function myProgressLogView(){
+  const allMine = APP.data.personalProgress.filter(c=>c.staffUid===effectiveUid());
+  const f = APP.myLogFilter;
+  const mine = f.month ? allMine.filter(c=>monthKey(c.date)===f.month) : allMine;
+  const rows = progressLogRows(mine, APP.user.uid, false);
+  const monthOptions = Array.from(new Set([...allMine.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
+  return `
+    <div class="page-header" style="margin-bottom:14px;">
+      <div><p class="hint" style="color:var(--muted);font-size:12.5px;">這裡是你自己的開發日誌，純粹自己記錄用，不會影響、也不會被拉進送件進度表或任何報表。</p></div>
+      <button class="btn primary" data-action="open-personal-log-modal">＋ 新增記錄</button>
+    </div>
+    <div class="filter-row">
+      <div class="filter-field"><label>月份</label>
+        <select data-case-filter="mylog-month"><option value="">全部月份</option>
+        ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+    </div>
+    <div class="table-wrap">
+      ${mine.length===0?`<div class="empty">${f.month?'這個月份尚無記錄':'尚無記錄，開始養成記錄客戶的習慣吧'}</div>`:`
+      <table><thead><tr><th>日期</th><th>客戶</th><th>來源</th><th>洽談產品</th><th>聯絡狀態</th><th>轉給誰</th><th>最新聯絡備註</th><th>案件狀態</th><th>婉拒原因</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table>`}
+    </div>
+  `;
+}
+function openPersonalLogModal(existing){
+  const c = existing || {date:todayStr(), customer:'', phone:'', source:'', dealProduct:'', contactStatus:'', transferTo:'', latestNote:'', caseStatus:'', declineReason:''};
+  openModal(existing?'編輯個人記錄':'新增個人記錄', `
+    <div class="grid grid-2">
+      <label class="field"><span>日期</span><input type="date" name="date" value="${c.date}" required/></label>
+      <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
+      <label class="field"><span>電話</span><input type="text" name="phone" value="${escAttr(c.phone)}"/></label>
+      <label class="field"><span>來源</span><input type="text" name="source" value="${escAttr(c.source)}" placeholder="例：公司/自己開發"/></label>
+      <label class="field"><span>洽談產品</span><select name="dealProduct"><option value="">請選擇</option>${DEAL_PRODUCT_OPTIONS.map(o=>`<option value="${o}" ${c.dealProduct===o?'selected':''}>${o}</option>`).join('')}</select></label>
+      <label class="field"><span>聯絡狀態</span><select name="contactStatus"><option value="">請選擇</option>${CONTACT_STATUS_OPTIONS.map(o=>`<option value="${o}" ${c.contactStatus===o?'selected':''}>${o}</option>`).join('')}</select></label>
+      <label class="field"><span>轉給誰</span><input type="text" name="transferTo" value="${escAttr(c.transferTo)}"/></label>
+      <label class="field"><span>案件狀態</span><select name="caseStatus"><option value="">請選擇</option>${LOG_CASE_STATUS_OPTIONS.map(o=>`<option value="${o}" ${c.caseStatus===o?'selected':''}>${o}</option>`).join('')}</select></label>
+    </div>
+    <label class="field"><span>最新聯絡備註</span><textarea name="latestNote">${escHtml(c.latestNote||'')}</textarea></label>
+    <label class="field"><span>婉拒原因</span><input type="text" name="declineReason" value="${escAttr(c.declineReason)}"/></label>
+  `, 'personal-log-form', (data)=>{
+    const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), ...data});
+    savePersonalProgress(rec);
+  });
+}
+
+function myAttendanceView(){
+  const allMine = APP.data.attendance.filter(a=>a.staffUid===effectiveUid());
+  const f = APP.attendanceFilter;
+  const mine = (f.month ? allMine.filter(a=>monthKey(a.date)===f.month) : allMine).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const monthOptions = Array.from(new Set([...allMine.map(a=>monthKey(a.date)), nowMonthKey])).filter(Boolean).sort().reverse();
+  const rows = mine.map(a=>`
+    <tr><td>${a.date}</td><td><span class="badge pending">${escHtml(a.leaveType)}</span></td>
+    <td style="color:var(--muted);font-size:12.5px;">${escHtml(a.note||'—')}</td>
+    <td><div class="row-actions">
+      <button class="icon-btn" data-action="delete-attendance" data-id="${a.id}">刪除</button>
+    </div></td></tr>`).join('');
+  return `
+    <div class="page-header" style="margin-bottom:14px;">
+      <div><p class="hint" style="color:var(--muted);font-size:12.5px;">純記錄用途，不需要簽核，登記完管理層看得到就好。</p></div>
+      <button class="btn primary" data-action="open-attendance-modal">＋ 新增請假紀錄</button>
+    </div>
+    <div class="filter-row">
+      <div class="filter-field"><label>月份</label>
+        <select data-case-filter="attendance-month"><option value="">全部月份</option>
+        ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+    </div>
+    <div class="table-wrap">
+      ${mine.length===0?`<div class="empty">${f.month?'這個月份尚無請假紀錄':'尚無請假紀錄'}</div>`:`
+      <table><thead><tr><th>日期</th><th>假別</th><th>備註</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+    </div>
+  `;
+}
+function openAttendanceModal(){
+  openModal('新增請假紀錄', `
+    <label class="field"><span>日期</span><input type="date" name="date" value="${todayStr()}" required/></label>
+    <label class="field"><span>假別</span><select name="leaveType">${LEAVE_TYPE_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></label>
+    <label class="field"><span>備註</span><textarea name="note" placeholder="原因（選填）"></textarea></label>
+  `, 'attendance-form', (data)=>{
+    saveAttendance(stamp({id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), ...data}));
+  });
+}
+
+function myCalendarView(){
+  const mine = APP.data.calendar.filter(c=>c.staffUid===effectiveUid()).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const today = todayStr();
+  const upcoming = mine.filter(c=>c.date>=today);
+  const past = mine.filter(c=>c.date<today).reverse();
+  function block(list, emptyMsg){
+    if(list.length===0) return `<div class="empty">${emptyMsg}</div>`;
+    return `<table><thead><tr><th>日期</th><th>事項</th><th>備註</th><th></th></tr></thead><tbody>
+      ${list.map(c=>`<tr><td>${c.date}</td><td>${escHtml(c.title)}</td>
+        <td style="color:var(--muted);font-size:12.5px;">${escHtml(c.note||'—')}</td>
+        <td><button class="icon-btn" data-action="delete-calendar" data-id="${c.id}">刪除</button></td></tr>`).join('')}
+      </tbody></table>`;
+  }
+  return `
+    <div class="page-header" style="margin-bottom:14px;"><div></div><button class="btn primary" data-action="open-calendar-modal">＋ 新增行程</button></div>
+    <div class="card" style="margin-bottom:16px;"><h3 style="margin-top:0;">即將到來</h3>${block(upcoming,'沒有即將到來的行程')}</div>
+    <div class="card"><h3 style="margin-top:0;">過去記錄</h3>${block(past,'尚無過去記錄')}</div>
+  `;
+}
+function openCalendarModal(){
+  openModal('新增行程', `
+    <label class="field"><span>日期</span><input type="date" name="date" value="${todayStr()}" required/></label>
+    <label class="field"><span>事項</span><input type="text" name="title" required placeholder="例：拜訪客戶、跟催資料"/></label>
+    <label class="field"><span>備註</span><textarea name="note"></textarea></label>
+  `, 'calendar-form', (data)=>{
+    saveCalendarEntry(stamp({id:uid(), staffUid:effectiveUid(), ...data}));
+  });
+}
+
+/* ---------------- Staff overview (核心視角看業務房間) ---------------- */
+function staffOverviewHTML(){
+  const names = Array.from(new Set(APP.users.filter(u=>u.staffName).map(u=>u.staffName))).sort();
+  const today = todayStr();
+  const cards = names.map(name=>{
+    const u = APP.users.find(x=>x.staffName===name);
+    const ad = APP.data.progressAd.filter(c=>c.staff===name);
+    const ch = APP.data.progressChannel.filter(c=>c.staff===name);
+    const all = [...ad, ...ch];
+    const pending = all.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
+    const done = all.filter(c=>STATUS_DONE.includes(c.status)).length;
+    const needDocsCount = all.filter(c=>c.status==='補資料').length;
+    const guarantorCheckCount = all.filter(c=>c.status==='對保').length;
+    const roleLabel = u.role==='staffAdmin' ? '行政' : '業務';
+
+    const adThisMonth = APP.data.casesAd.filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey);
+    const chThisMonth = APP.data.casesChannel.filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey);
+    const profitContribution = sum(adThisMonth.map(c=>({amount:c.companyProfit}))) + sum(chThisMonth.map(c=>({amount:c.companyProfit})));
+    const bonusThisMonth = sum(APP.data.staffBonusLedger.filter(e=>e.staffName===name && monthKey(e.date)===nowMonthKey)
+      .map(e=>({amount:(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0)})));
+    const prospectCount = APP.data.personalProgress.filter(c=>c.staffName===name && monthKey(c.date)===nowMonthKey).length;
+    const onLeaveToday = APP.data.attendance.some(a=>a.staffName===name && a.date===today);
+
+    const disp = displayNameFor(u.id, name);
+
+    return `<div class="card" style="cursor:pointer;" data-action="enter-staff-room" data-name="${escAttr(name)}" data-uid="${escAttr(u.id)}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${avatarHtml(u.id, disp, 40)}
+          <div>
+            <h3 style="margin:0;line-height:1.2;">${escHtml(disp)}</h3>
+            ${disp!==name?`<div style="font-size:11px;color:var(--muted);">系統名稱：${escHtml(name)}</div>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          ${onLeaveToday?`<span class="badge expense">今日請假</span>`:''}
+          <span class="badge pending">${roleLabel}</span>
+        </div>
+      </div>
+      <div class="grid grid-2" style="gap:10px;margin-bottom:10px;">
+        <div><div class="stat-label" style="margin-bottom:2px;">處理中</div><div class="stat-value blue" style="font-size:18px;">${pending} 件</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">撥款完成</div><div class="stat-value green" style="font-size:18px;">${done} 件</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">補資料中</div><div class="stat-value" style="font-size:18px;color:var(--amber);">${needDocsCount} 件</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">對保中</div><div class="stat-value" style="font-size:18px;color:var(--teal);">${guarantorCheckCount} 件</div></div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:10px;">
+        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:var(--muted);">本月利潤貢獻</div><div class="val" style="width:auto;font-weight:700;color:var(--ink);">${money(profitContribution)}</div></div>
+        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:var(--muted);">本月獎金累計</div><div class="val" style="width:auto;font-weight:700;color:var(--green);">${money(bonusThisMonth)}</div></div>
+        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:var(--muted);">開發中客戶</div><div class="val" style="width:auto;font-weight:700;color:var(--ink);">${prospectCount} 位</div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="page-header"><div><h1 class="page-title">業務總覽</h1><p class="page-sub">點選任一位業務／行政，直接進入他的房間查看與編輯</p></div></div>
+    <div class="grid grid-3">${cards || `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">目前還沒有任何業務／行政設定對應姓名，請先到「帳號管理」設定</div></div>`}</div>
+  `;
 }
 
 /* ================= CASES (業務案件) ================= */
 const STATUS_OPTIONS = ['教照會','等照會','複查','補資料','保人','對保','卡件','撥款完成','婉拒','客拒'];
 const STATUS_DONE = ['撥款完成'];
 const STATUS_CLOSED = ['婉拒','客拒'];
+const CONTACT_STATUS_OPTIONS = ['無需求','封鎖我','客不要','不回應','失聯','放棄','中途退','轉單','未聯絡','已聯絡','未接','持續聯絡中'];
+const DEAL_PRODUCT_OPTIONS = ['瑪吉','和潤','亞太','JET','無方案','房土','信貸','維力','廿一','公司代書','外面代書','當鋪'];
+const LOG_CASE_STATUS_OPTIONS = ['收資','審核','補資','核准','婉拒','取消'];
+const LEAVE_TYPE_OPTIONS = ['事假','病假','特休','其他'];
 function statusBadgeClass(s){
   if(STATUS_DONE.includes(s)) return 'active';
   if(STATUS_CLOSED.includes(s)) return 'resigned';
   return 'pending';
 }
 function monthKey(dateStr){ return dateStr ? dateStr.slice(0,7) : ''; }
+function monthBoundsStart(mk){ return mk ? `${mk}-01` : ''; }
+function monthBoundsEnd(mk){
+  if(!mk) return '';
+  const [y,m] = mk.split('-').map(Number);
+  const last = new Date(y, m, 0).getDate();
+  return `${mk}-${String(last).padStart(2,'0')}`;
+}
 function selectOptionsHtml(list, current){
   const opts = list.slice();
   if(current && !opts.includes(current)) opts.unshift(current);
   return `<option value="">請選擇</option>` + opts.map(o=>`<option value="${escAttr(o)}" ${o===current?'selected':''}>${escHtml(o)}</option>`).join('');
+}
+function staffOrChannelFieldHtml(name, current){
+  if(isStaffSales()){
+    return `<input type="text" name="${name}" value="${escAttr(myStaffName())}" readonly/>`;
+  }
+  return `<input type="text" name="${name}" list="staff-suggest-list" value="${escAttr(current||'')}" placeholder="選業務，或直接輸入通路夥伴名稱"/>
+    <datalist id="staff-suggest-list">${APP.data.caseSettings.staffOptions.map(s=>`<option value="${escAttr(s)}">`).join('')}</datalist>`;
 }
 function calcBusinessBonus(afterCost){ return Math.round((Number(afterCost)||0) * APP.data.caseSettings.businessBonusRate); }
 function calcXiaojiangBonus(afterCost, ordinalInMonth){
@@ -1198,7 +1822,7 @@ function exportProgressYear(year){
     日期:c.date, 客戶:c.customer, 電話:c.phone, 方案:c.plan, 業務:c.staff, 狀態:c.status, 備註:c.note
   }));
   const rowsCh = APP.data.progressChannel.filter(c=>c.date && c.date.startsWith(year)).map(c=>({
-    日期:c.date, 客戶:c.customer, 電話:c.phone, 方案:c.plan, 來源:c.source, 介紹人:c.referrer, 狀態:c.status, 備註:c.note
+    日期:c.date, 客戶:c.customer, 電話:c.phone, 方案:c.plan, 業務:c.staff, 來源:c.source, 通路名稱:c.referrer, 狀態:c.status, 備註:c.note
   }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsAd.length?rowsAd:[{提示:'該年度無資料'}]), '廣告客進度');
@@ -1210,7 +1834,7 @@ function exportCasesYear(year){
     日期:c.date, 客戶:c.customer, 方案:c.plan, 業務:c.staff, 扣除成本後:c.afterCost, 業務獎金:c.businessBonus, 小江獎金:c.xiaojiangBonus, 公司利潤:c.companyProfit, 獎金發放:c.bonusPaid?'是':'否', 備註:c.note
   }));
   const rowsCh = APP.data.casesChannel.filter(c=>c.date && c.date.startsWith(year)).map(c=>({
-    日期:c.date, 客戶:c.customer, 方案:c.plan, 來源:c.source, 介紹人:c.referrer, 扣除成本後:c.afterCost, 業務或通路利潤:c.partnerProfit, 公司利潤:c.companyProfit, 備註:c.note
+    日期:c.date, 客戶:c.customer, 方案:c.plan, 業務:c.staff, 來源:c.source, 通路名稱:c.referrer, 扣除成本後:c.afterCost, 業務或通路利潤:c.partnerProfit, 公司利潤:c.companyProfit, 備註:c.note
   }));
   const rowsSpend = APP.data.adSpend.filter(a=>a.month && a.month.startsWith(year)).map(a=>({
     月份:a.month, 投放金額:a.spend, 私訊數:a.messages, 送件數:a.submitted, 核准數:a.approved, 備註:a.note
@@ -1284,7 +1908,7 @@ function dailyBonusView(){
   });
   const byReferrer = {};
   chToday.forEach(c=>{
-    const key = c.referrer || '（未填介紹人）';
+    const key = c.staff || '（未填業務）';
     if(!byReferrer[key]) byReferrer[key] = {count:0, profit:0};
     byReferrer[key].count++;
     byReferrer[key].profit += Number(c.partnerProfit)||0;
@@ -1317,7 +1941,7 @@ function dailyBonusView(){
         ${adToday.length>0 ? `<p style="color:var(--muted);font-size:12.5px;margin-top:10px;">小江獎金（不分業務，當日合計）：<b style="color:var(--ink);">${money(xiaojiangTotal)}</b></p>` : ''}
       </div>
       <div class="card">
-        <h3 style="margin-top:0;">通路線 · 業務或通路利潤（依介紹人彙總）</h3>
+        <h3 style="margin-top:0;">通路線 · 業務或通路利潤（依業務彙總）</h3>
         ${referrerRows ? `<table><thead><tr><th>介紹人</th><th>件數</th><th>金額合計</th></tr></thead><tbody>${referrerRows}</tbody></table>` : `<div class="empty">當日無通路線案件</div>`}
       </div>
     </div>
@@ -1325,33 +1949,36 @@ function dailyBonusView(){
 }
 
 function progressAdView(){
-  const editable = canEdit();
+  const canAdd = isCore() || isStaffAdmin() || isStaffSales();
   const f = APP.progressAdFilter;
   let list = APP.data.progressAd.slice();
+  if(isStaffSales()) list = list.filter(c=>c.staff===myStaffName());
   if(f.status!=='all') list = list.filter(c=>c.status===f.status);
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
   list.sort((a,b)=> b.date.localeCompare(a.date));
   const monthOptions = Array.from(new Set([...APP.data.progressAd.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
-  const rows = list.map(c=>`
+  const rows = list.map(c=>{
+    const rowEditable = canEditProgressRow();
+    return `
     <tr>
       <td>${c.date}</td>
       <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
       <td>${escHtml(c.plan||'—')}</td>
       <td>${escHtml(c.staff||'—')}</td>
-      <td><select class="inline-status-select" data-list="progressAd" data-id="${c.id}" ${editable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#e6f4ea':STATUS_CLOSED.includes(c.status)?'#efece4':'#fff4e0'};">
+      <td><select class="inline-status-select" data-list="progressAd" data-id="${c.id}" ${rowEditable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#DCFCE7':STATUS_CLOSED.includes(c.status)?'#F1F2F6':'#FEF3C7'};">
         ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
       </select></td>
-      <td><input type="text" class="inline-note-input" data-list="progressAd" data-id="${c.id}" value="${escAttr(c.note||'')}" placeholder="點擊輸入備註" ${editable?'':'readonly'} style="width:100%;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#fdfcf9';"/></td>
+      <td><input type="text" class="inline-note-input" data-list="progressAd" data-id="${c.id}" value="${escAttr(c.note||'')}" placeholder="點擊輸入備註" ${rowEditable?'':'readonly'} style="width:100%;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
       <td>${editedLabel(c)}</td>
-      ${editable?`<td><div class="row-actions">
+      ${canAdd?`<td>${rowEditable?`<div class="row-actions">
         <button class="icon-btn" data-action="edit-progress-ad" data-id="${c.id}">編輯</button>
         <button class="icon-btn" data-action="delete-progress-ad" data-id="${c.id}">刪除</button>
-      </div></td>`:''}
-    </tr>`).join('');
+      </div>`:''}</td>`:''}
+    </tr>`;}).join('');
 
   return `
-    <div class="page-header" style="margin-bottom:14px;"><div></div>${editable?`<button class="btn primary" data-action="open-progress-ad-modal">＋ 新增案件</button>`:''}</div>
+    <div class="page-header" style="margin-bottom:14px;"><div></div>${canAdd?`<button class="btn primary" data-action="open-progress-ad-modal">＋ 新增案件</button>`:''}</div>
     <div class="filter-row">
       <div class="filter-field"><label>狀態</label>
         <select data-case-filter="pad-status"><option value="all" ${f.status==='all'?'selected':''}>全部</option>
@@ -1362,40 +1989,44 @@ function progressAdView(){
     </div>
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無案件資料</div>`:`
-      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>業務</th><th>狀態</th><th>備註</th><th>最後編輯</th>${editable?'<th></th>':''}</tr></thead>
+      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>業務</th><th>狀態</th><th>備註</th><th>最後編輯</th>${canAdd?'<th></th>':''}</tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
 }
 
 function progressChannelView(){
-  const editable = canEdit();
+  const canAdd = isCore() || isStaffAdmin() || isStaffSales();
   const f = APP.progressChannelFilter;
   let list = APP.data.progressChannel.slice();
+  if(isStaffSales()) list = list.filter(c=>c.staff===myStaffName());
   if(f.status!=='all') list = list.filter(c=>c.status===f.status);
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
   list.sort((a,b)=> b.date.localeCompare(a.date));
   const monthOptions = Array.from(new Set([...APP.data.progressChannel.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
-  const rows = list.map(c=>`
+  const rows = list.map(c=>{
+    const rowEditable = canEditProgressRow();
+    return `
     <tr>
       <td>${c.date}</td>
       <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
       <td>${escHtml(c.plan||'—')}</td>
-      <td>${escHtml(c.referrer||'—')}</td>
-      <td><select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" ${editable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#e6f4ea':STATUS_CLOSED.includes(c.status)?'#efece4':'#fff4e0'};">
+      <td>${escHtml(c.staff||'—')}</td>
+      <td>${escHtml(c.source||'—')}${c.referrer?(' · '+escHtml(c.referrer)):''}</td>
+      <td><select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" ${rowEditable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#DCFCE7':STATUS_CLOSED.includes(c.status)?'#F1F2F6':'#FEF3C7'};">
         ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
       </select></td>
-      <td><input type="text" class="inline-note-input" data-list="progressChannel" data-id="${c.id}" value="${escAttr(c.note||'')}" placeholder="點擊輸入備註" ${editable?'':'readonly'} style="width:100%;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#fdfcf9';"/></td>
+      <td><input type="text" class="inline-note-input" data-list="progressChannel" data-id="${c.id}" value="${escAttr(c.note||'')}" placeholder="點擊輸入備註" ${rowEditable?'':'readonly'} style="width:100%;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
       <td>${editedLabel(c)}</td>
-      ${editable?`<td><div class="row-actions">
+      ${canAdd?`<td>${rowEditable?`<div class="row-actions">
         <button class="icon-btn" data-action="edit-progress-channel" data-id="${c.id}">編輯</button>
         <button class="icon-btn" data-action="delete-progress-channel" data-id="${c.id}">刪除</button>
-      </div></td>`:''}
-    </tr>`).join('');
+      </div>`:''}</td>`:''}
+    </tr>`;}).join('');
 
   return `
-    <div class="page-header" style="margin-bottom:14px;"><div></div>${editable?`<button class="btn primary" data-action="open-progress-channel-modal">＋ 新增案件</button>`:''}</div>
+    <div class="page-header" style="margin-bottom:14px;"><div></div>${canAdd?`<button class="btn primary" data-action="open-progress-channel-modal">＋ 新增案件</button>`:''}</div>
     <div class="filter-row">
       <div class="filter-field"><label>狀態</label>
         <select data-case-filter="pch-status"><option value="all" ${f.status==='all'?'selected':''}>全部</option>
@@ -1406,7 +2037,7 @@ function progressChannelView(){
     </div>
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無案件資料</div>`:`
-      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>介紹人</th><th>狀態</th><th>備註</th><th>最後編輯</th>${editable?'<th></th>':''}</tr></thead>
+      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>業務</th><th>來源</th><th>狀態</th><th>備註</th><th>最後編輯</th>${canAdd?'<th></th>':''}</tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
@@ -1476,11 +2107,12 @@ function channelCasesView(){
       <td>${c.date}</td>
       <td>${escHtml(c.customer)}</td>
       <td>${escHtml(c.plan||'—')}</td>
-      <td><span class="badge ${c.source==='直客'?'income':'expense'}">${escHtml(c.source||'—')}</span></td>
-      <td>${escHtml(c.referrer||'—')}</td>
+      <td>${escHtml(c.staff||'—')}</td>
+      <td><span class="badge ${c.source==='直客'?'income':'expense'}">${escHtml(c.source||'—')}</span>${c.referrer?(' <span style="color:var(--muted);font-size:12px;">'+escHtml(c.referrer)+'</span>'):''}</td>
       <td>${money(c.afterCost)}</td>
       <td>${money(c.partnerProfit)}</td>
       <td class="amount-pos">${money(c.companyProfit)}</td>
+      <td>${c.profitPaid?'<span class="badge active">已發放</span>':'<span class="badge pending">未發放</span>'}</td>
       <td>${c.linkedTxId ? '<span class="badge active">已轉收支</span>' : (editable ? `<button class="btn ghost sm" data-action="post-channel-case" data-id="${c.id}">轉入收支明細</button>` : '')}</td>
       ${editable?`<td><div class="row-actions">
         <button class="icon-btn" data-action="edit-channel-case" data-id="${c.id}">編輯</button>
@@ -1504,12 +2136,16 @@ function channelCasesView(){
     </div>
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無獲利資料</div>`:`
-      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>來源</th><th>介紹人</th><th>扣除成本後</th><th>業務或通路利潤</th><th>公司利潤</th><th></th>${editable?'<th></th>':''}</tr></thead>
+      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>業務</th><th>來源</th><th>扣除成本後</th><th>業務或通路利潤</th><th>公司利潤</th><th>獎金</th><th></th>${editable?'<th></th>':''}</tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
 }
 
+function computeFixedCost(mk){
+  const list = APP.data.transactions.filter(t=>t.type==='expense' && monthKey(t.date)===mk && (t.mainCategory==='房租水電' || t.mainCategory==='薪資支出'));
+  return sum(list);
+}
 function adSpendView(){
   const editable = canEdit();
   const list = APP.data.adSpend.slice().sort((a,b)=>b.month.localeCompare(a.month));
@@ -1523,7 +2159,8 @@ function adSpendView(){
     const spend = Number(a.spend||0);
     const adNetBeforeFixed = adRevenue - spend;
     const roi = spend===0 ? 0 : (adNetBeforeFixed - spend) / spend;
-    const adTotalNet = adRevenue - cs.fixedCost - spend;
+    const fixedCostThisMonth = computeFixedCost(a.month);
+    const adTotalNet = adRevenue - fixedCostThisMonth - spend;
     const pilotBonus = Math.max(0, adTotalNet) * cs.pilotBonusRate;
     const adFinalNet = adTotalNet - pilotBonus;
     const companyFinalNet = adFinalNet + chProfit;
@@ -1542,6 +2179,7 @@ function adSpendView(){
       <td>${approveRate?(approveRate*100).toFixed(1)+'%':'—'}</td>
       <td>${(roi*100).toFixed(1)}%</td>
       <td>${money(adRevenue)}</td>
+      <td style="color:var(--muted);">${money(fixedCostThisMonth)}</td>
       <td class="${adTotalNet>=0?'amount-pos':'amount-neg'}">${money(adTotalNet)}</td>
       <td class="amount-neg">${money(pilotBonus)}</td>
       <td class="${adFinalNet>=0?'amount-pos':'amount-neg'}">${money(adFinalNet)}</td>
@@ -1555,12 +2193,12 @@ function adSpendView(){
 
   return `
     <div class="page-header" style="margin-bottom:14px;">
-      <div><p class="hint" style="color:var(--muted);font-size:12.5px;max-width:640px;">房租＋固定人事成本（${money(cs.fixedCost)}）由廣告線全額吸收；廣告投手月獎金 ＝（廣告線案件利潤加總 − 固定成本 − 廣告投放金額）× ${(cs.pilotBonusRate*100).toFixed(0)}%，於每月 5 號發放，此區塊公式固定不開放手動調整。</p></div>
+      <div><p class="hint" style="color:var(--muted);font-size:12.5px;max-width:640px;">房租＋固定人事成本，由廣告線全額吸收，<b>自動抓收支明細裡當月「房租水電」＋「薪資支出」的實際加總</b>；廣告投手月獎金 ＝（廣告線案件利潤加總 − 固定成本 − 廣告投放金額）× ${(cs.pilotBonusRate*100).toFixed(0)}%，於每月 5 號發放，此區塊公式固定不開放手動調整。</p></div>
       ${editable?`<button class="btn primary" data-action="open-adspend-modal">＋ 新增月份資料</button>`:''}
     </div>
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無資料</div>`:`
-      <table><thead><tr><th>月份</th><th>投放金額</th><th>私訊數</th><th>送件數</th><th>核准數</th><th>CPC</th><th>CPA</th><th>核准率</th><th>ROI</th><th>廣告線利潤</th><th>廣告總淨利</th><th>投手月獎金(5號發)</th><th>廣告線最終淨利</th><th>全公司最終淨利</th>${editable?'<th></th>':''}</tr></thead>
+      <table><thead><tr><th>月份</th><th>投放金額</th><th>私訊數</th><th>送件數</th><th>核准數</th><th>CPC</th><th>CPA</th><th>核准率</th><th>ROI</th><th>廣告線利潤</th><th>固定成本</th><th>廣告總淨利</th><th>投手月獎金(5號發)</th><th>廣告線最終淨利</th><th>全公司最終淨利</th>${editable?'<th></th>':''}</tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
@@ -1673,7 +2311,7 @@ function openVendorModal(existing){
 function buildTxRowHtml(r, idx){
   const allCatsExp = APP.data.categories.expense.map(c=>c.name);
   const allCatsInc = APP.data.categories.income.map(c=>c.name);
-  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #f0ede4;font-size:12.5px;flex-wrap:wrap;">
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
     <input type="checkbox" class="ai-row-check" checked/>
     <input type="date" class="ai-row-field" data-key="date" value="${r.date||todayStr()}" style="width:126px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
     <select class="ai-row-field ai-row-type" data-key="type" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
@@ -1752,7 +2390,7 @@ function renderAiImportPreview(rows){
   });
 }
 function openCaseOptionModal(kind){
-  const label = kind==='planOptions' ? '送件方案' : '業務／介紹人';
+  const label = kind==='planOptions' ? '送件方案' : '業務';
   openModal(`新增${label}選項`, `<label class="field"><span>${label}名稱</span><input name="value" type="text" required/></label>`, 'case-option-form', (data)=>{
     if(data.value && !APP.data.caseSettings[kind].includes(data.value)){
       APP.data.caseSettings[kind].push(data.value);
@@ -1768,30 +2406,29 @@ function openProgressAdModal(existing){
     <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
     <label class="field"><span>電話</span><input type="text" name="phone" value="${escAttr(c.phone)}"/></label>
     <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
-    <label class="field"><span>負責業務</span><select name="staff">${selectOptionsHtml(APP.data.caseSettings.staffOptions, c.staff)}</select></label>
+    <label class="field"><span>負責業務</span><select name="staff" ${isStaffSales()?'disabled':''}>${selectOptionsHtml(APP.data.caseSettings.staffOptions, isStaffSales()?myStaffName():c.staff)}</select>${isStaffSales()?`<input type="hidden" name="staff" value="${escAttr(myStaffName())}"/>`:''}</label>
     <label class="field"><span>送件狀態</span><select name="status">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></label>
     <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
   `, 'progress-ad-form', (data)=>{
-    if(existing) Object.assign(existing, stamp(data));
-    else APP.data.progressAd.push(stamp({id:uid(), ...data}));
-    saveProgressAd();
+    const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
+    saveProgressAdCase(rec);
   });
 }
 function openProgressChannelModal(existing){
-  const c = existing || {date:todayStr(), customer:'', phone:'', plan:'', source:'通路', referrer:'', status:'教照會', note:''};
+  const c = existing || {date:todayStr(), customer:'', phone:'', plan:'', staff:'', source:'直客', referrer:'', status:'教照會', note:''};
   openModal(existing?'編輯進度（直客／通路）':'新增案件（直客／通路）', `
     <label class="field"><span>日期</span><input type="date" name="date" value="${c.date}" required/></label>
     <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
     <label class="field"><span>電話</span><input type="text" name="phone" value="${escAttr(c.phone)}"/></label>
     <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
-    <label class="field"><span>來源</span><select name="source"><option value="通路" ${c.source==='通路'?'selected':''}>通路</option><option value="直客" ${c.source==='直客'?'selected':''}>直客</option></select></label>
-    <label class="field"><span>介紹人</span><input type="text" name="referrer" value="${escAttr(c.referrer)}" placeholder="輸入介紹人姓名"/></label>
+    <label class="field"><span>業務／通路</span>${staffOrChannelFieldHtml('staff', c.staff)}<span style="color:var(--muted);font-size:11.5px;margin-top:2px;">內部業務可從清單選；如果是通路夥伴，直接打名字即可</span></label>
+    <label class="field"><span>來源</span><select name="source" id="pc-source"><option value="直客" ${c.source==='直客'?'selected':''}>直客（自己的客人）</option><option value="通路" ${c.source==='通路'?'selected':''}>通路（有通路夥伴介紹）</option></select></label>
+    <label class="field"><span>備註（有無通路等說明）</span><input type="text" name="referrer" value="${escAttr(c.referrer)}" placeholder="選填，例如：透過XX轉介"/></label>
     <label class="field"><span>送件狀態</span><select name="status">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></label>
     <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
   `, 'progress-channel-form', (data)=>{
-    if(existing) Object.assign(existing, stamp(data));
-    else APP.data.progressChannel.push(stamp({id:uid(), ...data}));
-    saveProgressChannel();
+    const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
+    saveProgressChannelCase(rec);
   });
 }
 
@@ -1865,14 +2502,22 @@ function openAdCaseModal(existing){
       staff: fd.get('staff'), afterCost, businessBonus, businessBonusOverride,
       xiaojiangBonus, xiaojiangBonusOverride, companyProfit, bonusPaid: fd.get('bonusPaid')==='on', note: fd.get('note')
     };
+    const caseId = existing ? existing.id : uid();
+    const wasPaidBefore = existing ? !!existing.bonusPaid : false;
     if(existing) Object.assign(existing, stamp(data));
-    else APP.data.casesAd.push(stamp({id:uid(), _createdSeq:Date.now(), linkedTxId:null, ...data}));
-    saveCasesAd(); closeModal();
+    else APP.data.casesAd.push(stamp({id:caseId, _createdSeq:Date.now(), linkedTxId:null, bonusTxId:null, ...data}));
+    const rec = existing || APP.data.casesAd.find(x=>x.id===caseId);
+    if(data.bonusPaid && !wasPaidBefore && !rec.bonusTxId){
+      postBonusPayoutToTransactions(rec, businessBonus+xiaojiangBonus, `業務獎金＋小江獎金發放（${data.staff}／${data.customer}）`);
+    }
+    saveCasesAd();
+    saveBonusLedgerEntry(stamp({ id:caseId, staffName:data.staff, date:data.date, businessBonus, xiaojiangBonus, customer:data.customer }));
+    closeModal();
   });
 }
 
 function openChannelCaseModal(existing){
-  const c = existing || {date:todayStr(), customer:'', plan:'', source:'通路', referrer:'', afterCost:'', partnerProfit:'', companyProfit:0, note:''};
+  const c = existing || {date:todayStr(), customer:'', plan:'', staff:'', source:'直客', referrer:'', afterCost:'', partnerProfit:'', companyProfit:0, note:'', profitPaid:false};
   document.getElementById('modal-overlay').style.display = 'flex';
   document.getElementById('modal-box').innerHTML = `
     <div class="modal-head"><h3>${existing?'編輯獲利紀錄':'新增獲利紀錄'}（業務／通路線）</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
@@ -1881,14 +2526,16 @@ function openChannelCaseModal(existing){
         <label class="field"><span>日期</span><input type="date" name="date" value="${c.date}" required/></label>
         <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
         <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
-        <label class="field"><span>來源</span><select name="source"><option value="通路" ${c.source==='通路'?'selected':''}>通路</option><option value="直客" ${c.source==='直客'?'selected':''}>直客</option></select></label>
-        <label class="field"><span>介紹人</span><input type="text" name="referrer" value="${escAttr(c.referrer)}" placeholder="輸入介紹人姓名"/></label>
+        <label class="field"><span>業務／通路</span>${staffOrChannelFieldHtml('staff', c.staff)}</label>
+        <label class="field"><span>來源</span><select name="source"><option value="直客" ${c.source==='直客'?'selected':''}>直客</option><option value="通路" ${c.source==='通路'?'selected':''}>通路</option></select></label>
+        <label class="field"><span>備註（有無通路等說明）</span><input type="text" name="referrer" value="${escAttr(c.referrer)}" placeholder="選填"/></label>
       </div>
       <label class="field"><span>扣除成本後金額</span><input type="number" id="cc-afterCost" value="${c.afterCost}" required/></label>
       <label class="field"><span>業務或通路利潤（人工判斷，無固定公式）</span><input type="number" id="cc-partnerProfit" value="${c.partnerProfit}"/></label>
       <label class="field"><span>公司利潤（自動＝扣除成本後 − 業務或通路利潤）</span>
         <div id="cc-companyProfit-display" style="font-size:18px;font-weight:700;color:var(--blue);">${money(c.companyProfit||0)}</div>
       </label>
+      <label class="field checkbox"><input type="checkbox" name="profitPaid" ${c.profitPaid?'checked':''}/><span>利潤已發放</span></label>
       <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
       <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button><button type="submit" class="btn primary">儲存</button></div>
     </form>`;
@@ -1905,12 +2552,18 @@ function openChannelCaseModal(existing){
     const afterCost = Number(document.getElementById('cc-afterCost').value)||0;
     const partnerProfit = Number(document.getElementById('cc-partnerProfit').value)||0;
     const data = {
-      date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'),
-      source: fd.get('source'), referrer: fd.get('referrer'),
+      date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'), staff: fd.get('staff'),
+      source: fd.get('source'), referrer: fd.get('referrer'), profitPaid: fd.get('profitPaid')==='on',
       afterCost, partnerProfit, companyProfit: afterCost-partnerProfit, note: fd.get('note')
     };
+    const wasPaidBefore = existing ? !!existing.profitPaid : false;
     if(existing) Object.assign(existing, stamp(data));
-    else APP.data.casesChannel.push(stamp({id:uid(), linkedTxId:null, ...data}));
+    else APP.data.casesChannel.push(stamp({id:uid(), linkedTxId:null, profitTxId:null, ...data}));
+    const chRec = existing || APP.data.casesChannel[APP.data.casesChannel.length-1];
+    if(data.profitPaid && !wasPaidBefore && !chRec.profitTxId){
+      postBonusPayoutToTransactions(chRec, partnerProfit, `業務或通路利潤發放（${data.staff}／${data.customer}）`);
+      chRec.profitTxId = chRec.bonusTxId; // reuse same tx-id field set by helper
+    }
     saveCasesChannel(); closeModal();
   });
 }
@@ -1932,6 +2585,14 @@ function openAdSpendModal(existing){
   });
 }
 
+function postBonusPayoutToTransactions(caseRec, amount, noteText){
+  if(!amount || amount<=0) return;
+  const tx = stamp({ id:uid(), date:caseRec.date, type:'expense', mainCategory:'佣金支出', subCategory:caseRec.plan||'',
+    amount:Number(amount)||0, vendor:caseRec.staff||caseRec.referrer||'', note:noteText, pending:false });
+  APP.data.transactions.push(tx);
+  caseRec.bonusTxId = tx.id;
+  saveTransactions();
+}
 function postAdCaseToTransactions(caseId){
   const c = APP.data.casesAd.find(x=>x.id===caseId);
   if(!c || c.linkedTxId) return;
@@ -1953,7 +2614,7 @@ function postChannelCaseToTransactions(caseId){
     saveCategories();
   }
   const tx = stamp({ id:uid(), date:c.date, type:'income', mainCategory:'案件利潤-通路', subCategory:c.plan||'',
-    amount:Number(c.companyProfit)||0, vendor:c.customer||'', note:`案件公司利潤自動轉入（介紹人:${c.referrer||''}）`, pending:false });
+    amount:Number(c.companyProfit)||0, vendor:c.customer||'', note:`案件公司利潤自動轉入（業務:${c.staff||''}${c.referrer?'／通路:'+c.referrer:''}）`, pending:false });
   APP.data.transactions.push(tx);
   c.linkedTxId = tx.id;
   saveTransactions(); saveCasesChannel();
@@ -2038,6 +2699,45 @@ function buildFinanceContext(){
   const liabTotal = sum(APP.data.liabilities);
   const empActive = APP.data.hr.employees.filter(e=>e.status!=='resigned').length;
 
+  /* ---- 業務案件與進度（本月） ---- */
+  const progAdThis = APP.data.progressAd.filter(c=>monthKey(c.date)===nowMonthKey);
+  const progChThis = APP.data.progressChannel.filter(c=>monthKey(c.date)===nowMonthKey);
+  const allProgThis = [...progAdThis, ...progChThis];
+  const doneCount = allProgThis.filter(c=>STATUS_DONE.includes(c.status)).length;
+  const pendingCount = allProgThis.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
+  const closedCount = allProgThis.filter(c=>STATUS_CLOSED.includes(c.status)).length;
+  const statusMap = {};
+  allProgThis.forEach(c=>{ statusMap[c.status]=(statusMap[c.status]||0)+1; });
+  const statusSummary = Object.entries(statusMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${v}`).join('、');
+
+  /* ---- 本月業務利潤排行 ---- */
+  const profitByStaff = {};
+  APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey).forEach(c=>{ const k=c.staff||'未填'; profitByStaff[k]=(profitByStaff[k]||0)+(Number(c.companyProfit)||0); });
+  APP.data.casesChannel.filter(c=>monthKey(c.date)===nowMonthKey).forEach(c=>{ const k=c.staff||'未填'; profitByStaff[k]=(profitByStaff[k]||0)+(Number(c.companyProfit)||0); });
+  const rankingLines = Object.entries(profitByStaff).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${money(v)}`).join('、');
+
+  /* ---- 本月獎金發放狀況 ---- */
+  const unpaidBonus = APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey && !c.bonusPaid);
+  const unpaidTotal = sum(unpaidBonus.map(c=>({amount:(Number(c.businessBonus)||0)+(Number(c.xiaojiangBonus)||0)})));
+  const paidBonusTotal = sum(APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey && c.bonusPaid).map(c=>({amount:(Number(c.businessBonus)||0)+(Number(c.xiaojiangBonus)||0)})));
+
+  /* ---- 廣告投放成效（近4個月） ---- */
+  const adSpendSorted = APP.data.adSpend.slice().sort((a,b)=>b.month.localeCompare(a.month)).slice(0,4);
+  const adSpendLines = adSpendSorted.map(a=>{
+    const adCasesInMonth = APP.data.casesAd.filter(c=>monthKey(c.date)===a.month);
+    const chCasesInMonth = APP.data.casesChannel.filter(c=>monthKey(c.date)===a.month);
+    const adRevenue = sum(adCasesInMonth.map(c=>({amount:c.companyProfit})));
+    const chProfit = sum(chCasesInMonth.map(c=>({amount:c.companyProfit})));
+    const spend = Number(a.spend||0);
+    const fixedCostThisMonth = computeFixedCost(a.month);
+    const adTotalNet = adRevenue - fixedCostThisMonth - spend;
+    const roi = spend===0?0:((adRevenue-spend)-spend)/spend;
+    const cpc = a.messages? spend/Number(a.messages) : 0;
+    const cpa = a.approved? spend/Number(a.approved) : 0;
+    const approveRate = a.submitted? Number(a.approved||0)/Number(a.submitted) : 0;
+    return `${a.month}：投放金額 ${money(spend)}，私訊數 ${a.messages||0}，送件數 ${a.submitted||0}，核准數 ${a.approved||0}，核准率 ${(approveRate*100).toFixed(1)}%，CPC ${cpc?money(cpc):'—'}，CPA ${cpa?money(cpa):'—'}，ROI ${(roi*100).toFixed(1)}%，廣告線案件利潤 ${money(adRevenue)}，固定成本(房租+薪資) ${money(fixedCostThisMonth)}，廣告總淨利 ${money(adTotalNet)}，通路線利潤 ${money(chProfit)}`;
+  }).join('\n');
+
   return `公司：${APP.data.company.name || '（未設定）'}
 ${year}年度：收入 ${money(incThis)}，支出 ${money(expThis)}，淨損益 ${money(incThis-expThis)}
 ${year-1}年度：收入 ${money(incLast)}，支出 ${money(expLast)}
@@ -2047,7 +2747,16 @@ ${year}年度收入分類：${catSummary(txThis,'income')}
 在職員工人數：${empActive}
 廠商數量：${APP.data.vendors.length}
 最近25筆收支紀錄：
-${recent || '無'}`;
+${recent || '無'}
+
+【業務案件與進度】（本月 ${nowMonthKey}）
+本月案件狀態：撥款完成 ${doneCount} 件、處理中 ${pendingCount} 件、婉拒/客拒 ${closedCount} 件
+詳細狀態分布：${statusSummary || '無'}
+本月業務利潤貢獻排行（含廣告線+通路線）：${rankingLines || '無'}
+本月獎金：已發放 ${money(paidBonusTotal)}，尚未發放 ${unpaidBonus.length} 筆合計 ${money(unpaidTotal)}
+
+【廣告投放成效】（近 ${adSpendSorted.length} 個月，由新到舊）
+${adSpendLines || '無資料'}`;
 }
 
 function renderChat(){
@@ -2056,7 +2765,7 @@ function renderChat(){
   if(!panel || !box) return;
   panel.classList.toggle('hidden', !APP.chatOpen);
   if(APP.chatMessages.length===0 && !APP.chatLoading){
-    box.innerHTML = `<div class="ai-chat-empty">你可以問問題（例如「這個月支出比上個月高在哪裡」），也可以直接說要記一筆帳（例如「幫我記一筆 8/15 廣告費 1200」），AI 會列出來讓你確認後才會新增。</div>`;
+    box.innerHTML = `<div class="ai-chat-empty">可以問財務、案件進度、業務排行、廣告投放成效（例如「這個月 ROI 怎麼樣」「哪個業務貢獻最多」），也可以請它給建議，或直接說要記一筆帳（例如「幫我記一筆 8/15 廣告費 1200」）。</div>`;
   } else {
     box.innerHTML = APP.chatMessages.map((m,i)=>{
       if(m.role==='user') return `<div class="ai-msg user">${escHtml(m.text)}</div>`;
@@ -2110,7 +2819,11 @@ document.addEventListener('click', (e)=>{
   const el = e.target.closest('[data-action]');
   if(el){
     const action = el.dataset.action;
-    if(action==='nav'){ APP.view = el.dataset.view; render(); closeSidebar(); return; }
+    if(action==='nav'){
+      const personalViews = ['progress','personalLog','attendance','calendar','personalDashboard'];
+      if(!personalViews.includes(el.dataset.view)) APP.viewingStaff=null;
+      APP.view = el.dataset.view; render(); closeSidebar(); return;
+    }
     if(action==='close-modal'){ closeModal(); return; }
     if(action==='tx-tab'){ APP.txTab = el.dataset.tab; render(); return; }
     if(action==='open-tx-modal'){ openTransactionModal(null); return; }
@@ -2197,28 +2910,68 @@ document.addEventListener('click', (e)=>{
         saveCaseSettings();
       }); return;
     }
+    if(action==='pay-monthly-salaries'){
+      const targets = APP.users.filter(u=>{
+        if(u.role!=='staffAdmin' && u.role!=='staffSales') return false;
+        const p = APP.staffProfiles[u.id]||{};
+        return (p.baseSalary>0) && !((p.salaryPaidMonths||[]).includes(nowMonthKey));
+      });
+      const totalAmt = sum(targets.map(u=>({amount:(APP.staffProfiles[u.id]||{}).baseSalary||0})));
+      openConfirm(`確定要發放 ${nowMonthKey} 的底薪嗎？共 ${targets.length} 人，合計 ${money(totalAmt)}，會各自在收支明細新增一筆薪資支出。`, ()=>{
+        targets.forEach(u=>{
+          const p = APP.staffProfiles[u.id]||{};
+          const amt = Number(p.baseSalary)||0;
+          if(amt<=0) return;
+          const tx = stamp({ id:uid(), date:todayStr(), type:'expense', mainCategory:'薪資支出', subCategory:'',
+            amount:amt, vendor:u.staffName||u.email, note:`${nowMonthKey} 底薪發放`, pending:false });
+          APP.data.transactions.push(tx);
+          const paidMonths = (p.salaryPaidMonths||[]).concat([nowMonthKey]);
+          saveStaffProfile(u.id, { salaryPaidMonths: paidMonths });
+        });
+        saveTransactions();
+        render();
+      });
+      return;
+    }
+    if(action==='biz-tab'){ APP.bizToolsTab = el.dataset.tab; render(); return; }
+    if(action==='open-personal-log-modal'){ openPersonalLogModal(null); return; }
+    if(action==='edit-personal-log'){ const c = APP.data.personalProgress.find(x=>x.id===el.dataset.id); if(c) openPersonalLogModal(c); return; }
+    if(action==='delete-personal-log'){
+      openConfirm('確定要刪除這筆個人記錄嗎？', ()=>{ deletePersonalProgress(el.dataset.id); }); return;
+    }
+    if(action==='open-attendance-modal'){ openAttendanceModal(); return; }
+    if(action==='delete-attendance'){
+      openConfirm('確定要刪除這筆請假紀錄嗎？', ()=>{ deleteAttendance(el.dataset.id); }); return;
+    }
+    if(action==='open-calendar-modal'){ openCalendarModal(); return; }
+    if(action==='delete-calendar'){
+      openConfirm('確定要刪除這筆行程嗎？', ()=>{ deleteCalendarEntry(el.dataset.id); }); return;
+    }
+    if(action==='enter-staff-room'){
+      APP.viewingStaff = { uid: el.dataset.uid, name: el.dataset.name };
+      APP.view = 'personalDashboard';
+      renderRoot(); return;
+    }
+    if(action==='exit-staff-room'){ APP.viewingStaff = null; APP.view = 'staffOverview'; renderRoot(); return; }
     if(action==='progress-tab'){ APP.progressTab = el.dataset.tab; render(); return; }
     if(action==='open-export-modal'){ openExportModal(el.dataset.mode); return; }
     if(action==='cases-tab'){ APP.casesTab = el.dataset.tab; render(); return; }
     if(action==='open-progress-ad-modal'){ openProgressAdModal(null); return; }
     if(action==='edit-progress-ad'){ const c = APP.data.progressAd.find(x=>x.id===el.dataset.id); if(c) openProgressAdModal(c); return; }
     if(action==='delete-progress-ad'){
-      openConfirm('確定要刪除這筆進度資料嗎？', ()=>{
-        APP.data.progressAd = APP.data.progressAd.filter(x=>x.id!==el.dataset.id); saveProgressAd();
-      }); return;
+      openConfirm('確定要刪除這筆進度資料嗎？', ()=>{ deleteProgressAdCase(el.dataset.id); }); return;
     }
     if(action==='open-progress-channel-modal'){ openProgressChannelModal(null); return; }
     if(action==='edit-progress-channel'){ const c = APP.data.progressChannel.find(x=>x.id===el.dataset.id); if(c) openProgressChannelModal(c); return; }
     if(action==='delete-progress-channel'){
-      openConfirm('確定要刪除這筆進度資料嗎？', ()=>{
-        APP.data.progressChannel = APP.data.progressChannel.filter(x=>x.id!==el.dataset.id); saveProgressChannel();
-      }); return;
+      openConfirm('確定要刪除這筆進度資料嗎？', ()=>{ deleteProgressChannelCase(el.dataset.id); }); return;
     }
     if(action==='open-ad-case-modal'){ openAdCaseModal(null); return; }
     if(action==='edit-ad-case'){ const c = APP.data.casesAd.find(x=>x.id===el.dataset.id); if(c) openAdCaseModal(c); return; }
     if(action==='delete-ad-case'){
       openConfirm('確定要刪除這筆案件資料嗎？', ()=>{
         APP.data.casesAd = APP.data.casesAd.filter(x=>x.id!==el.dataset.id); saveCasesAd();
+        deleteBonusLedgerEntry(el.dataset.id);
       }); return;
     }
     if(action==='post-ad-case'){ postAdCaseToTransactions(el.dataset.id); return; }
@@ -2239,6 +2992,15 @@ document.addEventListener('click', (e)=>{
     }
   }
   if(e.target.id==='hamburger-btn'){ openSidebar(); return; }
+  if(e.target.id==='toggle-core-nav'){
+    const block = document.getElementById('core-nav-block');
+    if(block){
+      const showing = block.style.display !== 'none';
+      block.style.display = showing ? 'none' : 'block';
+      e.target.textContent = showing ? '☰ 展開完整選單' : '☰ 收合完整選單';
+    }
+    return;
+  }
   if(e.target.id==='sidebar-backdrop'){ closeSidebar(); return; }
   if(e.target.id==='ai-chat-toggle'){ APP.chatOpen = !APP.chatOpen; renderChat(); return; }
   if(e.target.id==='ai-chat-close'){ APP.chatOpen = false; renderChat(); return; }
@@ -2294,7 +3056,7 @@ document.addEventListener('change', (e)=>{
     if(rec){
       rec.status = e.target.value;
       Object.assign(rec, stamp({}));
-      if(listName==='progressAd') saveProgressAd(); else saveProgressChannel();
+      if(listName==='progressAd') saveProgressAdCase(rec); else saveProgressChannelCase(rec);
       render();
     }
     return;
@@ -2306,7 +3068,17 @@ document.addEventListener('change', (e)=>{
     if(rec){
       rec.note = e.target.value;
       Object.assign(rec, stamp({}));
-      if(listName==='progressAd') saveProgressAd(); else saveProgressChannel();
+      if(listName==='progressAd') saveProgressAdCase(rec); else saveProgressChannelCase(rec);
+    }
+    return;
+  }
+  if(e.target.classList && (e.target.classList.contains('inline-log-field') || e.target.classList.contains('inline-log-text'))){
+    const id = e.target.dataset.id, field = e.target.dataset.field;
+    const rec = APP.data.personalProgress.find(x=>x.id===id);
+    if(rec){
+      rec[field] = e.target.value;
+      Object.assign(rec, stamp({}));
+      savePersonalProgress(rec);
     }
     return;
   }
@@ -2318,14 +3090,65 @@ document.addEventListener('change', (e)=>{
     else if(key==='pch-month') APP.progressChannelFilter.month = e.target.value;
     else if(key==='ad-month') APP.caseAdFilter.month = e.target.value;
     else if(key==='channel-month') APP.caseChannelFilter.month = e.target.value;
+    else if(key==='mylog-month') APP.myLogFilter.month = e.target.value;
+    else if(key==='attendance-month') APP.attendanceFilter.month = e.target.value;
     render(); return;
   }
   if(e.target.id==='daily-bonus-date'){ APP.dailyBonusDate = e.target.value; render(); return; }
   if(e.target.id==='year-select'){ APP.year = Number(e.target.value); render(); return; }
-  if(e.target.dataset && e.target.dataset.filter){ APP.txFilter[e.target.dataset.filter] = e.target.value; render(); return; }
+  if(e.target.dataset && e.target.dataset.filter){
+    const key = e.target.dataset.filter;
+    APP.txFilter[key] = e.target.value;
+    if(key==='month'){
+      APP.txFilter.start = monthBoundsStart(e.target.value);
+      APP.txFilter.end = monthBoundsEnd(e.target.value);
+    } else if(key==='start' || key==='end'){
+      APP.txFilter.month = ''; // custom range overrides month quick-filter
+    }
+    render(); return;
+  }
   if(e.target.dataset && e.target.dataset.userRole!==undefined){
     const uidTarget = e.target.dataset.uid;
-    updateDoc(doc(db,'users',uidTarget), { role: e.target.value });
+    updateDoc(doc(db,'users',uidTarget), { role: e.target.value }).then(()=>render());
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('staff-name-select')){
+    const uidTarget = e.target.dataset.uid;
+    updateDoc(doc(db,'users',uidTarget), { staffName: e.target.value });
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('staff-salary-input')){
+    const uidTarget = e.target.dataset.uid;
+    saveStaffProfile(uidTarget, { baseSalary: Number(e.target.value)||0 });
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('display-name-input')){
+    const uidTarget = e.target.dataset.uid;
+    saveStaffProfile(uidTarget, { displayName: e.target.value.trim() });
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('avatar-upload-input')){
+    const uidTarget = e.target.dataset.uid;
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 5*1024*1024){ alert('圖片太大，請選 5MB 以內的圖片'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const size = 160;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const minSide = Math.min(img.width, img.height);
+        const sx = (img.width-minSide)/2, sy = (img.height-minSide)/2;
+        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        saveStaffProfile(uidTarget, { avatarDataUrl: dataUrl });
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
     return;
   }
 });
@@ -2376,7 +3199,6 @@ document.addEventListener('submit', (e)=>{
       xiaojiangThreshold: Number(fd.get('xiaojiangThreshold'))||0,
       xiaojiangRateBelow: (Number(fd.get('xiaojiangRateBelow'))||0)/100,
       xiaojiangRateAbove: (Number(fd.get('xiaojiangRateAbove'))||0)/100,
-      fixedCost: Number(fd.get('fixedCost'))||0,
       pilotBonusRate: (Number(fd.get('pilotBonusRate'))||0)/100
     };
     saveCaseSettings(); return;
@@ -2387,7 +3209,7 @@ document.addEventListener('submit', (e)=>{
     APP.data.company = { name:fd.get('name'), taxId:fd.get('taxId'), phone:fd.get('phone'), address:fd.get('address') };
     saveCompany(); return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form'].includes(e.target.id)){
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = {};
