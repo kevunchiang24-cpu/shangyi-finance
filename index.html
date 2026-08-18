@@ -597,13 +597,13 @@ function shellHTML(){
     </div>
   </div>
   <div id="main"></div>
-  ${core ? `
+  ${(core || staffAny) ? `
   <button class="ai-chat-fab" id="ai-chat-toggle">🤖</button>
   <div class="ai-chat-panel hidden" id="ai-chat-panel">
-    <div class="ai-chat-header"><span>問 AI · 財務資料</span><button type="button" id="ai-chat-close">✕</button></div>
+    <div class="ai-chat-header"><span>${core ? '問 AI · 財務資料' : '問 AI · 我的工作'}</span><button type="button" id="ai-chat-close">✕</button></div>
     <div class="ai-chat-messages" id="ai-chat-messages"></div>
     <form class="ai-chat-form" id="ai-chat-form">
-      <input type="text" id="ai-chat-input" placeholder="問財務、案件進度、廣告成效，或請它給建議" autocomplete="off"/>
+      <input type="text" id="ai-chat-input" placeholder="${core ? '問財務、案件進度、廣告成效，或請它給建議' : '問我的案件進度、獎金、行程，或請它給建議'}" autocomplete="off"/>
       <button type="submit">送出</button>
     </form>
   </div>` : ''}`;
@@ -2326,6 +2326,44 @@ function buildTxRowHtml(r, idx){
     <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="備註" style="width:110px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
   </div>`;
 }
+function aiField(inputHtml){ return inputHtml; }
+function buildPersonalLogRowHtml(r, idx){
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    <input type="date" class="ai-row-field" data-key="date" value="${r.date||todayStr()}" style="width:126px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="customer" value="${escAttr(r.customer||'')}" placeholder="客戶姓名" style="width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="phone" value="${escAttr(r.phone||'')}" placeholder="電話" style="width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <select class="ai-row-field" data-key="dealProduct" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+      <option value="">洽談產品</option>
+      ${DEAL_PRODUCT_OPTIONS.map(o=>`<option value="${o}" ${r.dealProduct===o?'selected':''}>${o}</option>`).join('')}
+    </select>
+    <select class="ai-row-field" data-key="contactStatus" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+      <option value="">聯絡狀態</option>
+      ${CONTACT_STATUS_OPTIONS.map(o=>`<option value="${o}" ${r.contactStatus===o?'selected':''}>${o}</option>`).join('')}
+    </select>
+    <input type="text" class="ai-row-field" data-key="latestNote" value="${escAttr(r.latestNote||'')}" placeholder="最新聯絡備註" style="flex:1;min-width:110px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+  </div>`;
+}
+function buildProgressTrackRowHtml(r, idx){
+  const isChannel = r.lineType==='channel';
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    <input type="hidden" class="ai-row-field" data-key="lineType" value="${isChannel?'channel':'ad'}"/>
+    <span class="badge ${isChannel?'expense':'income'}" style="flex-shrink:0;">${isChannel?'直客/通路':'廣告客'}</span>
+    <input type="date" class="ai-row-field" data-key="date" value="${r.date||todayStr()}" style="width:126px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="customer" value="${escAttr(r.customer||'')}" placeholder="客戶姓名" style="width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="phone" value="${escAttr(r.phone||'')}" placeholder="電話" style="width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <select class="ai-row-field" data-key="plan" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+      <option value="">送件方案</option>
+      ${APP.data.caseSettings.planOptions.map(o=>`<option value="${o}" ${r.plan===o?'selected':''}>${o}</option>`).join('')}
+    </select>
+    <input type="text" class="ai-row-field" data-key="staff" value="${escAttr(r.staff||'')}" placeholder="業務／通路" style="width:90px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <select class="ai-row-field" data-key="status" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+      ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${(r.status||'教照會')===o?'selected':''}>${o}</option>`).join('')}
+    </select>
+    <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="備註" style="flex:1;min-width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+  </div>`;
+}
 function openAiImportModal(){
   document.getElementById('modal-overlay').style.display = 'flex';
   document.getElementById('modal-box').innerHTML = `
@@ -2759,20 +2797,69 @@ ${recent || '無'}
 ${adSpendLines || '無資料'}`;
 }
 
+/* 業務／行政專用的資料摘要——只包含本人自己的資料，完全不含公司財務數字、其他同事的資料 */
+function buildStaffContext(){
+  const meUid = APP.user.uid;
+  const meName = myStaffName();
+  const profile = APP.staffProfiles[meUid] || {};
+  const thisMonth = nowMonthKey;
+
+  const myAd = APP.data.progressAd.filter(c=>c.staff===meName && monthKey(c.date)===thisMonth);
+  const myCh = APP.data.progressChannel.filter(c=>c.staff===meName && monthKey(c.date)===thisMonth);
+  const myAll = [...myAd, ...myCh];
+  const doneCount = myAll.filter(c=>STATUS_DONE.includes(c.status)).length;
+  const pendingCount = myAll.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
+  const closedCount = myAll.filter(c=>STATUS_CLOSED.includes(c.status)).length;
+  const statusMap = {};
+  myAll.forEach(c=>{ statusMap[c.status]=(statusMap[c.status]||0)+1; });
+  const statusSummary = Object.entries(statusMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${v}`).join('、');
+
+  const myEntries = APP.data.staffBonusLedger.filter(e=>e.staffName===meName && monthKey(e.date)===thisMonth);
+  const byDay = {};
+  myEntries.forEach(e=>{ const t=(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0); byDay[e.date]=(byDay[e.date]||0)+t; });
+  const monthTotal = Object.values(byDay).reduce((a,b)=>a+b,0);
+  const dayLines = Object.entries(byDay).sort((a,b)=>b[0].localeCompare(a[0])).map(([d,v])=>`${d}：${money(v)}`).join('\n');
+
+  const myLogs = APP.data.personalProgress.filter(c=>c.staffUid===meUid && monthKey(c.date)===thisMonth);
+  const myAttendance = APP.data.attendance.filter(a=>a.staffUid===meUid && monthKey(a.date)===thisMonth);
+  const today = todayStr();
+  const upcoming = APP.data.calendar.filter(c=>c.staffUid===meUid && c.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,10)
+    .map(c=>`${c.date} ${c.title}${c.note?('：'+c.note):''}`).join('\n');
+
+  return `你正在跟「${meName || APP.userEmail}」對話，以下只有他自己的資料摘要（不包含公司財務、其他同事的資料，你也不知道其他人的任何數字，遇到問這類問題請說明你只看得到他自己的資料）：
+
+本月底薪：${money(profile.baseSalary||0)}
+本月案件狀態：撥款完成 ${doneCount} 件、處理中 ${pendingCount} 件、婉拒/客拒 ${closedCount} 件
+詳細狀態分布：${statusSummary || '無'}
+本月獎金累計：${money(monthTotal)}
+每日獎金明細（由新到舊）：
+${dayLines || '無'}
+本月個人開發紀錄筆數：${myLogs.length} 筆
+本月請假次數：${myAttendance.length} 次
+即將到來的行程：
+${upcoming || '無'}`;
+}
+
 function renderChat(){
   const panel = document.getElementById('ai-chat-panel');
   const box = document.getElementById('ai-chat-messages');
   if(!panel || !box) return;
   panel.classList.toggle('hidden', !APP.chatOpen);
   if(APP.chatMessages.length===0 && !APP.chatLoading){
-    box.innerHTML = `<div class="ai-chat-empty">可以問財務、案件進度、業務排行、廣告投放成效（例如「這個月 ROI 怎麼樣」「哪個業務貢獻最多」），也可以請它給建議，或直接說要記一筆帳（例如「幫我記一筆 8/15 廣告費 1200」）。</div>`;
+    box.innerHTML = isCore()
+      ? `<div class="ai-chat-empty">可以問財務、案件進度、業務排行、廣告投放成效（例如「這個月 ROI 怎麼樣」「哪個業務貢獻最多」），也可以請它給建議，或直接說要記一筆帳（例如「幫我記一筆 8/15 廣告費 1200」）。</div>`
+      : isStaffSales()
+        ? `<div class="ai-chat-empty">可以問你自己的案件進度、獎金、行程，也可以直接說要記一筆客戶開發記錄（例如「幫我記一筆，陳小姐 0912345678，在談和潤，客戶還在考慮」），AI 會幫你整理成一筆個人業務進度紀錄，確認後才會真的存進去。它只看得到你自己的資料。</div>`
+        : `<div class="ai-chat-empty">可以問案件進度、獎金發放狀況，也可以直接說要登記一筆正式案件（例如「幫我新增一筆，王先生 0987654321，JET方案，指派給秉，狀態教照會」），AI 會幫你整理成一筆進度追蹤紀錄，確認後才會真的存進去。它只看得到進度追蹤資料，看不到財務數字。</div>`;
   } else {
     box.innerHTML = APP.chatMessages.map((m,i)=>{
       if(m.role==='user') return `<div class="ai-msg user">${escHtml(m.text)}</div>`;
       let inner = `<div class="ai-msg ai">${escHtml(m.text)}`;
       if(m.pendingTx && m.pendingTx.length>0 && !m.confirmed){
-        inner += `<div id="chat-pending-${i}" style="margin-top:10px;background:#fff;border-radius:8px;padding:8px;">
-          ${m.pendingTx.map((r,j)=>buildTxRowHtml(r,j)).join('')}
+        const kind = m.pendingKind || 'tx';
+        const rowBuilder = kind==='personallog' ? buildPersonalLogRowHtml : kind==='progresstrack' ? buildProgressTrackRowHtml : buildTxRowHtml;
+        inner += `<div id="chat-pending-${i}" style="margin-top:10px;background:#fff;border-radius:8px;padding:8px;" data-kind="${kind}">
+          ${m.pendingTx.map((r,j)=>rowBuilder(r,j)).join('')}
           <button type="button" class="btn primary sm" style="margin-top:6px;width:100%;" data-action="chat-tx-confirm" data-msgidx="${i}">確認新增選取的紀錄</button>
         </div>`;
       } else if(m.confirmed){
@@ -2790,23 +2877,45 @@ async function sendChatMessage(question){
   APP.chatLoading = true;
   renderChat();
   try{
+    const ctx = isCore() ? buildFinanceContext() : buildStaffContext();
     const resp = await fetch(AI_WORKER_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        question, context: buildFinanceContext(), today: todayStr(),
-        categories: { expense: APP.data.categories.expense.map(c=>c.name), income: APP.data.categories.income.map(c=>c.name) }
+        question, context: ctx, today: todayStr(),
+        role: APP.role,
+        categories: isCore() ? { expense: APP.data.categories.expense.map(c=>c.name), income: APP.data.categories.income.map(c=>c.name) } : { expense:[], income:[] },
+        caseOptions: { plan: APP.data.caseSettings.planOptions, staff: APP.data.caseSettings.staffOptions, dealProduct: DEAL_PRODUCT_OPTIONS, contactStatus: CONTACT_STATUS_OPTIONS, status: STATUS_OPTIONS }
       })
     });
     const data = await resp.json();
     let text = data.answer || data.error || '沒有取得回應，請再試一次。';
     let rows = null;
-    const match = text.match(/<transactions>([\s\S]*?)<\/transactions>/i);
-    if(match){
-      try{ rows = JSON.parse(match[1].trim()); }catch(e){ rows = null; }
-      text = text.replace(match[0], '').trim();
+    let pendingKind = 'tx';
+    if(isCore()){
+      const match = text.match(/<transactions>([\s\S]*?)<\/transactions>/i);
+      if(match){
+        try{ rows = JSON.parse(match[1].trim()); }catch(e){ rows = null; }
+        text = text.replace(match[0], '').trim();
+      }
+    } else if(isStaffSales()){
+      const match = text.match(/<personallog>([\s\S]*?)<\/personallog>/i);
+      if(match){
+        try{ rows = JSON.parse(match[1].trim()); }catch(e){ rows = null; }
+        text = text.replace(match[0], '').trim();
+      }
+      pendingKind = 'personallog';
+      text = text.replace(/<transactions>[\s\S]*?<\/transactions>/i, '').trim();
+    } else if(isStaffAdmin()){
+      const match = text.match(/<progresstrack>([\s\S]*?)<\/progresstrack>/i);
+      if(match){
+        try{ rows = JSON.parse(match[1].trim()); }catch(e){ rows = null; }
+        text = text.replace(match[0], '').trim();
+      }
+      pendingKind = 'progresstrack';
+      text = text.replace(/<transactions>[\s\S]*?<\/transactions>/i, '').trim();
     }
-    APP.chatMessages.push({ role:'ai', text, pendingTx: (rows && Array.isArray(rows) && rows.length>0) ? rows : null });
+    APP.chatMessages.push({ role:'ai', text, pendingTx: (rows && Array.isArray(rows) && rows.length>0) ? rows : null, pendingKind });
   }catch(e){
     APP.chatMessages.push({role:'ai', text:'連線失敗，請確認網路連線後再試一次。'});
   }
@@ -3009,18 +3118,39 @@ document.addEventListener('click', (e)=>{
     const msgIdx = Number(chatConfirmBtn.dataset.msgidx);
     const container = document.getElementById('chat-pending-'+msgIdx);
     if(container){
+      const kind = container.dataset.kind || 'tx';
       const rowEls = container.querySelectorAll('.tx-row');
       let count = 0;
       rowEls.forEach(rowEl=>{
         const chk = rowEl.querySelector('.ai-row-check');
         if(!chk.checked) return;
-        const data = { note:'', pending:false };
+        const data = {};
         rowEl.querySelectorAll('.ai-row-field').forEach(f=>{ data[f.dataset.key] = f.value; });
-        data.amount = Number(data.amount) || 0;
-        APP.data.transactions.push(stamp({id:uid(), ...data}));
-        count++;
+        if(kind==='tx'){
+          data.note = data.note || ''; data.pending = false;
+          data.amount = Number(data.amount) || 0;
+          APP.data.transactions.push(stamp({id:uid(), ...data}));
+          count++;
+        } else if(kind==='personallog'){
+          data.customer = data.customer || '';
+          if(!data.customer) return;
+          data.phone = data.phone || ''; data.source = data.source || ''; data.transferTo = data.transferTo || '';
+          data.latestNote = data.latestNote || ''; data.caseStatus = data.caseStatus || ''; data.declineReason = data.declineReason || '';
+          savePersonalProgress(stamp({ id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), ...data }));
+          count++;
+        } else if(kind==='progresstrack'){
+          data.customer = data.customer || '';
+          if(!data.customer) return;
+          data.phone = data.phone || ''; data.note = data.note || ''; data.status = data.status || '教照會';
+          if(data.lineType==='channel'){
+            saveProgressChannelCase(stamp({ id:uid(), date:data.date, customer:data.customer, phone:data.phone, plan:data.plan||'', staff:data.staff||'', source:'通路', referrer:'', status:data.status, note:data.note }));
+          } else {
+            saveProgressAdCase(stamp({ id:uid(), date:data.date, customer:data.customer, phone:data.phone, plan:data.plan||'', staff:data.staff||'', status:data.status, note:data.note }));
+          }
+          count++;
+        }
       });
-      if(count>0) saveTransactions();
+      if(kind==='tx' && count>0) saveTransactions();
       APP.chatMessages[msgIdx].confirmed = true;
       APP.chatMessages[msgIdx].confirmedCount = count;
       renderChat();
