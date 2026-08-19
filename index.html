@@ -208,6 +208,39 @@
   .ai-msg.loading{align-self:flex-start;background:#EEF1FB;color:var(--muted);font-style:italic;}
   .ai-chat-empty{color:var(--muted);font-size:12.5px;text-align:center;padding:20px 10px;}
   .ai-chat-form{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border);}
+  .aurora-card{
+    position:relative; overflow:hidden;
+    background:linear-gradient(120deg,#0b1e3d 0%,#0f3d5c 20%,#1a6b5e 40%,#2ea88c 55%,#3a7bd5 70%,#6a3fb5 85%,#0b1e3d 100%);
+    background-size:400% 400%;
+    animation:aurora-shift 14s ease-in-out infinite, aurora-breathe 5s ease-in-out infinite;
+  }
+  .aurora-card::before{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse at 30% 20%, rgba(46,255,213,.35), transparent 55%),
+               radial-gradient(ellipse at 75% 60%, rgba(147,112,255,.3), transparent 55%),
+               radial-gradient(ellipse at 50% 90%, rgba(58,199,255,.25), transparent 60%);
+    mix-blend-mode:screen;
+    animation:aurora-drift 9s ease-in-out infinite alternate;
+  }
+  .aurora-card > *{ position:relative; z-index:1; }
+  @keyframes aurora-shift{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+  }
+  @keyframes aurora-breathe{
+    0%,100%{ box-shadow:0 0 22px 2px rgba(58,199,255,.25), inset 0 0 40px rgba(46,255,213,.08); }
+    50%{ box-shadow:0 0 40px 8px rgba(147,112,255,.4), inset 0 0 60px rgba(46,255,213,.18); }
+  }
+  @keyframes aurora-drift{
+    0%{ transform:translate(-3%,-2%) scale(1); opacity:.85; }
+    100%{ transform:translate(3%,2%) scale(1.08); opacity:1; }
+  }
+  .wizard-hat-icon{
+    display:inline-block; width:16px; height:16px; vertical-align:middle;
+    background-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAKbUlEQVR42s1Ya5AU1RX+zr23e3Z2WBZWRYFEUDSaXY1GJJVCyK5A1JQGXKqaMpWKZaVSxCQVxeA76jAVLRE0SRljAinzqDJqbAGR+AiK7EQDJRqfiFF8IAoILMtjmZnuvo+THz277KzL+ghJvP+mqqf7u9855zvnfMDHOnmRz+cFwITP1mEKgkDWQM3nRWtrXgF58X8GdwDA2WdfO3LatOtOnjjxiob+YPtf4FAfOhhzAPHkyXNGel5uPjPPALiRmbcR0fPMtFIp8egTT9y4sec9QRCIMAzt/wBgXgDzeMqUn44CuChl3TitKwAYRBJSKgAEY5KYiB4Xwi1atWr+XwEgCO6XYTjLAeBDBfBDeRQEGwggtlb/SojMuCQpxQAzADBb1jq2xlQM4DJSqvMAb8WUKdd2tLVd0xqGs2wK7tDl54cK4M4773TnnPOzcUKIOwADIlLOOQIAIhARCYAEALbWOOcspPSOIcJFY8dOGlZfP3X1zp0Fk8/nRbFY5EPKYEdH+juXy37lsMOOlEOHDufGxiZqbByObDYHISSYXW96EJEkImFMbJ3TTqnMnKOO0qsnTrxiVKFQcIeigAYMhXMYXU1PJiJ4no9crgGNjU3I5YaCiMB8gBwikgAJrctaCDUxk/E6pk276ugwDG2qn5/+qINUcc3NUzAMIkI2m4PvZ1AqdSNJIhD1/T55xlSMUtnjrXWPtrZeesaGDfO6Z8/+prdo0XhDRDxQUba2pkSNGNHCO3a8SsUiHFBwgwAU8UGlmx2klBg6dBhKpW5UKmUQ9RUDoYyJtOfVNxuDP4YhnQ/ALl4MMDP1gAyCQIZhMwMFlwLqBzufF4VCwQ0IUAhbGrS/VMPbE+5yudQPJHlaVyyIZlwY/OXWaafNWrt5e2kNEW1LpShwYUgWAKZNu+5451wrM48HaBiR+BdzdHehUHgrn88LNXAO0m5m13NjDMZmff0QOOcQRZUakASSxiauO+6cW4qBw4bldt56ZXL+5Qv8NQDQ1nbtuULgh8bYqUr5meobQSTgXN3ctrarvlUoFB6uAThiREtV78RO52wqLB/VrZmRyzXAWgOtdS9IBkPJjNjR9Ybd3rVFj/vc6CPA3jkTJly4t7Fx7O3MPIUIcC5BqqsAp2nuhPAaALp36tSrT62psObmVzkNMW+31jgiiNquMDBeIuoNd2+akESU7MOJn58qD28cnekugddvemq68oesE0JNMSZyWsdVYScFkKqqgeecNkr5DcbwlTUAC4V5DADWyg+Y3R4hZMoFMwuhYIx+m5m7hBDoC5yZoZSHbLYezAxBEpVkL8aMOB2njjsXlpl0AhrGLadkvab6SrTXEkmRAhro1iSt1UyEb/TTKGIAtHz5ZXuJsIVIgpkYgJPSQ7lcWkNEz0npg7m28pgdstkhEEKikuzDuJFnYGLLd8BVVrs7GfXc5L589LdZSinBgzYZYnbEjNHqw734ftHc/Cq//DLeEkKcTARHJKC1RhSVXmhqOoKk9M8iirhPQQAALCeoy2bRfPTX0TzmTFgHWM0o7yKwBvwmJ44bfiK27m/B5h3Pw/fq+3amAVIHUvQfs7q7t6lCoeAAfi2NAOAcU6m0D0RuvTGlZVHcbQkkiQgEgnEJjIvRNGQcvtZyMVrGngltGcyA04RMAzB0NJBpIBgLJKZHlvjgk3LK/D7RhzkJED/22KXx9Om3nC6lN92YmImIKpX9MopKlcjX/7zgq1eXs97wyLKGNhFbpzE8Nwanjglw2tgAQ+qOQKJdL6teFvBzVYEnQlf3NnTufQdKZmraZX9tqJLzuuoBHIZkZ8zID/P9Ydcw02VCSM+YiMvlEmttWQj1xLOrfr2rc9Idv/3C6Gm5F9++z4xu+pIaOawFw3NHQxCgHVdDI/p86gBRRMD6TQ/DOg1PZQ8aXmZiIgFmrKzuFuTa2xdeIKV3M5EaG8fdbIzWcVwhrS15XoaEsDcDoES7SYcPGc1nnPAjyvr1YEaaa45xMFF3bJH1JV56+0ls7XwFvpcbLPeYCGSt1lKKexRQcO3tN5/i+9l7kyRGZ+dWQyQVkfSIPGQyGWhdvrGjY8HafD4vhBXPZ3y0GFsPYxlcLZKBwTGYGVlf4vX31+GVd1bAU4MXBjMb3895WpfuefLJBRtSQWNZ75xla7UBhGLmzcz2MWYz35jK1I6OBdcHwf1+oVBw2/euL+zZXd4tHMhZZjrIJsqc5qGvBNZv+juee+M+KJkZvCcxa8+r84yJtjC7K4BqLzZGbBRC75dSNnheBlpHl6xePX95z1/Hj5/theGs5Pzzb2tdv2X57cfUzRw6ou6LJIeA6hoGGCQI8JSANgleevdxbNi0CoK8mrGt+rTjNAgQQkrPy3jG6A1ESVAs3vZBPp8X1LPBzZx56zoiOWHPni4YE7W3tdU/9MwzTV5DQxeHYSFpb7/1e0plFlmuiFG5CThhVBussCBIMLjaSEWvcO3YtxFvftCB/fFOKFGHOK4gSeLqmuCYmaUQiqT0ADCsNVuJ+K4oMgvXrFnY3TtutbbOk8UiDJHYaK2dYK1xUnpxOrLnOQwLycyZCy7yvOzvjImdtc52xW9IJydDkYRjQBBBEME5YNf+d7G5cx06u98EkYAns2C2XFeXtXV19UpKTwIErWNYq9+z1j2ldfJQFLmVTz89f3fPEJtqMaDa2uCAvHLOnlQulx0RCSHMJgAIw3k6CIaezCwWp3uHIyU9WYq6sH7zChx35CRImYU2Zewpv4/te1/DntJ7cHDwUp1j56yTUkmlMkrrSmxt8g9ArvI8r3jssSe9eNttZ5f6anG6thZczXgya9YvL0gSd293925Yq3/R0XHz3CAIRRjOsu3tC//m+/VnaV0xByZwgnUxpPChZAbGxjA2Svdm4YMAOHY2zas6GBO9z4zfW+v+/OCDl79R21oDCQQIw8BVZ4Hadrdo0XPeihUrN8VxnEmSaE6xeMvd1ZvYIFjY7Jx8pSoLonbjJzA4rVYSVXFmOJc+nMlkhdZJFzN+LqX7TRjO7eoZ5Ts6IEaM2MBheP+AoGqWpgcffOQGrfXLpdKui9euvfPdIAjkjh2vUlrdPDmTqRNJUjb9AVaLr7drpJdgo5SviAjGJH8SIr4hDK/eDACtrXnV1gZXzS03qPPSF2AUxY+uXn3T9X1ywKbuFQDQyI/lgaXawplMThkTb7TWzVm6dO4jPcCKxXm2WCRTLH6KvXj16pvWpFKTF1Xrom8g93+Uz8LMVkpFnpcRWkeLiOIJS5fOfSQdPpiKxYL5qDAOymCqN1Rj+BzYTeyzzhkaaHlKWYPz/XrpnN6idfLjZcvmLusbif+i/ZZq0ezZo+TOnfte8Ly6Fq0jTUSpqoItkVJK+TAmecC50iXLll3Xu1L+J4x9LOujx+VavPj7Wgj5A2Znlcp41Vwj388pItphbfTdJUsuCw6Am2UPJbhBAfb4KkuW/OQpY+LzAH5NSkVCiLK18V1E9rQHHpj7h1THmA5VSD+5EVw1f8aPn+0FwR2nzpy5cEztFP4ZOP1ttJ4K/Yw5/qAgCOR/aqd90vNv162lEEagXz4AAAAASUVORK5CYII=');
+    background-size:contain; background-repeat:no-repeat; background-position:center;
+  }
   .ai-chat-form input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:20px;font-size:13px;}
   .ai-chat-form button{background:var(--navy);color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:13px;cursor:pointer;}
 
@@ -322,13 +355,16 @@ const APP = {
   casesTab:'ad', caseAdFilter:{status:'all', month:nowMonthKey}, caseChannelFilter:{status:'all', month:nowMonthKey}, dailyBonusDate:'',
   bizToolsTab:'progress', staffOverviewName:'', staffOverviewTab:'log', viewingStaff:null,
   myLogFilter:{month:nowMonthKey}, attendanceFilter:{month:nowMonthKey},
+  progressAdSort:{key:'date',dir:'desc'}, progressChannelSort:{key:'date',dir:'desc'},
+  casesAdSort:{key:'date',dir:'desc'}, casesChannelSort:{key:'date',dir:'desc'},
+  txSort:{key:'date',dir:'desc'}, adSpendSort:{key:'month',dir:'desc'}, myLogSort:{key:'date',dir:'desc'},
   progressTab:'ad', progressAdFilter:{status:'all', month:nowMonthKey}, progressChannelFilter:{status:'all', month:nowMonthKey},
   data:{
     company:{name:'',taxId:'',phone:'',address:''}, assets:[], liabilities:[],
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
     personalProgress:[], attendance:[], calendar:[],
-    caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05,
+    caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
       planOptions:['醫美','JET','電腦','裕富','維力','21','亞太','二線、商品'],
       staffOptions:['煌','全','熙','傑','秉','耿','琪','曾','希'] }
   }
@@ -478,6 +514,14 @@ function saveProgressChannelCase(rec){ return setDoc(doc(db,'progressChannelCase
 function deleteProgressChannelCase(id){ return deleteDoc(doc(db,'progressChannelCases', id)); }
 function saveBonusLedgerEntry(entry){ return setDoc(doc(db,'staffBonusLedger', entry.id), entry); }
 function deleteBonusLedgerEntry(id){ return deleteDoc(doc(db,'staffBonusLedger', id)).catch(()=>{}); }
+function syncWizardHatLedger(caseId, date, customer, fee){
+  const xjName = APP.data.caseSettings.xiaojiangName || '小江';
+  if(Number(fee)>0){
+    saveBonusLedgerEntry(stamp({ id:'wiz-'+caseId, staffName:xjName, date, businessBonus:0, xiaojiangBonus:0, specialFee:Number(fee), customer, isSpecialFee:true }));
+  } else {
+    deleteBonusLedgerEntry('wiz-'+caseId);
+  }
+}
 function saveStaffProfile(uid, data){ return setDoc(doc(db,'staffProfiles', uid), data, {merge:true}); }
 function savePersonalProgress(rec){ return setDoc(doc(db,'personalProgress', rec.id), rec); }
 function deletePersonalProgress(id){ return deleteDoc(doc(db,'personalProgress', id)); }
@@ -575,6 +619,7 @@ function shellHTML(){
     <div class="nav-group-label">業務營運</div>
     <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
     <div class="nav-item" data-action="nav" data-view="cases"><span class="nav-icon">📋</span>獲利報表</div>
+    <div class="nav-item" data-action="nav" data-view="dailyBonus"><span class="nav-icon">💰</span>每日獎金</div>
     <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
     <div class="nav-group-label">公司管理</div>
     <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">☺</span>人事管理</div>
@@ -709,7 +754,25 @@ function dashboardHTML(){
   const disbursedCount = allProgressThisMonth.filter(c=>STATUS_DONE.includes(c.status)).length;
   const pendingCount = allProgressThisMonth.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
   const todayLedger = APP.data.staffBonusLedger.filter(e=>e.date===todayStr());
-  const todayBonusTotal = sum(todayLedger.map(e=>({amount:(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0)})));
+  const todayAdBonus = sum(todayLedger.map(e=>({amount:(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0)})));
+  const todayChToday = APP.data.casesChannel.filter(c=>c.date===todayStr());
+  const todayChProfit = sum(todayChToday.map(c=>({amount:c.partnerProfit})));
+  const todayWizardFee = sum([...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>c.date===todayStr() && c.specialHandling).map(c=>({amount:c.specialFee})));
+  const todayBonusTotal = todayAdBonus + todayChProfit + todayWizardFee;
+  const todayByPerson = {};
+  const xiaojiangNameForToday = APP.data.caseSettings.xiaojiangName || '小江';
+  APP.data.casesAd.filter(c=>c.date===todayStr()).forEach(c=>{
+    const k = c.staff||'（未填）'; todayByPerson[k] = (todayByPerson[k]||0) + (Number(c.businessBonus)||0);
+    const xj = Number(c.xiaojiangBonus)||0;
+    if(xj>0) todayByPerson[xiaojiangNameForToday] = (todayByPerson[xiaojiangNameForToday]||0) + xj;
+  });
+  todayChToday.forEach(c=>{
+    const k = c.staff||'（未填）'; todayByPerson[k] = (todayByPerson[k]||0) + (Number(c.partnerProfit)||0);
+  });
+  [...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>c.date===todayStr() && c.specialHandling && Number(c.specialFee)>0).forEach(c=>{
+    todayByPerson[xiaojiangNameForToday] = (todayByPerson[xiaojiangNameForToday]||0) + Number(c.specialFee);
+  });
+  const todayPeopleList = Object.entries(todayByPerson).sort((a,b)=>b[1]-a[1]);
 
   /* ---- Layer 3a: 業務排行榜(本月公司利潤) ---- */
   const profitByStaff = {};
@@ -747,6 +810,48 @@ function dashboardHTML(){
       <div class="card"><div class="stat-label">本月處理中案件</div><div class="stat-value blue">${pendingCount} 件</div></div>
       <div class="card"><div class="stat-label">今日應發獎金</div><div class="stat-value" style="color:var(--teal);">${money(todayBonusTotal)}</div></div>
     </div>
+
+    <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,var(--navy),var(--navy-hover));color:#fff;cursor:pointer;" data-action="nav" data-view="dailyBonus">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:13px;opacity:.85;">💰 今日獎金發放（${todayStr()}）</div>
+          <div style="font-size:32px;font-weight:800;margin:4px 0;">${money(todayBonusTotal)}</div>
+        </div>
+        <div style="text-align:right;font-size:12.5px;opacity:.9;">
+          ${todayPeopleList.length===0 ? '今天尚無案件' : todayPeopleList.slice(0,4).map(([name,val])=>`<div>${escHtml(name)}：${money(val)}</div>`).join('')}
+          ${todayPeopleList.length>4 ? `<div style="opacity:.7;">...等 ${todayPeopleList.length} 人</div>` : ''}
+        </div>
+      </div>
+      <div style="font-size:11.5px;opacity:.75;margin-top:8px;">點擊查看完整每日獎金明細 →</div>
+    </div>
+
+    ${(function(){
+      const meUser = APP.users.find(u=>u.id===APP.user.uid);
+      if(!meUser || !meUser.isXiaojiang) return '';
+      const xjName = APP.data.caseSettings.xiaojiangName || '小江';
+      const todayXj = todayByPerson[xjName] || 0;
+      const monthXjLedger = APP.data.staffBonusLedger.filter(e=>e.staffName===xjName && monthKey(e.date)===nowMonthKey);
+      const monthXjTiered = sum(monthXjLedger.map(e=>({amount:Number(e.xiaojiangBonus)||0})));
+      const monthWizardFee = sum([...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>monthKey(c.date)===nowMonthKey && c.specialHandling).map(c=>({amount:c.specialFee})));
+      const thisMonthAdSpend = APP.data.adSpend.find(a=>a.month===nowMonthKey);
+      let pilotBonusThisMonth = 0;
+      if(thisMonthAdSpend){
+        const adRevenue = sum(adThisMonth.map(c=>({amount:c.companyProfit})));
+        const fixedCostThisMonth = computeFixedCost(nowMonthKey);
+        const adTotalNet = adRevenue - fixedCostThisMonth - Number(thisMonthAdSpend.spend||0);
+        pilotBonusThisMonth = Math.max(0, adTotalNet) * APP.data.caseSettings.pilotBonusRate;
+      }
+      return `<div class="card aurora-card" style="margin-bottom:20px;color:#fff;border:none;">
+        <div style="font-size:13px;opacity:.9;">🌌 ${escHtml(xjName)}的個人獎金</div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;align-items:flex-end;">
+          <div><div style="font-size:11.5px;opacity:.85;">今日拆成</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(todayXj)}</div></div>
+          <div><div style="font-size:11.5px;opacity:.85;">本月拆成累計</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthXjTiered)}</div></div>
+          <div><div style="font-size:11.5px;opacity:.85;">本月投手獎金（5號發放）</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(pilotBonusThisMonth)}</div></div>
+          <div><div style="font-size:11.5px;opacity:.85;">本月${whIcon(13)}</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthWizardFee)}</div></div>
+          <div><div style="font-size:11.5px;opacity:.85;">本月合計</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthXjTiered+pilotBonusThisMonth+monthWizardFee)}</div></div>
+        </div>
+      </div>`;
+    })()}
 
     <div class="grid grid-2" style="margin-bottom:16px;">
       <div class="card"><div class="stat-label">${year} 年度總收入</div><div class="stat-value green">${money(totalIncome)}</div></div>
@@ -1174,6 +1279,7 @@ function settingsHTML(){
             <label class="field"><span>小江獎金比例－門檻外（%）</span><input type="number" step="0.1" name="xiaojiangRateAbove" value="${(cs.xiaojiangRateAbove*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
             <label class="field"><span>每月固定成本</span><div style="padding:10px 12px;background:#F5F7FC;border-radius:8px;font-size:12.5px;color:var(--muted);">自 ${nowMonthKey} 起改為自動計算：抓收支明細裡當月「房租水電」＋「薪資支出」兩個分類的實際支出加總，不用手動輸入。</div></label>
             <label class="field"><span>廣告投手月獎金比例（%，每月5號發放）</span><input type="number" step="0.1" name="pilotBonusRate" value="${(cs.pilotBonusRate*100).toFixed(1)}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>廣告投手（小江）姓名</span><input type="text" name="xiaojiangName" value="${escAttr(cs.xiaojiangName||'小江')}" ${isAdmin()?'':'disabled'} placeholder="用於每日獎金、儀表板顯示"/></label>
           </div>
           ${isAdmin()?`<div class="modal-actions" style="justify-content:flex-start;"><button type="submit" class="btn primary">儲存</button></div>`:`<p style="color:var(--muted);font-size:12.5px;">只有管理員能調整這些參數。</p>`}
         </form>
@@ -1325,6 +1431,7 @@ function usersHTML(){
           <option value="staffSales" ${u.role==='staffSales'?'selected':''}>業務</option>
         </select>`;
     const showStaffFields = (u.role==='staffAdmin' || u.role==='staffSales') && !isMe;
+    const showXiaojiangToggle = (u.role==='admin' || u.role==='editor') && !isMe;
     const profile = APP.staffProfiles[u.id] || {};
     const paidThisMonth = (profile.salaryPaidMonths||[]).includes(nowMonthKey);
     const staffFieldsHtml = showStaffFields ? `
@@ -1334,6 +1441,11 @@ function usersHTML(){
       </select>
       <input type="number" class="staff-salary-input" data-uid="${u.id}" value="${profile.baseSalary||''}" placeholder="底薪" style="margin-top:6px;margin-left:6px;width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;"/>
       ${profile.baseSalary>0 ? `<div style="margin-top:6px;"><span class="badge ${paidThisMonth?'active':'pending'}">${nowMonthKey} ${paidThisMonth?'已發放':'未發放'}</span></div>` : ''}
+    ` : showXiaojiangToggle ? `
+      <label style="margin-top:6px;display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);">
+        <input type="checkbox" class="xiaojiang-toggle" data-uid="${u.id}" ${u.isXiaojiang?'checked':''}/>
+        標記為廣告投手（${escHtml(APP.data.caseSettings.xiaojiangName||'小江')}），總覽會多顯示個人拆成獎金
+      </label>
     ` : '';
     return `<tr><td>${escHtml(u.email)}</td><td>${roleSelect}${staffFieldsHtml}</td><td>${u.createdAt?new Date(u.createdAt).toLocaleString('zh-TW'):'—'}</td></tr>`;
   }).join('');
@@ -1373,6 +1485,7 @@ function render(){
   else if(APP.view==='hr' && isCore()) main.innerHTML = hrHTML();
   else if(APP.view==='vendors' && isCore()) main.innerHTML = vendorsHTML();
   else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
+  else if(APP.view==='dailyBonus' && isCore()) main.innerHTML = dailyBonusPageHTML();
   else if(APP.view==='staffOverview' && isCore()) main.innerHTML = staffOverviewHTML();
   else if(APP.view==='progress') main.innerHTML = progressHTML();
   else if(APP.view==='personalLog' && roomOk) main.innerHTML = personalLogPageHTML();
@@ -1534,7 +1647,15 @@ function myDashboardView(){
   const today = todayStr();
   const upcoming = APP.data.calendar.filter(c=>c.staffUid===meUid && c.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
 
+  const todayAmount = byDay[todayStr()] || 0;
+
   return `
+    <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,var(--navy),var(--navy-hover));color:#fff;">
+      <div style="font-size:13px;opacity:.85;">💰 今天（${todayStr()}）你的獎金</div>
+      <div style="font-size:36px;font-weight:800;margin:4px 0;">${money(todayAmount)}</div>
+      <div style="font-size:12px;opacity:.8;">${todayAmount>0 ? '今天有案件入帳，實際發放時間依公司作業為準' : '今天目前還沒有案件入帳'}</div>
+    </div>
+
     <div class="card-head-row" style="margin-top:0;"><h3 style="font-size:15px;">本月案件狀態</h3></div>
     <div class="grid grid-3" style="margin-bottom:20px;">
       <div class="card"><div class="stat-label">處理中</div><div class="stat-value blue">${myPending} 件</div></div>
@@ -1570,7 +1691,8 @@ function inlineSelectHtml(id, field, options, current, badgeClass){
   </select>`;
 }
 function progressLogRows(list, ownerUid, readOnly){
-  return list.slice().sort((a,b)=> b.date.localeCompare(a.date)).map(c=> readOnly ? `
+  const sorted = readOnly ? list.slice().sort((a,b)=> b.date.localeCompare(a.date)) : sortList(list, APP.myLogSort, 'text');
+  return sorted.map(c=> readOnly ? `
     <tr>
       <td>${c.date}</td>
       <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
@@ -1581,19 +1703,21 @@ function progressLogRows(list, ownerUid, readOnly){
       <td style="max-width:200px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.latestNote||'—')}</td>
       <td>${c.caseStatus?`<span class="badge income">${escHtml(c.caseStatus)}</span>`:'—'}</td>
       <td style="max-width:140px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.declineReason||'—')}</td>
+      <td>${c.wizardHatNote?`${whIcon(15)} ${escHtml(c.wizardHatNote)}`:''}</td>
     </tr>` : `
     <tr>
-      <td>${c.date}</td>
-      <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
-      <td>${escHtml(c.source||'—')}</td>
+      <td><input type="date" class="inline-log-text" data-id="${c.id}" data-field="date" value="${c.date}" style="width:120px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';"/></td>
+      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="customer" value="${escAttr(c.customer)}" placeholder="客戶姓名" style="width:90px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/>
+        <div style="margin-top:2px;"><input type="text" class="inline-log-text" data-id="${c.id}" data-field="phone" value="${escAttr(c.phone||'')}" placeholder="電話" style="width:110px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12px;color:var(--muted);" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></div></td>
+      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="source" value="${escAttr(c.source||'')}" placeholder="來源" style="width:80px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
       <td>${inlineSelectHtml(c.id,'dealProduct',DEAL_PRODUCT_OPTIONS,c.dealProduct,'pending')}</td>
       <td>${inlineSelectHtml(c.id,'contactStatus',CONTACT_STATUS_OPTIONS,c.contactStatus,'expense')}</td>
-      <td>${escHtml(c.transferTo||'—')}</td>
+      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="transferTo" value="${escAttr(c.transferTo||'')}" placeholder="轉給誰" style="width:80px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
       <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="latestNote" value="${escAttr(c.latestNote||'')}" placeholder="點擊輸入備註" style="width:100%;min-width:160px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
       <td>${inlineSelectHtml(c.id,'caseStatus',LOG_CASE_STATUS_OPTIONS,c.caseStatus,'income')}</td>
       <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="declineReason" value="${escAttr(c.declineReason||'')}" placeholder="—" style="width:100%;min-width:110px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
+      <td><div style="display:flex;align-items:center;gap:4px;">${whIcon(15)}<input type="text" class="inline-log-text" data-id="${c.id}" data-field="wizardHatNote" value="${escAttr(c.wizardHatNote||'')}" placeholder="金額" style="width:70px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></div></td>
       <td><div class="row-actions">
-        <button class="icon-btn" data-action="edit-personal-log" data-id="${c.id}">編輯</button>
         <button class="icon-btn" data-action="delete-personal-log" data-id="${c.id}">刪除</button>
       </div></td>
     </tr>`).join('');
@@ -1616,13 +1740,15 @@ function myProgressLogView(){
     </div>
     <div class="table-wrap">
       ${mine.length===0?`<div class="empty">${f.month?'這個月份尚無記錄':'尚無記錄，開始養成記錄客戶的習慣吧'}</div>`:`
-      <table><thead><tr><th>日期</th><th>客戶</th><th>來源</th><th>洽談產品</th><th>聯絡狀態</th><th>轉給誰</th><th>最新聯絡備註</th><th>案件狀態</th><th>婉拒原因</th><th></th></tr></thead>
+      <table><thead><tr>
+        ${thSort('日期','date','myLogSort')}${thSort('客戶','customer','myLogSort')}${thSort('來源','source','myLogSort')}${thSort('洽談產品','dealProduct','myLogSort')}${thSort('聯絡狀態','contactStatus','myLogSort')}${thSort('轉給誰','transferTo','myLogSort')}<th>最新聯絡備註</th>${thSort('案件狀態','caseStatus','myLogSort')}<th>婉拒原因</th><th>${whIcon(14)}</th><th></th>
+      </tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
 }
 function openPersonalLogModal(existing){
-  const c = existing || {date:todayStr(), customer:'', phone:'', source:'', dealProduct:'', contactStatus:'', transferTo:'', latestNote:'', caseStatus:'', declineReason:''};
+  const c = existing || {date:todayStr(), customer:'', phone:'', source:'', dealProduct:'', contactStatus:'', transferTo:'', latestNote:'', caseStatus:'', declineReason:'', wizardHatNote:''};
   openModal(existing?'編輯個人記錄':'新增個人記錄', `
     <div class="grid grid-2">
       <label class="field"><span>日期</span><input type="date" name="date" value="${c.date}" required/></label>
@@ -1636,6 +1762,7 @@ function openPersonalLogModal(existing){
     </div>
     <label class="field"><span>最新聯絡備註</span><textarea name="latestNote">${escHtml(c.latestNote||'')}</textarea></label>
     <label class="field"><span>婉拒原因</span><input type="text" name="declineReason" value="${escAttr(c.declineReason)}"/></label>
+    <label class="field"><span style="display:flex;align-items:center;gap:6px;">${whIcon(16)}</span><input type="text" name="wizardHatNote" value="${escAttr(c.wizardHatNote||'')}" placeholder="金額（純自己記錄用）"/></label>
   `, 'personal-log-form', (data)=>{
     const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), ...data});
     savePersonalProgress(rec);
@@ -1781,6 +1908,24 @@ function statusBadgeClass(s){
   return 'pending';
 }
 function monthKey(dateStr){ return dateStr ? dateStr.slice(0,7) : ''; }
+function sortList(list, sortState, type){
+  if(!sortState || !sortState.key) return list;
+  const { key, dir } = sortState;
+  const sorted = list.slice().sort((a,b)=>{
+    let va = a[key], vb = b[key];
+    if(type==='number'){ va = Number(va)||0; vb = Number(vb)||0; }
+    else { va = (va===undefined||va===null?'':va).toString(); vb = (vb===undefined||vb===null?'':vb).toString(); }
+    if(va < vb) return dir==='asc' ? -1 : 1;
+    if(va > vb) return dir==='asc' ? 1 : -1;
+    return 0;
+  });
+  return sorted;
+}
+function thSort(label, key, stateKey){
+  const state = APP[stateKey] || {};
+  const arrow = state.key===key ? (state.dir==='asc'?' ▲':' ▼') : '';
+  return `<th data-action="sort-table" data-statekey="${stateKey}" data-sortkey="${key}" style="cursor:pointer;user-select:none;white-space:nowrap;">${label}${arrow}</th>`;
+}
 function monthBoundsStart(mk){ return mk ? `${mk}-01` : ''; }
 function monthBoundsEnd(mk){
   if(!mk) return '';
@@ -1800,6 +1945,15 @@ function staffOrChannelFieldHtml(name, current){
   return `<input type="text" name="${name}" list="staff-suggest-list" value="${escAttr(current||'')}" placeholder="選業務，或直接輸入通路夥伴名稱"/>
     <datalist id="staff-suggest-list">${APP.data.caseSettings.staffOptions.map(s=>`<option value="${escAttr(s)}">`).join('')}</datalist>`;
 }
+function staffOrChannelFieldHtml2(listName, id, current){
+  if(isStaffSales()){
+    return escHtml(myStaffName());
+  }
+  return `<input type="text" class="inline-note-input" data-list="${listName}" data-id="${id}" data-field="staff" list="staff-suggest-list-inline" value="${escAttr(current||'')}" placeholder="業務／通路" style="width:100px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/>`;
+}
+function staffSuggestDatalistHtml(){
+  return `<datalist id="staff-suggest-list-inline">${APP.data.caseSettings.staffOptions.map(s=>`<option value="${escAttr(s)}">`).join('')}</datalist>`;
+}
 function calcBusinessBonus(afterCost){ return Math.round((Number(afterCost)||0) * APP.data.caseSettings.businessBonusRate); }
 function calcXiaojiangBonus(afterCost, ordinalInMonth){
   const cs = APP.data.caseSettings;
@@ -1812,18 +1966,33 @@ function adCaseOrdinal(caseId, dateStr){
   const idx = sameMonth.findIndex(c=>c.id===caseId);
   return idx>=0 ? idx+1 : sameMonth.length+1;
 }
+function wizardHatDeduction(c){ return c.specialHandling ? (Number(c.specialFee)||0) : 0; }
+function whIcon(size){ size = size||16; return `<span class="wizard-hat-icon" style="width:${size}px;height:${size}px;"></span>`; }
 function recalcAdCase(c){
+  const base = (Number(c.afterCost)||0) - wizardHatDeduction(c);
   const ordinal = adCaseOrdinal(c.id, c.date);
-  if(!c.businessBonusOverride) c.businessBonus = calcBusinessBonus(c.afterCost);
-  if(!c.xiaojiangBonusOverride) c.xiaojiangBonus = calcXiaojiangBonus(c.afterCost, ordinal);
-  if(!c.companyProfitOverride) c.companyProfit = (Number(c.afterCost)||0) - (Number(c.businessBonus)||0) - (Number(c.xiaojiangBonus)||0);
+  if(!c.businessBonusOverride) c.businessBonus = calcBusinessBonus(base);
+  if(!c.xiaojiangBonusOverride) c.xiaojiangBonus = calcXiaojiangBonus(base, ordinal);
+  if(!c.companyProfitOverride) c.companyProfit = base - (Number(c.businessBonus)||0) - (Number(c.xiaojiangBonus)||0);
   return c;
 }
 function recalcChannelCase(c){
-  if(!c.companyProfitOverride) c.companyProfit = (Number(c.afterCost)||0) - (Number(c.partnerProfit)||0);
+  const base = (Number(c.afterCost)||0) - wizardHatDeduction(c);
+  if(!c.companyProfitOverride) c.companyProfit = base - (Number(c.partnerProfit)||0);
   return c;
 }
 
+function wizardHatCellHtml(c, listName, editable){
+  if(!editable){
+    if(!c.specialHandling) return '';
+    return `${whIcon(15)} ${money(c.specialFee)}${c.specialFeePaid?' <span class="badge active">已入帳</span>':' <span class="badge pending">未入帳</span>'}`;
+  }
+  return `<div style="display:flex;flex-direction:column;gap:3px;">
+    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11.5px;"><input type="checkbox" class="wizard-hat-checkbox" data-list="${listName}" data-id="${c.id}" ${c.specialHandling?'checked':''}/>${whIcon(15)}</label>
+    ${c.specialHandling?`<input type="number" class="wizard-hat-fee" data-list="${listName}" data-id="${c.id}" value="${Number(c.specialFee)||0}" placeholder="費用" style="width:80px;border:1px solid var(--border);border-radius:6px;padding:3px 5px;font-size:11.5px;"/>
+    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;"><input type="checkbox" class="wizard-hat-paid-checkbox" data-list="${listName}" data-id="${c.id}" ${c.specialFeePaid?'checked':''}/>${c.specialFeePaid?'已入帳':'已入帳？'}</label>`:''}
+  </div>`;
+}
 function overrideTag(isOverride){
   return isOverride ? `<span class="badge pending" style="margin-left:6px;">已手動調整</span>` : '';
 }
@@ -1889,11 +2058,10 @@ function progressHTML(){
 }
 
 function casesHTML(){
-  const tab = APP.casesTab;
+  const tab = APP.casesTab==='daily' ? 'ad' : APP.casesTab;
   let body = '';
   if(tab==='ad') body = adCasesView();
   else if(tab==='channel') body = channelCasesView();
-  else if(tab==='daily') body = dailyBonusView();
   else body = adSpendView();
   return `
     <div class="page-header"><div><h1 class="page-title">獲利報表</h1><p class="page-sub">廣告線與業務／通路線的獲利試算，與進度追蹤各自獨立</p></div>
@@ -1902,10 +2070,16 @@ function casesHTML(){
     <div class="tabs">
       <button class="tab-btn ${tab==='ad'?'active':''}" data-action="cases-tab" data-tab="ad">廣告線獲利報表</button>
       <button class="tab-btn ${tab==='channel'?'active':''}" data-action="cases-tab" data-tab="channel">通路線獲利報表</button>
-      <button class="tab-btn ${tab==='daily'?'active':''}" data-action="cases-tab" data-tab="daily">每日獎金發放</button>
       <button class="tab-btn ${tab==='adspend'?'active':''}" data-action="cases-tab" data-tab="adspend">廣告支出報表</button>
     </div>
     ${body}
+  `;
+}
+
+function dailyBonusPageHTML(){
+  return `
+    <div class="page-header"><div><h1 class="page-title">每日獎金</h1><p class="page-sub">每天誰要發多少錢，一頁看完</p></div></div>
+    ${dailyBonusView()}
   `;
 }
 
@@ -1914,53 +2088,83 @@ function dailyBonusView(){
   const adToday = APP.data.casesAd.filter(c=>c.date===d);
   const chToday = APP.data.casesChannel.filter(c=>c.date===d);
 
-  const byStaff = {};
-  let xiaojiangTotal = 0;
+  const byPerson = {};
+  const xiaojiangName = APP.data.caseSettings.xiaojiangName || '小江';
+  function ensure(name){ if(!byPerson[name]) byPerson[name] = {name, businessBonus:0, xiaojiangBonus:0, channelProfit:0, wizardHatFee:0, count:0, paidCount:0, unpaidCount:0}; return byPerson[name]; }
   adToday.forEach(c=>{
-    const key = c.staff || '（未填業務）';
-    if(!byStaff[key]) byStaff[key] = {count:0, businessBonus:0};
-    byStaff[key].count++;
-    byStaff[key].businessBonus += Number(c.businessBonus)||0;
-    xiaojiangTotal += Number(c.xiaojiangBonus)||0;
+    const p = ensure(c.staff || '（未填業務）');
+    p.businessBonus += Number(c.businessBonus)||0;
+    p.count++;
+    if(c.bonusPaid) p.paidCount++; else p.unpaidCount++;
+    const xj = Number(c.xiaojiangBonus)||0;
+    if(xj>0){
+      const xp = ensure(xiaojiangName);
+      xp.xiaojiangBonus += xj;
+      xp.count++;
+      if(c.bonusPaid) xp.paidCount++; else xp.unpaidCount++;
+    }
   });
-  const byReferrer = {};
   chToday.forEach(c=>{
-    const key = c.staff || '（未填業務）';
-    if(!byReferrer[key]) byReferrer[key] = {count:0, profit:0};
-    byReferrer[key].count++;
-    byReferrer[key].profit += Number(c.partnerProfit)||0;
+    const p = ensure(c.staff || '（未填業務）');
+    p.channelProfit += Number(c.partnerProfit)||0;
+    p.count++;
+    if(c.profitPaid) p.paidCount++; else p.unpaidCount++;
   });
+  [...adToday, ...chToday].forEach(c=>{
+    if(c.specialHandling && Number(c.specialFee)>0){
+      const xp = ensure(xiaojiangName);
+      xp.wizardHatFee += Number(c.specialFee)||0;
+      xp.count++;
+      if(c.specialFeePaid) xp.paidCount++; else xp.unpaidCount++;
+    }
+  });
+  Object.values(byPerson).forEach(p=>{ p.total = p.businessBonus + p.xiaojiangBonus + p.channelProfit + p.wizardHatFee; });
+  const people = Object.values(byPerson).sort((a,b)=>b.total-a.total);
+  const grandTotal = people.reduce((a,p)=>a+p.total,0);
+  const totalUnpaid = people.reduce((a,p)=>a+p.unpaidCount,0);
 
-  const businessBonusSum = Object.values(byStaff).reduce((a,v)=>a+v.businessBonus,0);
-  const referrerSum = Object.values(byReferrer).reduce((a,v)=>a+v.profit,0);
-  const grandTotal = businessBonusSum + xiaojiangTotal + referrerSum;
-
-  const staffRows = Object.entries(byStaff).map(([name,v])=>`
-    <tr><td>${escHtml(name)}</td><td>${v.count} 件</td><td class="amount-pos">${money(v.businessBonus)}</td></tr>`).join('');
-  const referrerRows = Object.entries(byReferrer).map(([name,v])=>`
-    <tr><td>${escHtml(name)}</td><td>${v.count} 件</td><td class="amount-pos">${money(v.profit)}</td></tr>`).join('');
+  const cards = people.map(p=>{
+    const uidMatch = (APP.users.find(u=>u.staffName===p.name)||{}).id;
+    const disp = uidMatch ? displayNameFor(uidMatch, p.name) : p.name;
+    const isXj = p.name===xiaojiangName;
+    const allPaid = p.unpaidCount===0;
+    const statusText = allPaid ? '全部已發放' : (p.paidCount===0 ? '尚未發放' : `部分已發放（${p.paidCount}/${p.count}）`);
+    return `<div class="card${isXj?' aurora-card':''}"${isXj?' style="color:#fff;border:none;"':''}>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${isXj ? `<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:18px;">🌌</div>` : (uidMatch ? avatarHtml(uidMatch, disp, 36) : `<div style="width:36px;height:36px;border-radius:50%;background:var(--muted);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">${escHtml((p.name||'?').charAt(0))}</div>`)}
+          <h3 style="margin:0;">${escHtml(disp)}</h3>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px;border-radius:20px;background:${isXj?'rgba(255,255,255,.15)':(allPaid?'#DCFCE7':'#FEF3C7')};">
+          <input type="checkbox" class="daily-bonus-checkbox" data-name="${escAttr(p.name)}" data-date="${d}" ${allPaid?'checked':''}/>
+          <span style="font-size:12px;font-weight:600;${isXj?'color:#fff;':(allPaid?'color:#166534;':'color:#92400E;')}">${statusText}</span>
+        </label>
+      </div>
+      <div class="stat-value ${isXj?'':'blue'}" style="font-size:26px;margin-bottom:8px;${isXj?'text-shadow:0 0 12px rgba(255,255,255,.4);':''}">${money(p.total)}</div>
+      <div style="font-size:12.5px;${isXj?'color:rgba(255,255,255,.85);':'color:var(--muted);'}line-height:1.8;">
+        ${p.businessBonus?`業務獎金：${money(p.businessBonus)}<br/>`:''}
+        ${p.xiaojiangBonus?`小江獎金：${money(p.xiaojiangBonus)}<br/>`:''}
+        ${p.channelProfit?`通路利潤：${money(p.channelProfit)}<br/>`:''}
+        ${p.wizardHatFee?`${whIcon(14)} ${money(p.wizardHatFee)}<br/>`:''}
+        共 ${p.count} 件
+      </div>
+    </div>`;
+  }).join('');
 
   return `
-    <div class="filter-row">
+    <div class="filter-row" style="align-items:flex-end;">
       <div class="filter-field"><label>日期</label><input type="date" id="daily-bonus-date" value="${d}"/></div>
+      <button class="btn ghost sm" data-action="daily-bonus-shift" data-days="-1">← 前一天</button>
+      <button class="btn ghost sm" data-action="daily-bonus-shift" data-days="0">今天</button>
+      <button class="btn ghost sm" data-action="daily-bonus-shift" data-days="1">後一天 →</button>
     </div>
-    <div class="tx-summary-bar">
-      <div class="item">當日案件數<b>${adToday.length + chToday.length} 筆</b></div>
-      <div class="item">業務獎金合計<b class="green">${money(businessBonusSum)}</b></div>
-      <div class="item">小江獎金合計<b class="green">${money(xiaojiangTotal)}</b></div>
-      <div class="item">通路利潤合計<b class="green">${money(referrerSum)}</b></div>
-      <div class="item">當日應發總額<b class="blue" style="font-size:18px;">${money(grandTotal)}</b></div>
+    <div class="card" style="margin:16px 0;background:linear-gradient(135deg,var(--navy),var(--navy-hover));color:#fff;">
+      <div style="font-size:13px;opacity:.85;">${d}　當日應發總額</div>
+      <div style="font-size:34px;font-weight:800;margin:4px 0;">${money(grandTotal)}</div>
+      <div style="font-size:12.5px;opacity:.85;">共 ${adToday.length + chToday.length} 筆案件，${people.length} 位業務／通路　${totalUnpaid>0?`· 尚有 ${totalUnpaid} 筆未發放`:'· 全部已發放'}</div>
     </div>
-    <div class="grid grid-2">
-      <div class="card">
-        <h3 style="margin-top:0;">廣告線 · 業務獎金（依業務彙總）</h3>
-        ${staffRows ? `<table><thead><tr><th>業務</th><th>件數</th><th>獎金合計</th></tr></thead><tbody>${staffRows}</tbody></table>` : `<div class="empty">當日無廣告線案件</div>`}
-        ${adToday.length>0 ? `<p style="color:var(--muted);font-size:12.5px;margin-top:10px;">小江獎金（不分業務，當日合計）：<b style="color:var(--ink);">${money(xiaojiangTotal)}</b></p>` : ''}
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0;">通路線 · 業務或通路利潤（依業務彙總）</h3>
-        ${referrerRows ? `<table><thead><tr><th>介紹人</th><th>件數</th><th>金額合計</th></tr></thead><tbody>${referrerRows}</tbody></table>` : `<div class="empty">當日無通路線案件</div>`}
-      </div>
+    <div class="grid grid-3">
+      ${cards || `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">這天沒有任何案件</div></div>`}
     </div>
   `;
 }
@@ -1972,24 +2176,26 @@ function progressAdView(){
   if(isStaffSales()) list = list.filter(c=>c.staff===myStaffName());
   if(f.status!=='all') list = list.filter(c=>c.status===f.status);
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
-  list.sort((a,b)=> b.date.localeCompare(a.date));
+  list = sortList(list, APP.progressAdSort, ['afterCost'].includes(APP.progressAdSort.key)?'number':'text');
   const monthOptions = Array.from(new Set([...APP.data.progressAd.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
   const rows = list.map(c=>{
     const rowEditable = canEditProgressRow();
+    const textField = (field, ph, width) => rowEditable
+      ? `<input type="text" class="inline-note-input" data-list="progressAd" data-id="${c.id}" data-field="${field}" value="${escAttr(c[field]||'')}" placeholder="${ph}" style="width:${width||'100%'};border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/>`
+      : escHtml(c[field]||'—');
     return `
     <tr>
-      <td>${c.date}</td>
-      <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
-      <td>${escHtml(c.plan||'—')}</td>
-      <td>${escHtml(c.staff||'—')}</td>
-      <td><select class="inline-status-select" data-list="progressAd" data-id="${c.id}" ${rowEditable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#DCFCE7':STATUS_CLOSED.includes(c.status)?'#F1F2F6':'#FEF3C7'};">
+      <td>${rowEditable ? `<input type="date" class="inline-note-input" data-list="progressAd" data-id="${c.id}" data-field="date" value="${c.date}" style="border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';"/>` : c.date}</td>
+      <td>${textField('customer','客戶姓名','100px')}<div style="margin-top:2px;">${textField('phone','電話','120px')}</div></td>
+      <td>${rowEditable ? `<select class="inline-status-select" data-list="progressAd" data-id="${c.id}" data-field="plan" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select>` : escHtml(c.plan||'—')}</td>
+      <td>${rowEditable ? staffOrChannelFieldHtml2('progressAd', c.id, c.staff) : escHtml(c.staff||'—')}</td>
+      <td><select class="inline-status-select" data-list="progressAd" data-id="${c.id}" data-field="status" ${rowEditable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#DCFCE7':STATUS_CLOSED.includes(c.status)?'#F1F2F6':'#FEF3C7'};">
         ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
       </select></td>
-      <td><input type="text" class="inline-note-input" data-list="progressAd" data-id="${c.id}" value="${escAttr(c.note||'')}" placeholder="點擊輸入備註" ${rowEditable?'':'readonly'} style="width:100%;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
+      <td>${textField('note','點擊輸入備註','140px')}</td>
       <td>${editedLabel(c)}</td>
       ${canAdd?`<td>${rowEditable?`<div class="row-actions">
-        <button class="icon-btn" data-action="edit-progress-ad" data-id="${c.id}">編輯</button>
         <button class="icon-btn" data-action="delete-progress-ad" data-id="${c.id}">刪除</button>
       </div>`:''}</td>`:''}
     </tr>`;}).join('');
@@ -2004,9 +2210,12 @@ function progressAdView(){
         <select data-case-filter="pad-month"><option value="">全部</option>
         ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
     </div>
+    ${staffSuggestDatalistHtml()}
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無案件資料</div>`:`
-      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>業務</th><th>狀態</th><th>備註</th><th>最後編輯</th>${canAdd?'<th></th>':''}</tr></thead>
+      <table><thead><tr>
+        ${thSort('日期','date','progressAdSort')}${thSort('客戶','customer','progressAdSort')}${thSort('方案','plan','progressAdSort')}${thSort('業務','staff','progressAdSort')}${thSort('狀態','status','progressAdSort')}<th>備註</th>${thSort('最後編輯','_at','progressAdSort')}${canAdd?'<th></th>':''}
+      </tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
@@ -2019,25 +2228,30 @@ function progressChannelView(){
   if(isStaffSales()) list = list.filter(c=>c.staff===myStaffName());
   if(f.status!=='all') list = list.filter(c=>c.status===f.status);
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
-  list.sort((a,b)=> b.date.localeCompare(a.date));
+  list = sortList(list, APP.progressChannelSort, 'text');
   const monthOptions = Array.from(new Set([...APP.data.progressChannel.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
   const rows = list.map(c=>{
     const rowEditable = canEditProgressRow();
+    const textField = (field, ph, width) => rowEditable
+      ? `<input type="text" class="inline-note-input" data-list="progressChannel" data-id="${c.id}" data-field="${field}" value="${escAttr(c[field]||'')}" placeholder="${ph}" style="width:${width||'100%'};border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/>`
+      : escHtml(c[field]||'—');
     return `
     <tr>
-      <td>${c.date}</td>
-      <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
-      <td>${escHtml(c.plan||'—')}</td>
-      <td>${escHtml(c.staff||'—')}</td>
-      <td>${escHtml(c.source||'—')}${c.referrer?(' · '+escHtml(c.referrer)):''}</td>
-      <td><select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" ${rowEditable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#DCFCE7':STATUS_CLOSED.includes(c.status)?'#F1F2F6':'#FEF3C7'};">
+      <td>${rowEditable ? `<input type="date" class="inline-note-input" data-list="progressChannel" data-id="${c.id}" data-field="date" value="${c.date}" style="border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';"/>` : c.date}</td>
+      <td>${textField('customer','客戶姓名','100px')}<div style="margin-top:2px;">${textField('phone','電話','120px')}</div></td>
+      <td>${rowEditable ? `<select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="plan" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select>` : escHtml(c.plan||'—')}</td>
+      <td>${rowEditable ? staffOrChannelFieldHtml2('progressChannel', c.id, c.staff) : escHtml(c.staff||'—')}</td>
+      <td>
+        ${rowEditable ? `<select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="source" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;"><option value="直客" ${c.source==='直客'?'selected':''}>直客</option><option value="通路" ${c.source==='通路'?'selected':''}>通路</option></select>` : escHtml(c.source||'—')}
+        <div style="margin-top:2px;">${textField('referrer','通路備註','120px')}</div>
+      </td>
+      <td><select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="status" ${rowEditable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#DCFCE7':STATUS_CLOSED.includes(c.status)?'#F1F2F6':'#FEF3C7'};">
         ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
       </select></td>
-      <td><input type="text" class="inline-note-input" data-list="progressChannel" data-id="${c.id}" value="${escAttr(c.note||'')}" placeholder="點擊輸入備註" ${rowEditable?'':'readonly'} style="width:100%;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
+      <td>${textField('note','點擊輸入備註','140px')}</td>
       <td>${editedLabel(c)}</td>
       ${canAdd?`<td>${rowEditable?`<div class="row-actions">
-        <button class="icon-btn" data-action="edit-progress-channel" data-id="${c.id}">編輯</button>
         <button class="icon-btn" data-action="delete-progress-channel" data-id="${c.id}">刪除</button>
       </div>`:''}</td>`:''}
     </tr>`;}).join('');
@@ -2052,9 +2266,12 @@ function progressChannelView(){
         <select data-case-filter="pch-month"><option value="">全部</option>
         ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
     </div>
+    ${staffSuggestDatalistHtml()}
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無案件資料</div>`:`
-      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>業務</th><th>來源</th><th>狀態</th><th>備註</th><th>最後編輯</th>${canAdd?'<th></th>':''}</tr></thead>
+      <table><thead><tr>
+        ${thSort('日期','date','progressChannelSort')}${thSort('客戶','customer','progressChannelSort')}${thSort('方案','plan','progressChannelSort')}${thSort('業務','staff','progressChannelSort')}${thSort('來源','source','progressChannelSort')}${thSort('狀態','status','progressChannelSort')}<th>備註</th>${thSort('最後編輯','_at','progressChannelSort')}${canAdd?'<th></th>':''}
+      </tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
@@ -2065,7 +2282,7 @@ function adCasesView(){
   const f = APP.caseAdFilter;
   let list = APP.data.casesAd.slice();
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
-  list.sort((a,b)=> b.date.localeCompare(a.date));
+  list = sortList(list, APP.casesAdSort, ['afterCost','businessBonus','xiaojiangBonus','companyProfit'].includes(APP.casesAdSort.key)?'number':'text');
   const monthOptions = Array.from(new Set([...APP.data.casesAd.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
   const totalProfit = sum(list.map(c=>({amount:c.companyProfit})));
@@ -2077,6 +2294,7 @@ function adCasesView(){
       <td>${escHtml(c.plan||'—')}</td>
       <td>${escHtml(c.staff||'—')}</td>
       <td>${money(c.afterCost)}</td>
+      <td>${c.specialHandling?`${whIcon(15)} ${money(c.specialFee)}${c.specialFeePaid?' <span class="badge active">已入帳</span>':' <span class="badge pending">未入帳</span>'}`:''}</td>
       <td>${money(c.businessBonus)}${overrideTag(c.businessBonusOverride)}</td>
       <td>${money(c.xiaojiangBonus)}${overrideTag(c.xiaojiangBonusOverride)}</td>
       <td class="amount-pos">${money(c.companyProfit)}</td>
@@ -2104,7 +2322,9 @@ function adCasesView(){
     </div>
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無獲利資料</div>`:`
-      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>業務</th><th>扣除成本後</th><th>業務獎金</th><th>小江獎金</th><th>公司利潤</th><th>獎金</th><th></th>${editable?'<th></th>':''}</tr></thead>
+      <table><thead><tr>
+        ${thSort('日期','date','casesAdSort')}${thSort('客戶','customer','casesAdSort')}${thSort('方案','plan','casesAdSort')}${thSort('業務','staff','casesAdSort')}${thSort('扣除成本後','afterCost','casesAdSort')}<th>${whIcon(14)}</th>${thSort('業務獎金','businessBonus','casesAdSort')}${thSort('小江獎金','xiaojiangBonus','casesAdSort')}${thSort('公司利潤','companyProfit','casesAdSort')}<th>獎金</th><th></th>${editable?'<th></th>':''}
+      </tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
@@ -2115,7 +2335,7 @@ function channelCasesView(){
   const f = APP.caseChannelFilter;
   let list = APP.data.casesChannel.slice();
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
-  list.sort((a,b)=> b.date.localeCompare(a.date));
+  list = sortList(list, APP.casesChannelSort, ['afterCost','partnerProfit','companyProfit'].includes(APP.casesChannelSort.key)?'number':'text');
   const monthOptions = Array.from(new Set([...APP.data.casesChannel.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
   const totalProfit = sum(list.map(c=>({amount:c.companyProfit})));
 
@@ -2127,6 +2347,7 @@ function channelCasesView(){
       <td>${escHtml(c.staff||'—')}</td>
       <td><span class="badge ${c.source==='直客'?'income':'expense'}">${escHtml(c.source||'—')}</span>${c.referrer?(' <span style="color:var(--muted);font-size:12px;">'+escHtml(c.referrer)+'</span>'):''}</td>
       <td>${money(c.afterCost)}</td>
+      <td>${c.specialHandling?`${whIcon(15)} ${money(c.specialFee)}${c.specialFeePaid?' <span class="badge active">已入帳</span>':' <span class="badge pending">未入帳</span>'}`:''}</td>
       <td>${money(c.partnerProfit)}</td>
       <td class="amount-pos">${money(c.companyProfit)}</td>
       <td>${c.profitPaid?'<span class="badge active">已發放</span>':'<span class="badge pending">未發放</span>'}</td>
@@ -2153,7 +2374,9 @@ function channelCasesView(){
     </div>
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無獲利資料</div>`:`
-      <table><thead><tr><th>日期</th><th>客戶</th><th>方案</th><th>業務</th><th>來源</th><th>扣除成本後</th><th>業務或通路利潤</th><th>公司利潤</th><th>獎金</th><th></th>${editable?'<th></th>':''}</tr></thead>
+      <table><thead><tr>
+        ${thSort('日期','date','casesChannelSort')}${thSort('客戶','customer','casesChannelSort')}${thSort('方案','plan','casesChannelSort')}${thSort('業務','staff','casesChannelSort')}${thSort('來源','source','casesChannelSort')}${thSort('扣除成本後','afterCost','casesChannelSort')}<th>${whIcon(14)}</th>${thSort('業務或通路利潤','partnerProfit','casesChannelSort')}${thSort('公司利潤','companyProfit','casesChannelSort')}<th>獎金</th><th></th>${editable?'<th></th>':''}
+      </tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
@@ -2165,7 +2388,7 @@ function computeFixedCost(mk){
 }
 function adSpendView(){
   const editable = canEdit();
-  const list = APP.data.adSpend.slice().sort((a,b)=>b.month.localeCompare(a.month));
+  const list = sortList(APP.data.adSpend.slice(), APP.adSpendSort, 'text');
   const cs = APP.data.caseSettings;
 
   const rows = list.map(a=>{
@@ -2184,7 +2407,6 @@ function adSpendView(){
     const cpc = a.messages ? (spend/Number(a.messages)) : 0;
     const cpa = a.approved ? (spend/Number(a.approved)) : 0;
     const approveRate = a.submitted ? (Number(a.approved||0)/Number(a.submitted)) : 0;
-    const submitRate = a.messages ? (Number(a.submitted||0)/Number(a.messages)) : 0;
     return `<tr>
       <td>${a.month}</td>
       <td>${money(a.spend)}</td>
@@ -2215,7 +2437,9 @@ function adSpendView(){
     </div>
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無資料</div>`:`
-      <table><thead><tr><th>月份</th><th>投放金額</th><th>私訊數</th><th>送件數</th><th>核准數</th><th>CPC</th><th>CPA</th><th>核准率</th><th>ROI</th><th>廣告線利潤</th><th>固定成本</th><th>廣告總淨利</th><th>投手月獎金(5號發)</th><th>廣告線最終淨利</th><th>全公司最終淨利</th>${editable?'<th></th>':''}</tr></thead>
+      <table><thead><tr>
+        ${thSort('月份','month','adSpendSort')}${thSort('投放金額','spend','adSpendSort')}${thSort('私訊數','messages','adSpendSort')}${thSort('送件數','submitted','adSpendSort')}${thSort('核准數','approved','adSpendSort')}<th>CPC</th><th>CPA</th><th>核准率</th><th>ROI</th><th>廣告線利潤</th><th>固定成本</th><th>廣告總淨利</th><th>投手月獎金(5號發)</th><th>廣告線最終淨利</th><th>全公司最終淨利</th>${editable?'<th></th>':''}
+      </tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
@@ -2447,6 +2671,10 @@ function renderAiImportPreview(rows){
 function openCaseOptionModal(kind){
   const label = kind==='planOptions' ? '送件方案' : '業務';
   openModal(`新增${label}選項`, `<label class="field"><span>${label}名稱</span><input name="value" type="text" required/></label>`, 'case-option-form', (data)=>{
+    if(kind==='staffOptions' && data.value===(APP.data.caseSettings.xiaojiangName||'小江')){
+      alert(`「${data.value}」跟廣告投手（小江）的姓名重複了，這樣會讓小江的獎金資料外洩給業務看到，請換一個名字。`);
+      return;
+    }
     if(data.value && !APP.data.caseSettings[kind].includes(data.value)){
       APP.data.caseSettings[kind].push(data.value);
       saveCaseSettings();
@@ -2488,7 +2716,7 @@ function openProgressChannelModal(existing){
 }
 
 function openAdCaseModal(existing){
-  const c = existing || {date:todayStr(), customer:'', plan:'', staff:'', afterCost:'', businessBonus:0, businessBonusOverride:false, xiaojiangBonus:0, xiaojiangBonusOverride:false, companyProfit:0, note:'', bonusPaid:false};
+  const c = existing || {date:todayStr(), customer:'', plan:'', staff:'', afterCost:'', businessBonus:0, businessBonusOverride:false, xiaojiangBonus:0, xiaojiangBonusOverride:false, companyProfit:0, note:'', bonusPaid:false, specialHandling:false, specialFee:0};
   document.getElementById('modal-overlay').style.display = 'flex';
   document.getElementById('modal-box').innerHTML = `
     <div class="modal-head"><h3>${existing?'編輯獲利紀錄':'新增獲利紀錄'}（廣告線）</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
@@ -2502,43 +2730,56 @@ function openAdCaseModal(existing){
       <label class="field"><span>扣除成本後金額</span><input type="number" id="ac-afterCost" name="afterCost" value="${c.afterCost}" required/></label>
       <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <span style="font-size:12.5px;color:var(--muted);">業務獎金（自動＝扣除成本後 × ${(APP.data.caseSettings.businessBonusRate*100).toFixed(0)}%）</span>
+          <span style="font-size:12.5px;color:var(--muted);">業務獎金</span>
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;"><input type="checkbox" id="ac-bb-override" ${c.businessBonusOverride?'checked':''}/>手動調整</label>
         </div>
         <input type="number" id="ac-businessBonus" value="${c.businessBonus}" ${c.businessBonusOverride?'':'readonly'} style="margin-top:6px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"/>
       </div>
       <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <span style="font-size:12.5px;color:var(--muted);">小江獎金（自動＝當月前${APP.data.caseSettings.xiaojiangThreshold}件${(APP.data.caseSettings.xiaojiangRateBelow*100).toFixed(0)}%，之後${(APP.data.caseSettings.xiaojiangRateAbove*100).toFixed(0)}%）</span>
+          <span style="font-size:12.5px;color:var(--muted);">小江獎金</span>
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;"><input type="checkbox" id="ac-xj-override" ${c.xiaojiangBonusOverride?'checked':''}/>手動調整</label>
         </div>
         <input type="number" id="ac-xiaojiangBonus" value="${c.xiaojiangBonus}" ${c.xiaojiangBonusOverride?'':'readonly'} style="margin-top:6px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"/>
       </div>
-      <label class="field"><span>公司利潤（自動＝扣除成本後 − 業務獎金 − 小江獎金）</span>
+      <label class="field"><span>公司利潤</span>
         <div id="ac-companyProfit-display" style="font-size:18px;font-weight:700;color:var(--blue);">${money(c.companyProfit||0)}</div>
       </label>
+      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:#FDF7EC;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="ac-special" ${c.specialHandling?'checked':''}/><span style="display:flex;align-items:center;">${whIcon(18)}</span></label>
+        <input type="number" id="ac-specialFee" value="${c.specialFee||0}" placeholder="特殊處理費用" style="margin-top:8px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;${c.specialHandling?'':'display:none;'}"/>
+      </div>
       <label class="field checkbox"><input type="checkbox" name="bonusPaid" ${c.bonusPaid?'checked':''}/><span>獎金發放完成</span></label>
       <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
       <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button><button type="submit" class="btn primary">儲存</button></div>
     </form>`;
 
+  document.getElementById('ac-special').addEventListener('change', function(){
+    document.getElementById('ac-specialFee').style.display = this.checked ? '' : 'none';
+    recalcPreview();
+  });
+  document.getElementById('ac-specialFee').addEventListener('input', recalcPreview);
+
   function recalcPreview(){
     const afterCost = Number(document.getElementById('ac-afterCost').value)||0;
+    const specialOn = document.getElementById('ac-special').checked;
+    const specialFee = specialOn ? (Number(document.getElementById('ac-specialFee').value)||0) : 0;
+    const base = afterCost - specialFee;
     const bbOverride = document.getElementById('ac-bb-override').checked;
     const xjOverride = document.getElementById('ac-xj-override').checked;
     const bbInput = document.getElementById('ac-businessBonus');
     const xjInput = document.getElementById('ac-xiaojiangBonus');
     bbInput.readOnly = !bbOverride;
     xjInput.readOnly = !xjOverride;
-    if(!bbOverride) bbInput.value = calcBusinessBonus(afterCost);
+    if(!bbOverride) bbInput.value = calcBusinessBonus(base);
     if(!xjOverride){
       const dateVal = document.getElementById('ac-date').value || todayStr();
       const ordinal = existing ? adCaseOrdinal(existing.id, dateVal) : (APP.data.casesAd.filter(cc=>monthKey(cc.date)===monthKey(dateVal)).length + 1);
-      xjInput.value = calcXiaojiangBonus(afterCost, ordinal);
+      xjInput.value = calcXiaojiangBonus(base, ordinal);
     }
     const bb = Number(bbInput.value)||0;
     const xj = Number(xjInput.value)||0;
-    document.getElementById('ac-companyProfit-display').textContent = money(afterCost - bb - xj);
+    document.getElementById('ac-companyProfit-display').textContent = money(base - bb - xj);
   }
   ['ac-afterCost','ac-businessBonus','ac-xiaojiangBonus'].forEach(id=>document.getElementById(id).addEventListener('input', recalcPreview));
   ['ac-bb-override','ac-xj-override'].forEach(id=>document.getElementById(id).addEventListener('change', recalcPreview));
@@ -2547,15 +2788,19 @@ function openAdCaseModal(existing){
     e.preventDefault();
     const fd = new FormData(e.target);
     const afterCost = Number(fd.get('afterCost'))||0;
+    const specialHandling = document.getElementById('ac-special').checked;
+    const specialFee = specialHandling ? (Number(document.getElementById('ac-specialFee').value)||0) : 0;
+    const base = afterCost - specialFee;
     const businessBonusOverride = document.getElementById('ac-bb-override').checked;
     const xiaojiangBonusOverride = document.getElementById('ac-xj-override').checked;
     const businessBonus = Number(document.getElementById('ac-businessBonus').value)||0;
     const xiaojiangBonus = Number(document.getElementById('ac-xiaojiangBonus').value)||0;
-    const companyProfit = afterCost - businessBonus - xiaojiangBonus;
+    const companyProfit = base - businessBonus - xiaojiangBonus;
     const data = {
       date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'),
       staff: fd.get('staff'), afterCost, businessBonus, businessBonusOverride,
-      xiaojiangBonus, xiaojiangBonusOverride, companyProfit, bonusPaid: fd.get('bonusPaid')==='on', note: fd.get('note')
+      xiaojiangBonus, xiaojiangBonusOverride, companyProfit, bonusPaid: fd.get('bonusPaid')==='on', note: fd.get('note'),
+      specialHandling, specialFee
     };
     const caseId = existing ? existing.id : uid();
     const wasPaidBefore = existing ? !!existing.bonusPaid : false;
@@ -2566,13 +2811,17 @@ function openAdCaseModal(existing){
       postBonusPayoutToTransactions(rec, businessBonus+xiaojiangBonus, `業務獎金＋小江獎金發放（${data.staff}／${data.customer}）`);
     }
     saveCasesAd();
-    saveBonusLedgerEntry(stamp({ id:caseId, staffName:data.staff, date:data.date, businessBonus, xiaojiangBonus, customer:data.customer }));
+    saveBonusLedgerEntry(stamp({ id:caseId, staffName:data.staff, date:data.date, businessBonus, xiaojiangBonus:0, customer:data.customer }));
+    if(xiaojiangBonus>0){
+      saveBonusLedgerEntry(stamp({ id:'xj-'+caseId, staffName:APP.data.caseSettings.xiaojiangName||'小江', date:data.date, businessBonus:0, xiaojiangBonus, customer:data.customer }));
+    }
+    syncWizardHatLedger(caseId, data.date, data.customer, specialFee);
     closeModal();
   });
 }
 
 function openChannelCaseModal(existing){
-  const c = existing || {date:todayStr(), customer:'', plan:'', staff:'', source:'直客', referrer:'', afterCost:'', partnerProfit:'', companyProfit:0, note:'', profitPaid:false};
+  const c = existing || {date:todayStr(), customer:'', plan:'', staff:'', source:'直客', referrer:'', afterCost:'', partnerProfit:'', companyProfit:0, note:'', profitPaid:false, specialHandling:false, specialFee:0};
   document.getElementById('modal-overlay').style.display = 'flex';
   document.getElementById('modal-box').innerHTML = `
     <div class="modal-head"><h3>${existing?'編輯獲利紀錄':'新增獲利紀錄'}（業務／通路線）</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
@@ -2586,18 +2835,29 @@ function openChannelCaseModal(existing){
         <label class="field"><span>備註（有無通路等說明）</span><input type="text" name="referrer" value="${escAttr(c.referrer)}" placeholder="選填"/></label>
       </div>
       <label class="field"><span>扣除成本後金額</span><input type="number" id="cc-afterCost" value="${c.afterCost}" required/></label>
-      <label class="field"><span>業務或通路利潤（人工判斷，無固定公式）</span><input type="number" id="cc-partnerProfit" value="${c.partnerProfit}"/></label>
-      <label class="field"><span>公司利潤（自動＝扣除成本後 − 業務或通路利潤）</span>
+      <label class="field"><span>業務或通路利潤</span><input type="number" id="cc-partnerProfit" value="${c.partnerProfit}"/></label>
+      <label class="field"><span>公司利潤</span>
         <div id="cc-companyProfit-display" style="font-size:18px;font-weight:700;color:var(--blue);">${money(c.companyProfit||0)}</div>
       </label>
+      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:#FDF7EC;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="cc-special" ${c.specialHandling?'checked':''}/><span style="display:flex;align-items:center;">${whIcon(18)}</span></label>
+        <input type="number" id="cc-specialFee" value="${c.specialFee||0}" placeholder="特殊處理費用" style="margin-top:8px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;${c.specialHandling?'':'display:none;'}"/>
+      </div>
       <label class="field checkbox"><input type="checkbox" name="profitPaid" ${c.profitPaid?'checked':''}/><span>利潤已發放</span></label>
       <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
       <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button><button type="submit" class="btn primary">儲存</button></div>
     </form>`;
+  document.getElementById('cc-special').addEventListener('change', function(){
+    document.getElementById('cc-specialFee').style.display = this.checked ? '' : 'none';
+    recalc();
+  });
+  document.getElementById('cc-specialFee').addEventListener('input', recalc);
   function recalc(){
     const ac = Number(document.getElementById('cc-afterCost').value)||0;
     const pp = Number(document.getElementById('cc-partnerProfit').value)||0;
-    document.getElementById('cc-companyProfit-display').textContent = money(ac-pp);
+    const specialOn = document.getElementById('cc-special').checked;
+    const specialFee = specialOn ? (Number(document.getElementById('cc-specialFee').value)||0) : 0;
+    document.getElementById('cc-companyProfit-display').textContent = money(ac - specialFee - pp);
   }
   document.getElementById('cc-afterCost').addEventListener('input', recalc);
   document.getElementById('cc-partnerProfit').addEventListener('input', recalc);
@@ -2606,19 +2866,25 @@ function openChannelCaseModal(existing){
     const fd = new FormData(e.target);
     const afterCost = Number(document.getElementById('cc-afterCost').value)||0;
     const partnerProfit = Number(document.getElementById('cc-partnerProfit').value)||0;
+    const specialHandling = document.getElementById('cc-special').checked;
+    const specialFee = specialHandling ? (Number(document.getElementById('cc-specialFee').value)||0) : 0;
     const data = {
       date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'), staff: fd.get('staff'),
       source: fd.get('source'), referrer: fd.get('referrer'), profitPaid: fd.get('profitPaid')==='on',
-      afterCost, partnerProfit, companyProfit: afterCost-partnerProfit, note: fd.get('note')
+      afterCost, partnerProfit, companyProfit: (afterCost - specialFee) - partnerProfit, note: fd.get('note'),
+      specialHandling, specialFee
     };
     const wasPaidBefore = existing ? !!existing.profitPaid : false;
+    const chCaseId = existing ? existing.id : uid();
     if(existing) Object.assign(existing, stamp(data));
-    else APP.data.casesChannel.push(stamp({id:uid(), linkedTxId:null, profitTxId:null, ...data}));
+    else APP.data.casesChannel.push(stamp({id:chCaseId, linkedTxId:null, profitTxId:null, ...data}));
     const chRec = existing || APP.data.casesChannel[APP.data.casesChannel.length-1];
     if(data.profitPaid && !wasPaidBefore && !chRec.profitTxId){
       postBonusPayoutToTransactions(chRec, partnerProfit, `業務或通路利潤發放（${data.staff}／${data.customer}）`);
       chRec.profitTxId = chRec.bonusTxId; // reuse same tx-id field set by helper
     }
+    saveBonusLedgerEntry(stamp({ id:'ch-'+chCaseId, staffName:data.staff, date:data.date, businessBonus:partnerProfit, xiaojiangBonus:0, customer:data.customer }));
+    syncWizardHatLedger(chCaseId, data.date, data.customer, specialFee);
     saveCasesChannel(); closeModal();
   });
 }
@@ -3082,6 +3348,25 @@ document.addEventListener('click', (e)=>{
       renderRoot(); return;
     }
     if(action==='exit-staff-room'){ APP.viewingStaff = null; APP.view = 'staffOverview'; renderRoot(); return; }
+    if(action==='daily-bonus-shift'){
+      const days = Number(el.dataset.days);
+      if(days===0){ APP.dailyBonusDate = todayStr(); }
+      else{
+        const dt = new Date((APP.dailyBonusDate||todayStr())+'T00:00:00');
+        dt.setDate(dt.getDate()+days);
+        APP.dailyBonusDate = dt.toISOString().slice(0,10);
+      }
+      render(); return;
+    }
+    if(action==='sort-table'){
+      const stateKey = el.dataset.statekey;
+      const sortKey = el.dataset.sortkey;
+      const cur = APP[stateKey] || {};
+      if(cur.key===sortKey){ cur.dir = cur.dir==='asc'?'desc':'asc'; }
+      else { APP[stateKey] = {key:sortKey, dir:'asc'}; }
+      render();
+      return;
+    }
     if(action==='progress-tab'){ APP.progressTab = el.dataset.tab; render(); return; }
     if(action==='open-export-modal'){ openExportModal(el.dataset.mode); return; }
     if(action==='cases-tab'){ APP.casesTab = el.dataset.tab; render(); return; }
@@ -3212,25 +3497,175 @@ document.addEventListener('change', (e)=>{
   }
   if(e.target.classList && e.target.classList.contains('inline-status-select')){
     const listName = e.target.dataset.list, id = e.target.dataset.id;
-    const arr = listName==='progressAd' ? APP.data.progressAd : APP.data.progressChannel;
-    const rec = arr.find(x=>x.id===id);
+    const field = e.target.dataset.field || 'status';
+    let arr, saveFn;
+    if(listName==='progressAd'){ arr = APP.data.progressAd; saveFn = saveProgressAdCase; }
+    else if(listName==='progressChannel'){ arr = APP.data.progressChannel; saveFn = saveProgressChannelCase; }
+    else if(listName==='casesAd'){ arr = APP.data.casesAd; saveFn = saveCasesAd; }
+    else if(listName==='casesChannel'){ arr = APP.data.casesChannel; saveFn = saveCasesChannel; }
+    else if(listName==='transactions'){ arr = APP.data.transactions; saveFn = saveTransactions; }
+    const rec = arr && arr.find(x=>x.id===id);
     if(rec){
-      rec.status = e.target.value;
+      rec[field] = e.target.value;
       Object.assign(rec, stamp({}));
-      if(listName==='progressAd') saveProgressAdCase(rec); else saveProgressChannelCase(rec);
+      saveFn(listName==='transactions'||listName==='casesAd'||listName==='casesChannel' ? undefined : rec);
       render();
     }
     return;
   }
   if(e.target.classList && e.target.classList.contains('inline-note-input')){
     const listName = e.target.dataset.list, id = e.target.dataset.id;
-    const arr = listName==='progressAd' ? APP.data.progressAd : APP.data.progressChannel;
+    const field = e.target.dataset.field || 'note';
+    let arr, saveFn;
+    if(listName==='progressAd'){ arr = APP.data.progressAd; saveFn = saveProgressAdCase; }
+    else if(listName==='progressChannel'){ arr = APP.data.progressChannel; saveFn = saveProgressChannelCase; }
+    else if(listName==='casesAd'){ arr = APP.data.casesAd; saveFn = saveCasesAd; }
+    else if(listName==='casesChannel'){ arr = APP.data.casesChannel; saveFn = saveCasesChannel; }
+    else if(listName==='transactions'){ arr = APP.data.transactions; saveFn = saveTransactions; }
+    else if(listName==='adSpend'){ arr = APP.data.adSpend; saveFn = saveAdSpend; }
+    const rec = arr && arr.find(x=>x.id===id);
+    if(rec){
+      const numericFields = ['amount','spend','messages','submitted','approved'];
+      rec[field] = numericFields.includes(field) ? (Number(e.target.value)||0) : e.target.value;
+      Object.assign(rec, stamp({}));
+      if(listName==='casesAd' && field==='date') recalcAdCase(rec);
+      if(listName==='casesChannel' && field==='date') recalcChannelCase(rec);
+      saveFn(listName==='progressAd'||listName==='progressChannel' ? rec : undefined);
+      if(listName==='casesAd' || listName==='casesChannel') render();
+    }
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('inline-number-field')){
+    const listName = e.target.dataset.list, id = e.target.dataset.id, field = e.target.dataset.field;
+    const arr = listName==='casesAd' ? APP.data.casesAd : APP.data.casesChannel;
     const rec = arr.find(x=>x.id===id);
     if(rec){
-      rec.note = e.target.value;
+      const val = Number(e.target.value)||0;
+      rec[field] = val;
+      if(listName==='casesAd'){
+        if(field==='businessBonus') rec.businessBonusOverride = true;
+        if(field==='xiaojiangBonus') rec.xiaojiangBonusOverride = true;
+        recalcAdCase(rec);
+      } else {
+        recalcChannelCase(rec);
+      }
       Object.assign(rec, stamp({}));
-      if(listName==='progressAd') saveProgressAdCase(rec); else saveProgressChannelCase(rec);
+      if(listName==='casesAd') saveCasesAd(); else saveCasesChannel();
+      render();
     }
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('wizard-hat-checkbox')){
+    const listName = e.target.dataset.list, id = e.target.dataset.id;
+    const arr = listName==='casesAd' ? APP.data.casesAd : APP.data.casesChannel;
+    const rec = arr.find(x=>x.id===id);
+    if(rec){
+      rec.specialHandling = e.target.checked;
+      if(!rec.specialHandling){ rec.specialFee = 0; rec.specialFeePaid = false; }
+      Object.assign(rec, stamp({}));
+      syncWizardHatLedger(rec.id, rec.date, rec.customer, rec.specialFee);
+      if(listName==='casesAd') recalcAdCase(rec); else recalcChannelCase(rec);
+      if(listName==='casesAd') saveCasesAd(); else saveCasesChannel();
+      render();
+    }
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('wizard-hat-fee')){
+    const listName = e.target.dataset.list, id = e.target.dataset.id;
+    const arr = listName==='casesAd' ? APP.data.casesAd : APP.data.casesChannel;
+    const rec = arr.find(x=>x.id===id);
+    if(rec){
+      rec.specialFee = Number(e.target.value)||0;
+      Object.assign(rec, stamp({}));
+      syncWizardHatLedger(rec.id, rec.date, rec.customer, rec.specialFee);
+      if(listName==='casesAd') recalcAdCase(rec); else recalcChannelCase(rec);
+      if(listName==='casesAd') saveCasesAd(); else saveCasesChannel();
+      render();
+    }
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('wizard-hat-paid-checkbox')){
+    const listName = e.target.dataset.list, id = e.target.dataset.id;
+    const arr = listName==='casesAd' ? APP.data.casesAd : APP.data.casesChannel;
+    const rec = arr.find(x=>x.id===id);
+    if(rec){
+      rec.specialFeePaid = e.target.checked;
+      if(rec.specialFeePaid && !rec.specialFeeTxId && Number(rec.specialFee)>0){
+        const xjName = APP.data.caseSettings.xiaojiangName || '小江';
+        const tx = stamp({ id:uid(), date:rec.date, type:'expense', mainCategory:'佣金支出', subCategory:'🎩',
+          amount:Number(rec.specialFee)||0, vendor:xjName, note:`🎩特殊處理費（${rec.customer}）`, pending:false });
+        APP.data.transactions.push(tx);
+        rec.specialFeeTxId = tx.id;
+        saveTransactions();
+      }
+      Object.assign(rec, stamp({}));
+      if(listName==='casesAd') saveCasesAd(); else saveCasesChannel();
+      render();
+    }
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('inline-paid-checkbox')){
+    const listName = e.target.dataset.list, id = e.target.dataset.id;
+    const arr = listName==='casesAd' ? APP.data.casesAd : APP.data.casesChannel;
+    const rec = arr.find(x=>x.id===id);
+    if(rec){
+      if(listName==='casesAd'){
+        rec.bonusPaid = e.target.checked;
+        if(rec.bonusPaid && !rec.bonusTxId){
+          postBonusPayoutToTransactions(rec, (Number(rec.businessBonus)||0)+(Number(rec.xiaojiangBonus)||0), `業務獎金＋小江獎金發放（${rec.staff}／${rec.customer}）`);
+        }
+        saveCasesAd();
+      } else {
+        rec.profitPaid = e.target.checked;
+        if(rec.profitPaid && !rec.profitTxId){
+          postBonusPayoutToTransactions(rec, rec.partnerProfit, `業務或通路利潤發放（${rec.staff}／${rec.customer}）`);
+          rec.profitTxId = rec.bonusTxId;
+        }
+        saveCasesChannel();
+      }
+      render();
+    }
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('daily-bonus-checkbox')){
+    const name = e.target.dataset.name;
+    const d = e.target.dataset.date;
+    const checked = e.target.checked;
+    const xjName = APP.data.caseSettings.xiaojiangName || '小江';
+    const isXj = name===xjName;
+    const adMatches = isXj
+      ? APP.data.casesAd.filter(c=>c.date===d && (Number(c.xiaojiangBonus)||0)>0)
+      : APP.data.casesAd.filter(c=>c.date===d && c.staff===name);
+    const chMatches = isXj ? [] : APP.data.casesChannel.filter(c=>c.date===d && c.staff===name);
+    const wizardMatches = isXj
+      ? [...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>c.date===d && c.specialHandling && Number(c.specialFee)>0)
+      : [];
+    adMatches.forEach(c=>{
+      c.bonusPaid = checked;
+      if(checked && !c.bonusTxId){
+        postBonusPayoutToTransactions(c, (Number(c.businessBonus)||0)+(Number(c.xiaojiangBonus)||0), `業務獎金＋小江獎金發放（${c.staff}／${c.customer}）`);
+      }
+    });
+    chMatches.forEach(c=>{
+      c.profitPaid = checked;
+      if(checked && !c.profitTxId){
+        postBonusPayoutToTransactions(c, c.partnerProfit, `業務或通路利潤發放（${c.staff}／${c.customer}）`);
+        c.profitTxId = c.bonusTxId;
+      }
+    });
+    wizardMatches.forEach(c=>{
+      c.specialFeePaid = checked;
+      if(checked && !c.specialFeeTxId){
+        const tx = stamp({ id:uid(), date:c.date, type:'expense', mainCategory:'佣金支出', subCategory:'🎩',
+          amount:Number(c.specialFee)||0, vendor:xjName, note:`🎩特殊處理費（${c.customer}）`, pending:false });
+        APP.data.transactions.push(tx);
+        c.specialFeeTxId = tx.id;
+      }
+    });
+    if(wizardMatches.length>0) saveTransactions();
+    if(adMatches.length>0 || wizardMatches.some(c=>APP.data.casesAd.includes(c))) saveCasesAd();
+    if(chMatches.length>0 || wizardMatches.some(c=>APP.data.casesChannel.includes(c))) saveCasesChannel();
+    render();
     return;
   }
   if(e.target.classList && (e.target.classList.contains('inline-log-field') || e.target.classList.contains('inline-log-text'))){
@@ -3281,6 +3716,11 @@ document.addEventListener('change', (e)=>{
   if(e.target.classList && e.target.classList.contains('staff-salary-input')){
     const uidTarget = e.target.dataset.uid;
     saveStaffProfile(uidTarget, { baseSalary: Number(e.target.value)||0 });
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('xiaojiang-toggle')){
+    const uidTarget = e.target.dataset.uid;
+    updateDoc(doc(db,'users',uidTarget), { isXiaojiang: e.target.checked }).then(()=>render());
     return;
   }
   if(e.target.classList && e.target.classList.contains('display-name-input')){
@@ -3354,13 +3794,21 @@ document.addEventListener('submit', (e)=>{
     e.preventDefault();
     if(!isAdmin()) return;
     const fd = new FormData(e.target);
+    const newXjName = (fd.get('xiaojiangName')||'小江').trim() || '小江';
+    const conflictWithOption = APP.data.caseSettings.staffOptions.includes(newXjName);
+    const conflictWithStaffAccount = APP.users.some(u=>(u.role==='staffAdmin'||u.role==='staffSales') && u.staffName===newXjName);
+    if(conflictWithOption || conflictWithStaffAccount){
+      alert(`「${newXjName}」跟現有的業務姓名／帳號重複了，這樣會導致小江的獎金資料被該業務的帳號讀取到，請換一個不會撞名的名字（例如加姓氏、或用「投手-小江」這種寫法）。`);
+      return;
+    }
     APP.data.caseSettings = {
       ...APP.data.caseSettings,
       businessBonusRate: (Number(fd.get('businessBonusRate'))||0)/100,
       xiaojiangThreshold: Number(fd.get('xiaojiangThreshold'))||0,
       xiaojiangRateBelow: (Number(fd.get('xiaojiangRateBelow'))||0)/100,
       xiaojiangRateAbove: (Number(fd.get('xiaojiangRateAbove'))||0)/100,
-      pilotBonusRate: (Number(fd.get('pilotBonusRate'))||0)/100
+      pilotBonusRate: (Number(fd.get('pilotBonusRate'))||0)/100,
+      xiaojiangName: newXjName
     };
     saveCaseSettings(); return;
   }
