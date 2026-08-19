@@ -1840,7 +1840,7 @@ function openPersonalLogModal(existing){
       <label class="field"><span>日期</span><input type="date" name="date" value="${c.date}" required/></label>
       <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
       <label class="field"><span>電話</span><input type="text" name="phone" value="${escAttr(c.phone)}"/></label>
-      <label class="field"><span>來源</span><input type="text" name="source" value="${escAttr(c.source)}" placeholder="例：公司/自己開發"/></label>
+      <label class="field"><span>來源</span><input type="text" name="source" value="${escAttr(c.source)}" placeholder="例：公司/自己開發" required/></label>
       <label class="field"><span>洽談產品</span><select name="dealProduct"><option value="">請選擇</option>${DEAL_PRODUCT_OPTIONS.map(o=>`<option value="${o}" ${c.dealProduct===o?'selected':''}>${o}</option>`).join('')}</select></label>
       <label class="field"><span>聯絡狀態</span><select name="contactStatus"><option value="">請選擇</option>${CONTACT_STATUS_OPTIONS.map(o=>`<option value="${o}" ${c.contactStatus===o?'selected':''}>${o}</option>`).join('')}</select></label>
       <label class="field"><span>轉給誰</span><input type="text" name="transferTo" value="${escAttr(c.transferTo)}"/></label>
@@ -3819,6 +3819,11 @@ document.addEventListener('change', (e)=>{
     const id = e.target.dataset.id, field = e.target.dataset.field;
     const rec = APP.data.personalProgress.find(x=>x.id===id);
     if(rec){
+      if(field==='source' && !e.target.value.trim()){
+        alert('來源不能空白，請填寫例如「公司」或「自己開發」');
+        e.target.value = rec.source||'';
+        return;
+      }
       rec[field] = e.target.value;
       Object.assign(rec, stamp({}));
       savePersonalProgress(rec);
