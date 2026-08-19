@@ -264,12 +264,12 @@
   .ai-chat-form button{background:var(--navy);color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:13px;cursor:pointer;}
 
   #modal-overlay{position:fixed;inset:0;background:rgba(20,22,28,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
-  #modal-box{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;}
+  #modal-box{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;}
   .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
   .modal-head h3{margin:0;font-size:16.5px;}
   .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font-size:13px;}
   .field span{color:var(--muted);font-size:12.5px;}
-  .field input, .field select, .field textarea{padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:inherit;background:#F8F9FC;}
+  .field input, .field select, .field textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:inherit;background:#F8F9FC;}
   .field textarea{min-height:64px;resize:vertical;}
   .field.checkbox{flex-direction:row;align-items:center;gap:8px;}
   .field.checkbox input{width:16px;height:16px;}
@@ -1846,7 +1846,7 @@ function openPersonalLogModal(existing){
       <label class="field"><span>轉給誰</span><input type="text" name="transferTo" value="${escAttr(c.transferTo)}"/></label>
       <label class="field"><span>案件狀態</span><select name="caseStatus"><option value="">請選擇</option>${LOG_CASE_STATUS_OPTIONS.map(o=>`<option value="${o}" ${c.caseStatus===o?'selected':''}>${o}</option>`).join('')}</select></label>
     </div>
-    <label class="field"><span>客戶詳細資料</span><textarea name="latestNote" rows="10" style="min-height:200px;font-family:monospace;white-space:pre-wrap;" placeholder="可貼上完整的評估表、聯絡紀錄等大段資訊">${escHtml(c.latestNote||'')}</textarea></label>
+    <label class="field"><span>客戶詳細資料</span><textarea name="latestNote" rows="4" style="min-height:88px;font-family:monospace;white-space:pre-wrap;" placeholder="可貼上完整的評估表、聯絡紀錄等大段資訊，存檔後可點擊該欄位展開成大視窗繼續編輯">${escHtml(c.latestNote||'')}</textarea></label>
     <label class="field"><span>案件狀況備註</span><textarea name="caseRemark" placeholder="客人現在的狀況、有提出什麼問題">${escHtml(c.caseRemark||'')}</textarea></label>
     <label class="field"><span style="display:flex;align-items:center;gap:6px;">${whIcon(16)}</span><input type="text" name="wizardHatNote" value="${escAttr(c.wizardHatNote||'')}" placeholder="金額（純自己記錄用）"/></label>
   `, 'personal-log-form', (data)=>{
