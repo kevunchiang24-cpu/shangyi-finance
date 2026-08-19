@@ -2273,6 +2273,7 @@ function progressAdView(){
         ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
       </select></td>
       <td>${textField('note','點擊輸入備註','140px')}</td>
+      <td>${rowEditable ? `<div style="display:flex;align-items:center;gap:4px;">${whIcon(15)}<input type="text" class="inline-note-input" data-list="progressAd" data-id="${c.id}" data-field="wizardHatNote" value="${escAttr(c.wizardHatNote||'')}" placeholder="備註" style="width:80px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></div>` : (c.wizardHatNote?`${whIcon(15)} ${escHtml(c.wizardHatNote)}`:'')}</td>
       <td>${editedLabel(c)}</td>
       ${canAdd?`<td>${rowEditable?`<div class="row-actions">
         <button class="icon-btn" data-action="delete-progress-ad" data-id="${c.id}">刪除</button>
@@ -2293,7 +2294,7 @@ function progressAdView(){
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無案件資料</div>`:`
       <table><thead><tr>
-        ${thSort('日期','date','progressAdSort')}${thSort('客戶','customer','progressAdSort')}${thSort('方案','plan','progressAdSort')}${thSort('業務','staff','progressAdSort')}${thSort('狀態','status','progressAdSort')}<th>備註</th>${thSort('最後編輯','_at','progressAdSort')}${canAdd?'<th></th>':''}
+        ${thSort('日期','date','progressAdSort')}${thSort('客戶','customer','progressAdSort')}${thSort('方案','plan','progressAdSort')}${thSort('業務','staff','progressAdSort')}${thSort('狀態','status','progressAdSort')}<th>備註</th><th>${whIcon(14)}</th>${thSort('最後編輯','_at','progressAdSort')}${canAdd?'<th></th>':''}
       </tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
@@ -2329,6 +2330,7 @@ function progressChannelView(){
         ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
       </select></td>
       <td>${textField('note','點擊輸入備註','140px')}</td>
+      <td>${rowEditable ? `<div style="display:flex;align-items:center;gap:4px;">${whIcon(15)}<input type="text" class="inline-note-input" data-list="progressChannel" data-id="${c.id}" data-field="wizardHatNote" value="${escAttr(c.wizardHatNote||'')}" placeholder="備註" style="width:80px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></div>` : (c.wizardHatNote?`${whIcon(15)} ${escHtml(c.wizardHatNote)}`:'')}</td>
       <td>${editedLabel(c)}</td>
       ${canAdd?`<td>${rowEditable?`<div class="row-actions">
         <button class="icon-btn" data-action="delete-progress-channel" data-id="${c.id}">刪除</button>
@@ -2349,7 +2351,7 @@ function progressChannelView(){
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無案件資料</div>`:`
       <table><thead><tr>
-        ${thSort('日期','date','progressChannelSort')}${thSort('客戶','customer','progressChannelSort')}${thSort('方案','plan','progressChannelSort')}${thSort('業務','staff','progressChannelSort')}${thSort('來源','source','progressChannelSort')}${thSort('狀態','status','progressChannelSort')}<th>備註</th>${thSort('最後編輯','_at','progressChannelSort')}${canAdd?'<th></th>':''}
+        ${thSort('日期','date','progressChannelSort')}${thSort('客戶','customer','progressChannelSort')}${thSort('方案','plan','progressChannelSort')}${thSort('業務','staff','progressChannelSort')}${thSort('來源','source','progressChannelSort')}${thSort('狀態','status','progressChannelSort')}<th>備註</th><th>${whIcon(14)}</th>${thSort('最後編輯','_at','progressChannelSort')}${canAdd?'<th></th>':''}
       </tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
