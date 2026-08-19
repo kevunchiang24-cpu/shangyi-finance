@@ -1800,7 +1800,7 @@ function progressLogRows(list, ownerUid, readOnly){
       </td>
       <td>${inlineSelectHtml(c.id,'caseStatus',LOG_CASE_STATUS_OPTIONS,c.caseStatus,'income')}</td>
       <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="caseRemark" value="${escAttr(c.caseRemark||'')}" placeholder="客人狀況／問題" style="width:100%;min-width:150px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
-      <td><div style="display:flex;align-items:center;gap:4px;">${whIcon(15)}<input type="text" class="inline-log-text" data-id="${c.id}" data-field="wizardHatNote" value="${escAttr(c.wizardHatNote||'')}" placeholder="金額" style="width:70px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></div></td>
+      <td><div style="display:flex;align-items:center;gap:3px;">${whIcon(14)}<input type="text" class="inline-log-text" data-id="${c.id}" data-field="wizardHatNote" value="${escAttr(c.wizardHatNote||'')}" placeholder="金額" style="width:48px;border:1px solid transparent;border-radius:6px;padding:4px 3px;font-size:12px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></div></td>
       <td><div class="row-actions">
         <button class="icon-btn" data-action="delete-personal-log" data-id="${c.id}">刪除</button>
       </div></td>
