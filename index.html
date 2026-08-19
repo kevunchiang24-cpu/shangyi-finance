@@ -3944,7 +3944,7 @@ document.addEventListener('submit', (e)=>{
     renderRoot();
     return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form'].includes(e.target.id)){
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = {};
