@@ -378,6 +378,7 @@ const APP = {
   progressAdSort:{key:'date',dir:'desc'}, progressChannelSort:{key:'date',dir:'desc'},
   casesAdSort:{key:'date',dir:'desc'}, casesChannelSort:{key:'date',dir:'desc'},
   txSort:{key:'date',dir:'desc'}, adSpendSort:{key:'month',dir:'desc'}, myLogSort:{key:'date',dir:'desc'},
+  progressAdSearch:'', progressChannelSearch:'', caseAdSearch:'', caseChannelSearch:'', myLogSearch:'',
   progressTab:'ad', progressAdFilter:{status:'all', month:nowMonthKey}, progressChannelFilter:{status:'all', month:nowMonthKey},
   data:{
     company:{name:'',taxId:'',phone:'',address:'',systemName:'',systemSubtitle:'',logoDataUrl:''}, assets:[], liabilities:[],
@@ -1779,22 +1780,26 @@ function progressLogRows(list, ownerUid, readOnly){
       <td><span class="badge pending">${escHtml(c.dealProduct||'—')}</span></td>
       <td><span class="badge expense">${escHtml(c.contactStatus||'—')}</span></td>
       <td>${escHtml(c.transferTo||'—')}</td>
-      <td style="max-width:200px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.latestNote||'—')}</td>
+      <td style="max-width:200px;white-space:normal;color:var(--muted);font-size:12.5px;">${c.latestNote?escHtml(c.latestNote.slice(0,40))+(c.latestNote.length>40?'…':''):'—'}</td>
       <td>${c.caseStatus?`<span class="badge income">${escHtml(c.caseStatus)}</span>`:'—'}</td>
-      <td style="max-width:140px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.declineReason||'—')}</td>
+      <td style="max-width:160px;white-space:normal;color:var(--muted);font-size:12.5px;">${escHtml(c.caseRemark||'—')}</td>
       <td>${c.wizardHatNote?`${whIcon(15)} ${escHtml(c.wizardHatNote)}`:''}</td>
     </tr>` : `
     <tr>
-      <td><input type="date" class="inline-log-text" data-id="${c.id}" data-field="date" value="${c.date}" style="width:120px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';"/></td>
+      <td><input type="date" class="inline-log-text" data-id="${c.id}" data-field="date" value="${c.date}" style="width:96px;border:1px solid transparent;border-radius:6px;padding:4px 4px;font-size:12px;" onfocus="this.style.border='1px solid var(--border)';"/></td>
       <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="customer" value="${escAttr(c.customer)}" placeholder="客戶姓名" style="width:90px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/>
         <div style="margin-top:2px;"><input type="text" class="inline-log-text" data-id="${c.id}" data-field="phone" value="${escAttr(c.phone||'')}" placeholder="電話" style="width:110px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12px;color:var(--muted);" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></div></td>
-      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="source" value="${escAttr(c.source||'')}" placeholder="來源" style="width:80px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
+      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="source" value="${escAttr(c.source||'')}" placeholder="來源" style="width:60px;border:1px solid transparent;border-radius:6px;padding:4px 4px;font-size:12px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
       <td>${inlineSelectHtml(c.id,'dealProduct',DEAL_PRODUCT_OPTIONS,c.dealProduct,'pending')}</td>
       <td>${inlineSelectHtml(c.id,'contactStatus',CONTACT_STATUS_OPTIONS,c.contactStatus,'expense')}</td>
-      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="transferTo" value="${escAttr(c.transferTo||'')}" placeholder="轉給誰" style="width:80px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
-      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="latestNote" value="${escAttr(c.latestNote||'')}" placeholder="點擊輸入備註" style="width:100%;min-width:160px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
+      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="transferTo" value="${escAttr(c.transferTo||'')}" placeholder="轉給誰" style="width:70px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
+      <td>
+        <div class="customer-detail-cell" data-action="open-customer-detail" data-id="${c.id}" style="cursor:pointer;min-width:150px;max-width:220px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:#F8F9FC;">
+          ${c.latestNote ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;color:var(--ink);">📄 ${escHtml(c.latestNote.slice(0,26))}${c.latestNote.length>26?'…':''}</div>` : `<span style="color:var(--muted);font-size:12px;">點擊填寫客戶詳細資料</span>`}
+        </div>
+      </td>
       <td>${inlineSelectHtml(c.id,'caseStatus',LOG_CASE_STATUS_OPTIONS,c.caseStatus,'income')}</td>
-      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="declineReason" value="${escAttr(c.declineReason||'')}" placeholder="—" style="width:100%;min-width:110px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
+      <td><input type="text" class="inline-log-text" data-id="${c.id}" data-field="caseRemark" value="${escAttr(c.caseRemark||'')}" placeholder="客人狀況／問題" style="width:100%;min-width:150px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;background:transparent;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></td>
       <td><div style="display:flex;align-items:center;gap:4px;">${whIcon(15)}<input type="text" class="inline-log-text" data-id="${c.id}" data-field="wizardHatNote" value="${escAttr(c.wizardHatNote||'')}" placeholder="金額" style="width:70px;border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';this.style.background='#F8F9FC';"/></div></td>
       <td><div class="row-actions">
         <button class="icon-btn" data-action="delete-personal-log" data-id="${c.id}">刪除</button>
@@ -1804,7 +1809,8 @@ function progressLogRows(list, ownerUid, readOnly){
 function myProgressLogView(){
   const allMine = APP.data.personalProgress.filter(c=>c.staffUid===effectiveUid());
   const f = APP.myLogFilter;
-  const mine = f.month ? allMine.filter(c=>monthKey(c.date)===f.month) : allMine;
+  let mine = f.month ? allMine.filter(c=>monthKey(c.date)===f.month) : allMine;
+  mine = mine.filter(c=>matchesSearch(c, APP.myLogSearch));
   const rows = progressLogRows(mine, APP.user.uid, false);
   const monthOptions = Array.from(new Set([...allMine.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
   return `
@@ -1816,18 +1822,19 @@ function myProgressLogView(){
       <div class="filter-field"><label>月份</label>
         <select data-case-filter="mylog-month"><option value="">全部月份</option>
         ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      ${searchBoxHtml('myLogSearch')}
     </div>
     <div class="table-wrap">
-      ${mine.length===0?`<div class="empty">${f.month?'這個月份尚無記錄':'尚無記錄，開始養成記錄客戶的習慣吧'}</div>`:`
+      ${mine.length===0?`<div class="empty">${f.month||APP.myLogSearch?'沒有符合條件的記錄':'尚無記錄，開始養成記錄客戶的習慣吧'}</div>`:`
       <table><thead><tr>
-        ${thSort('日期','date','myLogSort')}${thSort('客戶','customer','myLogSort')}${thSort('來源','source','myLogSort')}${thSort('洽談產品','dealProduct','myLogSort')}${thSort('聯絡狀態','contactStatus','myLogSort')}${thSort('轉給誰','transferTo','myLogSort')}<th>最新聯絡備註</th>${thSort('案件狀態','caseStatus','myLogSort')}<th>婉拒原因</th><th>${whIcon(14)}</th><th></th>
+        ${thSort('日期','date','myLogSort')}${thSort('客戶','customer','myLogSort')}${thSort('來源','source','myLogSort')}${thSort('洽談產品','dealProduct','myLogSort')}${thSort('聯絡狀態','contactStatus','myLogSort')}${thSort('轉給誰','transferTo','myLogSort')}<th>客戶詳細資料</th>${thSort('案件狀態','caseStatus','myLogSort')}<th>案件狀況備註</th><th>${whIcon(14)}</th><th></th>
       </tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
   `;
 }
 function openPersonalLogModal(existing){
-  const c = existing || {date:todayStr(), customer:'', phone:'', source:'', dealProduct:'', contactStatus:'', transferTo:'', latestNote:'', caseStatus:'', declineReason:'', wizardHatNote:''};
+  const c = existing || {date:todayStr(), customer:'', phone:'', source:'', dealProduct:'', contactStatus:'', transferTo:'', latestNote:'', caseStatus:'', declineReason:'', caseRemark:'', wizardHatNote:''};
   openModal(existing?'編輯個人記錄':'新增個人記錄', `
     <div class="grid grid-2">
       <label class="field"><span>日期</span><input type="date" name="date" value="${c.date}" required/></label>
@@ -1839,11 +1846,22 @@ function openPersonalLogModal(existing){
       <label class="field"><span>轉給誰</span><input type="text" name="transferTo" value="${escAttr(c.transferTo)}"/></label>
       <label class="field"><span>案件狀態</span><select name="caseStatus"><option value="">請選擇</option>${LOG_CASE_STATUS_OPTIONS.map(o=>`<option value="${o}" ${c.caseStatus===o?'selected':''}>${o}</option>`).join('')}</select></label>
     </div>
-    <label class="field"><span>最新聯絡備註</span><textarea name="latestNote">${escHtml(c.latestNote||'')}</textarea></label>
-    <label class="field"><span>婉拒原因</span><input type="text" name="declineReason" value="${escAttr(c.declineReason)}"/></label>
+    <label class="field"><span>客戶詳細資料</span><textarea name="latestNote" rows="10" style="min-height:200px;font-family:monospace;white-space:pre-wrap;" placeholder="可貼上完整的評估表、聯絡紀錄等大段資訊">${escHtml(c.latestNote||'')}</textarea></label>
+    <label class="field"><span>案件狀況備註</span><textarea name="caseRemark" placeholder="客人現在的狀況、有提出什麼問題">${escHtml(c.caseRemark||'')}</textarea></label>
     <label class="field"><span style="display:flex;align-items:center;gap:6px;">${whIcon(16)}</span><input type="text" name="wizardHatNote" value="${escAttr(c.wizardHatNote||'')}" placeholder="金額（純自己記錄用）"/></label>
   `, 'personal-log-form', (data)=>{
     const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), ...data});
+    savePersonalProgress(rec);
+  });
+}
+function openCustomerDetailModal(recId){
+  const rec = APP.data.personalProgress.find(x=>x.id===recId);
+  if(!rec) return;
+  openModal(`客戶詳細資料 — ${escHtml(rec.customer)}`, `
+    <label class="field"><span>客戶詳細資料</span><textarea name="latestNote" rows="18" style="min-height:360px;font-family:monospace;white-space:pre-wrap;" placeholder="可貼上完整的評估表、聯絡紀錄等大段資訊" autofocus>${escHtml(rec.latestNote||'')}</textarea></label>
+  `, 'customer-detail-form', (data)=>{
+    rec.latestNote = data.latestNote || '';
+    Object.assign(rec, stamp({}));
     savePersonalProgress(rec);
   });
 }
@@ -1876,12 +1894,26 @@ function myAttendanceView(){
   `;
 }
 function openAttendanceModal(){
+  const today = todayStr();
   openModal('新增請假紀錄', `
-    <label class="field"><span>日期</span><input type="date" name="date" value="${todayStr()}" required/></label>
+    <label class="field"><span>開始日期</span><input type="date" name="startDate" value="${today}" required/></label>
+    <label class="field"><span>結束日期</span><input type="date" name="endDate" value="${today}" required/></label>
+    <p style="color:var(--muted);font-size:12px;margin:-8px 0 12px;">單天請假：開始日期跟結束日期填同一天即可；請多天連續假，系統會自動幫你展開成每一天各一筆紀錄。</p>
     <label class="field"><span>假別</span><select name="leaveType">${LEAVE_TYPE_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></label>
     <label class="field"><span>備註</span><textarea name="note" placeholder="原因（選填）"></textarea></label>
   `, 'attendance-form', (data)=>{
-    saveAttendance(stamp({id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), ...data}));
+    const start = new Date(data.startDate+'T00:00:00');
+    const end = new Date(data.endDate+'T00:00:00');
+    if(isNaN(start) || isNaN(end)){ alert('日期格式有誤，請重新選擇'); return; }
+    if(end < start){ alert('結束日期不能早於開始日期'); return; }
+    const dayMs = 24*60*60*1000;
+    const totalDays = Math.round((end-start)/dayMs) + 1;
+    if(totalDays > 60){ alert('一次最多請 60 天，天數太多的話請分開新增'); return; }
+    for(let i=0;i<totalDays;i++){
+      const d = new Date(start.getTime() + i*dayMs);
+      const dateStr = d.toISOString().slice(0,10);
+      saveAttendance(stamp({id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), date:dateStr, leaveType:data.leaveType, note:data.note}));
+    }
   });
 }
 
@@ -2004,6 +2036,23 @@ function thSort(label, key, stateKey){
   const state = APP[stateKey] || {};
   const arrow = state.key===key ? (state.dir==='asc'?' ▲':' ▼') : '';
   return `<th data-action="sort-table" data-statekey="${stateKey}" data-sortkey="${key}" style="cursor:pointer;user-select:none;white-space:nowrap;">${label}${arrow}</th>`;
+}
+function searchBoxHtml(stateKey, placeholder){
+  const val = APP[stateKey] || '';
+  return `<div class="filter-field"><label>搜尋</label><input type="text" class="table-search-input" data-statekey="${stateKey}" value="${escAttr(val)}" placeholder="${placeholder||'搜尋任何欄位內容'}" style="min-width:180px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;"/></div>`;
+}
+function matchesSearch(c, searchVal){
+  if(!searchVal) return true;
+  const q = searchVal.trim().toLowerCase();
+  if(!q) return true;
+  return Object.keys(c).some(key=>{
+    if(key.startsWith('_')) return false; // 跳過內部時間戳記等技術欄位
+    const v = c[key];
+    if(v===null || v===undefined) return false;
+    if(typeof v === 'string') return v.toLowerCase().includes(q);
+    if(typeof v === 'number') return String(v).includes(q);
+    return false;
+  });
 }
 function monthBoundsStart(mk){ return mk ? `${mk}-01` : ''; }
 function monthBoundsEnd(mk){
@@ -2255,6 +2304,7 @@ function progressAdView(){
   if(isStaffSales()) list = list.filter(c=>c.staff===myStaffName());
   if(f.status!=='all') list = list.filter(c=>c.status===f.status);
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
+  list = list.filter(c=>matchesSearch(c, APP.progressAdSearch));
   list = sortList(list, APP.progressAdSort, ['afterCost'].includes(APP.progressAdSort.key)?'number':'text');
   const monthOptions = Array.from(new Set([...APP.data.progressAd.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
@@ -2289,6 +2339,7 @@ function progressAdView(){
       <div class="filter-field"><label>月份</label>
         <select data-case-filter="pad-month"><option value="">全部</option>
         ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      ${searchBoxHtml('progressAdSearch')}
     </div>
     ${staffSuggestDatalistHtml()}
     <div class="table-wrap">
@@ -2308,6 +2359,7 @@ function progressChannelView(){
   if(isStaffSales()) list = list.filter(c=>c.staff===myStaffName());
   if(f.status!=='all') list = list.filter(c=>c.status===f.status);
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
+  list = list.filter(c=>matchesSearch(c, APP.progressChannelSearch));
   list = sortList(list, APP.progressChannelSort, 'text');
   const monthOptions = Array.from(new Set([...APP.data.progressChannel.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
@@ -2346,6 +2398,7 @@ function progressChannelView(){
       <div class="filter-field"><label>月份</label>
         <select data-case-filter="pch-month"><option value="">全部</option>
         ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      ${searchBoxHtml('progressChannelSearch')}
     </div>
     ${staffSuggestDatalistHtml()}
     <div class="table-wrap">
@@ -2363,6 +2416,7 @@ function adCasesView(){
   const f = APP.caseAdFilter;
   let list = APP.data.casesAd.slice();
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
+  list = list.filter(c=>matchesSearch(c, APP.caseAdSearch));
   list = sortList(list, APP.casesAdSort, ['afterCost','businessBonus','xiaojiangBonus','companyProfit'].includes(APP.casesAdSort.key)?'number':'text');
   const monthOptions = Array.from(new Set([...APP.data.casesAd.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
 
@@ -2396,6 +2450,7 @@ function adCasesView(){
       <div class="filter-field"><label>月份</label>
         <select data-case-filter="ad-month"><option value="">全部</option>
         ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      ${searchBoxHtml('caseAdSearch')}
     </div>
     <div class="tx-summary-bar">
       <div class="item">案件數<b>${list.length} 筆</b></div>
@@ -2416,6 +2471,7 @@ function channelCasesView(){
   const f = APP.caseChannelFilter;
   let list = APP.data.casesChannel.slice();
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
+  list = list.filter(c=>matchesSearch(c, APP.caseChannelSearch));
   list = sortList(list, APP.casesChannelSort, ['afterCost','partnerProfit','companyProfit'].includes(APP.casesChannelSort.key)?'number':'text');
   const monthOptions = Array.from(new Set([...APP.data.casesChannel.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
   const totalProfit = sum(list.map(c=>({amount:c.companyProfit})));
@@ -2448,6 +2504,7 @@ function channelCasesView(){
       <div class="filter-field"><label>月份</label>
         <select data-case-filter="channel-month"><option value="">全部</option>
         ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      ${searchBoxHtml('caseChannelSearch')}
     </div>
     <div class="tx-summary-bar">
       <div class="item">案件數<b>${list.length} 筆</b></div>
@@ -2663,7 +2720,7 @@ function buildPersonalLogRowHtml(r, idx){
       <option value="">聯絡狀態</option>
       ${CONTACT_STATUS_OPTIONS.map(o=>`<option value="${o}" ${r.contactStatus===o?'selected':''}>${o}</option>`).join('')}
     </select>
-    <input type="text" class="ai-row-field" data-key="latestNote" value="${escAttr(r.latestNote||'')}" placeholder="最新聯絡備註" style="flex:1;min-width:110px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="latestNote" value="${escAttr(r.latestNote||'')}" placeholder="客戶詳細資料" style="flex:1;min-width:110px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
   </div>`;
 }
 function buildProgressTrackRowHtml(r, idx){
@@ -3429,6 +3486,7 @@ document.addEventListener('click', (e)=>{
       renderRoot(); return;
     }
     if(action==='exit-staff-room'){ APP.viewingStaff = null; APP.view = 'staffOverview'; renderRoot(); return; }
+    if(action==='open-customer-detail'){ openCustomerDetailModal(el.dataset.id); return; }
     if(action==='daily-bonus-shift'){
       const days = Number(el.dataset.days);
       if(days===0){ APP.dailyBonusDate = todayStr(); }
@@ -3809,7 +3867,17 @@ document.addEventListener('change', (e)=>{
   }
   if(e.target.classList && e.target.classList.contains('xiaojiang-toggle')){
     const uidTarget = e.target.dataset.uid;
-    updateDoc(doc(db,'users',uidTarget), { isXiaojiang: e.target.checked }).then(()=>render());
+    const checked = e.target.checked;
+    const updates = [updateDoc(doc(db,'users',uidTarget), { isXiaojiang: checked })];
+    if(checked){
+      // 防呆：同一時間只能有一個人被標記為廣告投手，勾選新的人時自動把其他人的標記清掉
+      APP.users.forEach(u=>{
+        if(u.id!==uidTarget && u.isXiaojiang){
+          updates.push(updateDoc(doc(db,'users',u.id), { isXiaojiang: false }));
+        }
+      });
+    }
+    Promise.all(updates).then(()=>render());
     return;
   }
   if(e.target.classList && e.target.classList.contains('display-name-input')){
@@ -3869,6 +3937,16 @@ document.addEventListener('change', (e)=>{
   }
 });
 document.addEventListener('input', (e)=>{
+  if(e.target.classList && e.target.classList.contains('table-search-input')){
+    const stateKey = e.target.dataset.statekey;
+    const focusVal = e.target.value;
+    const cursorPos = e.target.selectionStart;
+    APP[stateKey] = focusVal;
+    render();
+    const newEl = document.querySelector(`.table-search-input[data-statekey="${stateKey}"]`);
+    if(newEl){ newEl.focus(); newEl.setSelectionRange(cursorPos, cursorPos); }
+    return;
+  }
   if(e.target.id==='tx-search'){
     APP.txFilter.search = e.target.value;
     const focusVal = e.target.value;
@@ -3944,7 +4022,7 @@ document.addEventListener('submit', (e)=>{
     renderRoot();
     return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form'].includes(e.target.id)){
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = {};
