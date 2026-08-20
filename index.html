@@ -633,8 +633,14 @@ function subscribeAll(){
           render();
         }));
         unsubs.push(onSnapshot(doc(db,'staffProfiles', APP.user.uid), snap2=>{
-          APP.staffProfiles = {};
-          APP.staffProfiles[APP.user.uid] = snap2.exists() ? snap2.data() : {};
+          APP.staffProfiles[APP.user.uid] = { ...(APP.staffProfiles[APP.user.uid]||{}), ...(snap2.exists() ? snap2.data() : {}) };
+          render();
+        }));
+        unsubs.push(onSnapshot(collection(db,'staffPublicProfiles'), snap2=>{
+          snap2.docs.forEach(d=>{
+            if(d.id === APP.user.uid) return; // 自己的完整資料（含薪資）已由上面那個監聽器處理，這裡不要覆蓋掉
+            APP.staffProfiles[d.id] = { ...(APP.staffProfiles[d.id]||{}), ...d.data() };
+          });
           render();
         }));
         unsubs.push(onSnapshot(query(collection(db,'xiaojiangInbox'), where('staffUid','==',APP.user.uid)), snap2=>{
@@ -680,7 +686,16 @@ function syncWizardHatLedger(caseId, date, customer, fee){
     deleteBonusLedgerEntry('wiz-'+caseId);
   }
 }
-function saveStaffProfile(uid, data){ return setDoc(doc(db,'staffProfiles', uid), data, {merge:true}); }
+function saveStaffProfile(uid, data){
+  const write = setDoc(doc(db,'staffProfiles', uid), data, {merge:true});
+  const publicFields = {};
+  if('displayName' in data) publicFields.displayName = data.displayName;
+  if('avatarDataUrl' in data) publicFields.avatarDataUrl = data.avatarDataUrl;
+  if(Object.keys(publicFields).length){
+    return write.then(()=> setDoc(doc(db,'staffPublicProfiles', uid), publicFields, {merge:true}));
+  }
+  return write;
+}
 function savePersonalProgress(rec){ return setDoc(doc(db,'personalProgress', rec.id), rec); }
 function deletePersonalProgress(id){ return deleteDoc(doc(db,'personalProgress', id)); }
 function saveAttendance(rec){ return setDoc(doc(db,'attendanceRecords', rec.id), rec); }
