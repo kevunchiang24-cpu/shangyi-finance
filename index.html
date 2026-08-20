@@ -3578,7 +3578,7 @@ async function sendChatMessage(question){
       })
     });
     const data = await resp.json();
-    let text = data.answer || data.error || '沒有取得回應，請再試一次。';
+    let text = data.answer || (data.error ? 'AI 暫時忙碌，請稍後再試一次。' : '沒有取得回應，請再試一次。');
     let rows = null;
     let pendingKind = 'tx';
     if(isCore()){
