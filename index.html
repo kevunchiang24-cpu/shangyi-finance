@@ -1657,9 +1657,26 @@ function updateDailyBonusPulse(){
     dot.remove();
   }
 }
+function updateXiaojiangPulse(){
+  const navEl = document.querySelector('.nav-item[data-view="staffOverview"]');
+  if(!navEl) return;
+  const needsPulse = isCore()
+    ? (APP.data.xiaojiangInbox||[]).some(r=>!(r.replyMessage || r.replyFileDataUrl))
+    : isStaffAny() && (APP.data.xiaojiangInboxMine||[]).some(r=>!!(r.replyMessage || r.replyFileDataUrl));
+  navEl.classList.toggle('nav-item-pulse', needsPulse);
+  let dot = navEl.querySelector('.nav-pulse-dot');
+  if(needsPulse && !dot){
+    dot = document.createElement('span');
+    dot.className = 'nav-pulse-dot';
+    navEl.appendChild(dot);
+  } else if(!needsPulse && dot){
+    dot.remove();
+  }
+}
 function render(){
   document.querySelectorAll('.nav-item').forEach(el=>{ el.classList.toggle('active', el.dataset.view===APP.view); });
   updateDailyBonusPulse();
+  updateXiaojiangPulse();
   const main = document.getElementById('main');
   if(!main) return;
   const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview'];
