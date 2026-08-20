@@ -4298,8 +4298,23 @@ document.addEventListener('change', (e)=>{
     return;
   }
 });
+let APP_IME_COMPOSING = false;
+document.addEventListener('compositionstart', (e)=>{
+  if(e.target.classList && (e.target.classList.contains('table-search-input')) || e.target.id==='tx-search' || e.target.id==='vendor-search'){
+    APP_IME_COMPOSING = true;
+  }
+});
+document.addEventListener('compositionend', (e)=>{
+  if(e.target.classList && (e.target.classList.contains('table-search-input')) || e.target.id==='tx-search' || e.target.id==='vendor-search'){
+    APP_IME_COMPOSING = false;
+    // Composition just finished — trigger the same update logic manually since the
+    // browser does not always fire a follow-up 'input' event in every browser/IME combo.
+    e.target.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+});
 document.addEventListener('input', (e)=>{
   if(e.target.classList && e.target.classList.contains('table-search-input')){
+    if(APP_IME_COMPOSING) return; // 中文／注音輸入組字中，先不重繪畫面，避免打斷選字
     const stateKey = e.target.dataset.statekey;
     const focusVal = e.target.value;
     const cursorPos = e.target.selectionStart;
@@ -4310,6 +4325,7 @@ document.addEventListener('input', (e)=>{
     return;
   }
   if(e.target.id==='tx-search'){
+    if(APP_IME_COMPOSING) return; // 中文／注音輸入組字中，先不重繪畫面，避免打斷選字
     APP.txFilter.search = e.target.value;
     const focusVal = e.target.value;
     render();
@@ -4318,6 +4334,7 @@ document.addEventListener('input', (e)=>{
     return;
   }
   if(e.target.id==='vendor-search'){
+    if(APP_IME_COMPOSING) return; // 中文／注音輸入組字中，先不重繪畫面，避免打斷選字
     APP.vendorSearch = e.target.value;
     const focusVal = e.target.value;
     render();
@@ -4347,6 +4364,7 @@ document.addEventListener('submit', (e)=>{
   }
   if(e.target.id==='xiaojiang-upload-form'){
     e.preventDefault();
+    if(e.target.dataset.submitting==='1') return; // 防止重複點擊造成重複送出
     const messageInput = e.target.querySelector('[name="message"]');
     const message = messageInput.value.trim();
     if(!message){ return; }
@@ -4356,9 +4374,16 @@ document.addEventListener('submit', (e)=>{
       fileName: APP._pendingXjFile ? APP._pendingXjFile.name : null,
       fileType: APP._pendingXjFile ? APP._pendingXjFile.type : null
     });
+    e.target.dataset.submitting = '1';
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '送出中…'; }
     saveXiaojiangUpload(rec).then(()=>{
       APP._pendingXjFile = null;
       closeModal();
+    }).catch((err)=>{
+      e.target.dataset.submitting = '0';
+      if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = '儲存'; }
+      alert('送出失敗，請稍後再試一次。\n錯誤訊息：' + (err && err.message ? err.message : err));
     });
     return;
   }
