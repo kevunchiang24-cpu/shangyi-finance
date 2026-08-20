@@ -2104,7 +2104,7 @@ function openXiaojiangUploadModal(){
         }).join('')}
       </tbody></table>
     </div>`;
-  openModal(`✨ 霍格華茲`, `
+  openModal(`霍格華茲`, `
     <p style="color:var(--muted);font-size:12.5px;margin:-6px 0 12px;">客戶需要特殊處理時，把資料傳給${escHtml(xjName)}——上傳照片、檔案，或留一句話說明狀況（資料只保留 24 小時）</p>
     <label class="field"><span>簡短說明</span><textarea name="message" placeholder="例如：客戶需要特殊處理，資料如附件" required></textarea></label>
     <label class="field"><span>上傳照片或檔案（選填，單檔 5MB 以內）</span><input type="file" id="xiaojiang-file-input"/></label>
@@ -2229,7 +2229,7 @@ function staffOverviewHTML(){
   }).join('');
 
   const xjUser = APP.users.find(u=>u.isXiaojiang);
-  const xjName = APP.data.caseSettings.xiaojiangName || '小江';
+  const xjName = APP.data.caseSettings.xiaojiangName || '"मायासिद्धः प्रथमः"';
   const unreadCount = viewerIsCore ? APP.data.xiaojiangInbox.length : 0;
   const xjCard = xjUser ? `<div class="card hogwarts-card" style="color:#fff;border:none;">
       <div class="hogwarts-smoke"></div>
@@ -2252,8 +2252,8 @@ function staffOverviewHTML(){
           <div style="font-size:11px;color:rgba(216,196,255,.7);">ॐ संचय पत्राय नमः । संरक्षणाय स्वाहा ॥</div>
         </div>
       </div>
-      <p style="font-size:12.5px;color:rgba(243,238,255,.85);line-height:1.7;margin-bottom:0;">व्यापार-प्रशासन-प्रेषित${unreadCount>0?`，目前共 <b style="color:#fff;">${unreadCount}</b> 筆`:''}。	विशेष-कार्य-पत्राणि सन्देशाश्च 	तथ्यानि केवलं चतुर्विंशति-होराः रक्षितानि</p>
-      <div class="hogwarts-btn-wrap">
+      <p style="font-size:12.5px;color:rgba(243,238,255,.85);line-height:1.7;margin-bottom:0;">व्यापार-प्रशासन-प्रेषित${unreadCount>0?`，目前共 <b style="color:#fff;">${unreadCount}</b> 筆`:''}。	व्यापार-प्रशासन-प्रेषितानि गुह्य-कार्याणि अस्मिन् रहस्य-कक्षे गुप्तानि सन्ति ।
+परन्तु सावधानम्! अत्र मायाबन्धः स्थापितः । चतुर्विंशति-होरासु पूर्णासु, मन्त्रः स्वयमेव सक्रियः भवति, सर्वं च निश्चिह्नं विलीयते ॥ <div class="hogwarts-btn-wrap">
         ${viewerIsCore
           ? `<button type="button" class="hogwarts-btn-lg" data-action="nav" data-view="xiaojiangInbox">進入霍格華茲</button>`
           : `<button type="button" class="hogwarts-btn-lg" data-action="open-xiaojiang-upload-modal">進入霍格華茲</button>`}
