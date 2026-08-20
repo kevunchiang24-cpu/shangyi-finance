@@ -610,7 +610,18 @@ function subscribeAll(){
         }));
         unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap2=>{
           APP.staffProfiles = {};
-          snap2.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
+          snap2.docs.forEach(d=>{
+            const data = d.data();
+            APP.staffProfiles[d.id] = data;
+            // 自動補資料：把舊資料裡已經設定過的暱稱／大頭貼，順手同步一份到公開表，
+            // 讓業務／行政那邊也看得到（只需要跑一次，之後 saveStaffProfile 會自動保持同步）
+            if(data && (data.displayName || data.avatarDataUrl)){
+              const publicFields = {};
+              if(data.displayName) publicFields.displayName = data.displayName;
+              if(data.avatarDataUrl) publicFields.avatarDataUrl = data.avatarDataUrl;
+              setDoc(doc(db,'staffPublicProfiles', d.id), publicFields, {merge:true}).catch(()=>{});
+            }
+          });
           render();
         }));
         unsubs.push(onSnapshot(collection(db,'xiaojiangInbox'), snap2=>{
