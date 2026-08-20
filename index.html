@@ -767,6 +767,8 @@ function shellHTML(){
   );
   const meCoreUser = core ? APP.users.find(u=>u.id===APP.user.uid) : null;
   const meIsXiaojiang = !!(meCoreUser && meCoreUser.isXiaojiang);
+  const hasUnrepliedXj = core && (APP.data.xiaojiangInbox||[]).some(r=>!(r.replyMessage || r.replyFileDataUrl));
+  const hasXjReplyForMe = staffAny && (APP.data.xiaojiangInboxMine||[]).some(r=>!!(r.replyMessage || r.replyFileDataUrl));
   return `
   <div id="mobile-topbar">
     <button id="hamburger-btn" aria-label="選單">☰</button>
@@ -790,7 +792,7 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
     <div class="nav-item" data-action="nav" data-view="cases"><span class="nav-icon">📋</span>獲利報表</div>
     <div class="nav-item${hasUnpaidToday?' nav-item-pulse':''}" data-action="nav" data-view="dailyBonus"><span class="nav-icon">💰</span>每日獎金${hasUnpaidToday?'<span class="nav-pulse-dot"></span>':''}</div>
-    <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
+    <div class="nav-item${hasUnrepliedXj?' nav-item-pulse':''}" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽${hasUnrepliedXj?'<span class="nav-pulse-dot"></span>':''}</div>
     <div class="nav-group-label">公司管理</div>
     <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">☺</span>人事管理</div>
     <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">▣</span>廠商管理</div>
@@ -821,7 +823,7 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>個人業務進度紀錄</div>
     <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
     <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">📅</span>行事曆</div>
-    <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
+    <div class="nav-item${hasXjReplyForMe?' nav-item-pulse':''}" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽${hasXjReplyForMe?'<span class="nav-pulse-dot"></span>':''}</div>
     ` : ''}
     <div class="sidebar-footer">
       <div class="user-chip">${escHtml(APP.userEmail)}</div>
@@ -2137,14 +2139,16 @@ function xiaojiangInboxView(){
           <div style="color:var(--muted);font-size:12px;margin-bottom:8px;">${r._at?new Date(r._at).toLocaleString('zh-TW'):''}</div>
           <div style="font-size:13.5px;white-space:pre-wrap;margin-bottom:10px;">${escHtml(r.message||'')}</div>
           ${r.fileDataUrl ? (isImg
-            ? `<img src="${r.fileDataUrl}" style="max-width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:10px;"/>`
+            ? `<img src="${r.fileDataUrl}" style="max-width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;"/>
+               <a href="${r.fileDataUrl}" download="${escAttr(r.fileName||'attachment')}" class="btn ghost sm" style="margin-bottom:10px;">📎 下載照片</a>`
             : `<a href="${r.fileDataUrl}" download="${escAttr(r.fileName||'attachment')}" class="btn ghost sm" style="margin-bottom:10px;">📎 下載附件：${escHtml(r.fileName||'檔案')}</a>`
           ) : ''}
           ${hasReply ? `<div style="margin-top:6px;padding:10px;background:#F0FDF4;border-radius:8px;border:1px solid #BBF7D0;">
             <div style="font-size:11.5px;color:var(--green);font-weight:700;margin-bottom:4px;">✓ 已回覆</div>
             <div style="font-size:13px;white-space:pre-wrap;">${escHtml(r.replyMessage||'')}</div>
             ${r.replyFileDataUrl ? (isReplyImg
-              ? `<img src="${r.replyFileDataUrl}" style="max-width:100%;border-radius:6px;margin-top:6px;"/>`
+              ? `<img src="${r.replyFileDataUrl}" style="max-width:100%;border-radius:6px;margin-top:6px;margin-bottom:6px;"/>
+                 <a href="${r.replyFileDataUrl}" download="${escAttr(r.replyFileName||'reply')}" class="btn ghost sm" style="margin-top:6px;">📎 下載照片</a>`
               : `<a href="${r.replyFileDataUrl}" download="${escAttr(r.replyFileName||'reply')}" class="btn ghost sm" style="margin-top:6px;">📎 下載回覆附件</a>`
             ) : ''}
           </div>` : `
@@ -4359,6 +4363,8 @@ document.addEventListener('submit', (e)=>{
     saveXiaojiangReply(replyId, data).then(()=>{
       if(APP._pendingXjReplyFiles) delete APP._pendingXjReplyFiles[replyId];
       render();
+    }).catch((err)=>{
+      alert('回覆送出失敗，請稍後再試一次。\n錯誤訊息：' + (err && err.message ? err.message : err));
     });
     return;
   }
