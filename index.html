@@ -1735,7 +1735,7 @@ function profileEditCardHtml(){
           </label>
         </div>
         <div style="flex:1;min-width:200px;">
-          <label class="field" style="margin:0;"><span>房間顯示名稱（純外觀，不影響資料歸屬）</span>
+          <label class="field" style="margin:0;"><span>
             <input type="text" class="display-name-input" data-uid="${meUid}" value="${escAttr(p.displayName||'')}" placeholder="例：小傑、Jack…留空則顯示系統名稱「${escHtml(sysName)}」"/>
           </label>
         </div>
@@ -1770,14 +1770,14 @@ function xiaojiangDashboardView(){
         <div><div style="font-size:11.5px;opacity:.85;">今日拆成</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(todayXjBonus)}</div></div>
         <div><div style="font-size:11.5px;opacity:.85;">本月拆成累計</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthXjTiered)}</div></div>
         <div><div style="font-size:11.5px;opacity:.85;">本月投手獎金（5號發放）</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(pilotBonusThisMonth)}</div></div>
-        <div><div style="font-size:11.5px;opacity:.85;">本月${whIcon(13)}</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthWizardFee)}</div></div>
+        <div><div style="font-size:11.5px;opacity:.85;">${whIcon(13)}</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthWizardFee)}</div></div>
         <div><div style="font-size:11.5px;opacity:.85;">本月合計</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthXjTiered+pilotBonusThisMonth+monthWizardFee)}</div></div>
       </div>
     </div>
     <div class="card" style="cursor:pointer;" data-action="nav" data-view="xiaojiangInbox">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <h3 style="margin:0 0 4px;">✨ 霍格華茲信箱</h3>
+          <h3 style="margin:0 0 4px;">霍格華茲</h3>
           <p style="margin:0;color:var(--muted);font-size:12.5px;">業務／行政傳來的特殊處理檔案，${unreadCount>0?`目前有 ${unreadCount} 筆`:'目前沒有新資料'}</p>
         </div>
         <span style="font-size:20px;color:var(--muted);">→</span>
@@ -2119,7 +2119,7 @@ function xiaojiangInboxView(){
   return `
     <div class="page-header" style="margin-bottom:14px;">
       <div>
-        <h1 class="page-title">✨ 霍格華茲信箱</h1>
+        <h1 class="page-title">霍格華茲</h1>
         <p class="page-sub">業務／行政傳給${escHtml(xjName)}的檔案與訊息，資料只保留 24 小時，過了會自動清除</p>
       </div>
     </div>
@@ -2248,8 +2248,8 @@ function staffOverviewHTML(){
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
         <div style="width:40px;height:40px;border-radius:50%;background:rgba(216,196,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 14px rgba(139,92,246,.5);">🌙</div>
         <div>
-          <h3 style="margin:0;color:#F3EEFF;">${escHtml(displayNameFor(xjUser.id, xjName))} 的房間</h3>
-          <div style="font-size:11px;color:rgba(216,196,255,.7);">特殊處理事務・神秘空間</div>
+          <h3 style="margin:0;color:#F3EEFF;">${escHtml(displayNameFor(xjUser.id, xjName))}</h3>
+          <div style="font-size:11px;color:rgba(216,196,255,.7);">ॐ संचय पत्राय नमः । संरक्षणाय स्वाहा ॥</div>
         </div>
       </div>
       <p style="font-size:12.5px;color:rgba(243,238,255,.85);line-height:1.7;margin-bottom:0;">業務／行政傳來的特殊處理檔案與訊息，都收在這裡${unreadCount>0?`，目前共 <b style="color:#fff;">${unreadCount}</b> 筆`:''}。資料只保留 24 小時，過了會自動清除。</p>
