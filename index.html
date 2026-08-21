@@ -2606,7 +2606,7 @@ function dailyBonusView(){
 }
 
 function progressAdView(){
-  const canAdd = isCore() || isStaffAdmin() || isStaffSales();
+  const canAdd = isCore() || isStaffAdmin();
   const f = APP.progressAdFilter;
   let list = APP.data.progressAd.slice();
   if(isStaffSales()) list = list.filter(c=>c.staff===myStaffName());
@@ -2661,7 +2661,7 @@ function progressAdView(){
 }
 
 function progressChannelView(){
-  const canAdd = isCore() || isStaffAdmin() || isStaffSales();
+  const canAdd = isCore() || isStaffAdmin();
   const f = APP.progressChannelFilter;
   let list = APP.data.progressChannel.slice();
   if(isStaffSales()) list = list.filter(c=>c.staff===myStaffName());
@@ -3755,7 +3755,7 @@ async function sendChatMessage(question){
     let rows = null;
     let pendingKind = 'tx';
     const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor']];
-    const TAG_MAP_STAFFSALES = [['personallog','personallog'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar']];
+    const TAG_MAP_STAFFSALES = [['personallog','personallog'],['attendance','attendance'],['calendar','calendar']];
     const TAG_MAP_STAFFADMIN = [['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar']];
     const tagMap = isCore() ? TAG_MAP_CORE : isStaffSales() ? TAG_MAP_STAFFSALES : isStaffAdmin() ? TAG_MAP_STAFFADMIN : [];
     for(const [tag, kind] of tagMap){
