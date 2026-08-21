@@ -473,7 +473,7 @@ const defaultCategories = () => ({
 });
 
 const APP = {
-  user:null, userEmail:'', role:null, users:[], authError:'', authMsg:'', staffProfiles:{},
+  user:null, userEmail:'', role:null, users:[], authError:'', authMsg:'', staffProfiles:{}, publicProfiles:{},
   view:'dashboard', year:nowYear, settingsTab:'company', hrTab:'employees',
   showResigned:false, txTab:'list', txFilter:{type:'all',main:'all',start:monthBoundsStart(nowMonthKey),end:monthBoundsEnd(nowMonthKey),search:'',month:nowMonthKey},
   vendorSearch:'', reportYear:nowYear, reportRange:null, reportCompareMode:'none',
@@ -505,14 +505,18 @@ function isStaffSales(){ return APP.role==='staffSales'; }
 function isStaffAny(){ return isStaffAdmin() || isStaffSales(); }
 function myStaffName(){ const me = APP.users.find(u=>u.id===APP.user.uid); return me ? (me.staffName||'') : ''; }
 function displayNameFor(uidVal, fallbackName){
+  const pub = APP.publicProfiles[uidVal];
+  if(pub && pub.displayName) return pub.displayName;
   const p = APP.staffProfiles[uidVal];
   return (p && p.displayName) ? p.displayName : fallbackName;
 }
 function avatarHtml(uidVal, name, size){
+  const pub = APP.publicProfiles[uidVal];
   const p = APP.staffProfiles[uidVal];
   const s = size || 40;
-  if(p && p.avatarDataUrl){
-    return `<img src="${p.avatarDataUrl}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="${escAttr(name)}"/>`;
+  const avatarUrl = (pub && pub.avatarDataUrl) || (p && p.avatarDataUrl);
+  if(avatarUrl){
+    return `<img src="${avatarUrl}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="${escAttr(name)}"/>`;
   }
   const initial = (name||'?').charAt(0);
   const hue = (name||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0) % 360;
@@ -591,6 +595,11 @@ function subscribeAll(){
     APP.role = me ? me.role : 'pending';
     if(!personalSubsInitialized && APP.role){
       personalSubsInitialized = true;
+      unsubs.push(onSnapshot(collection(db,'staffPublicProfiles'), snap2=>{
+        APP.publicProfiles = {};
+        snap2.docs.forEach(d=>{ APP.publicProfiles[d.id] = d.data(); });
+        render();
+      }));
       unsubs.push(onSnapshot(
         isCore() ? collection(db,'personalProgress') : query(collection(db,'personalProgress'), where('staffUid','==',APP.user.uid)),
         snap2=>{ APP.data.personalProgress = snap2.docs.map(d=>({id:d.id, ...d.data()})); render(); }
@@ -681,6 +690,7 @@ function syncWizardHatLedger(caseId, date, customer, fee){
   }
 }
 function saveStaffProfile(uid, data){ return setDoc(doc(db,'staffProfiles', uid), data, {merge:true}); }
+function savePublicProfile(uid, data){ return setDoc(doc(db,'staffPublicProfiles', uid), data, {merge:true}); }
 function savePersonalProgress(rec){ return setDoc(doc(db,'personalProgress', rec.id), rec); }
 function deletePersonalProgress(id){ return deleteDoc(doc(db,'personalProgress', id)); }
 function saveAttendance(rec){ return setDoc(doc(db,'attendanceRecords', rec.id), rec); }
@@ -1514,25 +1524,26 @@ function hrHTML(){
   const editable = canEdit();
   let body = '';
   if(tab==='employees'){
-    let emps = APP.data.hr.employees;
-    if(!APP.showResigned) emps = emps.filter(e=>e.status!=='resigned');
-    const rows = emps.map(e=>`
-      <tr><td>${escHtml(e.name)}</td><td>${escHtml(e.title||'—')}</td><td>${money(e.salary)}</td><td>${e.startDate||'—'}</td>
-      <td><span class="badge ${e.status==='resigned'?'resigned':'active'}">${e.status==='resigned'?'離職':'在職'}</span></td>
-      <td>${editedLabel(e)}</td>
-      ${editable?`<td><div class="row-actions">
-        <button class="icon-btn" data-action="edit-employee" data-id="${e.id}">編輯</button>
-        <button class="icon-btn" data-action="delete-employee" data-id="${e.id}">刪除</button>
-      </div></td>`:''}</tr>`).join('');
+    const realStaff = APP.users.filter(u=>['admin','editor','staffAdmin','staffSales'].includes(u.role));
+    const roleLabelMap = {admin:'管理員', editor:'一般編輯', staffAdmin:'行政', staffSales:'業務'};
+    const rows = realStaff.map(u=>{
+      const p = APP.staffProfiles[u.id]||{};
+      const disp = displayNameFor(u.id, u.staffName||u.email);
+      return `
+      <tr><td>${escHtml(disp)}${u.staffName&&disp!==u.staffName?`<div style="color:var(--muted);font-size:11px;">系統名稱：${escHtml(u.staffName)}</div>`:''}</td>
+      <td>${editable?`<input type="text" class="staff-title-input" data-uid="${u.id}" value="${escAttr(p.title||'')}" placeholder="${roleLabelMap[u.role]||u.role}" style="width:90px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;"/>`:escHtml(p.title||roleLabelMap[u.role]||u.role)}</td>
+      <td>${editable?`<input type="number" class="staff-salary-input" data-uid="${u.id}" value="${p.baseSalary||''}" placeholder="底薪" style="width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;"/>`:money(p.baseSalary||0)}</td>
+      <td style="color:var(--muted);font-size:12px;">${u.createdAt?new Date(u.createdAt).toLocaleDateString('zh-TW'):'—'}</td>
+      <td><span class="badge active">在職</span></td>
+      <td>${escHtml(u.email)}</td></tr>`;
+    }).join('');
     body = `
-      <div class="page-header" style="margin-bottom:14px;"><div></div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn ghost sm" data-action="toggle-resigned">${APP.showResigned?'隱藏離職':'顯示離職'}</button>
-          ${editable?`<button class="btn primary" data-action="open-employee-modal">＋ 新增員工</button>`:''}
-        </div></div>
+      <div class="card" style="margin-bottom:16px;">
+        <p style="font-size:12.5px;color:var(--muted);line-height:1.7;margin:0;">這份名單直接讀取「帳號管理」裡實際的帳號資料，不再是另外單獨維護的清單——底薪、職稱在這裡改，跟帳號管理、每月發放底薪用的是同一份資料，兩邊會同步。要新增或移除員工，請到「帳號管理」設定帳號角色。</p>
+      </div>
       <div class="table-wrap">
-        ${emps.length===0 ? `<div class="empty">尚無員工資料</div>` :
-        `<table><thead><tr><th>姓名</th><th>職稱</th><th>月薪</th><th>到職日</th><th>狀態</th><th>最後編輯</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+        ${rows.length===0 ? `<div class="empty">目前帳號管理裡還沒有任何核心／業務／行政帳號</div>` :
+        `<table><thead><tr><th>姓名</th><th>職稱</th><th>底薪</th><th>建立日期</th><th>狀態</th><th>Email</th></tr></thead><tbody>${rows}</tbody></table>`}
       </div>`;
   } else if(tab==='collaborators'){
     const cols = APP.data.hr.collaborators;
@@ -1639,6 +1650,11 @@ function usersHTML(){
       <p style="font-size:13px;color:var(--muted);line-height:1.7;margin:0;">
       新夥伴要加入時：先請你（管理員）在 Firebase 後台「Authentication」新增他的信箱與密碼，接著請他用該帳密登入這個網站一次，登入後他的帳號就會出現在下方清單，狀態是「待設定」，此時再回來這裡把他的權限改成合適的選項即可。設定成「行政」或「業務」時，記得同時選好「對應姓名」（要跟進度追蹤裡的業務清單一致），否則他將看不到屬於自己的客戶資料。</p>
     </div>
+    <div class="card" style="margin-bottom:16px;background:#FFF8E6;">
+      <div class="card-head-row"><h3>同步暱稱與頭像</h3></div>
+      <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px;">修復用：之前設定過的暱稱、頭像因為權限架構調整，業務／行政互相看不到彼此的自訂暱稱與頭像（業務總覽會顯示回預設值）。按下去會把大家已經設定好的資料，同步到現在全公司都看得到的地方，只需要按一次。</p>
+      <button class="btn ghost" data-action="sync-public-profiles">🔄 立即同步</button>
+    </div>
     ${isAdmin() && salaryStaff.length>0 ? `
     <div class="card" style="margin-bottom:16px;background:#F5F7FC;">
       <div class="card-head-row">
@@ -1743,19 +1759,21 @@ function calendarPageHTML(){
 function profileEditCardHtml(){
   const meUid = effectiveUid();
   const sysName = effectiveStaffName();
-  const p = APP.staffProfiles[meUid] || {};
+  const pub = APP.publicProfiles[meUid] || {};
+  const priv = APP.staffProfiles[meUid] || {};
+  const displayName = pub.displayName || priv.displayName || '';
   return `
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
         <div style="position:relative;">
-          ${avatarHtml(meUid, p.displayName||sysName, 64)}
+          ${avatarHtml(meUid, displayName||sysName, 64)}
           <label style="position:absolute;bottom:-4px;right:-4px;background:var(--navy);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">
             📷<input type="file" accept="image/*" class="avatar-upload-input" data-uid="${meUid}" style="display:none;"/>
           </label>
         </div>
         <div style="flex:1;min-width:200px;">
           <label class="field" style="margin:0;"><span>房間顯示名稱（純外觀，不影響資料歸屬）</span>
-            <input type="text" class="display-name-input" data-uid="${meUid}" value="${escAttr(p.displayName||'')}" placeholder="例：小傑、Jack…留空則顯示系統名稱「${escHtml(sysName)}」"/>
+            <input type="text" class="display-name-input" data-uid="${meUid}" value="${escAttr(displayName)}" placeholder="例：小傑、Jack…留空則顯示系統名稱「${escHtml(sysName)}」"/>
           </label>
         </div>
       </div>
@@ -3481,10 +3499,15 @@ function buildFinanceContext(){
 
   const assetsTotal = sum(APP.data.assets);
   const liabTotal = sum(APP.data.liabilities);
-  const empActive = APP.data.hr.employees.filter(e=>e.status!=='resigned').length;
+  const realStaffForAi = APP.users.filter(u=>['admin','editor','staffAdmin','staffSales'].includes(u.role));
+  const empActive = realStaffForAi.length;
 
-  /* ---- 人事名單 ---- */
-  const empLines = APP.data.hr.employees.map(e=>`${e.name||'未填'} 職稱:${e.title||'未填'} 底薪:${money(e.salary||0)} 到職:${e.startDate||'未填'} 狀態:${e.status==='resigned'?'已離職':'在職'}`).join('\n');
+  /* ---- 人事名單（直接讀帳號管理的真實帳號資料，跟人事管理頁面同一份來源） ---- */
+  const roleLabelMapAi = {admin:'管理員', editor:'一般編輯', staffAdmin:'行政', staffSales:'業務'};
+  const empLines = realStaffForAi.map(u=>{
+    const p = APP.staffProfiles[u.id]||{};
+    return `${u.staffName||u.email} 職稱:${p.title||roleLabelMapAi[u.role]||u.role} 底薪:${money(p.baseSalary||0)}`;
+  }).join('\n');
 
   /* ---- 廠商名單 ---- */
   const vendorLines = APP.data.vendors.map(v=>`${v.name||'未填'}${v.contact?(' 聯絡人:'+v.contact):''}${v.phone?(' 電話:'+v.phone):''}${v.note?(' 備註:'+v.note):''}`).join('\n');
@@ -3714,7 +3737,7 @@ async function sendChatMessage(question){
     let text = data.answer || data.error || '沒有取得回應，請再試一次。';
     let rows = null;
     let pendingKind = 'tx';
-    const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor'],['employee','employee']];
+    const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor']];
     const TAG_MAP_STAFFSALES = [['personallog','personallog'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar']];
     const TAG_MAP_STAFFADMIN = [['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar']];
     const tagMap = isCore() ? TAG_MAP_CORE : isStaffSales() ? TAG_MAP_STAFFSALES : isStaffAdmin() ? TAG_MAP_STAFFADMIN : [];
@@ -3831,6 +3854,20 @@ document.addEventListener('click', (e)=>{
         APP.data.caseSettings[kind] = APP.data.caseSettings[kind].filter(x=>x!==val);
         saveCaseSettings();
       }); return;
+    }
+    if(action==='sync-public-profiles'){
+      const targets = Object.entries(APP.staffProfiles).filter(([uidVal, p])=> p && (p.displayName || p.avatarDataUrl));
+      if(targets.length===0){ alert('沒有找到需要同步的資料。'); return; }
+      openConfirm(`確定要同步 ${targets.length} 位的暱稱／頭像資料嗎？`, ()=>{
+        const promises = targets.map(([uidVal, p])=>{
+          const data = {};
+          if(p.displayName) data.displayName = p.displayName;
+          if(p.avatarDataUrl) data.avatarDataUrl = p.avatarDataUrl;
+          return savePublicProfile(uidVal, data);
+        });
+        Promise.allSettled(promises).then(()=>{ alert('同步完成！'); render(); });
+      });
+      return;
     }
     if(action==='pay-monthly-salaries'){
       const targets = APP.users.filter(u=>{
@@ -4296,6 +4333,11 @@ document.addEventListener('change', (e)=>{
     saveStaffProfile(uidTarget, { baseSalary: Number(e.target.value)||0 });
     return;
   }
+  if(e.target.classList && e.target.classList.contains('staff-title-input')){
+    const uidTarget = e.target.dataset.uid;
+    saveStaffProfile(uidTarget, { title: e.target.value });
+    return;
+  }
   if(e.target.classList && e.target.classList.contains('xiaojiang-toggle')){
     const uidTarget = e.target.dataset.uid;
     const checked = e.target.checked;
@@ -4313,7 +4355,7 @@ document.addEventListener('change', (e)=>{
   }
   if(e.target.classList && e.target.classList.contains('display-name-input')){
     const uidTarget = e.target.dataset.uid;
-    saveStaffProfile(uidTarget, { displayName: e.target.value.trim() });
+    savePublicProfile(uidTarget, { displayName: e.target.value.trim() });
     return;
   }
   if(e.target.classList && e.target.classList.contains('avatar-upload-input')){
@@ -4333,7 +4375,7 @@ document.addEventListener('change', (e)=>{
         const sx = (img.width-minSide)/2, sy = (img.height-minSide)/2;
         ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        saveStaffProfile(uidTarget, { avatarDataUrl: dataUrl });
+        savePublicProfile(uidTarget, { avatarDataUrl: dataUrl });
       };
       img.src = ev.target.result;
     };
