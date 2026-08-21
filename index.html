@@ -610,18 +610,7 @@ function subscribeAll(){
         }));
         unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap2=>{
           APP.staffProfiles = {};
-          snap2.docs.forEach(d=>{
-            const data = d.data();
-            APP.staffProfiles[d.id] = data;
-            // 自動補資料：把舊資料裡已經設定過的暱稱／大頭貼，順手同步一份到公開表，
-            // 讓業務／行政那邊也看得到（只需要跑一次，之後 saveStaffProfile 會自動保持同步）
-            if(data && (data.displayName || data.avatarDataUrl)){
-              const publicFields = {};
-              if(data.displayName) publicFields.displayName = data.displayName;
-              if(data.avatarDataUrl) publicFields.avatarDataUrl = data.avatarDataUrl;
-              setDoc(doc(db,'staffPublicProfiles', d.id), publicFields, {merge:true}).catch(()=>{});
-            }
-          });
+          snap2.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
           render();
         }));
         unsubs.push(onSnapshot(collection(db,'xiaojiangInbox'), snap2=>{
@@ -644,14 +633,8 @@ function subscribeAll(){
           render();
         }));
         unsubs.push(onSnapshot(doc(db,'staffProfiles', APP.user.uid), snap2=>{
-          APP.staffProfiles[APP.user.uid] = { ...(APP.staffProfiles[APP.user.uid]||{}), ...(snap2.exists() ? snap2.data() : {}) };
-          render();
-        }));
-        unsubs.push(onSnapshot(collection(db,'staffPublicProfiles'), snap2=>{
-          snap2.docs.forEach(d=>{
-            if(d.id === APP.user.uid) return; // 自己的完整資料（含薪資）已由上面那個監聽器處理，這裡不要覆蓋掉
-            APP.staffProfiles[d.id] = { ...(APP.staffProfiles[d.id]||{}), ...d.data() };
-          });
+          APP.staffProfiles = {};
+          APP.staffProfiles[APP.user.uid] = snap2.exists() ? snap2.data() : {};
           render();
         }));
         unsubs.push(onSnapshot(query(collection(db,'xiaojiangInbox'), where('staffUid','==',APP.user.uid)), snap2=>{
@@ -697,16 +680,7 @@ function syncWizardHatLedger(caseId, date, customer, fee){
     deleteBonusLedgerEntry('wiz-'+caseId);
   }
 }
-function saveStaffProfile(uid, data){
-  const write = setDoc(doc(db,'staffProfiles', uid), data, {merge:true});
-  const publicFields = {};
-  if('displayName' in data) publicFields.displayName = data.displayName;
-  if('avatarDataUrl' in data) publicFields.avatarDataUrl = data.avatarDataUrl;
-  if(Object.keys(publicFields).length){
-    return write.then(()=> setDoc(doc(db,'staffPublicProfiles', uid), publicFields, {merge:true}));
-  }
-  return write;
-}
+function saveStaffProfile(uid, data){ return setDoc(doc(db,'staffProfiles', uid), data, {merge:true}); }
 function savePersonalProgress(rec){ return setDoc(doc(db,'personalProgress', rec.id), rec); }
 function deletePersonalProgress(id){ return deleteDoc(doc(db,'personalProgress', id)); }
 function saveAttendance(rec){ return setDoc(doc(db,'attendanceRecords', rec.id), rec); }
@@ -716,7 +690,6 @@ function deleteCalendarEntry(id){ return deleteDoc(doc(db,'personalCalendar', id
 function saveXiaojiangUpload(rec){ return setDoc(doc(db,'xiaojiangInbox', rec.id), rec); }
 function deleteXiaojiangUpload(id){ return deleteDoc(doc(db,'xiaojiangInbox', id)); }
 function saveXiaojiangReply(id, data){ return updateDoc(doc(db,'xiaojiangInbox', id), data); }
-function markXjReplySeen(id){ return updateDoc(doc(db,'xiaojiangInbox', id), { staffSeenReply: true }).catch(()=>{}); }
 function saveCasesAd(){ return setDoc(doc(db,'appdata','casesAd'), {list:APP.data.casesAd}); }
 function saveCasesChannel(){ return setDoc(doc(db,'appdata','casesChannel'), {list:APP.data.casesChannel}); }
 function saveAdSpend(){ return setDoc(doc(db,'appdata','adSpend'), {list:APP.data.adSpend}); }
@@ -794,8 +767,6 @@ function shellHTML(){
   );
   const meCoreUser = core ? APP.users.find(u=>u.id===APP.user.uid) : null;
   const meIsXiaojiang = !!(meCoreUser && meCoreUser.isXiaojiang);
-  const hasUnrepliedXj = core && (APP.data.xiaojiangInbox||[]).some(r=>!(r.replyMessage || r.replyFileDataUrl));
-  const hasXjReplyForMe = staffAny && (APP.data.xiaojiangInboxMine||[]).some(r=>!!(r.replyMessage || r.replyFileDataUrl) && !r.staffSeenReply);
   return `
   <div id="mobile-topbar">
     <button id="hamburger-btn" aria-label="選單">☰</button>
@@ -819,7 +790,7 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
     <div class="nav-item" data-action="nav" data-view="cases"><span class="nav-icon">📋</span>獲利報表</div>
     <div class="nav-item${hasUnpaidToday?' nav-item-pulse':''}" data-action="nav" data-view="dailyBonus"><span class="nav-icon">💰</span>每日獎金${hasUnpaidToday?'<span class="nav-pulse-dot"></span>':''}</div>
-    <div class="nav-item${hasUnrepliedXj?' nav-item-pulse':''}" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽${hasUnrepliedXj?'<span class="nav-pulse-dot"></span>':''}</div>
+    <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
     <div class="nav-group-label">公司管理</div>
     <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">☺</span>人事管理</div>
     <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">▣</span>廠商管理</div>
@@ -850,7 +821,7 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>個人業務進度紀錄</div>
     <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
     <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">📅</span>行事曆</div>
-    <div class="nav-item${hasXjReplyForMe?' nav-item-pulse':''}" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽${hasXjReplyForMe?'<span class="nav-pulse-dot"></span>':''}</div>
+    <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
     ` : ''}
     <div class="sidebar-footer">
       <div class="user-chip">${escHtml(APP.userEmail)}</div>
@@ -1066,6 +1037,25 @@ function catColor(name){
   let hash = 0;
   for(let i=0;i<String(name).length;i++){ hash = String(name).charCodeAt(i) + ((hash<<5)-hash); }
   return palette[Math.abs(hash)%palette.length];
+}
+const OPTION_COLOR_PALETTE = [
+  {bg:'#DBEAFE', text:'#1D4ED8'}, {bg:'#DCFCE7', text:'#15803D'}, {bg:'#FEF3C7', text:'#92400E'},
+  {bg:'#FCE7F3', text:'#BE185D'}, {bg:'#EDE9FE', text:'#6D28D9'}, {bg:'#CFFAFE', text:'#0E7490'},
+  {bg:'#FFE4E6', text:'#BE123C'}, {bg:'#ECFCCB', text:'#4D7C0F'}, {bg:'#FFEDD5', text:'#C2410C'},
+  {bg:'#E0E7FF', text:'#4338CA'}, {bg:'#F3E8FF', text:'#7E22CE'}, {bg:'#D1FAE5', text:'#047857'},
+  {bg:'#FEE2E2', text:'#B91C1C'}, {bg:'#E2E8F0', text:'#334155'},
+];
+function colorForOption(value){
+  if(!value) return {bg:'#F1F2F6', text:'#6B7280'};
+  let hash = 0;
+  const s = String(value);
+  for(let i=0;i<s.length;i++){ hash = s.charCodeAt(i) + ((hash<<5)-hash); }
+  return OPTION_COLOR_PALETTE[Math.abs(hash)%OPTION_COLOR_PALETTE.length];
+}
+function optionBadgeHtml(value, placeholder){
+  if(!value) return `<span style="color:var(--muted);">${placeholder||'—'}</span>`;
+  const c = colorForOption(value);
+  return `<span class="badge" style="background:${c.bg};color:${c.text};">${escHtml(value)}</span>`;
 }
 function dateGroupLabel(d){
   const weekdayNames = ['日','一','二','三','四','五','六'];
@@ -1684,26 +1674,9 @@ function updateDailyBonusPulse(){
     dot.remove();
   }
 }
-function updateXiaojiangPulse(){
-  const navEl = document.querySelector('.nav-item[data-view="staffOverview"]');
-  if(!navEl) return;
-  const needsPulse = isCore()
-    ? (APP.data.xiaojiangInbox||[]).some(r=>!(r.replyMessage || r.replyFileDataUrl))
-    : isStaffAny() && (APP.data.xiaojiangInboxMine||[]).some(r=>!!(r.replyMessage || r.replyFileDataUrl) && !r.staffSeenReply);
-  navEl.classList.toggle('nav-item-pulse', needsPulse);
-  let dot = navEl.querySelector('.nav-pulse-dot');
-  if(needsPulse && !dot){
-    dot = document.createElement('span');
-    dot.className = 'nav-pulse-dot';
-    navEl.appendChild(dot);
-  } else if(!needsPulse && dot){
-    dot.remove();
-  }
-}
 function render(){
   document.querySelectorAll('.nav-item').forEach(el=>{ el.classList.toggle('active', el.dataset.view===APP.view); });
   updateDailyBonusPulse();
-  updateXiaojiangPulse();
   const main = document.getElementById('main');
   if(!main) return;
   const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview'];
@@ -1781,7 +1754,7 @@ function profileEditCardHtml(){
           </label>
         </div>
         <div style="flex:1;min-width:200px;">
-          <label class="field" style="margin:0;"><span>
+          <label class="field" style="margin:0;"><span>房間顯示名稱（純外觀，不影響資料歸屬）</span>
             <input type="text" class="display-name-input" data-uid="${meUid}" value="${escAttr(p.displayName||'')}" placeholder="例：小傑、Jack…留空則顯示系統名稱「${escHtml(sysName)}」"/>
           </label>
         </div>
@@ -1816,14 +1789,14 @@ function xiaojiangDashboardView(){
         <div><div style="font-size:11.5px;opacity:.85;">今日拆成</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(todayXjBonus)}</div></div>
         <div><div style="font-size:11.5px;opacity:.85;">本月拆成累計</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthXjTiered)}</div></div>
         <div><div style="font-size:11.5px;opacity:.85;">本月投手獎金（5號發放）</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(pilotBonusThisMonth)}</div></div>
-        <div><div style="font-size:11.5px;opacity:.85;">${whIcon(13)}</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthWizardFee)}</div></div>
+        <div><div style="font-size:11.5px;opacity:.85;">本月${whIcon(13)}</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthWizardFee)}</div></div>
         <div><div style="font-size:11.5px;opacity:.85;">本月合計</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthXjTiered+pilotBonusThisMonth+monthWizardFee)}</div></div>
       </div>
     </div>
     <div class="card" style="cursor:pointer;" data-action="nav" data-view="xiaojiangInbox">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <h3 style="margin:0 0 4px;">霍格華茲</h3>
+          <h3 style="margin:0 0 4px;">✨ 霍格華茲信箱</h3>
           <p style="margin:0;color:var(--muted);font-size:12.5px;">業務／行政傳來的特殊處理檔案，${unreadCount>0?`目前有 ${unreadCount} 筆`:'目前沒有新資料'}</p>
         </div>
         <span style="font-size:20px;color:var(--muted);">→</span>
@@ -1961,7 +1934,8 @@ function myDashboardView(){
 }
 
 function inlineSelectHtml(id, field, options, current, badgeClass){
-  return `<select class="inline-log-field badge ${badgeClass}" data-id="${id}" data-field="${field}" style="border:none;cursor:pointer;">
+  const c = colorForOption(current);
+  return `<select class="inline-log-field" data-id="${id}" data-field="${field}" style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${c.bg};color:${c.text};">
     <option value="">—</option>
     ${options.map(o=>`<option value="${o}" ${current===o?'selected':''}>${o}</option>`).join('')}
   </select>`;
@@ -1973,8 +1947,8 @@ function progressLogRows(list, ownerUid, readOnly){
       <td>${c.date}</td>
       <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
       <td>${escHtml(c.source||'—')}</td>
-      <td><span class="badge pending">${escHtml(c.dealProduct||'—')}</span></td>
-      <td><span class="badge expense">${escHtml(c.contactStatus||'—')}</span></td>
+      <td>${optionBadgeHtml(c.dealProduct)}</td>
+      <td>${optionBadgeHtml(c.contactStatus)}</td>
       <td>${escHtml(c.transferTo||'—')}</td>
       <td style="max-width:200px;white-space:normal;color:var(--muted);font-size:12.5px;">${c.latestNote?escHtml(c.latestNote.slice(0,40))+(c.latestNote.length>40?'…':''):'—'}</td>
       <td>${c.caseStatus?`<span class="badge income">${escHtml(c.caseStatus)}</span>`:'—'}</td>
@@ -2145,12 +2119,12 @@ function openXiaojiangUploadModal(){
           return `<tr>
             <td style="white-space:nowrap;font-size:11.5px;">${r._at?new Date(r._at).toLocaleString('zh-TW'):''}</td>
             <td style="font-size:12px;max-width:140px;white-space:normal;">${escHtml(r.message||'')}</td>
-            <td style="font-size:12px;">${hasReply?`<span style="color:var(--green);font-weight:700;">✓ 已回覆</span>${r.replyFileDataUrl?` <a href="${r.replyFileDataUrl}" download="${escAttr(r.replyFileName||'reply')}" data-action="mark-xj-seen" data-id="${r.id}">下載</a>`:(r.staffSeenReply?'':` <a href="#" data-action="mark-xj-seen" data-id="${r.id}">知道了</a>`)}`:'<span style="color:var(--muted);">尚未回覆</span>'}</td>
+            <td style="font-size:12px;">${hasReply?`<span style="color:var(--green);font-weight:700;">✓ 已回覆</span>${r.replyFileDataUrl?` <a href="${r.replyFileDataUrl}" download="${escAttr(r.replyFileName||'reply')}">下載</a>`:''}`:'<span style="color:var(--muted);">尚未回覆</span>'}</td>
           </tr>`;
         }).join('')}
       </tbody></table>
     </div>`;
-  openModal(`霍格華茲`, `
+  openModal(`✨ 霍格華茲`, `
     <p style="color:var(--muted);font-size:12.5px;margin:-6px 0 12px;">客戶需要特殊處理時，把資料傳給${escHtml(xjName)}——上傳照片、檔案，或留一句話說明狀況（資料只保留 24 小時）</p>
     <label class="field"><span>簡短說明</span><textarea name="message" placeholder="例如：客戶需要特殊處理，資料如附件" required></textarea></label>
     <label class="field"><span>上傳照片或檔案（選填，單檔 5MB 以內）</span><input type="file" id="xiaojiang-file-input"/></label>
@@ -2165,7 +2139,7 @@ function xiaojiangInboxView(){
   return `
     <div class="page-header" style="margin-bottom:14px;">
       <div>
-        <h1 class="page-title">霍格華茲</h1>
+        <h1 class="page-title">✨ 霍格華茲信箱</h1>
         <p class="page-sub">業務／行政傳給${escHtml(xjName)}的檔案與訊息，資料只保留 24 小時，過了會自動清除</p>
       </div>
     </div>
@@ -2183,16 +2157,14 @@ function xiaojiangInboxView(){
           <div style="color:var(--muted);font-size:12px;margin-bottom:8px;">${r._at?new Date(r._at).toLocaleString('zh-TW'):''}</div>
           <div style="font-size:13.5px;white-space:pre-wrap;margin-bottom:10px;">${escHtml(r.message||'')}</div>
           ${r.fileDataUrl ? (isImg
-            ? `<img src="${r.fileDataUrl}" style="max-width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;"/>
-               <a href="${r.fileDataUrl}" download="${escAttr(r.fileName||'attachment')}" class="btn ghost sm" style="margin-bottom:10px;">📎 下載照片</a>`
+            ? `<img src="${r.fileDataUrl}" style="max-width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:10px;"/>`
             : `<a href="${r.fileDataUrl}" download="${escAttr(r.fileName||'attachment')}" class="btn ghost sm" style="margin-bottom:10px;">📎 下載附件：${escHtml(r.fileName||'檔案')}</a>`
           ) : ''}
           ${hasReply ? `<div style="margin-top:6px;padding:10px;background:#F0FDF4;border-radius:8px;border:1px solid #BBF7D0;">
             <div style="font-size:11.5px;color:var(--green);font-weight:700;margin-bottom:4px;">✓ 已回覆</div>
             <div style="font-size:13px;white-space:pre-wrap;">${escHtml(r.replyMessage||'')}</div>
             ${r.replyFileDataUrl ? (isReplyImg
-              ? `<img src="${r.replyFileDataUrl}" style="max-width:100%;border-radius:6px;margin-top:6px;margin-bottom:6px;"/>
-                 <a href="${r.replyFileDataUrl}" download="${escAttr(r.replyFileName||'reply')}" class="btn ghost sm" style="margin-top:6px;">📎 下載照片</a>`
+              ? `<img src="${r.replyFileDataUrl}" style="max-width:100%;border-radius:6px;margin-top:6px;"/>`
               : `<a href="${r.replyFileDataUrl}" download="${escAttr(r.replyFileName||'reply')}" class="btn ghost sm" style="margin-top:6px;">📎 下載回覆附件</a>`
             ) : ''}
           </div>` : `
@@ -2277,7 +2249,7 @@ function staffOverviewHTML(){
   }).join('');
 
   const xjUser = APP.users.find(u=>u.isXiaojiang);
-  const xjName = APP.data.caseSettings.xiaojiangName || '"मायासिद्धः प्रथमः"';
+  const xjName = APP.data.caseSettings.xiaojiangName || '小江';
   const unreadCount = viewerIsCore ? APP.data.xiaojiangInbox.length : 0;
   const xjCard = xjUser ? `<div class="card hogwarts-card" style="color:#fff;border:none;">
       <div class="hogwarts-smoke"></div>
@@ -2294,16 +2266,14 @@ function staffOverviewHTML(){
         <span class="hogwarts-star" style="top:10%;left:92%;animation-delay:1.1s;"></span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-        ${(APP.staffProfiles[xjUser.id]||{}).avatarDataUrl
-          ? `<img src="${(APP.staffProfiles[xjUser.id]||{}).avatarDataUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;box-shadow:0 0 14px rgba(139,92,246,.5);" alt="${escAttr(displayNameFor(xjUser.id, xjName))}"/>`
-          : `<div style="width:40px;height:40px;border-radius:50%;background:rgba(216,196,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 14px rgba(139,92,246,.5);">🌙</div>`}
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(216,196,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 14px rgba(139,92,246,.5);">🌙</div>
         <div>
-          <h3 style="margin:0;color:#F3EEFF;">${escHtml(displayNameFor(xjUser.id, xjName))}</h3>
-          <div style="font-size:11px;color:rgba(216,196,255,.7);">ॐ संचय पत्राय नमः । संरक्षणाय स्वाहा ॥</div>
+          <h3 style="margin:0;color:#F3EEFF;">${escHtml(displayNameFor(xjUser.id, xjName))} 的房間</h3>
+          <div style="font-size:11px;color:rgba(216,196,255,.7);">特殊處理事務・神秘空間</div>
         </div>
       </div>
-      <p style="font-size:12.5px;color:rgba(243,238,255,.85);line-height:1.7;margin-bottom:0;">व्यापार-प्रशासन-प्रेषित${unreadCount>0?`，目前共 <b style="color:#fff;">${unreadCount}</b> 筆`:''}。	व्यापार-प्रशासन-प्रेषितानि गुह्य-कार्याणि अस्मिन् रहस्य-कक्षे गुप्तानि सन्ति ।
-परन्तु सावधानम्! अत्र मायाबन्धः स्थापितः । चतुर्विंशति-होरासु पूर्णासु, मन्त्रः स्वयमेव सक्रियः भवति, सर्वं च निश्चिह्नं विलीयते ॥ <div class="hogwarts-btn-wrap">
+      <p style="font-size:12.5px;color:rgba(243,238,255,.85);line-height:1.7;margin-bottom:0;">業務／行政傳來的特殊處理檔案與訊息，都收在這裡${unreadCount>0?`，目前共 <b style="color:#fff;">${unreadCount}</b> 筆`:''}。資料只保留 24 小時，過了會自動清除。</p>
+      <div class="hogwarts-btn-wrap">
         ${viewerIsCore
           ? `<button type="button" class="hogwarts-btn-lg" data-action="nav" data-view="xiaojiangInbox">進入霍格華茲</button>`
           : `<button type="button" class="hogwarts-btn-lg" data-action="open-xiaojiang-upload-modal">進入霍格華茲</button>`}
@@ -2628,9 +2598,9 @@ function progressAdView(){
     <tr>
       <td>${rowEditable ? `<input type="date" class="inline-note-input" data-list="progressAd" data-id="${c.id}" data-field="date" value="${c.date}" style="border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';"/>` : c.date}</td>
       <td>${textField('customer','客戶姓名','100px')}<div style="margin-top:2px;">${textField('phone','電話','120px')}</div></td>
-      <td>${rowEditable ? `<select class="inline-status-select" data-list="progressAd" data-id="${c.id}" data-field="plan" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select>` : escHtml(c.plan||'—')}</td>
+      <td>${rowEditable ? `<select class="inline-status-select" data-list="progressAd" data-id="${c.id}" data-field="plan" style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.plan).bg};color:${colorForOption(c.plan).text};">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select>` : optionBadgeHtml(c.plan)}</td>
       <td>${rowEditable ? staffOrChannelFieldHtml2('progressAd', c.id, c.staff) : escHtml(c.staff||'—')}</td>
-      <td><select class="inline-status-select" data-list="progressAd" data-id="${c.id}" data-field="status" ${rowEditable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#DCFCE7':STATUS_CLOSED.includes(c.status)?'#F1F2F6':'#FEF3C7'};">
+      <td><select class="inline-status-select" data-list="progressAd" data-id="${c.id}" data-field="status" ${rowEditable?'':'disabled'} style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.status).bg};color:${colorForOption(c.status).text};">
         ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
       </select></td>
       <td>${textField('note','點擊輸入備註','140px')}</td>
@@ -2683,13 +2653,13 @@ function progressChannelView(){
     <tr>
       <td>${rowEditable ? `<input type="date" class="inline-note-input" data-list="progressChannel" data-id="${c.id}" data-field="date" value="${c.date}" style="border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';"/>` : c.date}</td>
       <td>${textField('customer','客戶姓名','100px')}<div style="margin-top:2px;">${textField('phone','電話','120px')}</div></td>
-      <td>${rowEditable ? `<select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="plan" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select>` : escHtml(c.plan||'—')}</td>
+      <td>${rowEditable ? `<select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="plan" style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.plan).bg};color:${colorForOption(c.plan).text};">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select>` : optionBadgeHtml(c.plan)}</td>
       <td>${rowEditable ? staffOrChannelFieldHtml2('progressChannel', c.id, c.staff) : escHtml(c.staff||'—')}</td>
       <td>
         ${rowEditable ? `<select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="source" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;"><option value="直客" ${c.source==='直客'?'selected':''}>直客</option><option value="通路" ${c.source==='通路'?'selected':''}>通路</option></select>` : escHtml(c.source||'—')}
         <div style="margin-top:2px;">${textField('referrer','通路備註','120px')}</div>
       </td>
-      <td><select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="status" ${rowEditable?'':'disabled'} style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;background:${STATUS_DONE.includes(c.status)?'#DCFCE7':STATUS_CLOSED.includes(c.status)?'#F1F2F6':'#FEF3C7'};">
+      <td><select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="status" ${rowEditable?'':'disabled'} style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.status).bg};color:${colorForOption(c.status).text};">
         ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
       </select></td>
       <td>${textField('note','點擊輸入備註','140px')}</td>
@@ -3628,7 +3598,7 @@ async function sendChatMessage(question){
       })
     });
     const data = await resp.json();
-    let text = data.answer || (data.error ? 'AI 暫時忙碌，請稍後再試一次。' : '沒有取得回應，請再試一次。');
+    let text = data.answer || data.error || '沒有取得回應，請再試一次。';
     let rows = null;
     let pendingKind = 'tx';
     if(isCore()){
@@ -3671,11 +3641,6 @@ document.addEventListener('click', (e)=>{
       const personalViews = ['progress','personalLog','attendance','calendar','personalDashboard'];
       if(!personalViews.includes(el.dataset.view)) APP.viewingStaff=null;
       APP.view = el.dataset.view; render(); closeSidebar(); return;
-    }
-    if(action==='mark-xj-seen'){
-      if(!el.hasAttribute('download')) e.preventDefault();
-      markXjReplySeen(el.dataset.id).then(()=>{ updateXiaojiangPulse(); });
-      return;
     }
     if(action==='close-modal'){ closeModal(); return; }
     if(action==='tx-tab'){ APP.txTab = el.dataset.tab; render(); return; }
@@ -4353,23 +4318,8 @@ document.addEventListener('change', (e)=>{
     return;
   }
 });
-let APP_IME_COMPOSING = false;
-document.addEventListener('compositionstart', (e)=>{
-  if(e.target.classList && (e.target.classList.contains('table-search-input')) || e.target.id==='tx-search' || e.target.id==='vendor-search'){
-    APP_IME_COMPOSING = true;
-  }
-});
-document.addEventListener('compositionend', (e)=>{
-  if(e.target.classList && (e.target.classList.contains('table-search-input')) || e.target.id==='tx-search' || e.target.id==='vendor-search'){
-    APP_IME_COMPOSING = false;
-    // Composition just finished — trigger the same update logic manually since the
-    // browser does not always fire a follow-up 'input' event in every browser/IME combo.
-    e.target.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-});
 document.addEventListener('input', (e)=>{
   if(e.target.classList && e.target.classList.contains('table-search-input')){
-    if(APP_IME_COMPOSING) return; // 中文／注音輸入組字中，先不重繪畫面，避免打斷選字
     const stateKey = e.target.dataset.statekey;
     const focusVal = e.target.value;
     const cursorPos = e.target.selectionStart;
@@ -4380,7 +4330,6 @@ document.addEventListener('input', (e)=>{
     return;
   }
   if(e.target.id==='tx-search'){
-    if(APP_IME_COMPOSING) return; // 中文／注音輸入組字中，先不重繪畫面，避免打斷選字
     APP.txFilter.search = e.target.value;
     const focusVal = e.target.value;
     render();
@@ -4389,7 +4338,6 @@ document.addEventListener('input', (e)=>{
     return;
   }
   if(e.target.id==='vendor-search'){
-    if(APP_IME_COMPOSING) return; // 中文／注音輸入組字中，先不重繪畫面，避免打斷選字
     APP.vendorSearch = e.target.value;
     const focusVal = e.target.value;
     render();
@@ -4414,14 +4362,11 @@ document.addEventListener('submit', (e)=>{
     saveXiaojiangReply(replyId, data).then(()=>{
       if(APP._pendingXjReplyFiles) delete APP._pendingXjReplyFiles[replyId];
       render();
-    }).catch((err)=>{
-      alert('回覆送出失敗，請稍後再試一次。\n錯誤訊息：' + (err && err.message ? err.message : err));
     });
     return;
   }
   if(e.target.id==='xiaojiang-upload-form'){
     e.preventDefault();
-    if(e.target.dataset.submitting==='1') return; // 防止重複點擊造成重複送出
     const messageInput = e.target.querySelector('[name="message"]');
     const message = messageInput.value.trim();
     if(!message){ return; }
@@ -4431,16 +4376,9 @@ document.addEventListener('submit', (e)=>{
       fileName: APP._pendingXjFile ? APP._pendingXjFile.name : null,
       fileType: APP._pendingXjFile ? APP._pendingXjFile.type : null
     });
-    e.target.dataset.submitting = '1';
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '送出中…'; }
     saveXiaojiangUpload(rec).then(()=>{
       APP._pendingXjFile = null;
       closeModal();
-    }).catch((err)=>{
-      e.target.dataset.submitting = '0';
-      if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = '儲存'; }
-      alert('送出失敗，請稍後再試一次。\n錯誤訊息：' + (err && err.message ? err.message : err));
     });
     return;
   }
