@@ -3631,9 +3631,15 @@ function buildStaffContext(){
   const meName = myStaffName();
   const profile = APP.staffProfiles[meUid] || {};
   const thisMonth = nowMonthKey;
+  const isAdminRole = isStaffAdmin();
 
-  const myAd = APP.data.progressAd.filter(c=>c.staff===meName && monthKey(c.date)===thisMonth);
-  const myCh = APP.data.progressChannel.filter(c=>c.staff===meName && monthKey(c.date)===thisMonth);
+  // 行政能管理全公司的進度追蹤，不像業務只看得到自己名下的案件
+  const myAd = isAdminRole
+    ? APP.data.progressAd.filter(c=>monthKey(c.date)===thisMonth)
+    : APP.data.progressAd.filter(c=>c.staff===meName && monthKey(c.date)===thisMonth);
+  const myCh = isAdminRole
+    ? APP.data.progressChannel.filter(c=>monthKey(c.date)===thisMonth)
+    : APP.data.progressChannel.filter(c=>c.staff===meName && monthKey(c.date)===thisMonth);
   const myAll = [...myAd, ...myCh];
   const doneCount = myAll.filter(c=>STATUS_DONE.includes(c.status)).length;
   const pendingCount = myAll.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
@@ -3644,7 +3650,11 @@ function buildStaffContext(){
 
   const myActiveCases = myAll.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status))
     .slice().sort((a,b)=>b.date.localeCompare(a.date));
-  const myActiveCaseLines = myActiveCases.map(c=>`${c.date} ${c.customer||'未填姓名'} 方案:${c.plan||'未填'} 狀態:${c.status}`).join('\n');
+  const myActiveCaseLines = myActiveCases.map(c=>
+    isAdminRole
+      ? `${c.date} ${c.customer||'未填姓名'} 業務:${c.staff||'未填'} 方案:${c.plan||'未填'} 狀態:${c.status}`
+      : `${c.date} ${c.customer||'未填姓名'} 方案:${c.plan||'未填'} 狀態:${c.status}`
+  ).join('\n');
 
   const myEntries = APP.data.staffBonusLedger.filter(e=>e.staffName===meName && monthKey(e.date)===thisMonth);
   const byDay = {};
@@ -3662,12 +3672,12 @@ function buildStaffContext(){
   const upcoming = APP.data.calendar.filter(c=>c.staffUid===meUid && c.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,10)
     .map(c=>`${c.date} ${c.title}${c.note?('：'+c.note):''}`).join('\n');
 
-  return `你正在跟「${meName || APP.userEmail}」對話，以下只有他自己的資料摘要（不包含公司財務、其他同事的資料，你也不知道其他人的任何數字，遇到問這類問題請說明你只看得到他自己的資料）：
+  return `你正在跟「${meName || APP.userEmail}」對話（${isAdminRole?'行政':'業務'}），以下是他能看到的資料摘要（${isAdminRole?'進度追蹤是全公司的案件資料（行政負責管理全部案件的送件狀態），但完全不含公司財務數字（成本、利潤、獎金金額），也不知道其他同事的個人開發紀錄、請假、獎金等私人資料':'只有他自己的資料，不包含公司財務、其他同事的資料，你也不知道其他人的任何數字'}，遇到問這類問題請直接說明你看不到）：
 
 本月底薪：${money(profile.baseSalary||0)}
 本月案件狀態：撥款完成 ${doneCount} 件、處理中 ${pendingCount} 件、婉拒/客拒 ${closedCount} 件
 詳細狀態分布：${statusSummary || '無'}
-處理中案件明細（客戶姓名／方案／狀態，由新到舊）：
+處理中案件明細（${isAdminRole?'客戶姓名／業務／方案／狀態':'客戶姓名／方案／狀態'}，由新到舊）：
 ${myActiveCaseLines || '無'}
 本月獎金累計：${money(monthTotal)}
 每日獎金明細（由新到舊）：
