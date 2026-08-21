@@ -688,6 +688,12 @@ function saveProgressChannelCase(rec){ return setDoc(doc(db,'progressChannelCase
 function deleteProgressChannelCase(id){ return deleteDoc(doc(db,'progressChannelCases', id)); }
 function saveBonusLedgerEntry(entry){ return setDoc(doc(db,'staffBonusLedger', entry.id), entry); }
 function deleteBonusLedgerEntry(id){ return deleteDoc(doc(db,'staffBonusLedger', id)).catch(()=>{}); }
+function getCleanBonusLedger(){
+  const validIds = new Set();
+  APP.data.casesAd.forEach(c=>{ validIds.add(c.id); validIds.add('xj-'+c.id); validIds.add('wiz-'+c.id); });
+  APP.data.casesChannel.forEach(c=>{ validIds.add('ch-'+c.id); validIds.add('wiz-'+c.id); });
+  return APP.data.staffBonusLedger.filter(e=>validIds.has(e.id));
+}
 function syncWizardHatLedger(caseId, date, customer, fee){
   const xjName = APP.data.caseSettings.xiaojiangName || '小江';
   if(Number(fee)>0){
@@ -941,8 +947,8 @@ function dashboardHTML(){
   const allProgressThisMonth = [...progressAdThisMonth, ...progressChThisMonth];
   const disbursedCount = allProgressThisMonth.filter(c=>STATUS_DONE.includes(c.status)).length;
   const pendingCount = allProgressThisMonth.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
-  const todayLedger = APP.data.staffBonusLedger.filter(e=>e.date===todayStr());
-  const todayAdBonus = sum(todayLedger.map(e=>({amount:(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0)})));
+  const todayAdToday = APP.data.casesAd.filter(c=>c.date===todayStr());
+  const todayAdBonus = sum(todayAdToday.map(c=>({amount:(Number(c.businessBonus)||0)+(Number(c.xiaojiangBonus)||0)})));
   const todayChToday = APP.data.casesChannel.filter(c=>c.date===todayStr());
   const todayChProfit = sum(todayChToday.map(c=>({amount:c.partnerProfit})));
   const todayWizardFee = sum([...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>c.date===todayStr() && c.specialHandling).map(c=>({amount:c.specialFee})));
@@ -1662,6 +1668,12 @@ function usersHTML(){
       <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px;">修復用：之前設定過的暱稱、頭像因為權限架構調整，業務／行政互相看不到彼此的自訂暱稱與頭像（業務總覽會顯示回預設值）。按下去會把大家已經設定好的資料，同步到現在全公司都看得到的地方，只需要按一次。</p>
       <button class="btn ghost" data-action="sync-public-profiles">🔄 立即同步</button>
     </div>
+    <div class="card" style="margin-bottom:16px;background:#FFF8E6;">
+      <div class="card-head-row"><h3>檢查獎金分類帳孤兒資料</h3></div>
+      <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px;">修復用：過去刪除獲利報表案件時，曾經有 bug 沒有把對應的獎金分類帳紀錄一起清掉，導致案件已經刪除、但業務／小江的獎金累計還是把這筆算進去。按下去會自動掃描，列出所有「找不到對應案件」的分類帳紀錄讓你確認，確認沒問題後可以一次清除。</p>
+      <button class="btn ghost" data-action="scan-orphan-ledger">🔍 掃描孤兒資料</button>
+      <div id="orphan-ledger-result" style="margin-top:12px;"></div>
+    </div>
     ${isAdmin() && salaryStaff.length>0 ? `
     <div class="card" style="margin-bottom:16px;background:#F5F7FC;">
       <div class="card-head-row">
@@ -1791,7 +1803,7 @@ function xiaojiangDashboardView(){
   const todayStr_ = todayStr();
   const todayAdCases = APP.data.casesAd.filter(c=>c.date===todayStr_);
   const todayXjBonus = sum(todayAdCases.map(c=>({amount:Number(c.xiaojiangBonus)||0})));
-  const monthXjLedger = APP.data.staffBonusLedger.filter(e=>e.staffName===xjName && monthKey(e.date)===nowMonthKey);
+  const monthXjLedger = getCleanBonusLedger().filter(e=>e.staffName===xjName && monthKey(e.date)===nowMonthKey);
   const monthXjTiered = sum(monthXjLedger.map(e=>({amount:Number(e.xiaojiangBonus)||0})));
   const monthWizardFee = sum([...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>monthKey(c.date)===nowMonthKey && c.specialHandling).map(c=>({amount:c.specialFee})));
   const thisMonthAdSpend = APP.data.adSpend.find(a=>a.month===nowMonthKey);
@@ -1899,7 +1911,7 @@ function myDashboardView(){
     return `<div class="table-wrap"><div class="empty">你的帳號還沒有設定「對應業務姓名」，請聯絡管理員設定後才能看到獎金資料。</div></div>`;
   }
   const thisMonth = nowMonthKey;
-  const myEntries = APP.data.staffBonusLedger.filter(e=>e.staffName===me && monthKey(e.date)===thisMonth);
+  const myEntries = getCleanBonusLedger().filter(e=>e.staffName===me && monthKey(e.date)===thisMonth);
   const byDay = {};
   myEntries.forEach(e=>{
     const total = (Number(e.businessBonus)||0) + (Number(e.xiaojiangBonus)||0);
@@ -2138,12 +2150,14 @@ function openXiaojiangUploadModal(){
   const historyHtml = mine.length===0 ? `<div class="empty" style="margin-top:14px;">還沒有送出過任何紀錄</div>` : `
     <div class="card-head-row" style="margin-top:16px;"><h3 style="font-size:13.5px;">我自己送出過的紀錄（24 小時內）</h3></div>
     <div class="table-wrap" style="max-height:220px;overflow-y:auto;">
-      <table><thead><tr><th>時間</th><th>說明</th><th>${escHtml(xjName)}的回覆</th></tr></thead><tbody>
+      <table><thead><tr><th>時間</th><th>說明</th><th>附件</th><th>${escHtml(xjName)}的回覆</th></tr></thead><tbody>
         ${mine.map(r=>{
           const hasReply = !!(r.replyMessage || r.replyFileDataUrl);
+          const attCount = (r.attachments && r.attachments.length) || (r.fileDataUrl ? 1 : 0);
           return `<tr>
             <td style="white-space:nowrap;font-size:11.5px;">${r._at?new Date(r._at).toLocaleString('zh-TW'):''}</td>
             <td style="font-size:12px;max-width:140px;white-space:normal;">${escHtml(r.message||'')}</td>
+            <td style="font-size:12px;">${attCount>0?`📎 ${attCount}`:'—'}</td>
             <td style="font-size:12px;">${hasReply?`<span style="color:var(--green);font-weight:700;">✓ 已回覆</span>${r.replyFileDataUrl?` <a href="${r.replyFileDataUrl}" download="${escAttr(r.replyFileName||'reply')}">下載</a>`:''}`:'<span style="color:var(--muted);">尚未回覆</span>'}</td>
           </tr>`;
         }).join('')}
@@ -2152,7 +2166,7 @@ function openXiaojiangUploadModal(){
   openModal(`✨ 霍格華茲`, `
     <p style="color:var(--muted);font-size:12.5px;margin:-6px 0 12px;">客戶需要特殊處理時，把資料傳給${escHtml(xjName)}——上傳照片、檔案，或留一句話說明狀況（資料只保留 24 小時）</p>
     <label class="field"><span>簡短說明</span><textarea name="message" placeholder="例如：客戶需要特殊處理，資料如附件" required></textarea></label>
-    <label class="field"><span>上傳照片或檔案（選填，單檔 5MB 以內）</span><input type="file" id="xiaojiang-file-input"/></label>
+    <label class="field"><span>上傳照片或檔案（選填，一次最多 5 個檔案，單檔 5MB 以內）</span><input type="file" id="xiaojiang-file-input" multiple/></label>
     <div id="xiaojiang-file-preview" style="margin:6px 0 12px;"></div>
     ${historyHtml}
   `, 'xiaojiang-upload-form', ()=>{});
@@ -2171,9 +2185,10 @@ function xiaojiangInboxView(){
     ${list.length===0 ? `<div class="table-wrap"><div class="empty">目前沒有任何人送出過資料</div></div>` : `
     <div class="grid grid-2">
       ${list.map(r=>{
-        const isImg = r.fileType && r.fileType.startsWith('image/');
         const hasReply = !!(r.replyMessage || r.replyFileDataUrl);
         const isReplyImg = r.replyFileType && r.replyFileType.startsWith('image/');
+        const attachments = (r.attachments && r.attachments.length) ? r.attachments
+          : (r.fileDataUrl ? [{dataUrl:r.fileDataUrl, name:r.fileName, type:r.fileType}] : []);
         return `<div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <h3 style="margin:0;font-size:14.5px;">${escHtml(r.staffName||r.staffEmail||'未知')}</h3>
@@ -2181,10 +2196,12 @@ function xiaojiangInboxView(){
           </div>
           <div style="color:var(--muted);font-size:12px;margin-bottom:8px;">${r._at?new Date(r._at).toLocaleString('zh-TW'):''}</div>
           <div style="font-size:13.5px;white-space:pre-wrap;margin-bottom:10px;">${escHtml(r.message||'')}</div>
-          ${r.fileDataUrl ? (isImg
-            ? `<img src="${r.fileDataUrl}" style="max-width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:10px;"/>`
-            : `<a href="${r.fileDataUrl}" download="${escAttr(r.fileName||'attachment')}" class="btn ghost sm" style="margin-bottom:10px;">📎 下載附件：${escHtml(r.fileName||'檔案')}</a>`
-          ) : ''}
+          ${attachments.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">${attachments.map(a=>{
+            const isImg = a.type && a.type.startsWith('image/');
+            return isImg
+              ? `<img src="${a.dataUrl}" style="max-width:140px;max-height:140px;border-radius:8px;border:1px solid var(--border);"/>`
+              : `<a href="${a.dataUrl}" download="${escAttr(a.name||'attachment')}" class="btn ghost sm">📎 ${escHtml(a.name||'檔案')}</a>`;
+          }).join('')}</div>` : ''}
           ${hasReply ? `<div style="margin-top:6px;padding:10px;background:#F0FDF4;border-radius:8px;border:1px solid #BBF7D0;">
             <div style="font-size:11.5px;color:var(--green);font-weight:700;margin-bottom:4px;">✓ 已回覆</div>
             <div style="font-size:13px;white-space:pre-wrap;">${escHtml(r.replyMessage||'')}</div>
@@ -2240,7 +2257,7 @@ function staffOverviewHTML(){
       const adThisMonth = APP.data.casesAd.filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey);
       const chThisMonth = APP.data.casesChannel.filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey);
       const profitContribution = sum(adThisMonth.map(c=>({amount:c.companyProfit}))) + sum(chThisMonth.map(c=>({amount:c.companyProfit})));
-      const bonusThisMonth = sum(APP.data.staffBonusLedger.filter(e=>e.staffName===name && monthKey(e.date)===nowMonthKey)
+      const bonusThisMonth = sum(getCleanBonusLedger().filter(e=>e.staffName===name && monthKey(e.date)===nowMonthKey)
         .map(e=>({amount:(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0)})));
       const prospectCount = APP.data.personalProgress.filter(c=>c.staffName===name && monthKey(c.date)===nowMonthKey).length;
       return `<div style="border-top:1px solid var(--border);padding-top:10px;">
@@ -3665,7 +3682,7 @@ function buildStaffContext(){
       : `${c.date} ${c.customer||'未填姓名'} 方案:${c.plan||'未填'} 狀態:${c.status}`
   ).join('\n');
 
-  const myEntries = APP.data.staffBonusLedger.filter(e=>e.staffName===meName && monthKey(e.date)===thisMonth);
+  const myEntries = getCleanBonusLedger().filter(e=>e.staffName===meName && monthKey(e.date)===thisMonth);
   const byDay = {};
   myEntries.forEach(e=>{ const t=(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0); byDay[e.date]=(byDay[e.date]||0)+t; });
   const monthTotal = Object.values(byDay).reduce((a,b)=>a+b,0);
@@ -3888,6 +3905,45 @@ document.addEventListener('click', (e)=>{
       });
       return;
     }
+    if(action==='scan-orphan-ledger'){
+      const validIds = new Set();
+      APP.data.casesAd.forEach(c=>{ validIds.add(c.id); validIds.add('xj-'+c.id); validIds.add('wiz-'+c.id); });
+      APP.data.casesChannel.forEach(c=>{ validIds.add('ch-'+c.id); validIds.add('wiz-'+c.id); });
+      const orphans = APP.data.staffBonusLedger.filter(e=>!validIds.has(e.id));
+      const resultDiv = document.getElementById('orphan-ledger-result');
+      if(!resultDiv) return;
+      if(orphans.length===0){
+        resultDiv.innerHTML = `<div style="color:var(--green);font-size:13px;font-weight:600;">✓ 沒有找到孤兒資料，獎金分類帳很乾淨。</div>`;
+        return;
+      }
+      const total = sum(orphans.map(e=>({amount:(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0)+(Number(e.specialFee)||0)})));
+      const rows = orphans.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(e=>{
+        const amt = (Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0)+(Number(e.specialFee)||0);
+        return `<tr><td>${e.date}</td><td>${escHtml(e.staffName||'')}</td><td>${escHtml(e.customer||'—')}</td><td style="text-align:right;">${money(amt)}</td></tr>`;
+      }).join('');
+      resultDiv.innerHTML = `
+        <div style="color:var(--amber);font-size:13px;font-weight:600;margin-bottom:8px;">找到 ${orphans.length} 筆孤兒資料，合計 ${money(total)}，對應的案件都已經不存在了：</div>
+        <div class="table-wrap" style="max-height:240px;overflow-y:auto;margin-bottom:10px;">
+          <table><thead><tr><th>日期</th><th>姓名</th><th>客戶</th><th style="text-align:right;">金額</th></tr></thead><tbody>${rows}</tbody></table>
+        </div>
+        <button class="btn primary" data-action="clear-orphan-ledger" data-count="${orphans.length}">🗑 確認清除這 ${orphans.length} 筆</button>
+      `;
+      APP._orphanLedgerIds = orphans.map(e=>e.id);
+      return;
+    }
+    if(action==='clear-orphan-ledger'){
+      const ids = APP._orphanLedgerIds || [];
+      if(ids.length===0) return;
+      openConfirm(`確定要清除這 ${ids.length} 筆孤兒資料嗎？這個動作無法復原。`, ()=>{
+        Promise.allSettled(ids.map(id=>deleteBonusLedgerEntry(id))).then(()=>{
+          APP._orphanLedgerIds = [];
+          alert('清除完成！');
+          const resultDiv = document.getElementById('orphan-ledger-result');
+          if(resultDiv) resultDiv.innerHTML = `<div style="color:var(--green);font-size:13px;font-weight:600;">✓ 已清除完畢。</div>`;
+        });
+      });
+      return;
+    }
     if(action==='pay-monthly-salaries'){
       const targets = APP.users.filter(u=>{
         if(u.role!=='staffAdmin' && u.role!=='staffSales') return false;
@@ -3974,17 +4030,23 @@ document.addEventListener('click', (e)=>{
     if(action==='open-ad-case-modal'){ openAdCaseModal(null); return; }
     if(action==='edit-ad-case'){ const c = APP.data.casesAd.find(x=>x.id===el.dataset.id); if(c) openAdCaseModal(c); return; }
     if(action==='delete-ad-case'){
+      const caseId = el.dataset.id;
       openConfirm('確定要刪除這筆案件資料嗎？', ()=>{
-        APP.data.casesAd = APP.data.casesAd.filter(x=>x.id!==el.dataset.id); saveCasesAd();
-        deleteBonusLedgerEntry(el.dataset.id);
+        APP.data.casesAd = APP.data.casesAd.filter(x=>x.id!==caseId); saveCasesAd();
+        deleteBonusLedgerEntry(caseId);
+        deleteBonusLedgerEntry('xj-'+caseId);
+        deleteBonusLedgerEntry('wiz-'+caseId);
       }); return;
     }
     if(action==='post-ad-case'){ postAdCaseToTransactions(el.dataset.id); return; }
     if(action==='open-channel-case-modal'){ openChannelCaseModal(null); return; }
     if(action==='edit-channel-case'){ const c = APP.data.casesChannel.find(x=>x.id===el.dataset.id); if(c) openChannelCaseModal(c); return; }
     if(action==='delete-channel-case'){
+      const caseId = el.dataset.id;
       openConfirm('確定要刪除這筆案件資料嗎？', ()=>{
-        APP.data.casesChannel = APP.data.casesChannel.filter(x=>x.id!==el.dataset.id); saveCasesChannel();
+        APP.data.casesChannel = APP.data.casesChannel.filter(x=>x.id!==caseId); saveCasesChannel();
+        deleteBonusLedgerEntry('ch-'+caseId);
+        deleteBonusLedgerEntry('wiz-'+caseId);
       }); return;
     }
     if(action==='post-channel-case'){ postChannelCaseToTransactions(el.dataset.id); return; }
@@ -4428,45 +4490,67 @@ document.addEventListener('change', (e)=>{
     return;
   }
   if(e.target.id==='xiaojiang-file-input'){
-    const file2 = e.target.files[0];
+    const files = Array.from(e.target.files || []);
     const xjPreview = document.getElementById('xiaojiang-file-preview');
-    if(!file2){ APP._pendingXjFile = null; if(xjPreview) xjPreview.innerHTML=''; return; }
-    const isImage = file2.type && file2.type.startsWith('image/');
-    if(!isImage && file2.size > 700*1024){
-      alert('這個檔案太大了（超過 700KB），請壓縮後再上傳，或改成截圖／拍照上傳。');
+    if(files.length===0){ APP._pendingXjFiles = []; if(xjPreview) xjPreview.innerHTML=''; return; }
+    if(files.length > 5){
+      alert('一次最多上傳 5 個檔案，請分批上傳。');
       e.target.value = '';
       return;
     }
-    if(file2.size > 5*1024*1024){
-      alert('檔案太大，請選 5MB 以內的檔案');
-      e.target.value = '';
-      return;
+    for(const f of files){
+      const isImage = f.type && f.type.startsWith('image/');
+      if(!isImage && f.size > 700*1024){
+        alert(`「${f.name}」太大了（超過 700KB），請壓縮後再上傳，或改成截圖／拍照上傳。`);
+        e.target.value = '';
+        return;
+      }
+      if(f.size > 5*1024*1024){
+        alert(`「${f.name}」太大，請選 5MB 以內的檔案。`);
+        e.target.value = '';
+        return;
+      }
     }
-    const reader2 = new FileReader();
-    if(isImage){
-      reader2.onload = (ev2)=>{
-        const img2 = new Image();
-        img2.onload = ()=>{
-          const maxSize = 1000;
-          const scale = Math.min(maxSize/img2.width, maxSize/img2.height, 1);
-          const w = Math.max(1, Math.round(img2.width*scale)), h = Math.max(1, Math.round(img2.height*scale));
-          const canvas2 = document.createElement('canvas');
-          canvas2.width = w; canvas2.height = h;
-          const ctx2 = canvas2.getContext('2d');
-          ctx2.drawImage(img2, 0, 0, w, h);
-          const dataUrl2 = canvas2.toDataURL('image/jpeg', 0.82);
-          APP._pendingXjFile = { dataUrl: dataUrl2, name: file2.name, type: 'image/jpeg' };
-          if(xjPreview) xjPreview.innerHTML = `<img src="${dataUrl2}" style="max-width:200px;border-radius:8px;border:1px solid rgba(216,196,255,.4);"/>`;
+    APP._pendingXjFiles = new Array(files.length).fill(null);
+    if(xjPreview) xjPreview.innerHTML = `<span style="color:#F3EEFF;font-size:12px;">處理中…</span>`;
+    let doneCount = 0;
+    function onOneReady(idx, item){
+      APP._pendingXjFiles[idx] = item;
+      doneCount++;
+      if(doneCount===files.length && xjPreview){
+        xjPreview.innerHTML = APP._pendingXjFiles.map(item2=>
+          item2.type.startsWith('image/')
+            ? `<img src="${item2.dataUrl}" style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid rgba(216,196,255,.4);margin:0 6px 6px 0;"/>`
+            : `<span style="display:inline-block;color:#F3EEFF;font-size:12px;margin:0 10px 6px 0;">📎 ${escHtml(item2.name)}</span>`
+        ).join('');
+      }
+    }
+    files.forEach((f, idx)=>{
+      const isImage = f.type && f.type.startsWith('image/');
+      const reader2 = new FileReader();
+      if(isImage){
+        reader2.onload = (ev2)=>{
+          const img2 = new Image();
+          img2.onload = ()=>{
+            const maxSize = 1000;
+            const scale = Math.min(maxSize/img2.width, maxSize/img2.height, 1);
+            const w = Math.max(1, Math.round(img2.width*scale)), h = Math.max(1, Math.round(img2.height*scale));
+            const canvas2 = document.createElement('canvas');
+            canvas2.width = w; canvas2.height = h;
+            const ctx2 = canvas2.getContext('2d');
+            ctx2.drawImage(img2, 0, 0, w, h);
+            const dataUrl2 = canvas2.toDataURL('image/jpeg', 0.82);
+            onOneReady(idx, { dataUrl: dataUrl2, name: f.name, type: 'image/jpeg' });
+          };
+          img2.src = ev2.target.result;
         };
-        img2.src = ev2.target.result;
-      };
-    } else {
-      reader2.onload = (ev2)=>{
-        APP._pendingXjFile = { dataUrl: ev2.target.result, name: file2.name, type: file2.type||'application/octet-stream' };
-        if(xjPreview) xjPreview.innerHTML = `<span style="color:#F3EEFF;font-size:12.5px;">📎 ${escHtml(file2.name)}</span>`;
-      };
-    }
-    reader2.readAsDataURL(file2);
+      } else {
+        reader2.onload = (ev2)=>{
+          onOneReady(idx, { dataUrl: ev2.target.result, name: f.name, type: f.type||'application/octet-stream' });
+        };
+      }
+      reader2.readAsDataURL(f);
+    });
     return;
   }
   if(e.target.classList && e.target.classList.contains('xj-reply-file-input')){
@@ -4601,14 +4685,18 @@ document.addEventListener('submit', (e)=>{
     const messageInput = e.target.querySelector('[name="message"]');
     const message = messageInput.value.trim();
     if(!message){ return; }
+    const attachments = (APP._pendingXjFiles || []).filter(Boolean);
+    const totalSize = attachments.reduce((sum,a)=>sum+(a.dataUrl?a.dataUrl.length:0), 0);
+    if(totalSize > 850*1024){
+      alert('附件總大小超過限制，請減少檔案數量或選擇較小的檔案後再送出。');
+      return;
+    }
     const rec = stamp({
       id:uid(), staffUid:APP.user.uid, staffName:effectiveStaffName()||myStaffName(), staffEmail:APP.userEmail,
-      message, fileDataUrl: APP._pendingXjFile ? APP._pendingXjFile.dataUrl : null,
-      fileName: APP._pendingXjFile ? APP._pendingXjFile.name : null,
-      fileType: APP._pendingXjFile ? APP._pendingXjFile.type : null
+      message, attachments
     });
     saveXiaojiangUpload(rec).then(()=>{
-      APP._pendingXjFile = null;
+      APP._pendingXjFiles = [];
       closeModal();
     });
     return;
