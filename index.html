@@ -488,6 +488,7 @@ const APP = {
   progressTab:'ad', progressAdFilter:{status:'all', month:nowMonthKey}, progressChannelFilter:{status:'all', month:nowMonthKey},
   data:{
     company:{name:'',taxId:'',phone:'',address:'',systemName:'',systemSubtitle:'',logoDataUrl:''}, assets:[], liabilities:[],
+    companyPublic:{systemName:'',systemSubtitle:'',logoDataUrl:''},
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
     personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], xiaojiangInboxMine:[],
@@ -533,10 +534,9 @@ function canEditProgressRow(){
 let unsubs = [];
 function subscribeAll(){
   let personalSubsInitialized = false;
-  unsubs.push(onSnapshot(doc(db,'appdata','company'), snap=>{
-    const d = snap.data() || {};
-    APP.data.company = d.info || {name:'',taxId:'',phone:'',address:''};
-    APP.data.assets = d.assets || []; APP.data.liabilities = d.liabilities || [];
+  unsubs.push(onSnapshot(doc(db,'appdata','companyPublic'), snap=>{
+    const d = snap.data();
+    APP.data.companyPublic = d || {systemName:'',systemSubtitle:'',logoDataUrl:''};
     updateFavicon();
     render();
   }));
@@ -613,6 +613,12 @@ function subscribeAll(){
         snap2=>{ APP.data.calendar = snap2.docs.map(d=>({id:d.id, ...d.data()})); render(); }
       ));
       if(isCore()){
+        unsubs.push(onSnapshot(doc(db,'appdata','company'), snap=>{
+          const d = snap.data() || {};
+          APP.data.company = d.info || {name:'',taxId:'',phone:'',address:''};
+          APP.data.assets = d.assets || []; APP.data.liabilities = d.liabilities || [];
+          render();
+        }));
         unsubs.push(onSnapshot(collection(db,'staffBonusLedger'), snap2=>{
           APP.data.staffBonusLedger = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
@@ -661,8 +667,9 @@ function subscribeAll(){
 function unsubscribeAll(){ unsubs.forEach(u=>u()); unsubs=[]; }
 
 function saveCompany(){ return setDoc(doc(db,'appdata','company'), {info:APP.data.company, assets:APP.data.assets, liabilities:APP.data.liabilities}); }
+function saveCompanyPublic(data){ return setDoc(doc(db,'appdata','companyPublic'), data, {merge:true}); }
 function updateFavicon(){
-  const href = (APP.data.company && APP.data.company.logoDataUrl) || './icon-192.png';
+  const href = (APP.data.companyPublic && APP.data.companyPublic.logoDataUrl) || './icon-192.png';
   let link = document.querySelector('link[rel="icon"]');
   if(!link){
     link = document.createElement('link');
@@ -780,14 +787,14 @@ function shellHTML(){
   return `
   <div id="mobile-topbar">
     <button id="hamburger-btn" aria-label="選單">☰</button>
-    <div class="mt-brand"><div class="brand-logo" style="width:26px;height:26px;background:transparent;padding:0;"><img src="${APP.data.company.logoDataUrl || ('data:image/png;base64,'+DEFAULT_LOGO_B64)}" style="width:100%;height:100%;object-fit:contain;" alt="Logo"/></div>${escHtml(APP.data.company.systemName || '財務管理系統')}</div>
+    <div class="mt-brand"><div class="brand-logo" style="width:26px;height:26px;background:transparent;padding:0;"><img src="${APP.data.companyPublic.logoDataUrl || ('data:image/png;base64,'+DEFAULT_LOGO_B64)}" style="width:100%;height:100%;object-fit:contain;" alt="Logo"/></div>${escHtml(APP.data.companyPublic.systemName || '財務管理系統')}</div>
     <div style="width:26px;"></div>
   </div>
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
   <div id="sidebar">
     <div class="brand">
-      <div class="brand-logo" style="background:transparent;padding:0;"><img src="${APP.data.company.logoDataUrl || ('data:image/png;base64,'+DEFAULT_LOGO_B64)}" style="width:100%;height:100%;object-fit:contain;" alt="尚益資產"/></div>
-      <div class="brand-text"><div class="t1">${escHtml(APP.data.company.systemName || '財務管理系統')}</div><div class="t2">${escHtml(APP.data.company.systemSubtitle || '尚益資產 · 內部工具')}</div></div>
+      <div class="brand-logo" style="background:transparent;padding:0;"><img src="${APP.data.companyPublic.logoDataUrl || ('data:image/png;base64,'+DEFAULT_LOGO_B64)}" style="width:100%;height:100%;object-fit:contain;" alt="尚益資產"/></div>
+      <div class="brand-text"><div class="t1">${escHtml(APP.data.companyPublic.systemName || '財務管理系統')}</div><div class="t2">${escHtml(APP.data.companyPublic.systemSubtitle || '尚益資產 · 內部工具')}</div></div>
     </div>
     ${core ? `
     <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
@@ -1418,17 +1425,17 @@ function settingsHTML(){
         <div class="card-head-row"><h3>系統外觀</h3><span class="hint">左上角 Logo 與系統名稱，改完後所有人登入都會看到新的樣子</span></div>
         <form id="appearance-form">
           <div class="grid grid-2">
-            <label class="field"><span>系統名稱（Logo 旁邊的大字）</span><input type="text" name="systemName" placeholder="例：財務管理系統" value="${escAttr(c.systemName||'')}"/></label>
-            <label class="field"><span>副標題（Logo 旁邊的小字）</span><input type="text" name="systemSubtitle" placeholder="例：尚益資產 · 內部工具" value="${escAttr(c.systemSubtitle||'')}"/></label>
+            <label class="field"><span>系統名稱（Logo 旁邊的大字）</span><input type="text" name="systemName" placeholder="例：財務管理系統" value="${escAttr(APP.data.companyPublic.systemName||'')}"/></label>
+            <label class="field"><span>副標題（Logo 旁邊的小字）</span><input type="text" name="systemSubtitle" placeholder="例：尚益資產 · 內部工具" value="${escAttr(APP.data.companyPublic.systemSubtitle||'')}"/></label>
           </div>
           <div class="field">
             <span>Logo 圖片</span>
             <div style="display:flex;align-items:center;gap:16px;margin-top:6px;">
               <div style="width:56px;height:56px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--navy);">
-                <img id="appearance-logo-preview" src="${c.logoDataUrl || ('data:image/png;base64,'+DEFAULT_LOGO_B64)}" style="width:100%;height:100%;object-fit:contain;"/>
+                <img id="appearance-logo-preview" src="${APP.data.companyPublic.logoDataUrl || ('data:image/png;base64,'+DEFAULT_LOGO_B64)}" style="width:100%;height:100%;object-fit:contain;"/>
               </div>
               <input type="file" id="appearance-logo-file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="flex:1;"/>
-              ${c.logoDataUrl ? `<button type="button" class="btn ghost sm" id="appearance-logo-reset">恢復預設</button>` : ''}
+              ${APP.data.companyPublic.logoDataUrl ? `<button type="button" class="btn ghost sm" id="appearance-logo-reset">恢復預設</button>` : ''}
             </div>
             <p class="hint" style="margin-top:6px;">建議上傳正方形、背景透明的 PNG 圖片，檔案不用太大，系統會自動縮小。</p>
           </div>
@@ -4087,9 +4094,9 @@ document.addEventListener('click', (e)=>{
   }
   if(e.target.id==='logout-btn' || e.target.id==='pending-logout'){ signOut(auth); return; }
   if(e.target.id==='appearance-logo-reset'){
-    APP.data.company = { ...APP.data.company, logoDataUrl:'' };
+    APP.data.companyPublic = { ...APP.data.companyPublic, logoDataUrl:'' };
     APP._pendingLogoDataUrl = undefined;
-    saveCompany();
+    saveCompanyPublic(APP.data.companyPublic);
     updateFavicon();
     renderRoot();
     return;
@@ -4654,10 +4661,10 @@ document.addEventListener('submit', (e)=>{
   if(e.target.id==='appearance-form'){
     e.preventDefault();
     const fd = new FormData(e.target);
-    const logoDataUrl = APP._pendingLogoDataUrl !== undefined ? APP._pendingLogoDataUrl : APP.data.company.logoDataUrl;
-    APP.data.company = { ...APP.data.company, systemName:fd.get('systemName')||'', systemSubtitle:fd.get('systemSubtitle')||'', logoDataUrl };
+    const logoDataUrl = APP._pendingLogoDataUrl !== undefined ? APP._pendingLogoDataUrl : APP.data.companyPublic.logoDataUrl;
+    APP.data.companyPublic = { ...APP.data.companyPublic, systemName:fd.get('systemName')||'', systemSubtitle:fd.get('systemSubtitle')||'', logoDataUrl };
     APP._pendingLogoDataUrl = undefined;
-    saveCompany();
+    saveCompanyPublic(APP.data.companyPublic);
     updateFavicon();
     renderRoot();
     return;
