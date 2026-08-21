@@ -2139,7 +2139,7 @@ function xiaojiangInboxView(){
   return `
     <div class="page-header" style="margin-bottom:14px;">
       <div>
-        <h1 class="page-title">霍格華茲信箱</h1>
+        <h1 class="page-title">✨ 霍格華茲信箱</h1>
         <p class="page-sub">業務／行政傳給${escHtml(xjName)}的檔案與訊息，資料只保留 24 小時，過了會自動清除</p>
       </div>
     </div>
@@ -2206,6 +2206,7 @@ function staffOverviewHTML(){
     const done = all.filter(c=>STATUS_DONE.includes(c.status)).length;
     const needDocsCount = all.filter(c=>c.status==='補資料').length;
     const guarantorCheckCount = all.filter(c=>c.status==='對保').length;
+    const waitingDisbursementCount = all.filter(c=>c.status==='等撥款').length;
     const roleLabel = u.role==='staffAdmin' ? '行政' : '業務';
     const onLeaveToday = APP.data.attendance.some(a=>a.staffName===name && a.date===today);
     const disp = displayNameFor(u.id, name);
@@ -2238,11 +2239,12 @@ function staffOverviewHTML(){
           <span class="badge pending">${roleLabel}</span>
         </div>
       </div>
-      <div class="grid grid-2" style="gap:10px;margin-bottom:10px;">
+      <div class="grid grid-3" style="gap:10px;margin-bottom:10px;">
         <div><div class="stat-label" style="margin-bottom:2px;">處理中</div><div class="stat-value blue" style="font-size:18px;">${pending} 件</div></div>
-        <div><div class="stat-label" style="margin-bottom:2px;">撥款完成</div><div class="stat-value green" style="font-size:18px;">${done} 件</div></div>
         <div><div class="stat-label" style="margin-bottom:2px;">補資料中</div><div class="stat-value" style="font-size:18px;color:var(--amber);">${needDocsCount} 件</div></div>
         <div><div class="stat-label" style="margin-bottom:2px;">對保中</div><div class="stat-value" style="font-size:18px;color:var(--teal);">${guarantorCheckCount} 件</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">等撥款</div><div class="stat-value" style="font-size:18px;color:#7c3aed;">${waitingDisbursementCount} 件</div></div>
+        <div><div class="stat-label" style="margin-bottom:2px;">撥款完成</div><div class="stat-value green" style="font-size:18px;">${done} 件</div></div>
       </div>
       ${financeBlockHtml}
     </div>`;
@@ -2268,7 +2270,7 @@ function staffOverviewHTML(){
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
         <div style="border-radius:50%;box-shadow:0 0 14px rgba(139,92,246,.5);">${avatarHtml(xjUser.id, displayNameFor(xjUser.id, xjName), 40)}</div>
         <div>
-          <h3 style="margin:0;color:#F3EEFF;">${escHtml(displayNameFor(xjUser.id, xjName))}</h3>
+          <h3 style="margin:0;color:#F3EEFF;">${escHtml(displayNameFor(xjUser.id, xjName))} 的房間</h3>
           <div style="font-size:11px;color:rgba(216,196,255,.7);">ॐ संचय पत्राय नमः । संरक्षणाय स्वाहा ॥</div>
         </div>
       </div>
@@ -3028,6 +3030,44 @@ function buildProgressTrackRowHtml(r, idx){
     <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="備註" style="flex:1;min-width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
   </div>`;
 }
+function buildAttendanceRowHtml(r, idx){
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    ${isCore()?`<input type="text" class="ai-row-field" data-key="staffName" value="${escAttr(r.staffName||'')}" placeholder="員工姓名" style="width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>`:''}
+    <input type="date" class="ai-row-field" data-key="date" value="${r.date||todayStr()}" style="width:140px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <select class="ai-row-field" data-key="leaveType" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+      ${LEAVE_TYPE_OPTIONS.map(o=>`<option value="${o}" ${(r.leaveType||'事假')===o?'selected':''}>${o}</option>`).join('')}
+    </select>
+    <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="原因（選填）" style="flex:1;min-width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+  </div>`;
+}
+function buildCalendarRowHtml(r, idx){
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    ${isCore()?`<input type="text" class="ai-row-field" data-key="staffName" value="${escAttr(r.staffName||'')}" placeholder="員工姓名" style="width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>`:''}
+    <input type="date" class="ai-row-field" data-key="date" value="${r.date||todayStr()}" style="width:140px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="title" value="${escAttr(r.title||'')}" placeholder="行程標題" style="width:140px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="備註（選填）" style="flex:1;min-width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+  </div>`;
+}
+function buildVendorRowHtml(r, idx){
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    <input type="text" class="ai-row-field" data-key="name" value="${escAttr(r.name||'')}" placeholder="廠商名稱" style="width:110px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="contact" value="${escAttr(r.contact||'')}" placeholder="聯絡人" style="width:90px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="phone" value="${escAttr(r.phone||'')}" placeholder="電話" style="width:110px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="備註" style="flex:1;min-width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+  </div>`;
+}
+function buildEmployeeRowHtml(r, idx){
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    <input type="text" class="ai-row-field" data-key="name" value="${escAttr(r.name||'')}" placeholder="姓名" style="width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="title" value="${escAttr(r.title||'')}" placeholder="職稱" style="width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="number" class="ai-row-field" data-key="salary" value="${Number(r.salary)||0}" placeholder="底薪" style="width:90px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="date" class="ai-row-field" data-key="startDate" value="${r.startDate||todayStr()}" style="width:140px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+  </div>`;
+}
 function openAiImportModal(){
   document.getElementById('modal-overlay').style.display = 'flex';
   document.getElementById('modal-box').innerHTML = `
@@ -3443,7 +3483,31 @@ function buildFinanceContext(){
   const liabTotal = sum(APP.data.liabilities);
   const empActive = APP.data.hr.employees.filter(e=>e.status!=='resigned').length;
 
-  /* ---- 業務案件與進度（本月） ---- */
+  /* ---- 人事名單 ---- */
+  const empLines = APP.data.hr.employees.map(e=>`${e.name||'未填'} 職稱:${e.title||'未填'} 底薪:${money(e.salary||0)} 到職:${e.startDate||'未填'} 狀態:${e.status==='resigned'?'已離職':'在職'}`).join('\n');
+
+  /* ---- 廠商名單 ---- */
+  const vendorLines = APP.data.vendors.map(v=>`${v.name||'未填'}${v.contact?(' 聯絡人:'+v.contact):''}${v.phone?(' 電話:'+v.phone):''}${v.note?(' 備註:'+v.note):''}`).join('\n');
+
+  /* ---- 案件分潤參數 ---- */
+  const cs = APP.data.caseSettings;
+  const settingsSummary = `業務獎金比例:${(cs.businessBonusRate*100).toFixed(1)}%；${cs.xiaojiangName||'小江'}獎金比例：門檻內(當月前${cs.xiaojiangThreshold}件) ${(cs.xiaojiangRateBelow*100).toFixed(1)}%，門檻外 ${(cs.xiaojiangRateAbove*100).toFixed(1)}%；廣告投手月獎金比例:${(cs.pilotBonusRate*100).toFixed(1)}%（每月5號發放）；送件方案選項:${(cs.planOptions||[]).join('、')}；業務清單:${(cs.staffOptions||[]).join('、')}`;
+
+  /* ---- 本月出勤請假 ---- */
+  const attendanceThis = APP.data.attendance.filter(a=>monthKey(a.date)===nowMonthKey);
+  const attendanceLines = attendanceThis.slice().sort((a,b)=>b.date.localeCompare(a.date))
+    .map(a=>`${a.date} ${a.staffName||'未填'} ${a.leaveType||'請假'}${a.note?(' 備註:'+a.note):''}`).join('\n');
+
+  /* ---- 本月個人業務進度紀錄摘要（全公司，不含客戶詳細資料大段文字，避免資料過長） ---- */
+  const personalLogThis = APP.data.personalProgress.filter(c=>monthKey(c.date)===nowMonthKey);
+  const personalLogLines = personalLogThis.slice().sort((a,b)=>b.date.localeCompare(a.date))
+    .map(c=>`${c.date} ${c.staffName||'未填'} 客戶:${c.customer||'未填'} 來源:${c.source||'未填'} 洽談產品:${c.dealProduct||'未填'} 聯絡狀態:${c.contactStatus||'未填'}${c.caseStatus?(' 案件狀態:'+c.caseStatus):''}${c.caseRemark?(' 狀況備註:'+c.caseRemark):''}`).join('\n');
+
+  /* ---- 霍格華茲信箱狀態 ---- */
+  const hogwartsInbox = APP.data.xiaojiangInbox || [];
+  const hogwartsUnreplied = hogwartsInbox.filter(r=>!r.replyMessage && !r.replyFileDataUrl).length;
+
+  /* ---- 本月業務案件與進度 ---- */
   const progAdThis = APP.data.progressAd.filter(c=>monthKey(c.date)===nowMonthKey);
   const progChThis = APP.data.progressChannel.filter(c=>monthKey(c.date)===nowMonthKey);
   const allProgThis = [...progAdThis, ...progChThis];
@@ -3453,6 +3517,17 @@ function buildFinanceContext(){
   const statusMap = {};
   allProgThis.forEach(c=>{ statusMap[c.status]=(statusMap[c.status]||0)+1; });
   const statusSummary = Object.entries(statusMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${v}`).join('、');
+
+  /* ---- 本月處理中案件明細（排除已撥款完成／已婉拒客拒），讓AI能回答「誰在等撥款」這類具體問題 ---- */
+  const activeCases = allProgThis.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status))
+    .slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const activeCaseLines = activeCases.map(c=>`${c.date} ${c.customer||'未填姓名'} 業務:${c.staff||'未填'} 方案:${c.plan||'未填'} 狀態:${c.status}`).join('\n');
+
+  /* ---- 本月獲利報表案件明細（廣告線＋通路線，含每一筆的金額與發放狀態） ---- */
+  const casesAdThis = APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const casesAdLines = casesAdThis.map(c=>`${c.date} ${c.customer||'未填'} 業務:${c.staff||'未填'} 方案:${c.plan||'未填'} 扣除成本後:${money(c.afterCost)} 業務獎金:${money(c.businessBonus)} ${cs.xiaojiangName||'小江'}獎金:${money(c.xiaojiangBonus)} 公司利潤:${money(c.companyProfit)} 獎金${c.bonusPaid?'已發放':'未發放'}${c.specialHandling?` 特殊處理費:${money(c.specialFee)}(${c.specialFeePaid?'已入帳':'未入帳'})`:''}`).join('\n');
+  const casesChannelThis = APP.data.casesChannel.filter(c=>monthKey(c.date)===nowMonthKey).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const casesChannelLines = casesChannelThis.map(c=>`${c.date} ${c.customer||'未填'} 業務:${c.staff||'未填'} 來源:${c.source||'未填'}${c.referrer?('('+c.referrer+')'):''} 扣除成本後:${money(c.afterCost)} 業務或通路利潤:${money(c.partnerProfit)} 公司利潤:${money(c.companyProfit)} 利潤${c.profitPaid?'已發放':'未發放'}`).join('\n');
 
   /* ---- 本月業務利潤排行 ---- */
   const profitByStaff = {};
@@ -3488,16 +3563,40 @@ ${year-1}年度：收入 ${money(incLast)}，支出 ${money(expLast)}
 ${year}年度支出分類：${catSummary(txThis,'expense')}
 ${year}年度收入分類：${catSummary(txThis,'income')}
 資產總計：${money(assetsTotal)}，負債總計：${money(liabTotal)}，淨資產：${money(assetsTotal-liabTotal)}
-在職員工人數：${empActive}
-廠商數量：${APP.data.vendors.length}
 最近25筆收支紀錄：
 ${recent || '無'}
+
+【人事名單】（在職 ${empActive} 人）
+${empLines || '無'}
+
+【廠商名單】
+${vendorLines || '無'}
+
+【案件分潤參數設定】
+${settingsSummary}
+
+【本月出勤請假】（${nowMonthKey}）
+${attendanceLines || '無'}
 
 【業務案件與進度】（本月 ${nowMonthKey}）
 本月案件狀態：撥款完成 ${doneCount} 件、處理中 ${pendingCount} 件、婉拒/客拒 ${closedCount} 件
 詳細狀態分布：${statusSummary || '無'}
+本月處理中案件明細（客戶姓名／業務／方案／狀態，由新到舊）：
+${activeCaseLines || '無'}
 本月業務利潤貢獻排行（含廣告線+通路線）：${rankingLines || '無'}
 本月獎金：已發放 ${money(paidBonusTotal)}，尚未發放 ${unpaidBonus.length} 筆合計 ${money(unpaidTotal)}
+
+【本月獲利報表明細 — 廣告線】（每筆案件的完整金額，由新到舊）
+${casesAdLines || '無'}
+
+【本月獲利報表明細 — 通路線】（每筆案件的完整金額，由新到舊）
+${casesChannelLines || '無'}
+
+【本月全公司個人業務進度紀錄摘要】（業務／行政自己記錄的客戶開發日誌，由新到舊；不含完整客戶詳細資料原文，只有摘要欄位）
+${personalLogLines || '無'}
+
+【霍格華茲信箱】（客戶特殊處理事務，透過${cs.xiaojiangName||'小江'}處理）
+目前共 ${hogwartsInbox.length} 筆（24小時內），尚未回覆 ${hogwartsUnreplied} 筆
 
 【廣告投放成效】（近 ${adSpendSorted.length} 個月，由新到舊）
 ${adSpendLines || '無資料'}`;
@@ -3520,6 +3619,10 @@ function buildStaffContext(){
   myAll.forEach(c=>{ statusMap[c.status]=(statusMap[c.status]||0)+1; });
   const statusSummary = Object.entries(statusMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}:${v}`).join('、');
 
+  const myActiveCases = myAll.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status))
+    .slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const myActiveCaseLines = myActiveCases.map(c=>`${c.date} ${c.customer||'未填姓名'} 方案:${c.plan||'未填'} 狀態:${c.status}`).join('\n');
+
   const myEntries = APP.data.staffBonusLedger.filter(e=>e.staffName===meName && monthKey(e.date)===thisMonth);
   const byDay = {};
   myEntries.forEach(e=>{ const t=(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0); byDay[e.date]=(byDay[e.date]||0)+t; });
@@ -3527,7 +3630,11 @@ function buildStaffContext(){
   const dayLines = Object.entries(byDay).sort((a,b)=>b[0].localeCompare(a[0])).map(([d,v])=>`${d}：${money(v)}`).join('\n');
 
   const myLogs = APP.data.personalProgress.filter(c=>c.staffUid===meUid && monthKey(c.date)===thisMonth);
+  const myLogLines = myLogs.slice().sort((a,b)=>b.date.localeCompare(a.date))
+    .map(c=>`${c.date} 客戶:${c.customer||'未填'} 來源:${c.source||'未填'} 洽談產品:${c.dealProduct||'未填'} 聯絡狀態:${c.contactStatus||'未填'}${c.caseStatus?(' 案件狀態:'+c.caseStatus):''}${c.caseRemark?(' 狀況備註:'+c.caseRemark):''}`).join('\n');
   const myAttendance = APP.data.attendance.filter(a=>a.staffUid===meUid && monthKey(a.date)===thisMonth);
+  const myAttendanceLines = myAttendance.slice().sort((a,b)=>b.date.localeCompare(a.date))
+    .map(a=>`${a.date} ${a.leaveType||'請假'}${a.note?(' 備註:'+a.note):''}`).join('\n');
   const today = todayStr();
   const upcoming = APP.data.calendar.filter(c=>c.staffUid===meUid && c.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,10)
     .map(c=>`${c.date} ${c.title}${c.note?('：'+c.note):''}`).join('\n');
@@ -3537,11 +3644,15 @@ function buildStaffContext(){
 本月底薪：${money(profile.baseSalary||0)}
 本月案件狀態：撥款完成 ${doneCount} 件、處理中 ${pendingCount} 件、婉拒/客拒 ${closedCount} 件
 詳細狀態分布：${statusSummary || '無'}
+處理中案件明細（客戶姓名／方案／狀態，由新到舊）：
+${myActiveCaseLines || '無'}
 本月獎金累計：${money(monthTotal)}
 每日獎金明細（由新到舊）：
 ${dayLines || '無'}
-本月個人開發紀錄筆數：${myLogs.length} 筆
-本月請假次數：${myAttendance.length} 次
+本月個人開發紀錄（${myLogs.length} 筆，由新到舊）：
+${myLogLines || '無'}
+本月請假紀錄（${myAttendance.length} 次）：
+${myAttendanceLines || '無'}
 即將到來的行程：
 ${upcoming || '無'}`;
 }
@@ -3563,7 +3674,9 @@ function renderChat(){
       let inner = `<div class="ai-msg ai">${escHtml(m.text)}`;
       if(m.pendingTx && m.pendingTx.length>0 && !m.confirmed){
         const kind = m.pendingKind || 'tx';
-        const rowBuilder = kind==='personallog' ? buildPersonalLogRowHtml : kind==='progresstrack' ? buildProgressTrackRowHtml : buildTxRowHtml;
+        const rowBuilder = kind==='personallog' ? buildPersonalLogRowHtml : kind==='progresstrack' ? buildProgressTrackRowHtml
+          : kind==='attendance' ? buildAttendanceRowHtml : kind==='calendar' ? buildCalendarRowHtml
+          : kind==='vendor' ? buildVendorRowHtml : kind==='employee' ? buildEmployeeRowHtml : buildTxRowHtml;
         inner += `<div id="chat-pending-${i}" style="margin-top:10px;background:#fff;border-radius:8px;padding:8px;" data-kind="${kind}">
           ${m.pendingTx.map((r,j)=>rowBuilder(r,j)).join('')}
           <button type="button" class="btn primary sm" style="margin-top:6px;width:100%;" data-action="chat-tx-confirm" data-msgidx="${i}">確認新增選取的紀錄</button>
@@ -3601,28 +3714,19 @@ async function sendChatMessage(question){
     let text = data.answer || data.error || '沒有取得回應，請再試一次。';
     let rows = null;
     let pendingKind = 'tx';
-    if(isCore()){
-      const match = text.match(/<transactions>([\s\S]*?)<\/transactions>/i);
+    const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor'],['employee','employee']];
+    const TAG_MAP_STAFFSALES = [['personallog','personallog'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar']];
+    const TAG_MAP_STAFFADMIN = [['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar']];
+    const tagMap = isCore() ? TAG_MAP_CORE : isStaffSales() ? TAG_MAP_STAFFSALES : isStaffAdmin() ? TAG_MAP_STAFFADMIN : [];
+    for(const [tag, kind] of tagMap){
+      const re = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i');
+      const match = text.match(re);
       if(match){
         try{ rows = JSON.parse(match[1].trim()); }catch(e){ rows = null; }
         text = text.replace(match[0], '').trim();
+        pendingKind = kind;
+        break;
       }
-    } else if(isStaffSales()){
-      const match = text.match(/<personallog>([\s\S]*?)<\/personallog>/i);
-      if(match){
-        try{ rows = JSON.parse(match[1].trim()); }catch(e){ rows = null; }
-        text = text.replace(match[0], '').trim();
-      }
-      pendingKind = 'personallog';
-      text = text.replace(/<transactions>[\s\S]*?<\/transactions>/i, '').trim();
-    } else if(isStaffAdmin()){
-      const match = text.match(/<progresstrack>([\s\S]*?)<\/progresstrack>/i);
-      if(match){
-        try{ rows = JSON.parse(match[1].trim()); }catch(e){ rows = null; }
-        text = text.replace(match[0], '').trim();
-      }
-      pendingKind = 'progresstrack';
-      text = text.replace(/<transactions>[\s\S]*?<\/transactions>/i, '').trim();
     }
     APP.chatMessages.push({ role:'ai', text, pendingTx: (rows && Array.isArray(rows) && rows.length>0) ? rows : null, pendingKind });
   }catch(e){
@@ -3885,6 +3989,37 @@ document.addEventListener('click', (e)=>{
           } else {
             savePromises.push(saveProgressAdCase(stamp({ id:uid(), date:data.date, customer:data.customer, phone:data.phone, plan:data.plan||'', staff:data.staff||'', status:data.status, note:data.note })));
           }
+        } else if(kind==='attendance'){
+          let targetUid, targetName;
+          if(isCore()){
+            targetName = data.staffName || '';
+            const u = APP.users.find(x=>x.staffName===targetName);
+            if(!u){ skipped++; return; }
+            targetUid = u.id;
+          } else {
+            targetUid = effectiveUid(); targetName = effectiveStaffName();
+          }
+          if(!data.date){ skipped++; return; }
+          savePromises.push(saveAttendance(stamp({ id:uid(), staffUid:targetUid, staffName:targetName, date:data.date, leaveType:data.leaveType||'事假', note:data.note||'' })));
+        } else if(kind==='calendar'){
+          let targetUid;
+          if(isCore()){
+            const u = APP.users.find(x=>x.staffName===(data.staffName||''));
+            if(!u){ skipped++; return; }
+            targetUid = u.id;
+          } else {
+            targetUid = effectiveUid();
+          }
+          if(!data.date || !data.title){ skipped++; return; }
+          savePromises.push(saveCalendarEntry(stamp({ id:uid(), staffUid:targetUid, date:data.date, title:data.title, note:data.note||'' })));
+        } else if(kind==='vendor'){
+          if(!data.name){ skipped++; return; }
+          APP.data.vendors.push(stamp({ id:uid(), name:data.name, contact:data.contact||'', phone:data.phone||'', taxId:'', note:data.note||'' }));
+          savePromises.push(saveVendors());
+        } else if(kind==='employee'){
+          if(!data.name){ skipped++; return; }
+          APP.data.hr.employees.push(stamp({ id:uid(), name:data.name, title:data.title||'', salary:Number(data.salary)||0, startDate:data.startDate||todayStr(), status:'active' }));
+          savePromises.push(saveHR());
         }
       });
       Promise.allSettled(savePromises).then(results=>{
@@ -4318,8 +4453,41 @@ document.addEventListener('change', (e)=>{
     return;
   }
 });
+let isImeComposing = false;
+document.addEventListener('compositionstart', (e)=>{
+  if(e.target.classList && (e.target.classList.contains('table-search-input')) || e.target.id==='tx-search' || e.target.id==='vendor-search'){
+    isImeComposing = true;
+  }
+});
+document.addEventListener('compositionend', (e)=>{
+  isImeComposing = false;
+  // 組字剛結束（例如注音選字完成），這時候瀏覽器通常還會再補發一次 input 事件，
+  // 但為了保險起見這裡也主動觸發一次，確保搜尋結果一定會更新
+  if(e.target.classList && e.target.classList.contains('table-search-input')){
+    const stateKey = e.target.dataset.statekey;
+    const focusVal = e.target.value;
+    const cursorPos = e.target.selectionStart;
+    APP[stateKey] = focusVal;
+    render();
+    const newEl = document.querySelector(`.table-search-input[data-statekey="${stateKey}"]`);
+    if(newEl){ newEl.focus(); newEl.setSelectionRange(cursorPos, cursorPos); }
+  } else if(e.target.id==='tx-search'){
+    APP.txFilter.search = e.target.value;
+    const focusVal = e.target.value;
+    render();
+    const input = document.getElementById('tx-search');
+    if(input){ input.focus(); input.value = focusVal; input.setSelectionRange(focusVal.length, focusVal.length); }
+  } else if(e.target.id==='vendor-search'){
+    APP.vendorSearch = e.target.value;
+    const focusVal = e.target.value;
+    render();
+    const input = document.getElementById('vendor-search');
+    if(input){ input.focus(); input.value = focusVal; input.setSelectionRange(focusVal.length, focusVal.length); }
+  }
+});
 document.addEventListener('input', (e)=>{
   if(e.target.classList && e.target.classList.contains('table-search-input')){
+    if(isImeComposing) return; // 輸入法組字中（例如注音選字前），先不要重新渲染，避免打斷輸入
     const stateKey = e.target.dataset.statekey;
     const focusVal = e.target.value;
     const cursorPos = e.target.selectionStart;
@@ -4330,6 +4498,7 @@ document.addEventListener('input', (e)=>{
     return;
   }
   if(e.target.id==='tx-search'){
+    if(isImeComposing) return;
     APP.txFilter.search = e.target.value;
     const focusVal = e.target.value;
     render();
@@ -4338,6 +4507,7 @@ document.addEventListener('input', (e)=>{
     return;
   }
   if(e.target.id==='vendor-search'){
+    if(isImeComposing) return;
     APP.vendorSearch = e.target.value;
     const focusVal = e.target.value;
     render();
