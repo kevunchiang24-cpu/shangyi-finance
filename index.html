@@ -355,6 +355,18 @@
     0%,100%{ opacity:.15; transform:scale(0.7); }
     50%{ opacity:1; transform:scale(1.3); }
   }
+  .rank-diamond{ position:relative; overflow:hidden; }
+  .rank-diamond::before{
+    content:''; position:absolute; inset:-50%; pointer-events:none; z-index:0;
+    background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,.55) 48%, rgba(224,242,254,.7) 52%, transparent 70%);
+    background-size:250% 250%;
+    animation:diamond-shimmer 5s ease-in-out infinite;
+  }
+  .rank-diamond > *{ position:relative; z-index:1; }
+  @keyframes diamond-shimmer{
+    0%{ background-position:200% 0%; }
+    100%{ background-position:-50% 100%; }
+  }
   .hogwarts-btn{
     display:inline-flex; align-items:center; justify-content:center; padding:9px 18px; border-radius:10px; border:1px solid rgba(216,196,255,.5);
     background:rgba(139,92,246,.25); color:#F3EEFF; font-weight:700; font-size:13px; cursor:pointer;
@@ -481,7 +493,8 @@ const db = getFirestore(fbApp);
    ================================================================ */
 
 /* ---------------- State ---------------- */
-const todayStr = () => new Date().toISOString().slice(0,10);
+function formatDateLocal(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+const todayStr = () => formatDateLocal(new Date());
 const DEFAULT_LOGO_B64 = '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';
 const nowYear = new Date().getFullYear();
 const nowMonthKey = todayStr().slice(0,7);
@@ -529,6 +542,7 @@ const APP = {
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
     personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], xiaojiangInboxMine:[],
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
+      rankBronze:50000, rankSilver:100000, rankGold:200000, rankDiamond:400000,
       planOptions:['醫美','JET','電腦','裕富','維力','21','亞太','二線、商品'],
       staffOptions:['煌','全','熙','傑','秉','耿','琪','曾','希'] }
   }
@@ -1539,6 +1553,18 @@ function settingsHTML(){
         <div class="sub-chip-row">
           ${cs.staffOptions.map(p=>`<span class="sub-chip">${escHtml(p)}${isAdmin()?`<button data-action="delete-case-option" data-kind="staffOptions" data-value="${escAttr(p)}">✕</button>`:''}</span>`).join('') || '<span style="color:var(--muted);font-size:12.5px;">尚無選項</span>'}
         </div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="card-head-row"><h3>業績牌位門檻</h3><span class="hint">依「本月公司利潤貢獻」判定，業務總覽卡片會依牌位套用不同外框樣式</span></div>
+        <form id="rank-settings-form">
+          <div class="grid grid-2">
+            <label class="field"><span>🥉 銅牌門檻（公司利潤貢獻達）</span><input type="number" name="rankBronze" value="${cs.rankBronze||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>🥈 銀牌門檻</span><input type="number" name="rankSilver" value="${cs.rankSilver||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>🥇 金牌門檻</span><input type="number" name="rankGold" value="${cs.rankGold||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>💎 鑽石門檻</span><input type="number" name="rankDiamond" value="${cs.rankDiamond||0}" ${isAdmin()?'':'disabled'}/></label>
+          </div>
+          ${isAdmin()?`<div class="modal-actions" style="justify-content:flex-start;"><button type="submit" class="btn primary">儲存</button></div>`:''}
+        </form>
       </div>`;
   } else {
     const kind = tab;
@@ -2157,7 +2183,7 @@ function openAttendanceModal(){
     if(totalDays > 60){ alert('一次最多請 60 天，天數太多的話請分開新增'); return; }
     for(let i=0;i<totalDays;i++){
       const d = new Date(start.getTime() + i*dayMs);
-      const dateStr = d.toISOString().slice(0,10);
+      const dateStr = formatDateLocal(d);
       saveAttendance(stamp({id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), date:dateStr, leaveType:data.leaveType, note:data.note}));
     }
   });
@@ -2294,53 +2320,61 @@ function staffOverviewHTML(){
     const onLeaveToday = APP.data.attendance.some(a=>a.staffName===name && a.date===today);
     const disp = displayNameFor(u.id, name);
 
+    const adThisMonth = APP.data.casesAd.filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey);
+    const chThisMonth = APP.data.casesChannel.filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey);
+    const profitContribution = sum(adThisMonth.map(c=>({amount:c.companyProfit}))) + sum(chThisMonth.map(c=>({amount:c.companyProfit})));
+    const rankTier = computeRankTier(profitContribution);
+
+    const mutedTextColor = rankTier ? rankTier.mutedColor : 'var(--muted)';
     const financeBlockHtml = viewerIsCore ? (function(){
-      const adThisMonth = APP.data.casesAd.filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey);
-      const chThisMonth = APP.data.casesChannel.filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey);
-      const profitContribution = sum(adThisMonth.map(c=>({amount:c.companyProfit}))) + sum(chThisMonth.map(c=>({amount:c.companyProfit})));
       const bonusThisMonth = sum(getCleanBonusLedger().filter(e=>e.staffName===name && monthKey(e.date)===nowMonthKey)
         .map(e=>({amount:(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0)})));
       const prospectCount = APP.data.personalProgress.filter(c=>c.staffName===name && monthKey(c.date)===nowMonthKey).length;
-      return `<div style="border-top:1px solid var(--border);padding-top:10px;">
-        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:var(--muted);">本月利潤貢獻</div><div class="val" style="width:auto;font-weight:700;color:var(--ink);">${money(profitContribution)}</div></div>
-        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:var(--muted);">本月獎金累計</div><div class="val" style="width:auto;font-weight:700;color:var(--green);">${money(bonusThisMonth)}</div></div>
-        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:var(--muted);">開發中客戶</div><div class="val" style="width:auto;font-weight:700;color:var(--ink);">${prospectCount} 位</div></div>
+      return `<div style="border-top:1px solid ${rankTier?rankTier.border+'55':'var(--border)'};padding-top:10px;">
+        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:${mutedTextColor};">本月利潤貢獻</div><div class="val" style="width:auto;font-weight:700;color:${rankTier?rankTier.titleColor:'var(--ink)'};">${money(profitContribution)}</div></div>
+        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:${mutedTextColor};">本月獎金累計</div><div class="val" style="width:auto;font-weight:700;color:var(--green);">${money(bonusThisMonth)}</div></div>
+        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:${mutedTextColor};">開發中客戶</div><div class="val" style="width:auto;font-weight:700;color:${rankTier?rankTier.titleColor:'var(--ink)'};">${prospectCount} 位</div></div>
       </div>`;
     })() : '';
 
-    return `<div class="card"${viewerIsCore?` style="cursor:pointer;" data-action="enter-staff-room" data-name="${escAttr(name)}" data-uid="${escAttr(u.id)}"`:''}>
+    const cardStyleAttr = rankTier
+      ? `border:2px solid ${rankTier.border};background:${rankTier.cardBg};${viewerIsCore?'cursor:pointer;':''}`
+      : (viewerIsCore?`cursor:pointer;`:``);
+
+    return `<div class="card${rankTier&&rankTier.cssClass?' '+rankTier.cssClass:''}"${cardStyleAttr?` style="${cardStyleAttr}"`:''}${viewerIsCore?` data-action="enter-staff-room" data-name="${escAttr(name)}" data-uid="${escAttr(u.id)}"`:''}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
         <div style="display:flex;align-items:center;gap:10px;">
           ${avatarHtml(u.id, disp, 40)}
           <div>
-            <h3 style="margin:0;line-height:1.2;">${escHtml(disp)}</h3>
-            ${disp!==name?`<div style="font-size:11px;color:var(--muted);">系統名稱：${escHtml(name)}</div>`:''}
+            <h3 style="margin:0;line-height:1.2;${rankTier?`color:${rankTier.titleColor};`:''}">${escHtml(disp)}</h3>
+            ${disp!==name?`<div style="font-size:11px;color:${mutedTextColor};">系統名稱：${escHtml(name)}</div>`:''}
           </div>
         </div>
-        <div style="display:flex;gap:6px;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${rankTier?`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;background:${rankTier.border};color:#fff;font-size:11px;font-weight:700;">${rankTier.icon} ${rankTier.label}</span>`:''}
           ${onLeaveToday?`<span class="badge expense">今日請假</span>`:''}
           <span class="badge pending">${roleLabel}</span>
         </div>
       </div>
-      <div style="border:1.5px solid #DC2626;border-radius:12px;padding:8px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="border:1.5px solid #DC2626;background:rgba(255,255,255,.5);border-radius:12px;padding:8px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
         <div style="font-size:12px;color:#DC2626;font-weight:700;">撥款完成</div>
         <div style="font-size:26px;font-weight:800;color:#DC2626;line-height:1;">${done}<span style="font-size:13px;font-weight:600;margin-left:3px;">件</span></div>
       </div>
-      <div style="border:1.5px solid var(--amber);border-radius:12px;padding:8px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="border:1.5px solid var(--amber);background:rgba(255,255,255,.5);border-radius:12px;padding:8px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
         <div style="font-size:12px;color:var(--amber);font-weight:700;">對保中</div>
         <div style="font-size:26px;font-weight:800;color:var(--amber);line-height:1;">${guarantorCheckCount}<span style="font-size:13px;font-weight:600;margin-left:3px;">件</span></div>
       </div>
       <div class="grid grid-3" style="gap:6px;margin-bottom:10px;">
-        <div style="border:1px solid var(--border);border-radius:8px;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
-          <div class="stat-label" style="font-size:10px;">處理中</div>
+        <div style="border:1px solid ${rankTier?rankTier.border+'55':'var(--border)'};background:rgba(255,255,255,.4);border-radius:8px;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
+          <div class="stat-label" style="font-size:10px;color:${mutedTextColor};">處理中</div>
           <div class="stat-value blue" style="font-size:12.5px;">${pending}</div>
         </div>
-        <div style="border:1px solid var(--border);border-radius:8px;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
-          <div class="stat-label" style="font-size:10px;">補資料中</div>
+        <div style="border:1px solid ${rankTier?rankTier.border+'55':'var(--border)'};background:rgba(255,255,255,.4);border-radius:8px;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
+          <div class="stat-label" style="font-size:10px;color:${mutedTextColor};">補資料中</div>
           <div class="stat-value" style="font-size:12.5px;color:var(--amber);">${needDocsCount}</div>
         </div>
-        <div style="border:1px solid var(--border);border-radius:8px;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
-          <div class="stat-label" style="font-size:10px;">等撥款</div>
+        <div style="border:1px solid ${rankTier?rankTier.border+'55':'var(--border)'};background:rgba(255,255,255,.4);border-radius:8px;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
+          <div class="stat-label" style="font-size:10px;color:${mutedTextColor};">等撥款</div>
           <div class="stat-value" style="font-size:12.5px;color:#7c3aed;">${waitingDisbursementCount}</div>
         </div>
       </div>
@@ -2905,6 +2939,28 @@ function channelCasesView(){
   `;
 }
 
+/* ---- 業績牌位：依本月公司利潤貢獻判定，回傳邊框樣式設定 ---- */
+function computeRankTier(profitContribution){
+  const cs = APP.data.caseSettings;
+  const tiers = [
+    { key:'diamond', label:'鑽石', icon:'💎', threshold:cs.rankDiamond||0,
+      cardBg:'linear-gradient(135deg,#EFF8FF 0%,#DBF0FF 45%,#EAF6FF 100%)',
+      border:'#38BDF8', titleColor:'#0369A1', mutedColor:'#0C4A6E', cssClass:'rank-diamond' },
+    { key:'gold',    label:'金牌', icon:'🥇', threshold:cs.rankGold||0,
+      cardBg:'linear-gradient(135deg,#FFFBEB 0%,#FEF3C7 50%,#FFFBEB 100%)',
+      border:'#EAB308', titleColor:'#92400E', mutedColor:'#78350F', cssClass:'' },
+    { key:'silver',  label:'銀牌', icon:'🥈', threshold:cs.rankSilver||0,
+      cardBg:'linear-gradient(135deg,#F8FAFC 0%,#E2E8F0 50%,#F8FAFC 100%)',
+      border:'#94A3B8', titleColor:'#334155', mutedColor:'#475569', cssClass:'' },
+    { key:'bronze',  label:'銅牌', icon:'🥉', threshold:cs.rankBronze||0,
+      cardBg:'linear-gradient(135deg,#FFF7ED 0%,#FDE8D2 50%,#FFF7ED 100%)',
+      border:'#B45309', titleColor:'#9A3412', mutedColor:'#7C2D12', cssClass:'' },
+  ];
+  for(const t of tiers){
+    if(t.threshold>0 && profitContribution >= t.threshold) return t;
+  }
+  return null;
+}
 function computeFixedCost(mk){
   const list = APP.data.transactions.filter(t=>t.type==='expense' && monthKey(t.date)===mk && (t.mainCategory==='房租水電' || t.mainCategory==='薪資支出'));
   return sum(list);
@@ -3455,7 +3511,7 @@ function openChannelCaseModal(existing){
 }
 
 function openAdSpendModal(existing){
-  const a = existing || {month:new Date().toISOString().slice(0,7), spend:'', messages:'', submitted:'', approved:'', note:''};
+  const a = existing || {month:formatDateLocal(new Date()).slice(0,7), spend:'', messages:'', submitted:'', approved:'', note:''};
   openModal(existing?'編輯月份廣告資料':'新增月份廣告資料', `
     <label class="field"><span>月份</span><input type="month" name="month" value="${a.month}" required/></label>
     <label class="field"><span>投放金額</span><input type="number" name="spend" value="${a.spend}" required/></label>
@@ -4061,7 +4117,7 @@ document.addEventListener('click', (e)=>{
       else{
         const dt = new Date((APP.dailyBonusDate||todayStr())+'T00:00:00');
         dt.setDate(dt.getDate()+days);
-        APP.dailyBonusDate = dt.toISOString().slice(0,10);
+        APP.dailyBonusDate = formatDateLocal(dt);
       }
       render(); return;
     }
@@ -4799,6 +4855,19 @@ document.addEventListener('submit', (e)=>{
       xiaojiangRateAbove: (Number(fd.get('xiaojiangRateAbove'))||0)/100,
       pilotBonusRate: (Number(fd.get('pilotBonusRate'))||0)/100,
       xiaojiangName: newXjName
+    };
+    saveCaseSettings(); return;
+  }
+  if(e.target.id==='rank-settings-form'){
+    e.preventDefault();
+    if(!isAdmin()) return;
+    const fd = new FormData(e.target);
+    APP.data.caseSettings = {
+      ...APP.data.caseSettings,
+      rankBronze: Number(fd.get('rankBronze'))||0,
+      rankSilver: Number(fd.get('rankSilver'))||0,
+      rankGold: Number(fd.get('rankGold'))||0,
+      rankDiamond: Number(fd.get('rankDiamond'))||0,
     };
     saveCaseSettings(); return;
   }
