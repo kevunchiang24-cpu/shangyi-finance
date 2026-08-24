@@ -1010,7 +1010,7 @@ function dashboardHTML(){
   const todayAdToday = APP.data.casesAd.filter(c=>c.date===todayStr());
   const todayAdBonus = sum(todayAdToday.map(c=>({amount:(Number(c.businessBonus)||0)+(Number(c.xiaojiangBonus)||0)})));
   const todayChToday = APP.data.casesChannel.filter(c=>c.date===todayStr());
-  const todayChProfit = sum(todayChToday.map(c=>({amount:c.partnerProfit})));
+  const todayChProfit = sum(todayChToday.map(c=>({amount:channelCaseTotalPayout(c)})));
   const todayWizardFee = sum([...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>c.date===todayStr() && c.specialHandling).map(c=>({amount:c.specialFee})));
   const todayBonusTotal = todayAdBonus + todayChProfit + todayWizardFee;
   const todayByPerson = {};
@@ -1021,7 +1021,10 @@ function dashboardHTML(){
     if(xj>0) todayByPerson[xiaojiangNameForToday] = (todayByPerson[xiaojiangNameForToday]||0) + xj;
   });
   todayChToday.forEach(c=>{
-    const k = c.staff||'（未填）'; todayByPerson[k] = (todayByPerson[k]||0) + (Number(c.partnerProfit)||0);
+    const bb = channelCaseBusinessBonus(c);
+    if(bb>0){ const k = c.staff||'（未填）'; todayByPerson[k] = (todayByPerson[k]||0) + bb; }
+    const hb = channelCaseHuangBonus(c);
+    if(hb>0){ todayByPerson['煌'] = (todayByPerson['煌']||0) + hb; }
   });
   [...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>c.date===todayStr() && c.specialHandling && Number(c.specialFee)>0).forEach(c=>{
     todayByPerson[xiaojiangNameForToday] = (todayByPerson[xiaojiangNameForToday]||0) + Number(c.specialFee);
@@ -1729,7 +1732,7 @@ function vendorsHTML(){
 /* ================= USERS (admin) ================= */
 function usersHTML(){
   const roleNames = {admin:'管理員',editor:'一般編輯',viewer:'唯讀',pending:'待設定',staffAdmin:'行政',staffSales:'業務'};
-  const salaryStaff = APP.users.filter(u=>(u.role==='staffAdmin'||u.role==='staffSales') && (APP.staffProfiles[u.id]||{}).baseSalary>0);
+  const salaryStaff = APP.users.filter(u=>(u.role==='staffAdmin'||u.role==='staffSales'||(u.role==='admin'&&u.isXiaojiang)) && (APP.staffProfiles[u.id]||{}).baseSalary>0);
   const unpaidThisMonth = salaryStaff.filter(u=>!((APP.staffProfiles[u.id]||{}).salaryPaidMonths||[]).includes(nowMonthKey));
   const unpaidTotal = sum(unpaidThisMonth.map(u=>({amount:(APP.staffProfiles[u.id]||{}).baseSalary||0})));
   const rows = APP.users.map(u=>{
@@ -2609,7 +2612,7 @@ function exportCasesYear(year){
     日期:c.date, 客戶:c.customer, 方案:c.plan, 業務:c.staff, 扣除成本後:c.afterCost, 業務獎金:c.businessBonus, 小江獎金:c.xiaojiangBonus, 公司利潤:c.companyProfit, 獎金發放:c.bonusPaid?'是':'否', 備註:c.note
   }));
   const rowsCh = APP.data.casesChannel.filter(c=>c.date && c.date.startsWith(year)).map(c=>({
-    日期:c.date, 客戶:c.customer, 方案:c.plan, 業務:c.staff, 來源:c.source, 通路名稱:c.referrer, 扣除成本後:c.afterCost, 業務或通路利潤:c.partnerProfit, 公司利潤:c.companyProfit, 備註:c.note
+    日期:c.date, 客戶:c.customer, 方案:c.plan, 業務:c.staff, 來源:c.source, 通路名稱:c.referrer, 扣除成本後:c.afterCost, 業務獎金:channelCaseBusinessBonus(c), 通路實拿:channelCaseChannelTake(c), 煌獎金:channelCaseHuangBonus(c), 公司利潤:c.companyProfit, 備註:c.note
   }));
   const rowsSpend = APP.data.adSpend.filter(a=>a.month && a.month.startsWith(year)).map(a=>({
     月份:a.month, 投放金額:a.spend, 私訊數:a.messages, 送件數:a.submitted, 核准數:a.approved, 備註:a.note
@@ -2680,30 +2683,47 @@ function dailyBonusView(){
 
   const byPerson = {};
   const xiaojiangName = APP.data.caseSettings.xiaojiangName || '小江';
-  function ensure(name){ if(!byPerson[name]) byPerson[name] = {name, businessBonus:0, xiaojiangBonus:0, channelProfit:0, wizardHatFee:0, count:0, paidCount:0, unpaidCount:0}; return byPerson[name]; }
+  function ensure(name){ if(!byPerson[name]) byPerson[name] = {name, businessBonus:0, xiaojiangBonus:0, channelProfit:0, wizardHatFee:0, count:0, paidCount:0, unpaidCount:0, items:[]}; return byPerson[name]; }
   adToday.forEach(c=>{
     const p = ensure(c.staff || '（未填業務）');
-    p.businessBonus += Number(c.businessBonus)||0;
+    const bb0 = Number(c.businessBonus)||0;
+    p.businessBonus += bb0;
+    if(bb0>0) p.items.push({customer:c.customer||'（未填客戶）', amount:bb0, type:'業務獎金'});
     p.count++;
     if(c.bonusPaid) p.paidCount++; else p.unpaidCount++;
     const xj = Number(c.xiaojiangBonus)||0;
     if(xj>0){
       const xp = ensure(xiaojiangName);
       xp.xiaojiangBonus += xj;
+      xp.items.push({customer:c.customer||'（未填客戶）', amount:xj, type:'拆成'});
       xp.count++;
       if(c.bonusPaid) xp.paidCount++; else xp.unpaidCount++;
     }
   });
   chToday.forEach(c=>{
-    const p = ensure(c.staff || '（未填業務）');
-    p.channelProfit += Number(c.partnerProfit)||0;
-    p.count++;
-    if(c.profitPaid) p.paidCount++; else p.unpaidCount++;
+    const bb = channelCaseBusinessBonus(c);
+    if(bb>0){
+      const p = ensure(c.staff || '（未填業務）');
+      p.channelProfit += bb;
+      p.items.push({customer:c.customer||'（未填客戶）', amount:bb, type:'業務獎金（通路）'});
+      p.count++;
+      if(c.profitPaid) p.paidCount++; else p.unpaidCount++;
+    }
+    const hb = channelCaseHuangBonus(c);
+    if(hb>0){
+      const hp = ensure('煌');
+      hp.channelProfit += hb;
+      hp.items.push({customer:c.customer||'（未填客戶）', amount:hb, type:'煌獎金'});
+      hp.count++;
+      if(c.profitPaid) hp.paidCount++; else hp.unpaidCount++;
+    }
+    // 通路實拿是付給外部合作夥伴的錢，不歸屬於系統裡任何一位員工，不列進個人卡片
   });
   [...adToday, ...chToday].forEach(c=>{
     if(c.specialHandling && Number(c.specialFee)>0){
       const xp = ensure(xiaojiangName);
       xp.wizardHatFee += Number(c.specialFee)||0;
+      xp.items.push({customer:c.customer||'（未填客戶）', amount:Number(c.specialFee)||0, type:'巫師帽'});
       xp.count++;
       if(c.specialFeePaid) xp.paidCount++; else xp.unpaidCount++;
     }
@@ -2731,13 +2751,19 @@ function dailyBonusView(){
         </label>
       </div>
       <div class="stat-value ${isXj?'':'blue'}" style="font-size:26px;margin-bottom:8px;${isXj?'text-shadow:0 0 12px rgba(255,255,255,.4);':''}">${money(p.total)}</div>
-      <div style="font-size:12.5px;${isXj?'color:rgba(255,255,255,.85);':'color:var(--muted);'}line-height:1.8;">
+      <div style="font-size:12.5px;${isXj?'color:rgba(255,255,255,.85);':'color:var(--muted);'}line-height:1.8;margin-bottom:8px;">
         ${p.businessBonus?`業務獎金：${money(p.businessBonus)}<br/>`:''}
         ${p.xiaojiangBonus?`小江獎金：${money(p.xiaojiangBonus)}<br/>`:''}
-        ${p.channelProfit?`通路利潤：${money(p.channelProfit)}<br/>`:''}
+        ${p.channelProfit?`業務／通路線獎金：${money(p.channelProfit)}<br/>`:''}
         ${p.wizardHatFee?`${whIcon(14)} ${money(p.wizardHatFee)}<br/>`:''}
         共 ${p.count} 件
       </div>
+      ${p.items.length ? `<div style="border-top:1px solid ${isXj?'rgba(255,255,255,.25)':'var(--border)'};padding-top:8px;">
+        ${p.items.map(it=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px;${isXj?'color:rgba(255,255,255,.85);':'color:var(--muted);'}padding:2px 0;">
+          <span>${it.type==='巫師帽'?'🧙 ':''}${escHtml(it.customer)}</span>
+          <span style="font-weight:600;${isXj?'color:#fff;':'color:var(--ink);'}white-space:nowrap;">${money(it.amount)}</span>
+        </div>`).join('')}
+      </div>` : ''}
     </div>`;
   }).join('');
 
@@ -2936,9 +2962,20 @@ function channelCasesView(){
   let list = APP.data.casesChannel.slice();
   if(f.month) list = list.filter(c=>monthKey(c.date)===f.month);
   list = list.filter(c=>matchesSearch(c, APP.caseChannelSearch));
-  list = sortList(list, APP.casesChannelSort, ['afterCost','partnerProfit','companyProfit'].includes(APP.casesChannelSort.key)?'number':'text');
+  list = sortList(list, APP.casesChannelSort, ['afterCost','companyProfit'].includes(APP.casesChannelSort.key)?'number':'text');
   const monthOptions = Array.from(new Set([...APP.data.casesChannel.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
   const totalProfit = sum(list.map(c=>({amount:c.companyProfit})));
+
+  function bonusBreakdownHtml(c){
+    const parts = [];
+    const bb = channelCaseBusinessBonus(c);
+    const ct = channelCaseChannelTake(c);
+    const hb = channelCaseHuangBonus(c);
+    if(bb>0) parts.push(`<div>業務 ${money(bb)}</div>`);
+    if(ct>0) parts.push(`<div>通路 ${money(ct)}</div>`);
+    if(hb>0) parts.push(`<div>煌 ${money(hb)}</div>`);
+    return parts.length ? parts.join('') : '<span style="color:var(--muted);">—</span>';
+  }
 
   const rows = list.map(c=>`
     <tr>
@@ -2949,7 +2986,7 @@ function channelCasesView(){
       <td><span class="badge ${c.source==='直客'?'income':'expense'}">${escHtml(c.source||'—')}</span>${c.referrer?(' <span style="color:var(--muted);font-size:12px;">'+escHtml(c.referrer)+'</span>'):''}</td>
       <td>${money(c.afterCost)}</td>
       <td>${c.specialHandling?`${whIcon(15)} ${money(c.specialFee)}${c.specialFeePaid?' <span class="badge active">已入帳</span>':' <span class="badge pending">未入帳</span>'}`:''}</td>
-      <td>${money(c.partnerProfit)}</td>
+      <td style="font-size:12px;">${bonusBreakdownHtml(c)}</td>
       <td class="amount-pos">${money(c.companyProfit)}</td>
       <td>${c.profitPaid?'<span class="badge active">已發放</span>':'<span class="badge pending">未發放</span>'}</td>
       <td>${c.linkedTxId ? '<span class="badge active">已轉收支</span>' : (editable ? `<button class="btn ghost sm" data-action="post-channel-case" data-id="${c.id}">轉入收支明細</button>` : '')}</td>
@@ -2977,7 +3014,7 @@ function channelCasesView(){
     <div class="table-wrap">
       ${list.length===0?`<div class="empty">尚無獲利資料</div>`:`
       <table><thead><tr>
-        ${thSort('日期','date','casesChannelSort')}${thSort('客戶','customer','casesChannelSort')}${thSort('方案','plan','casesChannelSort')}${thSort('業務','staff','casesChannelSort')}${thSort('來源','source','casesChannelSort')}${thSort('扣除成本後','afterCost','casesChannelSort')}<th>${whIcon(14)}</th>${thSort('業務或通路利潤','partnerProfit','casesChannelSort')}${thSort('公司利潤','companyProfit','casesChannelSort')}<th>獎金</th><th></th>${editable?'<th></th>':''}
+        ${thSort('日期','date','casesChannelSort')}${thSort('客戶','customer','casesChannelSort')}${thSort('方案','plan','casesChannelSort')}${thSort('業務','staff','casesChannelSort')}${thSort('來源','source','casesChannelSort')}${thSort('扣除成本後','afterCost','casesChannelSort')}<th>${whIcon(14)}</th><th>獎金明細</th>${thSort('公司利潤','companyProfit','casesChannelSort')}<th>發放</th><th></th>${editable?'<th></th>':''}
       </tr></thead>
       <tbody>${rows}</tbody></table>`}
     </div>
@@ -2985,6 +3022,23 @@ function channelCasesView(){
 }
 
 /* ---- 業績牌位：依本月公司利潤貢獻判定，回傳邊框樣式設定 ---- */
+/* ---- 通路案件的獎金拆解（相容新格式三個獨立欄位／舊格式單一partnerProfit）---- */
+function channelCaseHasNewFields(c){
+  return c.businessBonusEnabled!==undefined || c.channelTakeEnabled!==undefined || c.huangBonusEnabled!==undefined;
+}
+function channelCaseBusinessBonus(c){
+  if(channelCaseHasNewFields(c)) return c.businessBonusEnabled ? (Number(c.businessBonus)||0) : 0;
+  return Number(c.partnerProfit)||0; // 舊資料相容：改版前的案件全部算在業務獎金
+}
+function channelCaseChannelTake(c){
+  return channelCaseHasNewFields(c) && c.channelTakeEnabled ? (Number(c.channelTake)||0) : 0;
+}
+function channelCaseHuangBonus(c){
+  return channelCaseHasNewFields(c) && c.huangBonusEnabled ? (Number(c.huangBonus)||0) : 0;
+}
+function channelCaseTotalPayout(c){
+  return channelCaseBusinessBonus(c) + channelCaseChannelTake(c) + channelCaseHuangBonus(c);
+}
 function computeRankTier(profitContribution){
   const cs = APP.data.caseSettings;
   const tiers = [
@@ -3946,7 +4000,7 @@ function buildFinanceContext(){
   const casesAdThis = APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey).slice().sort((a,b)=>b.date.localeCompare(a.date));
   const casesAdLines = casesAdThis.map(c=>`${c.date} ${c.customer||'未填'} 業務:${c.staff||'未填'} 方案:${c.plan||'未填'} 扣除成本後:${money(c.afterCost)} 業務獎金:${money(c.businessBonus)} ${cs.xiaojiangName||'小江'}獎金:${money(c.xiaojiangBonus)} 公司利潤:${money(c.companyProfit)} 獎金${c.bonusPaid?'已發放':'未發放'}${c.specialHandling?` 特殊處理費:${money(c.specialFee)}(${c.specialFeePaid?'已入帳':'未入帳'})`:''}`).join('\n');
   const casesChannelThis = APP.data.casesChannel.filter(c=>monthKey(c.date)===nowMonthKey).slice().sort((a,b)=>b.date.localeCompare(a.date));
-  const casesChannelLines = casesChannelThis.map(c=>`${c.date} ${c.customer||'未填'} 業務:${c.staff||'未填'} 來源:${c.source||'未填'}${c.referrer?('('+c.referrer+')'):''} 扣除成本後:${money(c.afterCost)} 業務或通路利潤:${money(c.partnerProfit)} 公司利潤:${money(c.companyProfit)} 利潤${c.profitPaid?'已發放':'未發放'}`).join('\n');
+  const casesChannelLines = casesChannelThis.map(c=>`${c.date} ${c.customer||'未填'} 業務:${c.staff||'未填'} 來源:${c.source||'未填'}${c.referrer?('('+c.referrer+')'):''} 扣除成本後:${money(c.afterCost)} 業務獎金:${money(channelCaseBusinessBonus(c))} 通路實拿:${money(channelCaseChannelTake(c))} 煌獎金:${money(channelCaseHuangBonus(c))} 公司利潤:${money(c.companyProfit)} 利潤${c.profitPaid?'已發放':'未發放'}`).join('\n');
 
   /* ---- 本月業務利潤排行 ---- */
   const profitByStaff = {};
@@ -4338,7 +4392,8 @@ document.addEventListener('click', (e)=>{
     }
     if(action==='pay-monthly-salaries'){
       const targets = APP.users.filter(u=>{
-        if(u.role!=='staffAdmin' && u.role!=='staffSales') return false;
+        const isEligibleRole = u.role==='staffAdmin' || u.role==='staffSales' || (u.role==='admin' && u.isXiaojiang);
+        if(!isEligibleRole) return false;
         const p = APP.staffProfiles[u.id]||{};
         return (p.baseSalary>0) && !((p.salaryPaidMonths||[]).includes(nowMonthKey));
       });
@@ -4702,7 +4757,7 @@ document.addEventListener('change', (e)=>{
       } else {
         rec.profitPaid = e.target.checked;
         if(rec.profitPaid && !rec.profitTxId){
-          postBonusPayoutToTransactions(rec, rec.partnerProfit, `業務或通路利潤發放（${rec.staff}／${rec.customer}）`);
+          postBonusPayoutToTransactions(rec, channelCaseTotalPayout(rec), `業務／通路獎金發放（${rec.staff}／${rec.customer}）`);
           rec.profitTxId = rec.bonusTxId;
         }
         saveCasesChannel();
@@ -4720,7 +4775,12 @@ document.addEventListener('change', (e)=>{
     const adMatches = isXj
       ? APP.data.casesAd.filter(c=>c.date===d && (Number(c.xiaojiangBonus)||0)>0)
       : APP.data.casesAd.filter(c=>c.date===d && c.staff===name);
-    const chMatches = isXj ? [] : APP.data.casesChannel.filter(c=>c.date===d && c.staff===name);
+    const chMatches = isXj ? [] : APP.data.casesChannel.filter(c=>{
+      if(c.date!==d) return false;
+      if(c.staff===name && channelCaseBusinessBonus(c)>0) return true;
+      if(name==='煌' && channelCaseHuangBonus(c)>0) return true;
+      return false;
+    });
     const wizardMatches = isXj
       ? [...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>c.date===d && c.specialHandling && Number(c.specialFee)>0)
       : [];
@@ -4733,7 +4793,7 @@ document.addEventListener('change', (e)=>{
     chMatches.forEach(c=>{
       c.profitPaid = checked;
       if(checked && !c.profitTxId){
-        postBonusPayoutToTransactions(c, c.partnerProfit, `業務或通路利潤發放（${c.staff}／${c.customer}）`);
+        postBonusPayoutToTransactions(c, channelCaseTotalPayout(c), `業務／通路獎金發放（${c.staff}／${c.customer}）`);
         c.profitTxId = c.bonusTxId;
       }
     });
