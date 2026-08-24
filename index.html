@@ -1025,6 +1025,8 @@ function dashboardHTML(){
     if(bb>0){ const k = c.staff||'（未填）'; todayByPerson[k] = (todayByPerson[k]||0) + bb; }
     const hb = channelCaseHuangBonus(c);
     if(hb>0){ todayByPerson['煌'] = (todayByPerson['煌']||0) + hb; }
+    const ct = channelCaseChannelTake(c);
+    if(ct>0){ const ck = c.referrer||c.staff||'（未填通路夥伴）'; todayByPerson[ck] = (todayByPerson[ck]||0) + ct; }
   });
   [...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>c.date===todayStr() && c.specialHandling && Number(c.specialFee)>0).forEach(c=>{
     todayByPerson[xiaojiangNameForToday] = (todayByPerson[xiaojiangNameForToday]||0) + Number(c.specialFee);
