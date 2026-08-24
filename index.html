@@ -749,7 +749,7 @@ function deleteBonusLedgerEntry(id){ return deleteDoc(doc(db,'staffBonusLedger',
 function getCleanBonusLedger(){
   const validIds = new Set();
   APP.data.casesAd.forEach(c=>{ validIds.add(c.id); validIds.add('xj-'+c.id); validIds.add('wiz-'+c.id); });
-  APP.data.casesChannel.forEach(c=>{ validIds.add('ch-'+c.id); validIds.add('wiz-'+c.id); });
+  APP.data.casesChannel.forEach(c=>{ validIds.add('ch-'+c.id); validIds.add('huang-'+c.id); validIds.add('wiz-'+c.id); });
   return APP.data.staffBonusLedger.filter(e=>validIds.has(e.id));
 }
 function syncWizardHatLedger(caseId, date, customer, fee){
@@ -3382,7 +3382,13 @@ function openProgressChannelModal(existing){
 }
 
 function openAdCaseModal(existing){
-  const c = existing || {date:todayStr(), customer:'', plan:'', staff:'', afterCost:'', businessBonus:0, businessBonusOverride:false, xiaojiangBonus:0, xiaojiangBonusOverride:false, companyProfit:0, note:'', bonusPaid:false, specialHandling:false, specialFee:0};
+  const c = existing || {date:todayStr(), customer:'', plan:'', staff:'', approvedAmount:'', deductionPercent:'', setupFee:'', withholding:'', disbursement:'', afterCost:0, businessBonus:0, businessBonusOverride:false, xiaojiangBonus:0, xiaojiangBonusOverride:false, companyProfit:0, note:'', bonusPaid:false, specialHandling:false, specialFee:0};
+  if(existing && c.approvedAmount===undefined){
+    // 相容改版前建立的舊資料：沒有核准金額／內扣趴數／開辦費欄位，用既有的扣除成本後金額當作核准金額、其餘預設0，避免編輯時顯示空白歸零
+    c.approvedAmount = c.afterCost || 0;
+    c.deductionPercent = 0;
+    c.setupFee = 0;
+  }
   document.getElementById('modal-overlay').style.display = 'flex';
   document.getElementById('modal-box').innerHTML = `
     <div class="modal-head"><h3>${existing?'編輯獲利紀錄':'新增獲利紀錄'}（廣告線）</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
@@ -3393,28 +3399,59 @@ function openAdCaseModal(existing){
         <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
         <label class="field"><span>負責業務</span><select name="staff">${selectOptionsHtml(APP.data.caseSettings.staffOptions, c.staff)}</select></label>
       </div>
-      <label class="field"><span>扣除成本後金額</span><input type="number" id="ac-afterCost" name="afterCost" value="${c.afterCost}" required/></label>
+
+      <div class="field" style="border:2px solid var(--border);border-radius:12px;padding:14px;background:#F8F9FC;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:10px;">① 成本記錄區</div>
+        <label class="field" style="margin:0 0 12px;"><span>客戶核准金額</span><input type="number" id="ac-approvedAmount" value="${c.approvedAmount}" required/></label>
+
+        <div style="border-top:1px dashed var(--border);padding-top:10px;margin-bottom:10px;">
+          <span style="font-size:12.5px;color:var(--muted);">內扣趴數</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+            <button type="button" class="ac-percent-btn" data-percent="10" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;">10%</button>
+            <button type="button" class="ac-percent-btn" data-percent="15" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;">15%</button>
+            <button type="button" class="ac-percent-btn" data-percent="21" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;">21%</button>
+            <input type="number" id="ac-deductionPercent" value="${c.deductionPercent||''}" placeholder="自訂趴數" step="0.1" style="width:110px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;"/>
+            <span style="align-self:center;font-size:12.5px;color:var(--muted);">%（意外狀況可自行輸入）</span>
+          </div>
+          <div style="margin-top:8px;font-size:12px;color:var(--muted);">內扣比例金額：<span id="ac-deductionAmount-display" style="font-weight:700;color:var(--ink);">${money(0)}</span>（核准金額 × 趴數，直接從核准金額扣除）</div>
+        </div>
+
+        <label class="field" style="margin:0 0 10px;"><span>開辦費（手動輸入，金額不固定，直接從核准金額扣除）</span><input type="number" id="ac-setupFee" value="${c.setupFee||0}"/></label>
+        <label class="field" style="margin:0 0 10px;"><span>代扣（選填，直接從核准金額扣除）</span><input type="number" id="ac-withholding" value="${c.withholding||''}" placeholder="非必填"/></label>
+
+        <div style="border-top:1px dashed var(--border);padding-top:10px;margin-bottom:10px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:6px;"><input type="checkbox" id="ac-special" ${c.specialHandling?'checked':''}/><span style="display:flex;align-items:center;">${whIcon(18)}</span></label>
+          <input type="number" id="ac-specialFee" value="${c.specialFee||0}" placeholder="巫師帽費用" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;${c.specialHandling?'':'display:none;'}"/>
+        </div>
+        <label class="field" style="margin:0 0 10px;"><span>撥款金額（手動輸入，金額不固定）</span><input type="number" id="ac-disbursement" value="${c.disbursement||0}"/></label>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12.5px;color:var(--muted);">扣除成本後金額（核准金額－內扣比例金額－開辦費－代扣－巫師帽－撥款金額）</span>
+          <span id="ac-afterCost-display" style="font-size:20px;font-weight:800;color:var(--ink);">${money(0)}</span>
+        </div>
+      </div>
+
+      <div style="font-weight:700;font-size:13px;margin:16px 0 8px;">② 獎金計算區</div>
       <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <span style="font-size:12.5px;color:var(--muted);">業務獎金</span>
+          <span style="font-size:12.5px;color:var(--muted);">業務獎金（扣除成本後金額的 ${(APP.data.caseSettings.businessBonusRate*100).toFixed(0)}%）</span>
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;"><input type="checkbox" id="ac-bb-override" ${c.businessBonusOverride?'checked':''}/>手動調整</label>
         </div>
         <input type="number" id="ac-businessBonus" value="${c.businessBonus}" ${c.businessBonusOverride?'':'readonly'} style="margin-top:6px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"/>
       </div>
       <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <span style="font-size:12.5px;color:var(--muted);">小江獎金</span>
+          <span style="font-size:12.5px;color:var(--muted);">${escHtml(APP.data.caseSettings.xiaojiangName||'小江')}獎金（當月前 ${APP.data.caseSettings.xiaojiangThreshold} 件 ${(APP.data.caseSettings.xiaojiangRateBelow*100).toFixed(0)}%，之後 ${(APP.data.caseSettings.xiaojiangRateAbove*100).toFixed(0)}%）</span>
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;"><input type="checkbox" id="ac-xj-override" ${c.xiaojiangBonusOverride?'checked':''}/>手動調整</label>
         </div>
         <input type="number" id="ac-xiaojiangBonus" value="${c.xiaojiangBonus}" ${c.xiaojiangBonusOverride?'':'readonly'} style="margin-top:6px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;"/>
       </div>
-      <label class="field"><span>公司利潤</span>
-        <div id="ac-companyProfit-display" style="font-size:18px;font-weight:700;color:var(--blue);">${money(c.companyProfit||0)}</div>
-      </label>
-      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:#FDF7EC;">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="ac-special" ${c.specialHandling?'checked':''}/><span style="display:flex;align-items:center;">${whIcon(18)}</span></label>
-        <input type="number" id="ac-specialFee" value="${c.specialFee||0}" placeholder="特殊處理費用" style="margin-top:8px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;${c.specialHandling?'':'display:none;'}"/>
+
+      <div style="font-weight:700;font-size:13px;margin:16px 0 8px;">③ 公司利潤</div>
+      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:12px;background:#EEF1FB;">
+        <div id="ac-companyProfit-display" style="font-size:22px;font-weight:800;color:var(--navy);">${money(c.companyProfit||0)}</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">扣除成本後金額－業務獎金－${escHtml(APP.data.caseSettings.xiaojiangName||'小江')}獎金</div>
       </div>
+
       <label class="field checkbox"><input type="checkbox" name="bonusPaid" ${c.bonusPaid?'checked':''}/><span>獎金發放完成</span></label>
       <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
       <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button><button type="submit" class="btn primary">儲存</button></div>
@@ -3425,12 +3462,32 @@ function openAdCaseModal(existing){
     recalcPreview();
   });
   document.getElementById('ac-specialFee').addEventListener('input', recalcPreview);
+  document.querySelectorAll('.ac-percent-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.getElementById('ac-deductionPercent').value = btn.dataset.percent;
+      recalcPreview();
+    });
+  });
 
   function recalcPreview(){
-    const afterCost = Number(document.getElementById('ac-afterCost').value)||0;
+    const approvedAmount = Number(document.getElementById('ac-approvedAmount').value)||0;
+    const deductionPercent = Number(document.getElementById('ac-deductionPercent').value)||0;
+    const setupFee = Number(document.getElementById('ac-setupFee').value)||0;
+    const deductionAmount = approvedAmount * (deductionPercent/100);
+    document.getElementById('ac-deductionAmount-display').textContent = money(deductionAmount);
+    document.querySelectorAll('.ac-percent-btn').forEach(btn=>{
+      const active = Number(btn.dataset.percent)===deductionPercent;
+      btn.style.background = active ? 'var(--navy)' : '#fff';
+      btn.style.color = active ? '#fff' : 'var(--ink)';
+      btn.style.borderColor = active ? 'var(--navy)' : 'var(--border)';
+    });
     const specialOn = document.getElementById('ac-special').checked;
     const specialFee = specialOn ? (Number(document.getElementById('ac-specialFee').value)||0) : 0;
-    const base = afterCost - specialFee;
+    const withholding = Number(document.getElementById('ac-withholding').value)||0;
+    const disbursement = Number(document.getElementById('ac-disbursement').value)||0;
+    const afterCost = approvedAmount - deductionAmount - setupFee - withholding - specialFee - disbursement;
+    document.getElementById('ac-afterCost-display').textContent = money(afterCost);
+    const base = afterCost;
     const bbOverride = document.getElementById('ac-bb-override').checked;
     const xjOverride = document.getElementById('ac-xj-override').checked;
     const bbInput = document.getElementById('ac-businessBonus');
@@ -3447,16 +3504,23 @@ function openAdCaseModal(existing){
     const xj = Number(xjInput.value)||0;
     document.getElementById('ac-companyProfit-display').textContent = money(base - bb - xj);
   }
-  ['ac-afterCost','ac-businessBonus','ac-xiaojiangBonus'].forEach(id=>document.getElementById(id).addEventListener('input', recalcPreview));
+  ['ac-approvedAmount','ac-deductionPercent','ac-setupFee','ac-withholding','ac-disbursement','ac-businessBonus','ac-xiaojiangBonus'].forEach(id=>document.getElementById(id).addEventListener('input', recalcPreview));
   ['ac-bb-override','ac-xj-override'].forEach(id=>document.getElementById(id).addEventListener('change', recalcPreview));
+  recalcPreview();
 
   document.getElementById('ad-case-form').addEventListener('submit', (e)=>{
     e.preventDefault();
     const fd = new FormData(e.target);
-    const afterCost = Number(fd.get('afterCost'))||0;
+    const approvedAmount = Number(document.getElementById('ac-approvedAmount').value)||0;
+    const deductionPercent = Number(document.getElementById('ac-deductionPercent').value)||0;
+    const setupFee = Number(document.getElementById('ac-setupFee').value)||0;
+    const deductionAmount = approvedAmount * (deductionPercent/100);
     const specialHandling = document.getElementById('ac-special').checked;
     const specialFee = specialHandling ? (Number(document.getElementById('ac-specialFee').value)||0) : 0;
-    const base = afterCost - specialFee;
+    const withholding = Number(document.getElementById('ac-withholding').value)||0;
+    const disbursement = Number(document.getElementById('ac-disbursement').value)||0;
+    const afterCost = approvedAmount - deductionAmount - setupFee - withholding - specialFee - disbursement;
+    const base = afterCost;
     const businessBonusOverride = document.getElementById('ac-bb-override').checked;
     const xiaojiangBonusOverride = document.getElementById('ac-xj-override').checked;
     const businessBonus = Number(document.getElementById('ac-businessBonus').value)||0;
@@ -3464,7 +3528,7 @@ function openAdCaseModal(existing){
     const companyProfit = base - businessBonus - xiaojiangBonus;
     const data = {
       date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'),
-      staff: fd.get('staff'), afterCost, businessBonus, businessBonusOverride,
+      staff: fd.get('staff'), approvedAmount, deductionPercent, setupFee, deductionAmount, withholding, disbursement, afterCost, businessBonus, businessBonusOverride,
       xiaojiangBonus, xiaojiangBonusOverride, companyProfit, bonusPaid: fd.get('bonusPaid')==='on', note: fd.get('note'),
       specialHandling, specialFee
     };
@@ -3487,69 +3551,215 @@ function openAdCaseModal(existing){
 }
 
 function openChannelCaseModal(existing){
-  const c = existing || {date:todayStr(), customer:'', plan:'', staff:'', source:'直客', referrer:'', afterCost:'', partnerProfit:'', companyProfit:0, note:'', profitPaid:false, specialHandling:false, specialFee:0};
+  const c = existing || {date:todayStr(), customer:'', plan:'', staff:'', source:'直客', referrer:'',
+    approvedAmount:'', deductionPercent:'', setupFee:'', withholding:'', disbursement:'', afterCost:0,
+    businessBonusEnabled:false, businessBonus:0, channelTakeEnabled:false, channelTake:0, huangBonusEnabled:false, huangBonus:0,
+    companyProfit:0, note:'', profitPaid:false, specialHandling:false, specialFee:0};
+  if(existing && c.approvedAmount===undefined){
+    // 相容改版前建立的舊資料：沒有核准金額等新欄位，用既有的扣除成本後金額當作核准金額，原本的「業務或通路利潤」搬進業務獎金欄位並打開勾選，其餘預設0，避免編輯時顯示空白歸零
+    c.approvedAmount = c.afterCost || 0;
+    c.deductionPercent = 0; c.setupFee = 0; c.withholding = 0; c.disbursement = 0;
+    c.businessBonusEnabled = (Number(c.partnerProfit)||0) !== 0;
+    c.businessBonus = c.partnerProfit || 0;
+    c.channelTakeEnabled = false; c.channelTake = 0;
+    c.huangBonusEnabled = false; c.huangBonus = 0;
+  }
   document.getElementById('modal-overlay').style.display = 'flex';
   document.getElementById('modal-box').innerHTML = `
     <div class="modal-head"><h3>${existing?'編輯獲利紀錄':'新增獲利紀錄'}（業務／通路線）</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
     <form id="channel-case-form">
       <div class="grid grid-2">
-        <label class="field"><span>日期</span><input type="date" name="date" value="${c.date}" required/></label>
+        <label class="field"><span>日期</span><input type="date" name="date" id="cc-date" value="${c.date}" required/></label>
         <label class="field"><span>客戶姓名</span><input type="text" name="customer" value="${escAttr(c.customer)}" required/></label>
         <label class="field"><span>送件方案</span><select name="plan">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select></label>
         <label class="field"><span>業務／通路</span>${staffOrChannelFieldHtml('staff', c.staff)}</label>
         <label class="field"><span>來源</span><select name="source"><option value="直客" ${c.source==='直客'?'selected':''}>直客</option><option value="通路" ${c.source==='通路'?'selected':''}>通路</option></select></label>
         <label class="field"><span>備註（有無通路等說明）</span><input type="text" name="referrer" value="${escAttr(c.referrer)}" placeholder="選填"/></label>
       </div>
-      <label class="field"><span>扣除成本後金額</span><input type="number" id="cc-afterCost" value="${c.afterCost}" required/></label>
-      <label class="field"><span>業務或通路利潤</span><input type="number" id="cc-partnerProfit" value="${c.partnerProfit}"/></label>
-      <label class="field"><span>公司利潤</span>
-        <div id="cc-companyProfit-display" style="font-size:18px;font-weight:700;color:var(--blue);">${money(c.companyProfit||0)}</div>
-      </label>
-      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:#FDF7EC;">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="cc-special" ${c.specialHandling?'checked':''}/><span style="display:flex;align-items:center;">${whIcon(18)}</span></label>
-        <input type="number" id="cc-specialFee" value="${c.specialFee||0}" placeholder="特殊處理費用" style="margin-top:8px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;${c.specialHandling?'':'display:none;'}"/>
+
+      <div class="field" style="border:2px solid var(--border);border-radius:12px;padding:14px;background:#F8F9FC;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:10px;">① 成本記錄區</div>
+        <label class="field" style="margin:0 0 12px;"><span>客戶核准金額</span><input type="number" id="cc-approvedAmount" value="${c.approvedAmount}" required/></label>
+
+        <div style="border-top:1px dashed var(--border);padding-top:10px;margin-bottom:10px;">
+          <span style="font-size:12.5px;color:var(--muted);">內扣趴數</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+            <button type="button" class="cc-percent-btn" data-percent="10" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;">10%</button>
+            <button type="button" class="cc-percent-btn" data-percent="15" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;">15%</button>
+            <button type="button" class="cc-percent-btn" data-percent="21" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:13px;">21%</button>
+            <input type="number" id="cc-deductionPercent" value="${c.deductionPercent||''}" placeholder="自訂趴數" step="0.1" style="width:110px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;"/>
+            <span style="align-self:center;font-size:12.5px;color:var(--muted);">%（意外狀況可自行輸入）</span>
+          </div>
+          <div style="margin-top:8px;font-size:12px;color:var(--muted);">內扣比例金額：<span id="cc-deductionAmount-display" style="font-weight:700;color:var(--ink);">${money(0)}</span>（核准金額 × 趴數，直接從核准金額扣除）</div>
+        </div>
+
+        <label class="field" style="margin:0 0 10px;"><span>開辦費（手動輸入，金額不固定，直接從核准金額扣除）</span><input type="number" id="cc-setupFee" value="${c.setupFee||0}"/></label>
+        <label class="field" style="margin:0 0 10px;"><span>代扣（選填，直接從核准金額扣除）</span><input type="number" id="cc-withholding" value="${c.withholding||''}" placeholder="非必填"/></label>
+
+        <div style="border-top:1px dashed var(--border);padding-top:10px;margin-bottom:10px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:6px;"><input type="checkbox" id="cc-special" ${c.specialHandling?'checked':''}/><span style="display:flex;align-items:center;">${whIcon(18)}</span></label>
+          <input type="number" id="cc-specialFee" value="${c.specialFee||0}" placeholder="巫師帽費用" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;${c.specialHandling?'':'display:none;'}"/>
+        </div>
+        <label class="field" style="margin:0 0 10px;"><span>撥款金額（手動輸入，金額不固定）</span><input type="number" id="cc-disbursement" value="${c.disbursement||0}"/></label>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12.5px;color:var(--muted);">扣除成本後金額（核准金額－內扣比例金額－開辦費－代扣－巫師帽－撥款金額）</span>
+          <span id="cc-afterCost-display" style="font-size:20px;font-weight:800;color:var(--ink);">${money(0)}</span>
+        </div>
       </div>
+
+      <div style="font-weight:700;font-size:13px;margin:16px 0 8px;">② 獎金計算區（三項各自獨立，可以同時勾選也可以只選其中一個）</div>
+      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:12px;">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="cc-bb-enabled" ${c.businessBonusEnabled?'checked':''} style="width:18px;height:18px;flex-shrink:0;margin-top:2px;"/>
+          <span>
+            <div style="font-size:13.5px;font-weight:700;">業務獎金</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">扣除成本後金額的 40%，勾選後仍可自行改數字</div>
+          </span>
+        </label>
+        <input type="number" id="cc-businessBonus" value="${c.businessBonus}" style="margin-top:10px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;${c.businessBonusEnabled?'':'display:none;'}"/>
+      </div>
+      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:12px;">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="cc-ct-enabled" ${c.channelTakeEnabled?'checked':''} style="width:18px;height:18px;flex-shrink:0;margin-top:2px;"/>
+          <span>
+            <div style="font-size:13.5px;font-weight:700;">通路實拿</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">扣除成本後金額的 40%，勾選後仍可自行改數字</div>
+          </span>
+        </label>
+        <input type="number" id="cc-channelTake" value="${c.channelTake}" style="margin-top:10px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;${c.channelTakeEnabled?'':'display:none;'}"/>
+      </div>
+      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:12px;">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="cc-hb-enabled" ${c.huangBonusEnabled?'checked':''} style="width:18px;height:18px;flex-shrink:0;margin-top:2px;"/>
+          <span>
+            <div style="font-size:13.5px;font-weight:700;">煌獎金</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">扣除成本後金額的 50%，固定發給「煌」本人，勾選後仍可自行改數字</div>
+          </span>
+        </label>
+        <input type="number" id="cc-huangBonus" value="${c.huangBonus}" style="margin-top:10px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;${c.huangBonusEnabled?'':'display:none;'}"/>
+      </div>
+
+      <div style="font-weight:700;font-size:13px;margin:16px 0 8px;">③ 公司利潤</div>
+      <div class="field" style="border:1px solid var(--border);border-radius:10px;padding:12px;background:#EEF1FB;">
+        <div id="cc-companyProfit-display" style="font-size:22px;font-weight:800;color:var(--navy);">${money(c.companyProfit||0)}</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">扣除成本後金額－已勾選的獎金項目合計</div>
+      </div>
+
       <label class="field checkbox"><input type="checkbox" name="profitPaid" ${c.profitPaid?'checked':''}/><span>利潤已發放</span></label>
       <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
       <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button><button type="submit" class="btn primary">儲存</button></div>
     </form>`;
+
   document.getElementById('cc-special').addEventListener('change', function(){
     document.getElementById('cc-specialFee').style.display = this.checked ? '' : 'none';
     recalc();
   });
   document.getElementById('cc-specialFee').addEventListener('input', recalc);
+  document.querySelectorAll('.cc-percent-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.getElementById('cc-deductionPercent').value = btn.dataset.percent;
+      recalc();
+    });
+  });
+  document.getElementById('cc-bb-enabled').addEventListener('change', function(){
+    document.getElementById('cc-businessBonus').style.display = this.checked ? '' : 'none';
+    recalc();
+  });
+  document.getElementById('cc-ct-enabled').addEventListener('change', function(){
+    document.getElementById('cc-channelTake').style.display = this.checked ? '' : 'none';
+    recalc();
+  });
+  document.getElementById('cc-hb-enabled').addEventListener('change', function(){
+    document.getElementById('cc-huangBonus').style.display = this.checked ? '' : 'none';
+    recalc();
+  });
+
   function recalc(){
-    const ac = Number(document.getElementById('cc-afterCost').value)||0;
-    const pp = Number(document.getElementById('cc-partnerProfit').value)||0;
+    const approvedAmount = Number(document.getElementById('cc-approvedAmount').value)||0;
+    const deductionPercent = Number(document.getElementById('cc-deductionPercent').value)||0;
+    const setupFee = Number(document.getElementById('cc-setupFee').value)||0;
+    const withholding = Number(document.getElementById('cc-withholding').value)||0;
+    const deductionAmount = approvedAmount * (deductionPercent/100);
+    document.getElementById('cc-deductionAmount-display').textContent = money(deductionAmount);
+    document.querySelectorAll('.cc-percent-btn').forEach(btn=>{
+      const active = Number(btn.dataset.percent)===deductionPercent;
+      btn.style.background = active ? 'var(--navy)' : '#fff';
+      btn.style.color = active ? '#fff' : 'var(--ink)';
+      btn.style.borderColor = active ? 'var(--navy)' : 'var(--border)';
+    });
     const specialOn = document.getElementById('cc-special').checked;
     const specialFee = specialOn ? (Number(document.getElementById('cc-specialFee').value)||0) : 0;
-    document.getElementById('cc-companyProfit-display').textContent = money(ac - specialFee - pp);
+    const disbursement = Number(document.getElementById('cc-disbursement').value)||0;
+    const afterCost = approvedAmount - deductionAmount - setupFee - withholding - specialFee - disbursement;
+    document.getElementById('cc-afterCost-display').textContent = money(afterCost);
+
+    const bbEnabled = document.getElementById('cc-bb-enabled').checked;
+    const ctEnabled = document.getElementById('cc-ct-enabled').checked;
+    const hbEnabled = document.getElementById('cc-hb-enabled').checked;
+    const bbInput = document.getElementById('cc-businessBonus');
+    const ctInput = document.getElementById('cc-channelTake');
+    const hbInput = document.getElementById('cc-huangBonus');
+    if(bbEnabled && bbInput.dataset.touched!=='1') bbInput.value = Math.round(afterCost*0.4);
+    if(ctEnabled && ctInput.dataset.touched!=='1') ctInput.value = Math.round(afterCost*0.4);
+    if(hbEnabled && hbInput.dataset.touched!=='1') hbInput.value = Math.round(afterCost*0.5);
+
+    const bb = bbEnabled ? (Number(bbInput.value)||0) : 0;
+    const ct = ctEnabled ? (Number(ctInput.value)||0) : 0;
+    const hb = hbEnabled ? (Number(hbInput.value)||0) : 0;
+    document.getElementById('cc-companyProfit-display').textContent = money(afterCost - bb - ct - hb);
   }
-  document.getElementById('cc-afterCost').addEventListener('input', recalc);
-  document.getElementById('cc-partnerProfit').addEventListener('input', recalc);
+  ['cc-approvedAmount','cc-deductionPercent','cc-setupFee','cc-withholding','cc-disbursement'].forEach(id=>document.getElementById(id).addEventListener('input', recalc));
+  ['cc-businessBonus','cc-channelTake','cc-huangBonus'].forEach(id=>document.getElementById(id).addEventListener('input', function(){ this.dataset.touched='1'; recalc(); }));
+  recalc();
+
   document.getElementById('channel-case-form').addEventListener('submit',(e)=>{
     e.preventDefault();
     const fd = new FormData(e.target);
-    const afterCost = Number(document.getElementById('cc-afterCost').value)||0;
-    const partnerProfit = Number(document.getElementById('cc-partnerProfit').value)||0;
+    const approvedAmount = Number(document.getElementById('cc-approvedAmount').value)||0;
+    const deductionPercent = Number(document.getElementById('cc-deductionPercent').value)||0;
+    const setupFee = Number(document.getElementById('cc-setupFee').value)||0;
+    const withholding = Number(document.getElementById('cc-withholding').value)||0;
+    const deductionAmount = approvedAmount * (deductionPercent/100);
     const specialHandling = document.getElementById('cc-special').checked;
     const specialFee = specialHandling ? (Number(document.getElementById('cc-specialFee').value)||0) : 0;
+    const disbursement = Number(document.getElementById('cc-disbursement').value)||0;
+    const afterCost = approvedAmount - deductionAmount - setupFee - withholding - specialFee - disbursement;
+
+    const businessBonusEnabled = document.getElementById('cc-bb-enabled').checked;
+    const channelTakeEnabled = document.getElementById('cc-ct-enabled').checked;
+    const huangBonusEnabled = document.getElementById('cc-hb-enabled').checked;
+    const businessBonus = businessBonusEnabled ? (Number(document.getElementById('cc-businessBonus').value)||0) : 0;
+    const channelTake = channelTakeEnabled ? (Number(document.getElementById('cc-channelTake').value)||0) : 0;
+    const huangBonus = huangBonusEnabled ? (Number(document.getElementById('cc-huangBonus').value)||0) : 0;
+    const companyProfit = afterCost - businessBonus - channelTake - huangBonus;
+
     const data = {
       date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'), staff: fd.get('staff'),
       source: fd.get('source'), referrer: fd.get('referrer'), profitPaid: fd.get('profitPaid')==='on',
-      afterCost, partnerProfit, companyProfit: (afterCost - specialFee) - partnerProfit, note: fd.get('note'),
-      specialHandling, specialFee
+      approvedAmount, deductionPercent, setupFee, deductionAmount, withholding, disbursement, afterCost,
+      businessBonusEnabled, businessBonus, channelTakeEnabled, channelTake, huangBonusEnabled, huangBonus,
+      companyProfit, note: fd.get('note'), specialHandling, specialFee
     };
     const wasPaidBefore = existing ? !!existing.profitPaid : false;
     const chCaseId = existing ? existing.id : uid();
     if(existing) Object.assign(existing, stamp(data));
     else APP.data.casesChannel.push(stamp({id:chCaseId, linkedTxId:null, profitTxId:null, ...data}));
     const chRec = existing || APP.data.casesChannel[APP.data.casesChannel.length-1];
-    if(data.profitPaid && !wasPaidBefore && !chRec.profitTxId){
-      postBonusPayoutToTransactions(chRec, partnerProfit, `業務或通路利潤發放（${data.staff}／${data.customer}）`);
+    const totalPayout = businessBonus + channelTake + huangBonus;
+    if(data.profitPaid && !wasPaidBefore && !chRec.profitTxId && totalPayout>0){
+      postBonusPayoutToTransactions(chRec, totalPayout, `業務／通路獎金發放（${data.staff}／${data.customer}）`);
       chRec.profitTxId = chRec.bonusTxId; // reuse same tx-id field set by helper
     }
-    saveBonusLedgerEntry(stamp({ id:'ch-'+chCaseId, staffName:data.staff, date:data.date, businessBonus:partnerProfit, xiaojiangBonus:0, customer:data.customer }));
+    if(businessBonus>0){
+      saveBonusLedgerEntry(stamp({ id:'ch-'+chCaseId, staffName:data.staff, date:data.date, businessBonus, xiaojiangBonus:0, customer:data.customer }));
+    } else {
+      deleteBonusLedgerEntry('ch-'+chCaseId);
+    }
+    if(huangBonus>0){
+      saveBonusLedgerEntry(stamp({ id:'huang-'+chCaseId, staffName:'煌', date:data.date, businessBonus:huangBonus, xiaojiangBonus:0, customer:data.customer }));
+    } else {
+      deleteBonusLedgerEntry('huang-'+chCaseId);
+    }
     syncWizardHatLedger(chCaseId, data.date, data.customer, specialFee);
     saveCasesChannel(); closeModal();
   });
@@ -4090,7 +4300,7 @@ document.addEventListener('click', (e)=>{
     if(action==='scan-orphan-ledger'){
       const validIds = new Set();
       APP.data.casesAd.forEach(c=>{ validIds.add(c.id); validIds.add('xj-'+c.id); validIds.add('wiz-'+c.id); });
-      APP.data.casesChannel.forEach(c=>{ validIds.add('ch-'+c.id); validIds.add('wiz-'+c.id); });
+      APP.data.casesChannel.forEach(c=>{ validIds.add('ch-'+c.id); validIds.add('huang-'+c.id); validIds.add('wiz-'+c.id); });
       const orphans = APP.data.staffBonusLedger.filter(e=>!validIds.has(e.id));
       const resultDiv = document.getElementById('orphan-ledger-result');
       if(!resultDiv) return;
@@ -4228,6 +4438,7 @@ document.addEventListener('click', (e)=>{
       openConfirm('確定要刪除這筆案件資料嗎？', ()=>{
         APP.data.casesChannel = APP.data.casesChannel.filter(x=>x.id!==caseId); saveCasesChannel();
         deleteBonusLedgerEntry('ch-'+caseId);
+        deleteBonusLedgerEntry('huang-'+caseId);
         deleteBonusLedgerEntry('wiz-'+caseId);
       }); return;
     }
