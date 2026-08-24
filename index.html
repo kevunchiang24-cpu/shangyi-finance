@@ -2717,7 +2717,15 @@ function dailyBonusView(){
       hp.count++;
       if(c.profitPaid) hp.paidCount++; else hp.unpaidCount++;
     }
-    // 通路實拿是付給外部合作夥伴的錢，不歸屬於系統裡任何一位員工，不列進個人卡片
+    const ct = channelCaseChannelTake(c);
+    if(ct>0){
+      const ctName = c.referrer || c.staff || '（未填通路夥伴）';
+      const ctp = ensure(ctName);
+      ctp.channelProfit += ct;
+      ctp.items.push({customer:c.customer||'（未填客戶）', amount:ct, type:'通路實拿'});
+      ctp.count++;
+      if(c.profitPaid) ctp.paidCount++; else ctp.unpaidCount++;
+    }
   });
   [...adToday, ...chToday].forEach(c=>{
     if(c.specialHandling && Number(c.specialFee)>0){
@@ -4779,6 +4787,7 @@ document.addEventListener('change', (e)=>{
       if(c.date!==d) return false;
       if(c.staff===name && channelCaseBusinessBonus(c)>0) return true;
       if(name==='煌' && channelCaseHuangBonus(c)>0) return true;
+      if((c.referrer||c.staff)===name && channelCaseChannelTake(c)>0) return true;
       return false;
     });
     const wizardMatches = isXj
