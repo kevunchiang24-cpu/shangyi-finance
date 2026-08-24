@@ -2744,16 +2744,21 @@ function dailyBonusView(){
   const totalUnpaid = people.reduce((a,p)=>a+p.unpaidCount,0);
 
   const cards = people.map(p=>{
-    const uidMatch = (APP.users.find(u=>u.staffName===p.name)||{}).id;
-    const disp = uidMatch ? displayNameFor(uidMatch, p.name) : p.name;
     const isXj = p.name===xiaojiangName;
+    const xjUser = isXj ? APP.users.find(u=>u.isXiaojiang) : null;
+    const uidMatch = xjUser ? xjUser.id : (APP.users.find(u=>u.staffName===p.name)||{}).id;
+    const disp = uidMatch ? displayNameFor(uidMatch, p.name) : p.name;
+    const hasRealAvatar = uidMatch && ((APP.publicProfiles[uidMatch]||{}).avatarDataUrl || (APP.staffProfiles[uidMatch]||{}).avatarDataUrl);
     const allPaid = p.unpaidCount===0;
     const statusText = allPaid ? '全部已發放' : (p.paidCount===0 ? '尚未發放' : `部分已發放（${p.paidCount}/${p.count}）`);
     return `<div class="card${isXj?' aurora-card':''}"${isXj?' style="color:#fff;border:none;"':''}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
         <div style="display:flex;align-items:center;gap:10px;">
-          ${isXj ? `<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:18px;">🌌</div>` : (uidMatch ? avatarHtml(uidMatch, disp, 36) : `<div style="width:36px;height:36px;border-radius:50%;background:var(--muted);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">${escHtml((p.name||'?').charAt(0))}</div>`)}
-          <h3 style="margin:0;">${escHtml(disp)}</h3>
+          ${(isXj && !hasRealAvatar) ? `<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:18px;">🌌</div>` : (uidMatch ? avatarHtml(uidMatch, disp, 36) : `<div style="width:36px;height:36px;border-radius:50%;background:var(--muted);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">${escHtml((p.name||'?').charAt(0))}</div>`)}
+          <div>
+            <h3 style="margin:0;line-height:1.2;">${escHtml(disp)}</h3>
+            ${disp!==p.name?`<div style="font-size:11px;${isXj?'color:rgba(255,255,255,.7);':'color:var(--muted);'}">系統名稱：${escHtml(p.name)}</div>`:''}
+          </div>
         </div>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px;border-radius:20px;background:${isXj?'rgba(255,255,255,.15)':(allPaid?'#DCFCE7':'#FEF3C7')};">
           <input type="checkbox" class="daily-bonus-checkbox" data-name="${escAttr(p.name)}" data-date="${d}" ${allPaid?'checked':''}/>
