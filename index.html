@@ -542,6 +542,7 @@ const APP = {
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
     personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], xiaojiangInboxMine:[],
+    optionColors:{ plan:{}, status:{}, dealProduct:{}, contactStatus:{} },
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
       rankBronze:50000, rankSilver:100000, rankGold:200000, rankDiamond:400000,
       planOptions:['醫美','JET','電腦','裕富','維力','21','亞太','二線、商品'],
@@ -589,6 +590,11 @@ function subscribeAll(){
     const d = snap.data();
     APP.data.companyPublic = d || {systemName:'',systemSubtitle:'',logoDataUrl:''};
     updateFavicon();
+    render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','optionColors'), snap=>{
+    const d = snap.data();
+    APP.data.optionColors = d || { plan:{}, status:{}, dealProduct:{}, contactStatus:{} };
     render();
   }));
   unsubs.push(onSnapshot(doc(db,'appdata','categories'), snap=>{
@@ -719,6 +725,7 @@ function unsubscribeAll(){ unsubs.forEach(u=>u()); unsubs=[]; }
 
 function saveCompany(){ return setDoc(doc(db,'appdata','company'), {info:APP.data.company, assets:APP.data.assets, liabilities:APP.data.liabilities}); }
 function saveCompanyPublic(data){ return setDoc(doc(db,'appdata','companyPublic'), data, {merge:true}); }
+function saveOptionColors(data){ return setDoc(doc(db,'appdata','optionColors'), data); }
 function updateFavicon(){
   const href = (APP.data.companyPublic && APP.data.companyPublic.logoDataUrl) || './icon-192.png';
   let link = document.querySelector('link[rel="icon"]');
@@ -870,6 +877,7 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">▣</span>廠商管理</div>
     <div class="nav-group-label">系統</div>
     <div class="nav-item" data-action="nav" data-view="settings"><span class="nav-icon">⚙</span>設定</div>
+    <div class="nav-item" data-action="nav" data-view="optionColors"><span class="nav-icon">🎨</span>選單顏色設定</div>
     ${isAdmin() ? `<div class="nav-item" data-action="nav" data-view="users"><span class="nav-icon">🔑</span>帳號管理</div>` : ''}
     </div>
     ${inRoom ? `<button id="toggle-core-nav" style="width:100%;text-align:left;background:transparent;border:none;color:#C7D4FB;font-size:12px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;">☰ 展開完整選單</button>
@@ -896,6 +904,7 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
     <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">📅</span>行事曆</div>
     <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
+    ${isStaffAdmin() ? `<div class="nav-item" data-action="nav" data-view="optionColors"><span class="nav-icon">🎨</span>選單顏色設定</div>` : ''}
     ` : ''}
     <div class="sidebar-footer">
       <div class="user-chip">${escHtml(APP.userEmail)}</div>
@@ -1119,16 +1128,19 @@ const OPTION_COLOR_PALETTE = [
   {bg:'#E0E7FF', text:'#4338CA'}, {bg:'#F3E8FF', text:'#7E22CE'}, {bg:'#D1FAE5', text:'#047857'},
   {bg:'#FEE2E2', text:'#B91C1C'}, {bg:'#E2E8F0', text:'#334155'},
 ];
-function colorForOption(value){
+function colorForOption(value, category){
   if(!value) return {bg:'#F1F2F6', text:'#6B7280'};
+  if(category && APP.data.optionColors && APP.data.optionColors[category] && APP.data.optionColors[category][value]){
+    return APP.data.optionColors[category][value];
+  }
   let hash = 0;
   const s = String(value);
   for(let i=0;i<s.length;i++){ hash = s.charCodeAt(i) + ((hash<<5)-hash); }
   return OPTION_COLOR_PALETTE[Math.abs(hash)%OPTION_COLOR_PALETTE.length];
 }
-function optionBadgeHtml(value, placeholder){
+function optionBadgeHtml(value, placeholder, category){
   if(!value) return `<span style="color:var(--muted);">${placeholder||'—'}</span>`;
-  const c = colorForOption(value);
+  const c = colorForOption(value, category);
   return `<span class="badge" style="background:${c.bg};color:${c.text};">${escHtml(value)}</span>`;
 }
 function dateGroupLabel(d){
@@ -1463,6 +1475,37 @@ function reportsHTML(){
 }
 
 /* ================= SETTINGS ================= */
+/* ---- 下拉選單自訂配色（行政跟核心都能設定，跟財務相關的分類顏色完全分開、互不影響）---- */
+function optionColorSettingsView(){
+  const oc = APP.data.optionColors || { plan:{}, status:{}, dealProduct:{}, contactStatus:{} };
+  const groups = [
+    { key:'plan', label:'進度追蹤 — 方案', options:APP.data.caseSettings.planOptions },
+    { key:'status', label:'進度追蹤 — 狀態', options:STATUS_OPTIONS },
+    { key:'dealProduct', label:'個人業務進度紀錄 — 洽談產品', options:DEAL_PRODUCT_OPTIONS },
+    { key:'contactStatus', label:'個人業務進度紀錄 — 聯絡狀態', options:CONTACT_STATUS_OPTIONS },
+  ];
+  const groupsHtml = groups.map(g=>`
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-head-row"><h3>${g.label}</h3><span class="hint">點選色塊指定顏色，沒特別設定的選項會自動配色</span></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${g.options.map(opt=>{
+          const custom = oc[g.key] && oc[g.key][opt];
+          const current = custom || colorForOption(opt, g.key);
+          return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span class="badge" style="background:${current.bg};color:${current.text};min-width:80px;text-align:center;">${escHtml(opt)}</span>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              ${OPTION_COLOR_PALETTE.map((c,idx)=>`<button type="button" class="option-color-swatch" data-action="option-color-swatch" data-category="${g.key}" data-option="${escAttr(opt)}" data-idx="${idx}" title="套用這個顏色" style="width:22px;height:22px;border-radius:6px;background:${c.bg};border:2px solid ${custom&&custom.bg===c.bg?c.text:'transparent'};cursor:pointer;padding:0;"></button>`).join('')}
+              ${custom ? `<button type="button" class="option-color-reset" data-action="option-color-reset" data-category="${g.key}" data-option="${escAttr(opt)}" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;">恢復自動</button>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+  return `
+    <div class="page-header"><div><h1 class="page-title">下拉選單顏色設定</h1><p class="page-sub">進度追蹤跟個人業務進度紀錄的選項顏色，可以自己指定；跟收支明細、財報的分類顏色是分開的兩套邏輯，不會互相影響</p></div></div>
+    ${groupsHtml}
+  `;
+}
 function settingsHTML(){
   const tab = APP.settingsTab;
   const c = APP.data.company;
@@ -1777,7 +1820,7 @@ function render(){
   updateDailyBonusPulse();
   const main = document.getElementById('main');
   if(!main) return;
-  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview'];
+  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
@@ -1785,6 +1828,7 @@ function render(){
   else if(APP.view==='transactions' && isCore()) main.innerHTML = transactionsHTML();
   else if(APP.view==='reports' && isCore()) main.innerHTML = reportsHTML();
   else if(APP.view==='settings' && isCore()) main.innerHTML = settingsHTML();
+  else if(APP.view==='optionColors' && (isCore() || isStaffAdmin())) main.innerHTML = optionColorSettingsView();
   else if(APP.view==='hr' && isCore()) main.innerHTML = hrHTML();
   else if(APP.view==='vendors' && isCore()) main.innerHTML = vendorsHTML();
   else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
@@ -2035,7 +2079,7 @@ function myDashboardView(){
 }
 
 function inlineSelectHtml(id, field, options, current, badgeClass){
-  const c = colorForOption(current);
+  const c = colorForOption(current, field);
   return `<select class="inline-log-field" data-id="${id}" data-field="${field}" style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${c.bg};color:${c.text};">
     <option value="">—</option>
     ${options.map(o=>`<option value="${o}" ${current===o?'selected':''}>${o}</option>`).join('')}
@@ -2048,8 +2092,8 @@ function progressLogRows(list, ownerUid, readOnly){
       <td>${c.date}</td>
       <td>${escHtml(c.customer)}<div style="color:var(--muted);font-size:12px;">${escHtml(c.phone||'')}</div></td>
       <td>${escHtml(c.source||'—')}</td>
-      <td>${optionBadgeHtml(c.dealProduct)}</td>
-      <td>${optionBadgeHtml(c.contactStatus)}</td>
+      <td>${optionBadgeHtml(c.dealProduct, null, 'dealProduct')}</td>
+      <td>${optionBadgeHtml(c.contactStatus, null, 'contactStatus')}</td>
       <td>${escHtml(c.transferTo||'—')}</td>
       <td style="max-width:200px;white-space:normal;color:var(--muted);font-size:12.5px;">${c.latestNote?escHtml(c.latestNote.slice(0,40))+(c.latestNote.length>40?'…':''):'—'}</td>
       <td>${c.caseStatus?`<span class="badge income">${escHtml(c.caseStatus)}</span>`:'—'}</td>
@@ -2735,9 +2779,9 @@ function progressAdView(){
     <tr>
       <td>${rowEditable ? `<input type="date" class="inline-note-input" data-list="progressAd" data-id="${c.id}" data-field="date" value="${c.date}" style="border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';"/>` : c.date}</td>
       <td>${textField('customer','客戶姓名','100px')}<div style="margin-top:2px;">${textField('phone','電話','120px')}</div></td>
-      <td>${rowEditable ? `<select class="inline-status-select" data-list="progressAd" data-id="${c.id}" data-field="plan" style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.plan).bg};color:${colorForOption(c.plan).text};">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select>` : optionBadgeHtml(c.plan)}</td>
+      <td>${rowEditable ? `<select class="inline-status-select" data-list="progressAd" data-id="${c.id}" data-field="plan" style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.plan,'plan').bg};color:${colorForOption(c.plan,'plan').text};">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select>` : optionBadgeHtml(c.plan, null, 'plan')}</td>
       <td>${rowEditable ? staffOrChannelFieldHtml2('progressAd', c.id, c.staff) : escHtml(c.staff||'—')}</td>
-      <td><select class="inline-status-select" data-list="progressAd" data-id="${c.id}" data-field="status" ${rowEditable?'':'disabled'} style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.status).bg};color:${colorForOption(c.status).text};">
+      <td><select class="inline-status-select" data-list="progressAd" data-id="${c.id}" data-field="status" ${rowEditable?'':'disabled'} style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.status,'status').bg};color:${colorForOption(c.status,'status').text};">
         ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
       </select></td>
       <td>${textField('note','點擊輸入備註','140px')}</td>
@@ -2791,13 +2835,13 @@ function progressChannelView(){
     <tr>
       <td>${rowEditable ? `<input type="date" class="inline-note-input" data-list="progressChannel" data-id="${c.id}" data-field="date" value="${c.date}" style="border:1px solid transparent;border-radius:6px;padding:4px 6px;font-size:12.5px;" onfocus="this.style.border='1px solid var(--border)';"/>` : c.date}</td>
       <td>${textField('customer','客戶姓名','100px')}<div style="margin-top:2px;">${textField('phone','電話','120px')}</div></td>
-      <td>${rowEditable ? `<select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="plan" style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.plan).bg};color:${colorForOption(c.plan).text};">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select>` : optionBadgeHtml(c.plan)}</td>
+      <td>${rowEditable ? `<select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="plan" style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.plan,'plan').bg};color:${colorForOption(c.plan,'plan').text};">${selectOptionsHtml(APP.data.caseSettings.planOptions, c.plan)}</select>` : optionBadgeHtml(c.plan, null, 'plan')}</td>
       <td>${rowEditable ? staffOrChannelFieldHtml2('progressChannel', c.id, c.staff) : escHtml(c.staff||'—')}</td>
       <td>
         ${rowEditable ? `<select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="source" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12.5px;"><option value="直客" ${c.source==='直客'?'selected':''}>直客</option><option value="通路" ${c.source==='通路'?'selected':''}>通路</option></select>` : escHtml(c.source||'—')}
         <div style="margin-top:2px;">${textField('referrer','通路備註','120px')}</div>
       </td>
-      <td><select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="status" ${rowEditable?'':'disabled'} style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.status).bg};color:${colorForOption(c.status).text};">
+      <td><select class="inline-status-select" data-list="progressChannel" data-id="${c.id}" data-field="status" ${rowEditable?'':'disabled'} style="border:none;cursor:pointer;border-radius:100px;padding:4px 10px;font-size:11.5px;font-weight:600;background:${colorForOption(c.status,'status').bg};color:${colorForOption(c.status,'status').text};">
         ${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
       </select></td>
       <td>${textField('note','點擊輸入備註','140px')}</td>
@@ -4020,6 +4064,27 @@ document.addEventListener('click', (e)=>{
         });
         Promise.allSettled(promises).then(()=>{ alert('同步完成！'); render(); });
       });
+      return;
+    }
+    if(action==='option-color-swatch'){
+      const category = el.dataset.category, option = el.dataset.option, idx = Number(el.dataset.idx);
+      const chosen = OPTION_COLOR_PALETTE[idx];
+      if(!chosen) return;
+      const oc = { ...APP.data.optionColors };
+      oc[category] = { ...(oc[category]||{}), [option]: chosen };
+      APP.data.optionColors = oc;
+      saveOptionColors(oc);
+      render();
+      return;
+    }
+    if(action==='option-color-reset'){
+      const category = el.dataset.category, option = el.dataset.option;
+      const oc = { ...APP.data.optionColors };
+      oc[category] = { ...(oc[category]||{}) };
+      delete oc[category][option];
+      APP.data.optionColors = oc;
+      saveOptionColors(oc);
+      render();
       return;
     }
     if(action==='scan-orphan-ledger'){
