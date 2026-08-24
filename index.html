@@ -144,6 +144,7 @@
   th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
   td{padding:12px;border-bottom:1px solid #EEF1F8;vertical-align:middle;}
   tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even){background:#F7F8FC;}
   .table-wrap{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;overflow-x:auto;}
   .table-wrap .empty{padding:60px 20px;text-align:center;color:var(--muted);font-size:13.5px;}
   .amount-pos{color:var(--green);font-weight:600;}
@@ -655,7 +656,7 @@ function subscribeAll(){
         snap2=>{ APP.data.personalProgress = snap2.docs.map(d=>({id:d.id, ...d.data()})); render(); }
       ));
       unsubs.push(onSnapshot(
-        isCore() ? collection(db,'attendanceRecords') : query(collection(db,'attendanceRecords'), where('staffUid','==',APP.user.uid)),
+        collection(db,'attendanceRecords'),
         snap2=>{ APP.data.attendance = snap2.docs.map(d=>({id:d.id, ...d.data()})); render(); }
       ));
       unsubs.push(onSnapshot(
