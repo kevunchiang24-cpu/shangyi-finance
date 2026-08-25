@@ -2304,7 +2304,7 @@ function openXiaojiangUploadModal(){
   openModal(`✨ 霍格華茲`, `
     <p style="color:var(--muted);font-size:12.5px;margin:-6px 0 12px;">客戶需要特殊處理時，把資料傳給${escHtml(xjName)}——上傳照片、檔案，或留一句話說明狀況（資料只保留 24 小時）</p>
     <label class="field"><span>簡短說明</span><textarea name="message" placeholder="例如：客戶需要特殊處理，資料如附件" required></textarea></label>
-    <label class="field"><span>上傳照片或檔案（選填，一次最多 5 個檔案，單檔 3MB 以內）</span><input type="file" id="xiaojiang-file-input" multiple/></label>
+    <label class="field"><span>上傳照片或檔案（選填，一次最多 5 個檔案，單檔 10MB 以內，24 小時後自動清除）</span><input type="file" id="xiaojiang-file-input" multiple/></label>
     <div id="xiaojiang-file-preview" style="margin:6px 0 12px;"></div>
     ${historyHtml}
   `, 'xiaojiang-upload-form', ()=>{});
@@ -5002,8 +5002,8 @@ document.addEventListener('change', (e)=>{
       return;
     }
     for(const f of files){
-      if(f.size > 3*1024*1024){
-        alert(`「${f.name}」太大，請選 3MB 以內的檔案。`);
+      if(f.size > 10*1024*1024){
+        alert(`「${f.name}」太大，請選 10MB 以內的檔案。`);
         e.target.value = '';
         return;
       }
@@ -5057,8 +5057,8 @@ document.addEventListener('change', (e)=>{
     if(!APP._pendingXjReplyFiles) APP._pendingXjReplyFiles = {};
     if(!file3){ delete APP._pendingXjReplyFiles[replyId]; if(replyPreview) replyPreview.innerHTML=''; return; }
     const isImage3 = file3.type && file3.type.startsWith('image/');
-    if(file3.size > 3*1024*1024){
-      alert('檔案太大，請選 3MB 以內的檔案');
+    if(file3.size > 10*1024*1024){
+      alert('檔案太大，請選 10MB 以內的檔案');
       e.target.value = '';
       return;
     }
