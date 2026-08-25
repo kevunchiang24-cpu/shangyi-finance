@@ -445,6 +445,9 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, updateDoc, query, where
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -457,6 +460,7 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
+const storage = getStorage(fbApp);
 
 /* ================================================================
    本檔案目錄（找程式碼用，行號會隨每次更新略有偏移，抓大概位置即可）
@@ -690,7 +694,11 @@ function subscribeAll(){
           const cutoff = Date.now() - 24*60*60*1000;
           all.forEach(r=>{
             const t = r._at ? new Date(r._at).getTime() : 0;
-            if(t && t < cutoff) deleteXiaojiangUpload(r.id);
+            if(t && t < cutoff){
+              deleteXiaojiangUpload(r.id);
+              (r.attachments||[]).forEach(a=>{ if(a.url) deleteObject(ref(storage, a.url)).catch(()=>{}); });
+              if(r.replyFileUrl) deleteObject(ref(storage, r.replyFileUrl)).catch(()=>{});
+            }
           });
           APP.data.xiaojiangInbox = all.filter(r=>{
             const t = r._at ? new Date(r._at).getTime() : 0;
@@ -775,6 +783,12 @@ function deleteAttendance(id){ return deleteDoc(doc(db,'attendanceRecords', id))
 function saveCalendarEntry(rec){ return setDoc(doc(db,'personalCalendar', rec.id), rec); }
 function deleteCalendarEntry(id){ return deleteDoc(doc(db,'personalCalendar', id)); }
 function saveXiaojiangUpload(rec){ return setDoc(doc(db,'xiaojiangInbox', rec.id), rec); }
+function uploadXjAttachment(pathPrefix, item){
+  const safeName = (item.name||'file').replace(/[^\w.\-]/g, '_');
+  const path = `${pathPrefix}/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${safeName}`;
+  const storageRef = ref(storage, path);
+  return uploadBytes(storageRef, item.blob).then(()=>getDownloadURL(storageRef)).then(url=>({url, name:item.name, type:item.type}));
+}
 function deleteXiaojiangUpload(id){ return deleteDoc(doc(db,'xiaojiangInbox', id)); }
 function saveXiaojiangReply(id, data){ return updateDoc(doc(db,'xiaojiangInbox', id), data); }
 function saveCasesAd(){ return setDoc(doc(db,'appdata','casesAd'), {list:APP.data.casesAd}); }
@@ -2275,13 +2289,14 @@ function openXiaojiangUploadModal(){
     <div class="table-wrap" style="max-height:220px;overflow-y:auto;">
       <table><thead><tr><th>時間</th><th>說明</th><th>附件</th><th>${escHtml(xjName)}的回覆</th></tr></thead><tbody>
         ${mine.map(r=>{
-          const hasReply = !!(r.replyMessage || r.replyFileDataUrl);
+          const hasReply = !!(r.replyMessage || r.replyFileUrl || r.replyFileDataUrl);
           const attCount = (r.attachments && r.attachments.length) || (r.fileDataUrl ? 1 : 0);
+          const replyLink = r.replyFileUrl || r.replyFileDataUrl;
           return `<tr>
             <td style="white-space:nowrap;font-size:11.5px;">${r._at?new Date(r._at).toLocaleString('zh-TW'):''}</td>
             <td style="font-size:12px;max-width:140px;white-space:normal;">${escHtml(r.message||'')}</td>
             <td style="font-size:12px;">${attCount>0?`📎 ${attCount}`:'—'}</td>
-            <td style="font-size:12px;">${hasReply?`<span style="color:var(--green);font-weight:700;">✓ 已回覆</span>${r.replyFileDataUrl?` <a href="${r.replyFileDataUrl}" download="${escAttr(r.replyFileName||'reply')}">下載</a>`:''}`:'<span style="color:var(--muted);">尚未回覆</span>'}</td>
+            <td style="font-size:12px;">${hasReply?`<span style="color:var(--green);font-weight:700;">✓ 已回覆</span>${replyLink?` <a href="${replyLink}" target="_blank" download="${escAttr(r.replyFileName||'reply')}">下載</a>`:''}`:'<span style="color:var(--muted);">尚未回覆</span>'}</td>
           </tr>`;
         }).join('')}
       </tbody></table>
@@ -2289,7 +2304,7 @@ function openXiaojiangUploadModal(){
   openModal(`✨ 霍格華茲`, `
     <p style="color:var(--muted);font-size:12.5px;margin:-6px 0 12px;">客戶需要特殊處理時，把資料傳給${escHtml(xjName)}——上傳照片、檔案，或留一句話說明狀況（資料只保留 24 小時）</p>
     <label class="field"><span>簡短說明</span><textarea name="message" placeholder="例如：客戶需要特殊處理，資料如附件" required></textarea></label>
-    <label class="field"><span>上傳照片或檔案（選填，一次最多 5 個檔案，單檔 5MB 以內）</span><input type="file" id="xiaojiang-file-input" multiple/></label>
+    <label class="field"><span>上傳照片或檔案（選填，一次最多 5 個檔案，單檔 3MB 以內）</span><input type="file" id="xiaojiang-file-input" multiple/></label>
     <div id="xiaojiang-file-preview" style="margin:6px 0 12px;"></div>
     ${historyHtml}
   `, 'xiaojiang-upload-form', ()=>{});
@@ -2308,8 +2323,9 @@ function xiaojiangInboxView(){
     ${list.length===0 ? `<div class="table-wrap"><div class="empty">目前沒有任何人送出過資料</div></div>` : `
     <div class="grid grid-2">
       ${list.map(r=>{
-        const hasReply = !!(r.replyMessage || r.replyFileDataUrl);
+        const hasReply = !!(r.replyMessage || r.replyFileUrl || r.replyFileDataUrl);
         const isReplyImg = r.replyFileType && r.replyFileType.startsWith('image/');
+        const replyLink = r.replyFileUrl || r.replyFileDataUrl;
         const attachments = (r.attachments && r.attachments.length) ? r.attachments
           : (r.fileDataUrl ? [{dataUrl:r.fileDataUrl, name:r.fileName, type:r.fileType}] : []);
         return `<div class="card">
@@ -2321,16 +2337,17 @@ function xiaojiangInboxView(){
           <div style="font-size:13.5px;white-space:pre-wrap;margin-bottom:10px;">${escHtml(r.message||'')}</div>
           ${attachments.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">${attachments.map(a=>{
             const isImg = a.type && a.type.startsWith('image/');
+            const link = a.url || a.dataUrl;
             return isImg
-              ? `<img src="${a.dataUrl}" style="max-width:140px;max-height:140px;border-radius:8px;border:1px solid var(--border);"/>`
-              : `<a href="${a.dataUrl}" download="${escAttr(a.name||'attachment')}" class="btn ghost sm">📎 ${escHtml(a.name||'檔案')}</a>`;
+              ? `<img src="${link}" style="max-width:140px;max-height:140px;border-radius:8px;border:1px solid var(--border);"/>`
+              : `<a href="${link}" target="_blank" download="${escAttr(a.name||'attachment')}" class="btn ghost sm">📎 ${escHtml(a.name||'檔案')}</a>`;
           }).join('')}</div>` : ''}
           ${hasReply ? `<div style="margin-top:6px;padding:10px;background:#F0FDF4;border-radius:8px;border:1px solid #BBF7D0;">
             <div style="font-size:11.5px;color:var(--green);font-weight:700;margin-bottom:4px;">✓ 已回覆</div>
             <div style="font-size:13px;white-space:pre-wrap;">${escHtml(r.replyMessage||'')}</div>
-            ${r.replyFileDataUrl ? (isReplyImg
-              ? `<img src="${r.replyFileDataUrl}" style="max-width:100%;border-radius:6px;margin-top:6px;"/>`
-              : `<a href="${r.replyFileDataUrl}" download="${escAttr(r.replyFileName||'reply')}" class="btn ghost sm" style="margin-top:6px;">📎 下載回覆附件</a>`
+            ${replyLink ? (isReplyImg
+              ? `<img src="${replyLink}" style="max-width:100%;border-radius:6px;margin-top:6px;"/>`
+              : `<a href="${replyLink}" target="_blank" download="${escAttr(r.replyFileName||'reply')}" class="btn ghost sm" style="margin-top:6px;">📎 下載回覆附件</a>`
             ) : ''}
           </div>` : `
           <details style="margin-top:10px;">
@@ -3999,7 +4016,7 @@ function buildFinanceContext(){
 
   /* ---- 霍格華茲信箱狀態 ---- */
   const hogwartsInbox = APP.data.xiaojiangInbox || [];
-  const hogwartsUnreplied = hogwartsInbox.filter(r=>!r.replyMessage && !r.replyFileDataUrl).length;
+  const hogwartsUnreplied = hogwartsInbox.filter(r=>!r.replyMessage && !r.replyFileUrl && !r.replyFileDataUrl).length;
 
   /* ---- 本月業務案件與進度 ---- */
   const progAdThis = APP.data.progressAd.filter(c=>monthKey(c.date)===nowMonthKey);
@@ -4460,7 +4477,16 @@ document.addEventListener('click', (e)=>{
     if(action==='open-xiaojiang-upload-modal'){ openXiaojiangUploadModal(); return; }
     if(action==='delete-xiaojiang-upload'){
       openConfirm('確定要刪除這筆訊息／附件嗎？', ()=>{
-        deleteXiaojiangUpload(el.dataset.id).then(()=>render());
+        const recToDelete = APP.data.xiaojiangInbox.find(r=>r.id===el.dataset.id) || (APP.data.xiaojiangInboxMine||[]).find(r=>r.id===el.dataset.id);
+        const urlsToClean = [];
+        if(recToDelete){
+          (recToDelete.attachments||[]).forEach(a=>{ if(a.url) urlsToClean.push(a.url); });
+          if(recToDelete.replyFileUrl) urlsToClean.push(recToDelete.replyFileUrl);
+        }
+        deleteXiaojiangUpload(el.dataset.id).then(()=>{
+          render();
+          urlsToClean.forEach(url=>{ deleteObject(ref(storage, url)).catch(()=>{}); });
+        });
       });
       return;
     }
@@ -4976,14 +5002,8 @@ document.addEventListener('change', (e)=>{
       return;
     }
     for(const f of files){
-      const isImage = f.type && f.type.startsWith('image/');
-      if(!isImage && f.size > 700*1024){
-        alert(`「${f.name}」太大了（超過 700KB），請壓縮後再上傳，或改成截圖／拍照上傳。`);
-        e.target.value = '';
-        return;
-      }
-      if(f.size > 5*1024*1024){
-        alert(`「${f.name}」太大，請選 5MB 以內的檔案。`);
+      if(f.size > 3*1024*1024){
+        alert(`「${f.name}」太大，請選 3MB 以內的檔案。`);
         e.target.value = '';
         return;
       }
@@ -4997,36 +5017,36 @@ document.addEventListener('change', (e)=>{
       if(doneCount===files.length && xjPreview){
         xjPreview.innerHTML = APP._pendingXjFiles.map(item2=>
           item2.type.startsWith('image/')
-            ? `<img src="${item2.dataUrl}" style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid rgba(216,196,255,.4);margin:0 6px 6px 0;"/>`
+            ? `<img src="${item2.previewUrl}" style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid rgba(216,196,255,.4);margin:0 6px 6px 0;"/>`
             : `<span style="display:inline-block;color:#F3EEFF;font-size:12px;margin:0 10px 6px 0;">📎 ${escHtml(item2.name)}</span>`
         ).join('');
       }
     }
     files.forEach((f, idx)=>{
       const isImage = f.type && f.type.startsWith('image/');
-      const reader2 = new FileReader();
       if(isImage){
+        const reader2 = new FileReader();
         reader2.onload = (ev2)=>{
           const img2 = new Image();
           img2.onload = ()=>{
-            const maxSize = 1000;
+            const maxSize = 1600;
             const scale = Math.min(maxSize/img2.width, maxSize/img2.height, 1);
             const w = Math.max(1, Math.round(img2.width*scale)), h = Math.max(1, Math.round(img2.height*scale));
             const canvas2 = document.createElement('canvas');
             canvas2.width = w; canvas2.height = h;
             const ctx2 = canvas2.getContext('2d');
             ctx2.drawImage(img2, 0, 0, w, h);
-            const dataUrl2 = canvas2.toDataURL('image/jpeg', 0.82);
-            onOneReady(idx, { dataUrl: dataUrl2, name: f.name, type: 'image/jpeg' });
+            const previewUrl = canvas2.toDataURL('image/jpeg', 0.85);
+            canvas2.toBlob((blob)=>{
+              onOneReady(idx, { blob, name: f.name, type: 'image/jpeg', previewUrl });
+            }, 'image/jpeg', 0.85);
           };
           img2.src = ev2.target.result;
         };
+        reader2.readAsDataURL(f);
       } else {
-        reader2.onload = (ev2)=>{
-          onOneReady(idx, { dataUrl: ev2.target.result, name: f.name, type: f.type||'application/octet-stream' });
-        };
+        onOneReady(idx, { blob: f, name: f.name, type: f.type||'application/octet-stream', previewUrl: null });
       }
-      reader2.readAsDataURL(f);
     });
     return;
   }
@@ -5037,41 +5057,36 @@ document.addEventListener('change', (e)=>{
     if(!APP._pendingXjReplyFiles) APP._pendingXjReplyFiles = {};
     if(!file3){ delete APP._pendingXjReplyFiles[replyId]; if(replyPreview) replyPreview.innerHTML=''; return; }
     const isImage3 = file3.type && file3.type.startsWith('image/');
-    if(!isImage3 && file3.size > 700*1024){
-      alert('這個檔案太大了（超過 700KB），請壓縮後再上傳。');
+    if(file3.size > 3*1024*1024){
+      alert('檔案太大，請選 3MB 以內的檔案');
       e.target.value = '';
       return;
     }
-    if(file3.size > 5*1024*1024){
-      alert('檔案太大，請選 5MB 以內的檔案');
-      e.target.value = '';
-      return;
-    }
-    const reader3 = new FileReader();
     if(isImage3){
+      const reader3 = new FileReader();
       reader3.onload = (ev3)=>{
         const img3 = new Image();
         img3.onload = ()=>{
-          const maxSize = 1000;
+          const maxSize = 1600;
           const scale = Math.min(maxSize/img3.width, maxSize/img3.height, 1);
           const w = Math.max(1, Math.round(img3.width*scale)), h = Math.max(1, Math.round(img3.height*scale));
           const canvas3 = document.createElement('canvas');
           canvas3.width = w; canvas3.height = h;
           const ctx3 = canvas3.getContext('2d');
           ctx3.drawImage(img3, 0, 0, w, h);
-          const dataUrl3 = canvas3.toDataURL('image/jpeg', 0.82);
-          APP._pendingXjReplyFiles[replyId] = { dataUrl: dataUrl3, name: file3.name, type: 'image/jpeg' };
-          if(replyPreview) replyPreview.innerHTML = `<img src="${dataUrl3}" style="max-width:160px;border-radius:6px;"/>`;
+          const previewUrl3 = canvas3.toDataURL('image/jpeg', 0.85);
+          canvas3.toBlob((blob)=>{
+            APP._pendingXjReplyFiles[replyId] = { blob, name: file3.name, type: 'image/jpeg' };
+            if(replyPreview) replyPreview.innerHTML = `<img src="${previewUrl3}" style="max-width:160px;border-radius:6px;"/>`;
+          }, 'image/jpeg', 0.85);
         };
         img3.src = ev3.target.result;
       };
+      reader3.readAsDataURL(file3);
     } else {
-      reader3.onload = (ev3)=>{
-        APP._pendingXjReplyFiles[replyId] = { dataUrl: ev3.target.result, name: file3.name, type: file3.type||'application/octet-stream' };
-        if(replyPreview) replyPreview.innerHTML = `<span style="font-size:12px;">📎 ${escHtml(file3.name)}</span>`;
-      };
+      APP._pendingXjReplyFiles[replyId] = { blob: file3, name: file3.name, type: file3.type||'application/octet-stream' };
+      if(replyPreview) replyPreview.innerHTML = `<span style="font-size:12px;">📎 ${escHtml(file3.name)}</span>`;
     }
-    reader3.readAsDataURL(file3);
     return;
   }
 });
@@ -5144,17 +5159,27 @@ document.addEventListener('submit', (e)=>{
     const replyMessage = e.target.querySelector('[name="replyMessage"]').value.trim();
     const pendingFile = (APP._pendingXjReplyFiles || {})[replyId];
     if(!replyMessage && !pendingFile){ alert('請至少填寫回覆說明或上傳附件'); return; }
-    const data = {
-      replyMessage: replyMessage || '',
-      replyFileDataUrl: pendingFile ? pendingFile.dataUrl : null,
-      replyFileName: pendingFile ? pendingFile.name : null,
-      replyFileType: pendingFile ? pendingFile.type : null,
-      repliedAt: new Date().toISOString(), repliedBy: APP.userEmail || ''
-    };
-    saveXiaojiangReply(replyId, data).then(()=>{
-      if(APP._pendingXjReplyFiles) delete APP._pendingXjReplyFiles[replyId];
-      render();
-    });
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '上傳中…'; }
+    (pendingFile ? uploadXjAttachment(`xiaojiangInbox/${replyId}/reply`, pendingFile) : Promise.resolve(null))
+      .then(uploaded=>{
+        const data = {
+          replyMessage: replyMessage || '',
+          replyFileUrl: uploaded ? uploaded.url : null,
+          replyFileName: uploaded ? uploaded.name : null,
+          replyFileType: uploaded ? uploaded.type : null,
+          repliedAt: new Date().toISOString(), repliedBy: APP.userEmail || ''
+        };
+        return saveXiaojiangReply(replyId, data);
+      })
+      .then(()=>{
+        if(APP._pendingXjReplyFiles) delete APP._pendingXjReplyFiles[replyId];
+        render();
+      })
+      .catch(()=>{
+        alert('上傳失敗，請檢查網路連線後再試一次。');
+        if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = '送出回覆'; }
+      });
     return;
   }
   if(e.target.id==='xiaojiang-upload-form'){
@@ -5162,20 +5187,26 @@ document.addEventListener('submit', (e)=>{
     const messageInput = e.target.querySelector('[name="message"]');
     const message = messageInput.value.trim();
     if(!message){ return; }
-    const attachments = (APP._pendingXjFiles || []).filter(Boolean);
-    const totalSize = attachments.reduce((sum,a)=>sum+(a.dataUrl?a.dataUrl.length:0), 0);
-    if(totalSize > 850*1024){
-      alert('附件總大小超過限制，請減少檔案數量或選擇較小的檔案後再送出。');
-      return;
-    }
-    const rec = stamp({
-      id:uid(), staffUid:APP.user.uid, staffName:effectiveStaffName()||myStaffName(), staffEmail:APP.userEmail,
-      message, attachments
-    });
-    saveXiaojiangUpload(rec).then(()=>{
-      APP._pendingXjFiles = [];
-      closeModal();
-    });
+    const pending = (APP._pendingXjFiles || []).filter(Boolean);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '上傳中…'; }
+    const recId = uid();
+    Promise.all(pending.map(item=>uploadXjAttachment(`xiaojiangInbox/${recId}`, item)))
+      .then(attachments=>{
+        const rec = stamp({
+          id:recId, staffUid:APP.user.uid, staffName:effectiveStaffName()||myStaffName(), staffEmail:APP.userEmail,
+          message, attachments
+        });
+        return saveXiaojiangUpload(rec);
+      })
+      .then(()=>{
+        APP._pendingXjFiles = [];
+        closeModal();
+      })
+      .catch(()=>{
+        alert('上傳失敗，請檢查網路連線後再試一次。');
+        if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = '儲存'; }
+      });
     return;
   }
   if(e.target.id==='ai-chat-form'){
