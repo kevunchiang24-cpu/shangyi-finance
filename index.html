@@ -747,6 +747,12 @@ function deleteProgressChannelCase(id){ return deleteDoc(doc(db,'progressChannel
 function saveBonusLedgerEntry(entry){ return setDoc(doc(db,'staffBonusLedger', entry.id), entry); }
 function deleteBonusLedgerEntry(id){ return deleteDoc(doc(db,'staffBonusLedger', id)).catch(()=>{}); }
 function getCleanBonusLedger(){
+  if(!isCore()){
+    // 業務／行政沒有獲利報表(casesAd/casesChannel)的讀取權限，前端拿不到完整案件資料可以比對，
+    // 直接回傳原始分類帳——反正他們的 Firestore 訂閱本來就只會拿到自己名下的紀錄，孤兒資料風險低，
+    // 而且錯誤地把全部資料當孤兒濾掉，會導致業務自己的當日/累積獎金整個消失不見
+    return APP.data.staffBonusLedger;
+  }
   const validIds = new Set();
   APP.data.casesAd.forEach(c=>{ validIds.add(c.id); validIds.add('xj-'+c.id); validIds.add('wiz-'+c.id); });
   APP.data.casesChannel.forEach(c=>{ validIds.add('ch-'+c.id); validIds.add('huang-'+c.id); validIds.add('wiz-'+c.id); });
@@ -1776,7 +1782,7 @@ function usersHTML(){
     </div>
     <div class="card" style="margin-bottom:16px;background:#FFF8E6;">
       <div class="card-head-row"><h3>同步暱稱與頭像</h3></div>
-      <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px;">修復用：之前設定過的暱稱、頭像因為權限架構調整，業務／行政互相看不到彼此的自訂暱稱與頭像（業務總覽會顯示回預設值）。按下去會把大家已經設定好的資料，同步到現在全公司都看得到的地方，只需要按一次。</p>
+      <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px;">修復用：之前設定過的暱稱、頭像因為權限架構調整，業務／行政互相看不到彼此的自訂暱稱與頭像（業務總覽會顯示回預設值）。按下去會把「還沒同步過」的人的資料，同步到現在全公司都看得到的地方——已經同步過、或本人後來自己更新過的資料不會被覆蓋，可以放心重複按。</p>
       <button class="btn ghost" data-action="sync-public-profiles">🔄 立即同步</button>
     </div>
     <div class="card" style="margin-bottom:16px;background:#FFF8E6;">
@@ -4332,9 +4338,11 @@ document.addEventListener('click', (e)=>{
       }); return;
     }
     if(action==='sync-public-profiles'){
-      const targets = Object.entries(APP.staffProfiles).filter(([uidVal, p])=> p && (p.displayName || p.avatarDataUrl));
-      if(targets.length===0){ alert('沒有找到需要同步的資料。'); return; }
-      openConfirm(`確定要同步 ${targets.length} 位的暱稱／頭像資料嗎？`, ()=>{
+      const targets = Object.entries(APP.staffProfiles).filter(([uidVal, p])=>
+        p && (p.displayName || p.avatarDataUrl) && !APP.publicProfiles[uidVal]
+      );
+      if(targets.length===0){ alert('沒有找到需要同步的資料（已經同步過的人不會重複覆蓋）。'); return; }
+      openConfirm(`確定要同步 ${targets.length} 位的暱稱／頭像資料嗎？已經有公開資料的人不會被覆蓋。`, ()=>{
         const promises = targets.map(([uidVal, p])=>{
           const data = {};
           if(p.displayName) data.displayName = p.displayName;
