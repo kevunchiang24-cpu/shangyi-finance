@@ -2571,7 +2571,8 @@ function xiaojiangInboxView(){
 
   if(APP.view==='xiaojiangInbox' && APP.xjActiveThread){
     const t = threads[APP.xjActiveThread];
-    return xiaojiangChatView(APP.xjActiveThread, t?t.threadName:'');
+    const fallbackName = t ? t.threadName : ((APP.users.find(u=>u.id===APP.xjActiveThread)||{}).staffName || '');
+    return xiaojiangChatView(APP.xjActiveThread, fallbackName);
   }
 
   return `
@@ -2580,6 +2581,13 @@ function xiaojiangInboxView(){
         <h1 class="page-title">✨ 霍格華茲信箱</h1>
         <p class="page-sub">業務／行政／核心跟${escHtml(xjName)}的對話列表，訊息只保留 1 小時</p>
       </div>
+    </div>
+    <div class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:13px;font-weight:600;">主動開始新對話：</span>
+      <select id="xj-start-thread-select" style="flex:1;min-width:160px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;">
+        <option value="">選擇業務／行政</option>
+        ${APP.users.filter(u=>u.staffName && !threads[u.id]).map(u=>`<option value="${u.id}" data-name="${escAttr(u.staffName)}">${escHtml(u.staffName)}</option>`).join('')}
+      </select>
     </div>
     ${threadList.length===0 ? `<div class="table-wrap"><div class="empty">目前還沒有任何對話</div></div>` : `
     <div class="table-wrap">
@@ -4931,6 +4939,11 @@ document.addEventListener('click', (e)=>{
 });
 
 document.addEventListener('change', (e)=>{
+  if(e.target.id==='xj-start-thread-select'){
+    const uidVal = e.target.value;
+    if(uidVal){ APP.xjActiveThread = uidVal; render(); }
+    return;
+  }
   if(e.target.classList && e.target.classList.contains('ai-row-type')){
     const row = e.target.closest('.tx-row');
     const catSelect = row ? row.querySelector('.ai-row-cat') : null;
@@ -5390,7 +5403,7 @@ document.addEventListener('submit', (e)=>{
         let threadName, senderName;
         if(senderIsXiaojiang){
           const existingMsg = (APP.data.xiaojiangInbox||[]).find(m=>m.threadUid===threadUid);
-          threadName = existingMsg ? existingMsg.threadName : threadUid;
+          threadName = existingMsg ? existingMsg.threadName : ((APP.users.find(u=>u.id===threadUid)||{}).staffName || threadUid);
           senderName = APP.data.caseSettings.xiaojiangName || '小江';
         } else {
           threadName = effectiveStaffName()||displayNameFor(APP.user.uid, APP.userEmail)||APP.userEmail;
