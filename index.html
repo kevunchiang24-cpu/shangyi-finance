@@ -484,6 +484,8 @@ import {
   getStorage, ref, uploadBytes, getDownloadURL, deleteObject
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
+const APP_BUILD = '2026-08-27-01';
+
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
   authDomain: "shangyiloan-financial.firebaseapp.com",
@@ -635,6 +637,10 @@ function subscribeAll(){
     const d = snap.data();
     APP.data.optionColors = d || { plan:{}, status:{}, dealProduct:{}, contactStatus:{} };
     render();
+  }));
+  unsubs.push(onSnapshot(doc(db,'appdata','version'), snap=>{
+    const d = snap.data();
+    if(d && d.build && d.build !== APP_BUILD) showUpdateBanner();
   }));
   let announceFirstSnapshot = true;
   unsubs.push(onSnapshot(collection(db,'announcements'), snap2=>{
@@ -1911,6 +1917,11 @@ function usersHTML(){
       <button class="btn ghost" data-action="scan-orphan-ledger">🔍 掃描孤兒資料</button>
       <div id="orphan-ledger-result" style="margin-top:12px;"></div>
     </div>
+    <div class="card" style="margin-bottom:16px;background:#EEF1FB;">
+      <div class="card-head-row"><h3>通知全公司系統更新</h3></div>
+      <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px;">上傳新版 index.html 之後按這個按鈕，所有目前開著網頁的人（不管是業務、行政還是其他核心）畫面下方都會跳出「有新版本可以用」的提示，點一下就能更新，不用自己按 F5 或猜有沒有更新到最新版。</p>
+      <button class="btn ghost" data-action="notify-everyone-update">🔄 通知全公司更新</button>
+    </div>
     ${isAdmin() && salaryStaff.length>0 ? `
     <div class="card" style="margin-bottom:16px;background:#F5F7FC;">
       <div class="card-head-row">
@@ -1971,7 +1982,66 @@ function showXjToast(text, threadUid, kind){
 }
 /* ---- 通知中心：鈴鐺＋下拉面板，跟聊天室是分開的另一套通知（公司公告／小江對全部人或指定業務發訊息）---- */
 /* ---- 鈴鐺展開訊息（公告專用，跳出訊息內容幾秒後自動收回，取代原本底部toast）---- */
+/* ---- 版本更新提示：偵測到appdata/version裡的build跟目前執行中的APP_BUILD不一樣，就跳出橫幅提示更新 ---- */
+function showUpdateBanner(){
+  if(document.getElementById('update-banner')) return;
+  const bar = document.createElement('div');
+  bar.id = 'update-banner';
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9998;background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:14px;font-size:13.5px;box-shadow:0 -4px 16px rgba(0,0,0,.2);';
+  bar.innerHTML = `<span>🔄 系統有新版本可以用，重新整理就能更新</span><button type="button" style="background:#fff;color:var(--navy);border:none;padding:7px 16px;border-radius:8px;font-weight:700;cursor:pointer;">立即更新</button>`;
+  bar.querySelector('button').addEventListener('click', ()=>location.reload());
+  document.body.appendChild(bar);
+}
+function notifyEveryoneToUpdate(){
+  return setDoc(doc(db,'appdata','version'), { build: 'push-'+Date.now(), _at: new Date().toISOString() });
+}
+/* ---- 分頁沒在看時，工作列(瀏覽器分頁/工作列縮圖)閃黃色圖示提醒 ---- */
+let taskbarFlashTimer = null;
+let taskbarFlashOriginalTitle = null;
+let taskbarFlashOriginalFavicon = null;
+let taskbarFlashCurrentText = '';
+function startTaskbarFlash(alertText){
+  if(document.hasFocus() && !document.hidden) return; // 使用者正在看畫面，不用閃
+  taskbarFlashCurrentText = alertText;
+  if(taskbarFlashTimer) return; // 已經在閃了，只更新文字，不重新記錄原始圖示
+  const link = document.querySelector('link[rel="icon"]');
+  taskbarFlashOriginalFavicon = link ? link.href : './icon-192.png';
+  taskbarFlashOriginalTitle = document.title;
+  const img = new Image();
+  img.onload = ()=>{
+    if(taskbarFlashTimer) return; // 圖片載入這段期間，使用者可能已經切回來看了
+    const canvas = document.createElement('canvas');
+    canvas.width = 64; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, 64, 64);
+    ctx.beginPath();
+    ctx.arc(48, 16, 15, 0, Math.PI*2);
+    ctx.fillStyle = '#FACC15';
+    ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
+    const alertFaviconUrl = canvas.toDataURL('image/png');
+    let toggled = false;
+    taskbarFlashTimer = setInterval(()=>{
+      toggled = !toggled;
+      if(link) link.href = toggled ? alertFaviconUrl : taskbarFlashOriginalFavicon;
+      document.title = toggled ? ('🔔 '+taskbarFlashCurrentText) : taskbarFlashOriginalTitle;
+    }, 700);
+  };
+  img.src = taskbarFlashOriginalFavicon;
+}
+function stopTaskbarFlash(){
+  if(!taskbarFlashTimer) return;
+  clearInterval(taskbarFlashTimer);
+  taskbarFlashTimer = null;
+  const link = document.querySelector('link[rel="icon"]');
+  if(link && taskbarFlashOriginalFavicon) link.href = taskbarFlashOriginalFavicon;
+  if(taskbarFlashOriginalTitle) document.title = taskbarFlashOriginalTitle;
+}
+window.addEventListener('focus', stopTaskbarFlash);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) stopTaskbarFlash(); });
+
 function flashBellNotification(text, onClick){
+  startTaskbarFlash(text);
   let flyout = document.getElementById('notif-bell-flyout');
   if(!flyout){
     flyout = document.createElement('div');
@@ -1979,7 +2049,7 @@ function flashBellNotification(text, onClick){
     document.body.appendChild(flyout);
   }
   flyout.textContent = text;
-  flyout.onclick = ()=>{ flyout.classList.remove('show'); (onClick||(()=>toggleNotifPanel(true)))(); };
+  flyout.onclick = ()=>{ flyout.classList.remove('show'); stopTaskbarFlash(); (onClick||(()=>toggleNotifPanel(true)))(); };
   requestAnimationFrame(()=>{ flyout.classList.add('show'); });
   clearTimeout(flyout._hideTimer);
   flyout._hideTimer = setTimeout(()=>{ flyout.classList.remove('show'); }, 2000);
@@ -4634,6 +4704,10 @@ document.addEventListener('click', (e)=>{
       APP.data.optionColors = oc;
       saveOptionColors(oc);
       render();
+      return;
+    }
+    if(action==='notify-everyone-update'){
+      notifyEveryoneToUpdate().then(()=>{ alert('已通知！大家的畫面下方應該很快就會跳出更新提示。'); });
       return;
     }
     if(action==='scan-orphan-ledger'){
