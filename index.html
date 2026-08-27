@@ -490,6 +490,9 @@ import {
 import {
   getStorage, ref, uploadBytes, getDownloadURL, deleteObject
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+import {
+  getMessaging, getToken, onMessage, isSupported as isMessagingSupported
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
 const APP_BUILD = '2026-08-27-02';
 
@@ -505,6 +508,10 @@ const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 const storage = getStorage(fbApp);
+
+/* ---- 推播通知 (FCM)：VAPID Key 要去 Firebase 後台「專案設定→Cloud Messaging→Web Push憑證」產生後貼在這裡 ---- */
+const FCM_VAPID_KEY = 'BFRlBCYdWN0hFzzl_ZF_nAoxEJyPRwfYU33Fq92S0pre-s1NlmIE4XJWUAWeVd2APqvomI1S9hhCm30YeZRzgqg';
+let fcmMessaging = null;
 
 /* ================================================================
    本檔案目錄（找程式碼用，行號會隨每次更新略有偏移，抓大概位置即可）
@@ -913,6 +920,68 @@ function uploadXjAttachment(pathPrefix, item){
   return uploadBytes(storageRef, item.blob).then(()=>getDownloadURL(storageRef)).then(url=>({url, name:item.name, type:item.type}));
 }
 function deleteXiaojiangUpload(id){ return deleteDoc(doc(db,'xiaojiangInbox', id)); }
+
+/* ---- 推播通知 (FCM)：手機/瀏覽器背景或關閉APP時也能收到通知 ---- */
+function tokenDocId(token){ return token.replace(/[^a-zA-Z0-9_-]/g, '_'); }
+function savePushToken(token){
+  if(!APP.user) return Promise.resolve();
+  return setDoc(doc(db,'pushTokens', tokenDocId(token)), {
+    uid: APP.user.uid,
+    token,
+    platform: navigator.userAgent||'',
+    updatedAt: new Date().toISOString()
+  });
+}
+async function requestPushPermission(){
+  try{
+    if(!('Notification' in window)) { alert('這個瀏覽器不支援推播通知'); return; }
+    const supported = await isMessagingSupported().catch(()=>false);
+    if(!supported){ alert('這個瀏覽器/裝置不支援推播通知（iPhone需先「加入主畫面」變成APP後才能開啟）'); return; }
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){ hidePushBanner(); return; }
+    const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './firebase-cloud-messaging-push-scope' });
+    if(!fcmMessaging) fcmMessaging = getMessaging(fbApp);
+    const token = await getToken(fcmMessaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
+    if(token){
+      await savePushToken(token);
+      localStorage.setItem('xj_push_enabled', '1');
+    }
+    hidePushBanner();
+  }catch(err){
+    console.error('推播設定失敗', err);
+    alert('推播設定失敗，請確認網路連線後再試一次');
+  }
+}
+function hidePushBanner(){
+  const el = document.getElementById('push-banner');
+  if(el) el.remove();
+  localStorage.setItem('xj_push_banner_dismissed', '1');
+}
+function showPushBanner(){
+  if(document.getElementById('push-banner')) return;
+  if(localStorage.getItem('xj_push_enabled')==='1') return;
+  if(localStorage.getItem('xj_push_banner_dismissed')==='1') return;
+  if(!('Notification' in window) || Notification.permission === 'denied') return;
+  const bar = document.createElement('div');
+  bar.id = 'push-banner';
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9997;background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:13.5px;box-shadow:0 -4px 16px rgba(0,0,0,.2);flex-wrap:wrap;';
+  bar.innerHTML = `<span>🔔 開啟推播通知，不錯過對話與公告訊息</span><button type="button" class="pb-on" style="background:#fff;color:var(--navy);border:none;padding:7px 16px;border-radius:8px;font-weight:700;cursor:pointer;">開啟通知</button><button type="button" class="pb-later" style="background:none;color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.4);padding:6px 14px;border-radius:8px;cursor:pointer;">先不要</button>`;
+  bar.querySelector('.pb-on').addEventListener('click', requestPushPermission);
+  bar.querySelector('.pb-later').addEventListener('click', hidePushBanner);
+  document.body.appendChild(bar);
+}
+function initPushForegroundListener(){
+  if(!fcmMessaging) return;
+  onMessage(fcmMessaging, (payload)=>{
+    const text = (payload.notification && payload.notification.body) || (payload.data && payload.data.body) || '有新訊息';
+    flashBellNotification('🔔 '+text, ()=>{
+      const url = payload.data && payload.data.url;
+      if(url === 'xiaojiangInbox'){ APP.view='xiaojiangInbox'; APP.xjActiveThread = (payload.data && payload.data.threadUid) || APP.xjActiveThread; render(); }
+      else toggleNotifPanel(true);
+    });
+  });
+}
+
 function saveCasesAd(){ return setDoc(doc(db,'appdata','casesAd'), {list:APP.data.casesAd}); }
 function saveCasesChannel(){ return setDoc(doc(db,'appdata','casesChannel'), {list:APP.data.casesChannel}); }
 function saveAdSpend(){ return setDoc(doc(db,'appdata','adSpend'), {list:APP.data.adSpend}); }
@@ -959,6 +1028,19 @@ function renderRoot(){
     const panelWrap = document.createElement('div');
     panelWrap.innerHTML = `<div id="notif-panel"></div>`;
     document.body.appendChild(panelWrap.firstElementChild);
+  }
+  if(!APP._pushInitDone){
+    APP._pushInitDone = true;
+    isMessagingSupported().then(ok=>{
+      if(!ok) return;
+      fcmMessaging = getMessaging(fbApp);
+      initPushForegroundListener();
+      if(localStorage.getItem('xj_push_enabled')==='1' && Notification.permission==='granted'){
+        requestPushPermission(); // token可能過期/換裝置，每次登入靜默刷新一次
+      } else {
+        setTimeout(showPushBanner, 1500);
+      }
+    }).catch(()=>{});
   }
   render();
 }
@@ -2640,6 +2722,7 @@ function xiaojiangChatView(threadUid, threadName){
         <p class="page-sub">訊息只保留 1 小時，過了會自動清除</p>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0;">
+        ${(localStorage.getItem('xj_push_enabled')!=='1')?`<button class="btn ghost sm" data-action="enable-push">🔔 開啟通知</button>`:''}
         ${messages.length>0?`<button class="btn ghost sm" data-action="clear-xj-thread" data-thread="${escAttr(threadUid)}" data-name="${escAttr(isCore()&&threadName?threadName:xjName)}" style="color:var(--red);">🗑 清空對話</button>`:''}
         ${isCore()?`<button class="btn ghost sm" data-action="nav" data-view="xiaojiangInbox">← 回信箱列表</button>`:''}
       </div>
@@ -4842,6 +4925,7 @@ document.addEventListener('click', (e)=>{
       const pv = document.getElementById('xj-chat-preview'); if(pv) pv.innerHTML = '';
       return;
     }
+    if(action==='enable-push'){ requestPushPermission().then(()=>render()); return; }
     if(action==='clear-xj-thread'){
       const threadUid = el.dataset.thread;
       if(!isCore() && threadUid!==effectiveUid()) return;
