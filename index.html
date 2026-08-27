@@ -1996,7 +1996,13 @@ function showUpdateBanner(){
   bar.id = 'update-banner';
   bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9998;background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:13.5px;box-shadow:0 -4px 16px rgba(0,0,0,.2);flex-wrap:wrap;';
   bar.innerHTML = `<span>🔄 系統有新版本可以用，重新整理就能更新</span><button type="button" class="ub-now" style="background:#fff;color:var(--navy);border:none;padding:7px 16px;border-radius:8px;font-weight:700;cursor:pointer;">立即更新</button><button type="button" class="ub-later" style="background:none;color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.4);padding:6px 14px;border-radius:8px;cursor:pointer;">稍後再說</button>`;
-  bar.querySelector('.ub-now').addEventListener('click', ()=>{ bar.remove(); location.reload(); });
+  bar.querySelector('.ub-now').addEventListener('click', function(){
+    this.textContent = '更新中…';
+    this.disabled = true;
+    this.style.opacity = '.7';
+    const laterBtn = bar.querySelector('.ub-later'); if(laterBtn) laterBtn.style.display = 'none';
+    setTimeout(()=>{ location.reload(); }, 300);
+  });
   bar.querySelector('.ub-later').addEventListener('click', ()=>{ bar.remove(); });
   document.body.appendChild(bar);
 }
@@ -2059,8 +2065,6 @@ function flashBellNotification(text, onClick){
   flyout.textContent = text;
   flyout.onclick = ()=>{ flyout.classList.remove('show'); stopTaskbarFlash(); (onClick||(()=>toggleNotifPanel(true)))(); };
   requestAnimationFrame(()=>{ flyout.classList.add('show'); });
-  clearTimeout(flyout._hideTimer);
-  flyout._hideTimer = setTimeout(()=>{ flyout.classList.remove('show'); }, 2000);
 }
 function updateNotifBell(){
   const bell = document.getElementById('notif-bell');
