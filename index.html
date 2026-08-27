@@ -356,6 +356,31 @@
     0%,100%{ opacity:.15; transform:scale(0.7); }
     50%{ opacity:1; transform:scale(1.3); }
   }
+  @keyframes xj-toast-in{
+    0%{ transform:translateY(20px); opacity:0; }
+    100%{ transform:translateY(0); opacity:1; }
+  }
+  #notif-bell{
+    position:fixed; top:16px; right:22px; z-index:150;
+    width:40px; height:40px; border-radius:50%; background:var(--navy); border:2px solid #fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  #notif-bell .notif-badge{
+    position:absolute; top:-4px; right:-4px; background:var(--red); color:#fff; font-size:10px; font-weight:700;
+    min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 4px;
+    border:1.5px solid #fff;
+  }
+  #notif-panel{
+    position:fixed; top:64px; right:22px; z-index:150; width:320px; max-height:70vh; overflow-y:auto;
+    background:var(--white); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 28px rgba(0,0,0,.18);
+    display:none;
+  }
+  #notif-panel.open{ display:block; }
+  @media (max-width:900px){
+    #notif-bell{ top:8px; right:52px; width:34px; height:34px; font-size:16px; }
+    #notif-panel{ top:52px; right:12px; left:12px; width:auto; }
+  }
   .rank-diamond{ position:relative; overflow:hidden; }
   .rank-diamond::before{
     content:''; position:absolute; inset:-50%; pointer-events:none; z-index:0;
@@ -545,7 +570,7 @@ const APP = {
     companyPublic:{systemName:'',systemSubtitle:'',logoDataUrl:''},
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
-    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], xiaojiangInboxMine:[],
+    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[],
     optionColors:{ plan:{}, status:{}, dealProduct:{}, contactStatus:{} },
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
       rankBronze:50000, rankSilver:100000, rankGold:200000, rankDiamond:400000,
@@ -599,6 +624,33 @@ function subscribeAll(){
   unsubs.push(onSnapshot(doc(db,'appdata','optionColors'), snap=>{
     const d = snap.data();
     APP.data.optionColors = d || { plan:{}, status:{}, dealProduct:{}, contactStatus:{} };
+    render();
+  }));
+  let announceFirstSnapshot = true;
+  unsubs.push(onSnapshot(collection(db,'announcements'), snap2=>{
+    const all = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+    const cutoff = Date.now() - 60*60*1000;
+    const mine = all.filter(a=>a.scope==='all' || a.targetUid===APP.user.uid);
+    if(!announceFirstSnapshot){
+      snap2.docChanges().forEach(ch=>{
+        if(ch.type==='added'){
+          const a = ch.doc.data();
+          const relevant = a.scope==='all' || a.targetUid===APP.user.uid;
+          if(relevant && a.senderUid!==APP.user.uid){
+            showXjToast(`🔔 ${escHtml(a.senderName||'系統通知')}：${(a.message||'').slice(0,30)}`, null, 'announcement');
+          }
+        }
+      });
+    }
+    announceFirstSnapshot = false;
+    mine.forEach(a=>{
+      const t = a._at ? new Date(a._at).getTime() : 0;
+      if(t && t < cutoff) deleteDoc(doc(db,'announcements', a.id)).catch(()=>{});
+    });
+    APP.data.announcements = mine.filter(a=>{
+      const t = a._at ? new Date(a._at).getTime() : 0;
+      return !t || t >= cutoff;
+    }).sort((a,b)=>(b._at||'').localeCompare(a._at||''));
     render();
   }));
   unsubs.push(onSnapshot(doc(db,'appdata','categories'), snap=>{
@@ -689,9 +741,25 @@ function subscribeAll(){
           snap2.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
           render();
         }));
+        let xjCoreFirstSnapshot = true;
         unsubs.push(onSnapshot(collection(db,'xiaojiangInbox'), snap2=>{
           const all = snap2.docs.map(d=>({id:d.id, ...d.data()}));
-          const cutoff = Date.now() - 24*60*60*1000;
+          const cutoff = Date.now() - 60*60*1000;
+          if(!xjCoreFirstSnapshot){
+            const meIsXj = (APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang;
+            const xjName2 = APP.data.caseSettings.xiaojiangName || '小江';
+            snap2.docChanges().forEach(ch=>{
+              if(ch.type==='added'){
+                const m = ch.doc.data();
+                if(meIsXj && !m.senderIsXiaojiang){
+                  showXjToast(`💬 ${escHtml(m.threadName||m.senderName||'有人')}傳訊息給你：${(m.message||'（附件）').slice(0,30)}`, m.threadUid);
+                } else if(!meIsXj && m.senderIsXiaojiang && m.threadUid===APP.user.uid){
+                  showXjToast(`💬 ${xjName2}回覆了你：${(m.message||'（附件）').slice(0,30)}`, APP.user.uid);
+                }
+              }
+            });
+          }
+          xjCoreFirstSnapshot = false;
           all.forEach(r=>{
             const t = r._at ? new Date(r._at).getTime() : 0;
             if(t && t < cutoff){
@@ -703,7 +771,7 @@ function subscribeAll(){
           APP.data.xiaojiangInbox = all.filter(r=>{
             const t = r._at ? new Date(r._at).getTime() : 0;
             return !t || t >= cutoff;
-          }).sort((a,b)=>(b._at||'').localeCompare(a._at||''));
+          }).sort((a,b)=>(a._at||'').localeCompare(b._at||''));
           render();
         }));
       } else {
@@ -717,11 +785,24 @@ function subscribeAll(){
           APP.staffProfiles[APP.user.uid] = snap2.exists() ? snap2.data() : {};
           render();
         }));
-        unsubs.push(onSnapshot(query(collection(db,'xiaojiangInbox'), where('staffUid','==',APP.user.uid)), snap2=>{
-          const cutoff = Date.now() - 24*60*60*1000;
-          APP.data.xiaojiangInboxMine = snap2.docs.map(d=>({id:d.id, ...d.data()}))
+        let xjFirstSnapshot = true;
+        unsubs.push(onSnapshot(query(collection(db,'xiaojiangInbox'), where('threadUid','==',APP.user.uid)), snap2=>{
+          const cutoff = Date.now() - 60*60*1000;
+          if(!xjFirstSnapshot){
+            snap2.docChanges().forEach(ch=>{
+              if(ch.type==='added'){
+                const m = ch.doc.data();
+                if(m.senderIsXiaojiang){
+                  const xjName2 = APP.data.caseSettings.xiaojiangName || '小江';
+                  showXjToast(`💬 ${xjName2}回覆了你：${(m.message||'（附件）').slice(0,30)}`, APP.user.uid);
+                }
+              }
+            });
+          }
+          xjFirstSnapshot = false;
+          APP.data.xiaojiangInbox = snap2.docs.map(d=>({id:d.id, ...d.data()}))
             .filter(r=>{ const t = r._at ? new Date(r._at).getTime() : 0; return !t || t >= cutoff; })
-            .sort((a,b)=>(b._at||'').localeCompare(a._at||''));
+            .sort((a,b)=>(a._at||'').localeCompare(b._at||''));
           render();
         }));
       }
@@ -790,7 +871,6 @@ function uploadXjAttachment(pathPrefix, item){
   return uploadBytes(storageRef, item.blob).then(()=>getDownloadURL(storageRef)).then(url=>({url, name:item.name, type:item.type}));
 }
 function deleteXiaojiangUpload(id){ return deleteDoc(doc(db,'xiaojiangInbox', id)); }
-function saveXiaojiangReply(id, data){ return updateDoc(doc(db,'xiaojiangInbox', id), data); }
 function saveCasesAd(){ return setDoc(doc(db,'appdata','casesAd'), {list:APP.data.casesAd}); }
 function saveCasesChannel(){ return setDoc(doc(db,'appdata','casesChannel'), {list:APP.data.casesChannel}); }
 function saveAdSpend(){ return setDoc(doc(db,'appdata','adSpend'), {list:APP.data.adSpend}); }
@@ -830,6 +910,14 @@ function renderRoot(){
     return;
   }
   root.innerHTML = shellHTML();
+  if(!document.getElementById('notif-bell')){
+    const bellWrap = document.createElement('div');
+    bellWrap.innerHTML = `<div id="notif-bell" data-action="toggle-notif-panel">🔔<span class="notif-badge" style="display:none;"></span></div>`;
+    document.body.appendChild(bellWrap.firstElementChild);
+    const panelWrap = document.createElement('div');
+    panelWrap.innerHTML = `<div id="notif-panel"></div>`;
+    document.body.appendChild(panelWrap.firstElementChild);
+  }
   render();
 }
 function loginHTML(){
@@ -1840,12 +1928,106 @@ function updateDailyBonusPulse(){
     dot.remove();
   }
 }
+function showXjToast(text, threadUid, kind){
+  const existing = document.querySelectorAll('.xj-toast').length;
+  const toast = document.createElement('div');
+  toast.className = 'xj-toast';
+  toast.textContent = text;
+  toast.style.cssText = `position:fixed;bottom:${24+existing*58}px;right:24px;background:var(--navy);color:#fff;padding:12px 18px;border-radius:10px;font-size:13.5px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:9999;cursor:pointer;max-width:280px;animation:xj-toast-in .3s ease-out;transition:bottom .25s ease;`;
+  toast.addEventListener('click', ()=>{
+    toast.remove();
+    if(kind==='announcement'){
+      toggleNotifPanel(true);
+    } else {
+      APP.view='xiaojiangInbox'; APP.xjActiveThread = threadUid;
+      render();
+      const meIsXj = !!(APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang;
+      if(meIsXj){
+        (APP.data.xiaojiangInbox||[]).filter(m=>m.threadUid===threadUid && !m.senderIsXiaojiang && !m.readByXiaojiang)
+          .forEach(m=>{ updateDoc(doc(db,'xiaojiangInbox', m.id), {readByXiaojiang:true}).catch(()=>{}); });
+      }
+    }
+  });
+  document.body.appendChild(toast);
+  setTimeout(()=>{ toast.style.transition='opacity .4s'; toast.style.opacity='0'; setTimeout(()=>toast.remove(), 400); }, 6000);
+}
+/* ---- 通知中心：鈴鐺＋下拉面板，跟聊天室是分開的另一套通知（公司公告／小江對全部人或指定業務發訊息）---- */
+function updateNotifBell(){
+  const bell = document.getElementById('notif-bell');
+  if(!bell) return;
+  if(!APP._notifReadIds) APP._notifReadIds = new Set();
+  const unread = (APP.data.announcements||[]).filter(a=>!APP._notifReadIds.has(a.id));
+  const badge = bell.querySelector('.notif-badge');
+  if(badge){
+    if(unread.length>0){ badge.textContent = unread.length>9?'9+':String(unread.length); badge.style.display='flex'; }
+    else { badge.style.display='none'; }
+  }
+  const panel = document.getElementById('notif-panel');
+  if(panel && panel.classList.contains('open')) panel.innerHTML = notifPanelHtml();
+}
+function toggleNotifPanel(forceOpen){
+  const panel = document.getElementById('notif-panel');
+  if(!panel) return;
+  const willOpen = forceOpen!==undefined ? forceOpen : !panel.classList.contains('open');
+  panel.classList.toggle('open', willOpen);
+  if(willOpen){
+    if(!APP._notifReadIds) APP._notifReadIds = new Set();
+    (APP.data.announcements||[]).forEach(a=>APP._notifReadIds.add(a.id));
+    panel.innerHTML = notifPanelHtml();
+    updateNotifBell();
+  }
+}
+function notifPanelHtml(){
+  const list = APP.data.announcements||[];
+  const items = list.length===0 ? `<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">目前沒有通知</div>` :
+    list.map(a=>`<div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:3px;">
+        <span style="font-weight:700;font-size:12.5px;">${escHtml(a.senderName||'系統')}${a.scope==='all'?' <span class="badge pending" style="font-size:9.5px;">全公司</span>':''}</span>
+        <span style="font-size:10.5px;color:var(--muted);white-space:nowrap;">${a._at?new Date(a._at).toLocaleString('zh-TW',{hour:'2-digit',minute:'2-digit'}):''}</span>
+      </div>
+      <div style="font-size:13px;white-space:pre-wrap;line-height:1.5;">${escHtml(a.message||'')}</div>
+    </div>`).join('');
+  const composeBtn = isCore() ? `<div style="padding:10px 14px;border-bottom:1px solid var(--border);"><button type="button" class="btn primary sm" data-action="open-announcement-modal" style="width:100%;">＋ 發布公告／傳訊息</button></div>` : '';
+  return `
+    <div style="padding:12px 14px;border-bottom:1px solid var(--border);font-weight:700;font-size:13.5px;display:flex;justify-content:space-between;align-items:center;">
+      <span>🔔 通知中心</span>
+      <span style="font-size:11px;font-weight:400;color:var(--muted);">1 小時後自動清除</span>
+    </div>
+    ${composeBtn}
+    ${items}`;
+}
+function openAnnouncementModal(){
+  const staffList = APP.users.filter(u=>u.staffName);
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-head"><h3>發布公告／傳訊息</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <form id="announcement-form">
+      <label class="field"><span>發送對象</span>
+        <select name="scope" id="ann-scope">
+          <option value="all">全公司公告</option>
+          <option value="targeted">指定某位業務／行政</option>
+        </select>
+      </label>
+      <label class="field" id="ann-target-field" style="display:none;"><span>指定對象</span>
+        <select name="targetUid">${staffList.map(u=>`<option value="${u.id}">${escHtml(u.staffName)}</option>`).join('')}</select>
+      </label>
+      <label class="field"><span>訊息內容</span><textarea name="message" required placeholder="輸入公告或訊息內容"></textarea></label>
+      <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button><button type="submit" class="btn primary">發送</button></div>
+    </form>`;
+  const scopeSel = document.getElementById('ann-scope');
+  if(scopeSel) scopeSel.addEventListener('change', function(){
+    const tf = document.getElementById('ann-target-field');
+    if(tf) tf.style.display = this.value==='targeted' ? '' : 'none';
+  });
+}
+function saveAnnouncement(rec){ return setDoc(doc(db,'announcements', rec.id), rec); }
 function render(){
   document.querySelectorAll('.nav-item').forEach(el=>{ el.classList.toggle('active', el.dataset.view===APP.view); });
   updateDailyBonusPulse();
+  updateNotifBell();
   const main = document.getElementById('main');
   if(!main) return;
-  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors'];
+  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
@@ -1859,7 +2041,7 @@ function render(){
   else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
   else if(APP.view==='dailyBonus' && isCore()) main.innerHTML = dailyBonusPageHTML();
   else if(APP.view==='staffOverview' && (isCore() || isStaffAny())) main.innerHTML = staffOverviewHTML();
-  else if(APP.view==='xiaojiangInbox' && isCore()) main.innerHTML = xiaojiangInboxView();
+  else if(APP.view==='xiaojiangInbox' && (isCore() || isStaffAny())) main.innerHTML = xiaojiangInboxView();
   else if(APP.view==='progress') main.innerHTML = progressHTML();
   else if(APP.view==='personalLog' && roomOk) main.innerHTML = personalLogPageHTML();
   else if(APP.view==='attendance' && roomOk) main.innerHTML = attendancePageHTML();
@@ -1948,7 +2130,7 @@ function xiaojiangDashboardView(){
     const adTotalNet = adRevenue - fixedCostThisMonth - Number(thisMonthAdSpend.spend||0);
     pilotBonusThisMonth = Math.max(0, adTotalNet) * APP.data.caseSettings.pilotBonusRate;
   }
-  const unreadCount = APP.data.xiaojiangInbox.length;
+  const unreadCount = (APP.data.xiaojiangInbox||[]).filter(m=>!m.senderIsXiaojiang && !m.readByXiaojiang).length;
 
   return `
     <div class="page-header"><div><h1 class="page-title">🌙 我的個人空間</h1><p class="page-sub">${escHtml(xjName)}自己的獎金與資料，其他核心成員看不到這個頁面</p></div></div>
@@ -2281,86 +2463,95 @@ function myCalendarView(){
 }
 
 /* ---- 霍格華茲：業務／行政上傳給小江的彈出視窗（唯一入口在業務總覽的小江卡片）---- */
-function openXiaojiangUploadModal(){
-  const xjName = APP.data.caseSettings.xiaojiangName || '小江';
-  const mine = APP.data.xiaojiangInboxMine || [];
-  const historyHtml = mine.length===0 ? `<div class="empty" style="margin-top:14px;">還沒有送出過任何紀錄</div>` : `
-    <div class="card-head-row" style="margin-top:16px;"><h3 style="font-size:13.5px;">我自己送出過的紀錄（24 小時內）</h3></div>
-    <div class="table-wrap" style="max-height:220px;overflow-y:auto;">
-      <table><thead><tr><th>時間</th><th>說明</th><th>附件</th><th>${escHtml(xjName)}的回覆</th></tr></thead><tbody>
-        ${mine.map(r=>{
-          const hasReply = !!(r.replyMessage || r.replyFileUrl || r.replyFileDataUrl);
-          const attCount = (r.attachments && r.attachments.length) || (r.fileDataUrl ? 1 : 0);
-          const replyLink = r.replyFileUrl || r.replyFileDataUrl;
-          return `<tr>
-            <td style="white-space:nowrap;font-size:11.5px;">${r._at?new Date(r._at).toLocaleString('zh-TW'):''}</td>
-            <td style="font-size:12px;max-width:140px;white-space:normal;">${escHtml(r.message||'')}</td>
-            <td style="font-size:12px;">${attCount>0?`📎 ${attCount}`:'—'}</td>
-            <td style="font-size:12px;">${hasReply?`<span style="color:var(--green);font-weight:700;">✓ 已回覆</span>${replyLink?` <a href="${replyLink}" target="_blank" download="${escAttr(r.replyFileName||'reply')}">下載</a>`:''}`:'<span style="color:var(--muted);">尚未回覆</span>'}</td>
-          </tr>`;
-        }).join('')}
-      </tbody></table>
-    </div>`;
-  openModal(`✨ 霍格華茲`, `
-    <p style="color:var(--muted);font-size:12.5px;margin:-6px 0 12px;">客戶需要特殊處理時，把資料傳給${escHtml(xjName)}——上傳照片、檔案，或留一句話說明狀況（資料只保留 24 小時）</p>
-    <label class="field"><span>簡短說明</span><textarea name="message" placeholder="例如：客戶需要特殊處理，資料如附件" required></textarea></label>
-    <label class="field"><span>上傳照片或檔案（選填，一次最多 5 個檔案，單檔 10MB 以內，24 小時後自動清除）</span><input type="file" id="xiaojiang-file-input" multiple/></label>
-    <div id="xiaojiang-file-preview" style="margin:6px 0 12px;"></div>
-    ${historyHtml}
-  `, 'xiaojiang-upload-form', ()=>{});
+/* ---- 霍格華茲聊天室：業務／行政／其他核心都能跟小江持續來回訊息，1小時後訊息自動清除 ---- */
+function xiaojiangMessagesFor(threadUid){
+  return (APP.data.xiaojiangInbox || []).filter(m=>m.threadUid===threadUid).sort((a,b)=>(a._at||'').localeCompare(b._at||''));
 }
-
+function xiaojiangChatBubblesHtml(messages, xjName){
+  if(messages.length===0) return `<div class="empty" style="padding:30px 0;">還沒有任何訊息，打字開始對話吧</div>`;
+  return messages.map(m=>{
+    const mine = !m.senderIsXiaojiang;
+    return `<div style="display:flex;flex-direction:column;align-items:${m.senderIsXiaojiang?'flex-start':'flex-end'};margin-bottom:10px;">
+      <div style="font-size:10.5px;color:var(--muted);margin-bottom:2px;">${m.senderIsXiaojiang?escHtml(xjName):escHtml(m.senderName||'')} · ${m._at?new Date(m._at).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</div>
+      <div style="max-width:78%;padding:9px 13px;border-radius:14px;${m.senderIsXiaojiang?'background:#F1F2F6;color:var(--ink);border-bottom-left-radius:4px;':'background:var(--navy);color:#fff;border-bottom-right-radius:4px;'}">
+        ${m.message?`<div style="font-size:13.5px;white-space:pre-wrap;line-height:1.5;">${escHtml(m.message)}</div>`:''}
+        ${(m.attachments||[]).map(a=>{
+          const isImg = a.type && a.type.startsWith('image/');
+          return isImg
+            ? `<img src="${a.url}" style="max-width:180px;max-height:180px;border-radius:8px;margin-top:6px;display:block;"/>`
+            : `<a href="${a.url}" target="_blank" download="${escAttr(a.name||'attachment')}" style="display:block;margin-top:6px;font-size:12px;color:${m.senderIsXiaojiang?'var(--navy)':'#fff'};text-decoration:underline;">📎 ${escHtml(a.name||'檔案')}</a>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function xiaojiangChatInputHtml(threadUid){
+  return `
+    <div id="xj-chat-preview" style="margin-bottom:6px;"></div>
+    <form id="xj-chat-form" data-thread="${threadUid}" style="display:flex;gap:8px;align-items:flex-end;">
+      <label class="icon-btn" style="cursor:pointer;flex-shrink:0;" title="附加檔案">
+        📎<input type="file" id="xj-chat-file-input" style="display:none;"/>
+      </label>
+      <textarea name="message" placeholder="輸入訊息…" rows="1" style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:13.5px;resize:none;"></textarea>
+      <button type="submit" class="btn primary" style="flex-shrink:0;">送出</button>
+    </form>`;
+}
+function xiaojiangChatView(threadUid, threadName){
+  const xjName = APP.data.caseSettings.xiaojiangName || '小江';
+  const messages = xiaojiangMessagesFor(threadUid);
+  return `
+    <div class="page-header" style="margin-bottom:10px;">
+      <div>
+        <h1 class="page-title">✨ ${isCore()&&threadName?`跟 ${escHtml(threadName)} 的對話`:`跟${escHtml(xjName)}聊天`}</h1>
+        <p class="page-sub">訊息只保留 1 小時，過了會自動清除</p>
+      </div>
+      ${isCore()?`<button class="btn ghost sm" data-action="nav" data-view="xiaojiangInbox">← 回信箱列表</button>`:''}
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;height:calc(100vh - 230px);min-height:360px;">
+      <div id="xj-chat-scroll" style="flex:1;overflow-y:auto;padding:6px;">${xiaojiangChatBubblesHtml(messages, xjName)}</div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px;">${xiaojiangChatInputHtml(threadUid)}</div>
+    </div>`;
+}
 function xiaojiangInboxView(){
   const xjName = APP.data.caseSettings.xiaojiangName || '小江';
-  const list = APP.data.xiaojiangInbox || [];
+  if(!isCore()){
+    return xiaojiangChatView(effectiveUid(), effectiveStaffName()||myStaffName());
+  }
+  const all = APP.data.xiaojiangInbox || [];
+  const threads = {};
+  all.forEach(m=>{
+    if(!threads[m.threadUid]) threads[m.threadUid] = { threadUid:m.threadUid, threadName:m.threadName||'未知', messages:[] };
+    threads[m.threadUid].messages.push(m);
+  });
+  const threadList = Object.values(threads).map(t=>{
+    t.messages.sort((a,b)=>(a._at||'').localeCompare(b._at||''));
+    const last = t.messages[t.messages.length-1];
+    const unread = t.messages.some(m=>!m.senderIsXiaojiang && !m.readByXiaojiang);
+    return { ...t, last, unread };
+  }).sort((a,b)=>(b.last._at||'').localeCompare(a.last._at||''));
+
+  if(APP.view==='xiaojiangInbox' && APP.xjActiveThread){
+    const t = threads[APP.xjActiveThread];
+    return xiaojiangChatView(APP.xjActiveThread, t?t.threadName:'');
+  }
+
   return `
     <div class="page-header" style="margin-bottom:14px;">
       <div>
         <h1 class="page-title">✨ 霍格華茲信箱</h1>
-        <p class="page-sub">業務／行政傳給${escHtml(xjName)}的檔案與訊息，資料只保留 24 小時，過了會自動清除</p>
+        <p class="page-sub">業務／行政／核心跟${escHtml(xjName)}的對話列表，訊息只保留 1 小時</p>
       </div>
     </div>
-    ${list.length===0 ? `<div class="table-wrap"><div class="empty">目前沒有任何人送出過資料</div></div>` : `
-    <div class="grid grid-2">
-      ${list.map(r=>{
-        const hasReply = !!(r.replyMessage || r.replyFileUrl || r.replyFileDataUrl);
-        const isReplyImg = r.replyFileType && r.replyFileType.startsWith('image/');
-        const replyLink = r.replyFileUrl || r.replyFileDataUrl;
-        const attachments = (r.attachments && r.attachments.length) ? r.attachments
-          : (r.fileDataUrl ? [{dataUrl:r.fileDataUrl, name:r.fileName, type:r.fileType}] : []);
-        return `<div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <h3 style="margin:0;font-size:14.5px;">${escHtml(r.staffName||r.staffEmail||'未知')}</h3>
-            <button class="icon-btn" data-action="delete-xiaojiang-upload" data-id="${r.id}">刪除</button>
-          </div>
-          <div style="color:var(--muted);font-size:12px;margin-bottom:8px;">${r._at?new Date(r._at).toLocaleString('zh-TW'):''}</div>
-          <div style="font-size:13.5px;white-space:pre-wrap;margin-bottom:10px;">${escHtml(r.message||'')}</div>
-          ${attachments.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">${attachments.map(a=>{
-            const isImg = a.type && a.type.startsWith('image/');
-            const link = a.url || a.dataUrl;
-            return isImg
-              ? `<img src="${link}" style="max-width:140px;max-height:140px;border-radius:8px;border:1px solid var(--border);"/>`
-              : `<a href="${link}" target="_blank" download="${escAttr(a.name||'attachment')}" class="btn ghost sm">📎 ${escHtml(a.name||'檔案')}</a>`;
-          }).join('')}</div>` : ''}
-          ${hasReply ? `<div style="margin-top:6px;padding:10px;background:#F0FDF4;border-radius:8px;border:1px solid #BBF7D0;">
-            <div style="font-size:11.5px;color:var(--green);font-weight:700;margin-bottom:4px;">✓ 已回覆</div>
-            <div style="font-size:13px;white-space:pre-wrap;">${escHtml(r.replyMessage||'')}</div>
-            ${replyLink ? (isReplyImg
-              ? `<img src="${replyLink}" style="max-width:100%;border-radius:6px;margin-top:6px;"/>`
-              : `<a href="${replyLink}" target="_blank" download="${escAttr(r.replyFileName||'reply')}" class="btn ghost sm" style="margin-top:6px;">📎 下載回覆附件</a>`
-            ) : ''}
-          </div>` : `
-          <details style="margin-top:10px;">
-            <summary style="cursor:pointer;font-size:12.5px;color:var(--navy);font-weight:600;">回覆這筆</summary>
-            <form class="xj-reply-form" data-id="${r.id}" style="margin-top:8px;">
-              <textarea name="replyMessage" placeholder="回覆說明（選填）" style="width:100%;margin-bottom:6px;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;"></textarea>
-              <input type="file" class="xj-reply-file-input" data-id="${r.id}" style="margin-bottom:6px;font-size:12px;"/>
-              <div class="xj-reply-file-preview" data-id="${r.id}" style="margin-bottom:6px;"></div>
-              <button type="submit" class="btn primary sm">送出回覆</button>
-            </form>
-          </details>`}
-        </div>`;
-      }).join('')}
+    ${threadList.length===0 ? `<div class="table-wrap"><div class="empty">目前還沒有任何對話</div></div>` : `
+    <div class="table-wrap">
+      <table><thead><tr><th>對象</th><th>最新訊息</th><th>時間</th><th></th></tr></thead><tbody>
+        ${threadList.map(t=>`<tr style="cursor:pointer;" data-action="open-xj-thread" data-thread="${t.threadUid}">
+          <td>${escHtml(t.threadName)}${t.unread?' <span class="badge expense">未讀</span>':''}</td>
+          <td style="max-width:280px;white-space:normal;color:var(--muted);font-size:12.5px;">${t.last.senderIsXiaojiang?`${escHtml(xjName)}：`:''}${escHtml((t.last.message||'📎 附件').slice(0,40))}</td>
+          <td style="white-space:nowrap;font-size:12px;color:var(--muted);">${t.last._at?new Date(t.last._at).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</td>
+          <td><button class="btn ghost sm" data-action="open-xj-thread" data-thread="${t.threadUid}">開啟對話</button></td>
+        </tr>`).join('')}
+      </tbody></table>
     </div>`}
   `;
 }
@@ -2457,7 +2648,8 @@ function staffOverviewHTML(){
 
   const xjUser = APP.users.find(u=>u.isXiaojiang);
   const xjName = APP.data.caseSettings.xiaojiangName || '小江';
-  const unreadCount = viewerIsCore ? APP.data.xiaojiangInbox.length : 0;
+  const isXjViewer = !!(xjUser && APP.user && APP.user.uid===xjUser.id);
+  const unreadCount = viewerIsCore ? (APP.data.xiaojiangInbox||[]).filter(m=>!m.senderIsXiaojiang && !m.readByXiaojiang).length : 0;
   const xjCard = xjUser ? `<div class="card hogwarts-card" style="color:#fff;border:none;">
       <div class="hogwarts-smoke"></div>
       <div class="hogwarts-glow-wash"></div>
@@ -2480,10 +2672,11 @@ function staffOverviewHTML(){
         </div>
       </div>
       <p style="font-size:12.5px;color:rgba(243,238,255,.85);line-height:1.7;margin-bottom:0;">व्यापार-प्रशासन-प्रेषितानि गुह्य-कार्याणि अस्मिन् रहस्य-कक्षे गुप्तानि सन्ति । परन्तु सावधानम्! अत्र मायाबन्धः स्थापितः । चतुर्विंशति-होरासु पूर्णासु, मन्त्रः स्वयमेव सक्रियः भवति, सर्वं च निश्चिह्नं विलीयते ॥${unreadCount>0?` <b style="color:#fff;">（${unreadCount}）</b>`:''}</p>
-      <div class="hogwarts-btn-wrap">
-        ${viewerIsCore
+      <div class="hogwarts-btn-wrap" style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+        ${isXjViewer
           ? `<button type="button" class="hogwarts-btn-lg" data-action="nav" data-view="xiaojiangInbox">進入霍格華茲</button>`
-          : `<button type="button" class="hogwarts-btn-lg" data-action="open-xiaojiang-upload-modal">進入霍格華茲</button>`}
+          : `<button type="button" class="hogwarts-btn-lg" data-action="open-xj-own-thread">跟${escHtml(xjName)}聊天</button>`}
+        ${(viewerIsCore && !isXjViewer) ? `<button type="button" data-action="nav" data-view="xiaojiangInbox" style="background:none;border:none;color:rgba(216,196,255,.8);font-size:11.5px;text-decoration:underline;cursor:pointer;">查看完整信箱</button>` : ''}
       </div>
     </div>` : '';
 
@@ -4016,7 +4209,8 @@ function buildFinanceContext(){
 
   /* ---- 霍格華茲信箱狀態 ---- */
   const hogwartsInbox = APP.data.xiaojiangInbox || [];
-  const hogwartsUnreplied = hogwartsInbox.filter(r=>!r.replyMessage && !r.replyFileUrl && !r.replyFileDataUrl).length;
+  const hogwartsThreadUids = new Set(hogwartsInbox.map(m=>m.threadUid));
+  const hogwartsUnreplied = new Set(hogwartsInbox.filter(m=>!m.senderIsXiaojiang && !m.readByXiaojiang).map(m=>m.threadUid)).size;
 
   /* ---- 本月業務案件與進度 ---- */
   const progAdThis = APP.data.progressAd.filter(c=>monthKey(c.date)===nowMonthKey);
@@ -4107,7 +4301,7 @@ ${casesChannelLines || '無'}
 ${personalLogLines || '無'}
 
 【霍格華茲信箱】（客戶特殊處理事務，透過${cs.xiaojiangName||'小江'}處理）
-目前共 ${hogwartsInbox.length} 筆（24小時內），尚未回覆 ${hogwartsUnreplied} 筆
+目前共 ${hogwartsThreadUids.size} 組對話、${hogwartsInbox.length} 則訊息（1小時內），有未讀訊息的對話 ${hogwartsUnreplied} 組
 
 【廣告投放成效】（近 ${adSpendSorted.length} 個月，由新到舊）
 ${adSpendLines || '無資料'}`;
@@ -4269,6 +4463,8 @@ document.addEventListener('click', (e)=>{
       APP.view = el.dataset.view; render(); closeSidebar(); return;
     }
     if(action==='close-modal'){ closeModal(); return; }
+    if(action==='toggle-notif-panel'){ toggleNotifPanel(); return; }
+    if(action==='open-announcement-modal'){ openAnnouncementModal(); return; }
     if(action==='tx-tab'){ APP.txTab = el.dataset.tab; render(); return; }
     if(action==='open-tx-modal'){ openTransactionModal(null); return; }
     if(action==='open-ai-import-modal'){ openAiImportModal(); return; }
@@ -4474,10 +4670,22 @@ document.addEventListener('click', (e)=>{
       renderRoot(); return;
     }
     if(action==='exit-staff-room'){ APP.viewingStaff = null; APP.view = 'staffOverview'; renderRoot(); return; }
-    if(action==='open-xiaojiang-upload-modal'){ openXiaojiangUploadModal(); return; }
+    if(action==='open-xj-own-thread'){ APP.view='xiaojiangInbox'; APP.xjActiveThread=effectiveUid(); render(); return; }
+    if(action==='open-xj-thread'){
+      APP.view='xiaojiangInbox'; APP.xjActiveThread=el.dataset.thread; render();
+      (APP.data.xiaojiangInbox||[]).filter(m=>m.threadUid===el.dataset.thread && !m.senderIsXiaojiang && !m.readByXiaojiang)
+        .forEach(m=>{ updateDoc(doc(db,'xiaojiangInbox', m.id), {readByXiaojiang:true}).catch(()=>{}); });
+      return;
+    }
+    if(action==='clear-xj-chat-file'){
+      APP._pendingXjChatFile = null;
+      const fi = document.getElementById('xj-chat-file-input'); if(fi) fi.value = '';
+      const pv = document.getElementById('xj-chat-preview'); if(pv) pv.innerHTML = '';
+      return;
+    }
     if(action==='delete-xiaojiang-upload'){
       openConfirm('確定要刪除這筆訊息／附件嗎？', ()=>{
-        const recToDelete = APP.data.xiaojiangInbox.find(r=>r.id===el.dataset.id) || (APP.data.xiaojiangInboxMine||[]).find(r=>r.id===el.dataset.id);
+        const recToDelete = APP.data.xiaojiangInbox.find(r=>r.id===el.dataset.id);
         const urlsToClean = [];
         if(recToDelete){
           (recToDelete.attachments||[]).forEach(a=>{ if(a.url) urlsToClean.push(a.url); });
@@ -4992,100 +5200,41 @@ document.addEventListener('change', (e)=>{
     reader.readAsDataURL(file);
     return;
   }
-  if(e.target.id==='xiaojiang-file-input'){
-    const files = Array.from(e.target.files || []);
-    const xjPreview = document.getElementById('xiaojiang-file-preview');
-    if(files.length===0){ APP._pendingXjFiles = []; if(xjPreview) xjPreview.innerHTML=''; return; }
-    if(files.length > 5){
-      alert('一次最多上傳 5 個檔案，請分批上傳。');
+  if(e.target.id==='xj-chat-file-input'){
+    const file2 = e.target.files[0];
+    const xjPreview = document.getElementById('xj-chat-preview');
+    if(!file2){ APP._pendingXjChatFile = null; if(xjPreview) xjPreview.innerHTML=''; return; }
+    if(file2.size > 10*1024*1024){
+      alert(`「${file2.name}」太大，請選 10MB 以內的檔案。`);
       e.target.value = '';
       return;
     }
-    for(const f of files){
-      if(f.size > 10*1024*1024){
-        alert(`「${f.name}」太大，請選 10MB 以內的檔案。`);
-        e.target.value = '';
-        return;
-      }
-    }
-    APP._pendingXjFiles = new Array(files.length).fill(null);
-    if(xjPreview) xjPreview.innerHTML = `<span style="color:#F3EEFF;font-size:12px;">處理中…</span>`;
-    let doneCount = 0;
-    function onOneReady(idx, item){
-      APP._pendingXjFiles[idx] = item;
-      doneCount++;
-      if(doneCount===files.length && xjPreview){
-        xjPreview.innerHTML = APP._pendingXjFiles.map(item2=>
-          item2.type.startsWith('image/')
-            ? `<img src="${item2.previewUrl}" style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid rgba(216,196,255,.4);margin:0 6px 6px 0;"/>`
-            : `<span style="display:inline-block;color:#F3EEFF;font-size:12px;margin:0 10px 6px 0;">📎 ${escHtml(item2.name)}</span>`
-        ).join('');
-      }
-    }
-    files.forEach((f, idx)=>{
-      const isImage = f.type && f.type.startsWith('image/');
-      if(isImage){
-        const reader2 = new FileReader();
-        reader2.onload = (ev2)=>{
-          const img2 = new Image();
-          img2.onload = ()=>{
-            const maxSize = 1600;
-            const scale = Math.min(maxSize/img2.width, maxSize/img2.height, 1);
-            const w = Math.max(1, Math.round(img2.width*scale)), h = Math.max(1, Math.round(img2.height*scale));
-            const canvas2 = document.createElement('canvas');
-            canvas2.width = w; canvas2.height = h;
-            const ctx2 = canvas2.getContext('2d');
-            ctx2.drawImage(img2, 0, 0, w, h);
-            const previewUrl = canvas2.toDataURL('image/jpeg', 0.85);
-            canvas2.toBlob((blob)=>{
-              onOneReady(idx, { blob, name: f.name, type: 'image/jpeg', previewUrl });
-            }, 'image/jpeg', 0.85);
-          };
-          img2.src = ev2.target.result;
-        };
-        reader2.readAsDataURL(f);
-      } else {
-        onOneReady(idx, { blob: f, name: f.name, type: f.type||'application/octet-stream', previewUrl: null });
-      }
-    });
-    return;
-  }
-  if(e.target.classList && e.target.classList.contains('xj-reply-file-input')){
-    const replyId = e.target.dataset.id;
-    const file3 = e.target.files[0];
-    const replyPreview = document.querySelector(`.xj-reply-file-preview[data-id="${replyId}"]`);
-    if(!APP._pendingXjReplyFiles) APP._pendingXjReplyFiles = {};
-    if(!file3){ delete APP._pendingXjReplyFiles[replyId]; if(replyPreview) replyPreview.innerHTML=''; return; }
-    const isImage3 = file3.type && file3.type.startsWith('image/');
-    if(file3.size > 10*1024*1024){
-      alert('檔案太大，請選 10MB 以內的檔案');
-      e.target.value = '';
-      return;
-    }
-    if(isImage3){
-      const reader3 = new FileReader();
-      reader3.onload = (ev3)=>{
-        const img3 = new Image();
-        img3.onload = ()=>{
+    const isImage = file2.type && file2.type.startsWith('image/');
+    if(xjPreview) xjPreview.innerHTML = `<span style="color:var(--muted);font-size:12px;">處理中…</span>`;
+    if(isImage){
+      const reader2 = new FileReader();
+      reader2.onload = (ev2)=>{
+        const img2 = new Image();
+        img2.onload = ()=>{
           const maxSize = 1600;
-          const scale = Math.min(maxSize/img3.width, maxSize/img3.height, 1);
-          const w = Math.max(1, Math.round(img3.width*scale)), h = Math.max(1, Math.round(img3.height*scale));
-          const canvas3 = document.createElement('canvas');
-          canvas3.width = w; canvas3.height = h;
-          const ctx3 = canvas3.getContext('2d');
-          ctx3.drawImage(img3, 0, 0, w, h);
-          const previewUrl3 = canvas3.toDataURL('image/jpeg', 0.85);
-          canvas3.toBlob((blob)=>{
-            APP._pendingXjReplyFiles[replyId] = { blob, name: file3.name, type: 'image/jpeg' };
-            if(replyPreview) replyPreview.innerHTML = `<img src="${previewUrl3}" style="max-width:160px;border-radius:6px;"/>`;
+          const scale = Math.min(maxSize/img2.width, maxSize/img2.height, 1);
+          const w = Math.max(1, Math.round(img2.width*scale)), h = Math.max(1, Math.round(img2.height*scale));
+          const canvas2 = document.createElement('canvas');
+          canvas2.width = w; canvas2.height = h;
+          const ctx2 = canvas2.getContext('2d');
+          ctx2.drawImage(img2, 0, 0, w, h);
+          const previewUrl = canvas2.toDataURL('image/jpeg', 0.85);
+          canvas2.toBlob((blob)=>{
+            APP._pendingXjChatFile = { blob, name: file2.name, type: 'image/jpeg' };
+            if(xjPreview) xjPreview.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><img src="${previewUrl}" style="max-width:70px;max-height:70px;border-radius:8px;"/><button type="button" data-action="clear-xj-chat-file" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;">移除</button></div>`;
           }, 'image/jpeg', 0.85);
         };
-        img3.src = ev3.target.result;
+        img2.src = ev2.target.result;
       };
-      reader3.readAsDataURL(file3);
+      reader2.readAsDataURL(file2);
     } else {
-      APP._pendingXjReplyFiles[replyId] = { blob: file3, name: file3.name, type: file3.type||'application/octet-stream' };
-      if(replyPreview) replyPreview.innerHTML = `<span style="font-size:12px;">📎 ${escHtml(file3.name)}</span>`;
+      APP._pendingXjChatFile = { blob: file2, name: file2.name, type: file2.type||'application/octet-stream' };
+      if(xjPreview) xjPreview.innerHTML = `<div style="display:flex;align-items:center;gap:8px;font-size:12px;">📎 ${escHtml(file2.name)}<button type="button" data-action="clear-xj-chat-file" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;">移除</button></div>`;
     }
     return;
   }
@@ -5122,6 +5271,12 @@ document.addEventListener('compositionend', (e)=>{
     if(input){ input.focus(); input.value = focusVal; input.setSelectionRange(focusVal.length, focusVal.length); }
   }
 });
+document.addEventListener('keydown', (e)=>{
+  if(e.target.tagName==='TEXTAREA' && e.target.closest('#xj-chat-form') && e.key==='Enter' && !e.shiftKey && !isImeComposing){
+    e.preventDefault();
+    e.target.closest('#xj-chat-form').requestSubmit ? e.target.closest('#xj-chat-form').requestSubmit() : e.target.closest('#xj-chat-form').dispatchEvent(new Event('submit', {cancelable:true, bubbles:true}));
+  }
+});
 document.addEventListener('input', (e)=>{
   if(e.target.classList && e.target.classList.contains('table-search-input')){
     if(isImeComposing) return; // 輸入法組字中（例如注音選字前），先不要重新渲染，避免打斷輸入
@@ -5153,59 +5308,64 @@ document.addEventListener('input', (e)=>{
   }
 });
 document.addEventListener('submit', (e)=>{
-  if(e.target.classList && e.target.classList.contains('xj-reply-form')){
+  if(e.target.id==='announcement-form'){
     e.preventDefault();
-    const replyId = e.target.dataset.id;
-    const replyMessage = e.target.querySelector('[name="replyMessage"]').value.trim();
-    const pendingFile = (APP._pendingXjReplyFiles || {})[replyId];
-    if(!replyMessage && !pendingFile){ alert('請至少填寫回覆說明或上傳附件'); return; }
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '上傳中…'; }
-    (pendingFile ? uploadXjAttachment(`xiaojiangInbox/${replyId}/reply`, pendingFile) : Promise.resolve(null))
-      .then(uploaded=>{
-        const data = {
-          replyMessage: replyMessage || '',
-          replyFileUrl: uploaded ? uploaded.url : null,
-          replyFileName: uploaded ? uploaded.name : null,
-          replyFileType: uploaded ? uploaded.type : null,
-          repliedAt: new Date().toISOString(), repliedBy: APP.userEmail || ''
-        };
-        return saveXiaojiangReply(replyId, data);
-      })
-      .then(()=>{
-        if(APP._pendingXjReplyFiles) delete APP._pendingXjReplyFiles[replyId];
-        render();
-      })
-      .catch(()=>{
-        alert('上傳失敗，請檢查網路連線後再試一次。');
-        if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = '送出回覆'; }
-      });
+    const fd = new FormData(e.target);
+    const scope = fd.get('scope');
+    const targetUid = scope==='targeted' ? fd.get('targetUid') : null;
+    const message = (fd.get('message')||'').trim();
+    if(!message) return;
+    if(scope==='targeted' && !targetUid){ alert('請選擇要傳送的對象'); return; }
+    const meIsXj = !!(APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang;
+    const senderName = meIsXj
+      ? (APP.data.caseSettings.xiaojiangName || '小江')
+      : (displayNameFor(APP.user.uid, APP.userEmail) || APP.userEmail);
+    saveAnnouncement(stamp({ id:uid(), scope, targetUid, message, senderUid:APP.user.uid, senderName }));
+    closeModal();
     return;
   }
-  if(e.target.id==='xiaojiang-upload-form'){
+  if(e.target.id==='xj-chat-form'){
     e.preventDefault();
+    const threadUid = e.target.dataset.thread;
     const messageInput = e.target.querySelector('[name="message"]');
     const message = messageInput.value.trim();
-    if(!message){ return; }
-    const pending = (APP._pendingXjFiles || []).filter(Boolean);
+    const pendingFile = APP._pendingXjChatFile;
+    if(!message && !pendingFile) return;
+    const meIsXj = !!(APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang;
+    const senderIsXiaojiang = meIsXj;
     const submitBtn = e.target.querySelector('button[type="submit"]');
-    if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '上傳中…'; }
-    const recId = uid();
-    Promise.all(pending.map(item=>uploadXjAttachment(`xiaojiangInbox/${recId}`, item)))
-      .then(attachments=>{
+    if(submitBtn) submitBtn.disabled = true;
+    const msgId = uid();
+    (pendingFile ? uploadXjAttachment(`xiaojiangInbox/${msgId}`, pendingFile) : Promise.resolve(null))
+      .then(uploaded=>{
+        let threadName, senderName;
+        if(senderIsXiaojiang){
+          const existingMsg = (APP.data.xiaojiangInbox||[]).find(m=>m.threadUid===threadUid);
+          threadName = existingMsg ? existingMsg.threadName : threadUid;
+          senderName = APP.data.caseSettings.xiaojiangName || '小江';
+        } else {
+          threadName = effectiveStaffName()||displayNameFor(APP.user.uid, APP.userEmail)||APP.userEmail;
+          senderName = threadName;
+        }
         const rec = stamp({
-          id:recId, staffUid:APP.user.uid, staffName:effectiveStaffName()||myStaffName(), staffEmail:APP.userEmail,
-          message, attachments
+          id: msgId, threadUid, threadName,
+          senderIsXiaojiang, senderUid: APP.user.uid, senderName,
+          message, attachments: uploaded ? [uploaded] : [],
+          readByXiaojiang: senderIsXiaojiang
         });
         return saveXiaojiangUpload(rec);
       })
       .then(()=>{
-        APP._pendingXjFiles = [];
-        closeModal();
+        APP._pendingXjChatFile = null;
+        messageInput.value = '';
+        const pv = document.getElementById('xj-chat-preview'); if(pv) pv.innerHTML='';
+        if(submitBtn) submitBtn.disabled = false;
+        render();
+        setTimeout(()=>{ const scroll = document.getElementById('xj-chat-scroll'); if(scroll) scroll.scrollTop = scroll.scrollHeight; }, 60);
       })
       .catch(()=>{
-        alert('上傳失敗，請檢查網路連線後再試一次。');
-        if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = '儲存'; }
+        alert('傳送失敗，請檢查網路連線後再試一次。');
+        if(submitBtn) submitBtn.disabled = false;
       });
     return;
   }
@@ -5287,6 +5447,13 @@ document.addEventListener('submit', (e)=>{
     fd.forEach((v,k)=>{ data[k]=v; });
     if(modalOnSubmit) modalOnSubmit(data);
     closeModal();
+  }
+});
+document.addEventListener('click', (e)=>{
+  const panel = document.getElementById('notif-panel');
+  const bell = document.getElementById('notif-bell');
+  if(panel && panel.classList.contains('open') && !panel.contains(e.target) && !(bell && bell.contains(e.target))){
+    toggleNotifPanel(false);
   }
 });
 </script>
