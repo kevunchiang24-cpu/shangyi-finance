@@ -377,9 +377,18 @@
     display:none;
   }
   #notif-panel.open{ display:block; }
+  #notif-bell-flyout{
+    position:fixed; top:16px; right:70px; z-index:151; max-width:260px;
+    background:var(--navy); color:#fff; padding:11px 16px; border-radius:20px; font-size:13px; line-height:1.4;
+    box-shadow:0 4px 14px rgba(0,0,0,.22); cursor:pointer;
+    opacity:0; transform:translateX(16px) scale(.94); pointer-events:none;
+    transition:opacity .28s ease, transform .28s ease;
+  }
+  #notif-bell-flyout.show{ opacity:1; transform:translateX(0) scale(1); pointer-events:auto; }
   @media (max-width:900px){
     #notif-bell{ top:8px; right:52px; width:34px; height:34px; font-size:16px; }
     #notif-panel{ top:52px; right:12px; left:12px; width:auto; }
+    #notif-bell-flyout{ top:7px; right:96px; max-width:170px; font-size:11.5px; padding:8px 12px; }
   }
   .rank-diamond{ position:relative; overflow:hidden; }
   .rank-diamond::before{
@@ -637,7 +646,7 @@ function subscribeAll(){
           const a = ch.doc.data();
           const relevant = a.scope==='all' || a.targetUid===APP.user.uid;
           if(relevant && a.senderUid!==APP.user.uid){
-            showXjToast(`🔔 ${escHtml(a.senderName||'系統通知')}：${(a.message||'').slice(0,30)}`, null, 'announcement');
+            flashBellNotification(`${escHtml(a.senderName||'系統通知')}：${(a.message||'').slice(0,30)}`);
           }
         }
       });
@@ -752,9 +761,15 @@ function subscribeAll(){
               if(ch.type==='added'){
                 const m = ch.doc.data();
                 if(meIsXj && !m.senderIsXiaojiang){
-                  showXjToast(`💬 ${escHtml(m.threadName||m.senderName||'有人')}傳訊息給你：${(m.message||'（附件）').slice(0,30)}`, m.threadUid);
+                  flashBellNotification(`💬 ${escHtml(m.threadName||m.senderName||'有人')}：${(m.message||'（附件）').slice(0,30)}`, ()=>{
+                    APP.view='xiaojiangInbox'; APP.xjActiveThread = m.threadUid; render();
+                    (APP.data.xiaojiangInbox||[]).filter(x=>x.threadUid===m.threadUid && !x.senderIsXiaojiang && !x.readByXiaojiang)
+                      .forEach(x=>{ updateDoc(doc(db,'xiaojiangInbox', x.id), {readByXiaojiang:true}).catch(()=>{}); });
+                  });
                 } else if(!meIsXj && m.senderIsXiaojiang && m.threadUid===APP.user.uid){
-                  showXjToast(`💬 ${xjName2}回覆了你：${(m.message||'（附件）').slice(0,30)}`, APP.user.uid);
+                  flashBellNotification(`💬 ${xjName2}回覆了你：${(m.message||'（附件）').slice(0,30)}`, ()=>{
+                    APP.view='xiaojiangInbox'; APP.xjActiveThread = APP.user.uid; render();
+                  });
                 }
               }
             });
@@ -794,7 +809,9 @@ function subscribeAll(){
                 const m = ch.doc.data();
                 if(m.senderIsXiaojiang){
                   const xjName2 = APP.data.caseSettings.xiaojiangName || '小江';
-                  showXjToast(`💬 ${xjName2}回覆了你：${(m.message||'（附件）').slice(0,30)}`, APP.user.uid);
+                  flashBellNotification(`💬 ${xjName2}回覆了你：${(m.message||'（附件）').slice(0,30)}`, ()=>{
+                    APP.view='xiaojiangInbox'; APP.xjActiveThread = APP.user.uid; render();
+                  });
                 }
               }
             });
@@ -1952,14 +1969,36 @@ function showXjToast(text, threadUid, kind){
   setTimeout(()=>{ toast.style.transition='opacity .4s'; toast.style.opacity='0'; setTimeout(()=>toast.remove(), 400); }, 6000);
 }
 /* ---- 通知中心：鈴鐺＋下拉面板，跟聊天室是分開的另一套通知（公司公告／小江對全部人或指定業務發訊息）---- */
+/* ---- 鈴鐺展開訊息（公告專用，跳出訊息內容幾秒後自動收回，取代原本底部toast）---- */
+function flashBellNotification(text, onClick){
+  let flyout = document.getElementById('notif-bell-flyout');
+  if(!flyout){
+    flyout = document.createElement('div');
+    flyout.id = 'notif-bell-flyout';
+    document.body.appendChild(flyout);
+  }
+  flyout.textContent = text;
+  flyout.onclick = ()=>{ flyout.classList.remove('show'); (onClick||(()=>toggleNotifPanel(true)))(); };
+  requestAnimationFrame(()=>{ flyout.classList.add('show'); });
+  clearTimeout(flyout._hideTimer);
+  flyout._hideTimer = setTimeout(()=>{ flyout.classList.remove('show'); }, 4500);
+}
 function updateNotifBell(){
   const bell = document.getElementById('notif-bell');
   if(!bell) return;
   if(!APP._notifReadIds) APP._notifReadIds = new Set();
-  const unread = (APP.data.announcements||[]).filter(a=>!APP._notifReadIds.has(a.id));
+  const unreadAnnouncements = (APP.data.announcements||[]).filter(a=>!APP._notifReadIds.has(a.id)).length;
+  const meIsXj = !!(APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang;
+  let unreadChat = 0;
+  if(meIsXj){
+    unreadChat = (APP.data.xiaojiangInbox||[]).filter(m=>!m.senderIsXiaojiang && !m.readByXiaojiang).length;
+  } else {
+    unreadChat = (APP.data.xiaojiangInbox||[]).filter(m=>m.senderIsXiaojiang && m.threadUid===APP.user.uid && !APP._notifReadIds.has(m.id)).length;
+  }
+  const total = unreadAnnouncements + unreadChat;
   const badge = bell.querySelector('.notif-badge');
   if(badge){
-    if(unread.length>0){ badge.textContent = unread.length>9?'9+':String(unread.length); badge.style.display='flex'; }
+    if(total>0){ badge.textContent = total>9?'9+':String(total); badge.style.display='flex'; }
     else { badge.style.display='none'; }
   }
   const panel = document.getElementById('notif-panel');
@@ -4460,6 +4499,7 @@ document.addEventListener('click', (e)=>{
     if(action==='nav'){
       const personalViews = ['progress','personalLog','attendance','calendar','personalDashboard'];
       if(!personalViews.includes(el.dataset.view)) APP.viewingStaff=null;
+      if(el.dataset.view==='xiaojiangInbox') APP.xjActiveThread = null;
       APP.view = el.dataset.view; render(); closeSidebar(); return;
     }
     if(action==='close-modal'){ closeModal(); return; }
@@ -4670,11 +4710,20 @@ document.addEventListener('click', (e)=>{
       renderRoot(); return;
     }
     if(action==='exit-staff-room'){ APP.viewingStaff = null; APP.view = 'staffOverview'; renderRoot(); return; }
-    if(action==='open-xj-own-thread'){ APP.view='xiaojiangInbox'; APP.xjActiveThread=effectiveUid(); render(); return; }
+    if(action==='open-xj-own-thread'){
+      APP.view='xiaojiangInbox'; APP.xjActiveThread=effectiveUid(); render();
+      if(!APP._notifReadIds) APP._notifReadIds = new Set();
+      (APP.data.xiaojiangInbox||[]).filter(m=>m.threadUid===effectiveUid() && m.senderIsXiaojiang).forEach(m=>APP._notifReadIds.add(m.id));
+      updateNotifBell();
+      return;
+    }
     if(action==='open-xj-thread'){
       APP.view='xiaojiangInbox'; APP.xjActiveThread=el.dataset.thread; render();
+      if(!APP._notifReadIds) APP._notifReadIds = new Set();
+      (APP.data.xiaojiangInbox||[]).filter(m=>m.threadUid===el.dataset.thread).forEach(m=>APP._notifReadIds.add(m.id));
       (APP.data.xiaojiangInbox||[]).filter(m=>m.threadUid===el.dataset.thread && !m.senderIsXiaojiang && !m.readByXiaojiang)
         .forEach(m=>{ updateDoc(doc(db,'xiaojiangInbox', m.id), {readByXiaojiang:true}).catch(()=>{}); });
+      updateNotifBell();
       return;
     }
     if(action==='clear-xj-chat-file'){
