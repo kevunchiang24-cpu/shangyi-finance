@@ -485,7 +485,7 @@ import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, updateDoc, query, where
+  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, updateDoc, query, where, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getStorage, ref, uploadBytes, getDownloadURL, deleteObject
@@ -894,6 +894,17 @@ function saveAttendance(rec){ return setDoc(doc(db,'attendanceRecords', rec.id),
 function deleteAttendance(id){ return deleteDoc(doc(db,'attendanceRecords', id)); }
 function saveCalendarEntry(rec){ return setDoc(doc(db,'personalCalendar', rec.id), rec); }
 function deleteCalendarEntry(id){ return deleteDoc(doc(db,'personalCalendar', id)); }
+function clearXiaojiangThread(threadUid){
+  const msgs = xiaojiangMessagesFor(threadUid);
+  if(msgs.length===0) return Promise.resolve();
+  const urlsToClean = [];
+  msgs.forEach(m=>{ (m.attachments||[]).forEach(a=>{ if(a.url) urlsToClean.push(a.url); }); });
+  const batch = writeBatch(db);
+  msgs.forEach(m=>{ batch.delete(doc(db,'xiaojiangInbox', m.id)); });
+  return batch.commit().then(()=>{
+    urlsToClean.forEach(url=>{ deleteObject(ref(storage, url)).catch(()=>{}); });
+  });
+}
 function saveXiaojiangUpload(rec){ return setDoc(doc(db,'xiaojiangInbox', rec.id), rec); }
 function uploadXjAttachment(pathPrefix, item){
   const safeName = (item.name||'file').replace(/[^\w.\-]/g, '_');
@@ -2628,7 +2639,10 @@ function xiaojiangChatView(threadUid, threadName){
         <h1 class="page-title">✨ ${isCore()&&threadName?`跟 ${escHtml(threadName)} 的對話`:`跟${escHtml(xjName)}聊天`}</h1>
         <p class="page-sub">訊息只保留 1 小時，過了會自動清除</p>
       </div>
-      ${isCore()?`<button class="btn ghost sm" data-action="nav" data-view="xiaojiangInbox">← 回信箱列表</button>`:''}
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        ${messages.length>0?`<button class="btn ghost sm" data-action="clear-xj-thread" data-thread="${escAttr(threadUid)}" data-name="${escAttr(isCore()&&threadName?threadName:xjName)}" style="color:var(--red);">🗑 清空對話</button>`:''}
+        ${isCore()?`<button class="btn ghost sm" data-action="nav" data-view="xiaojiangInbox">← 回信箱列表</button>`:''}
+      </div>
     </div>
     <div class="card" style="display:flex;flex-direction:column;height:calc(100vh - 230px);min-height:360px;">
       <div id="xj-chat-scroll" style="flex:1;overflow-y:auto;padding:6px;">${xiaojiangChatBubblesHtml(messages, xjName)}</div>
@@ -4826,6 +4840,14 @@ document.addEventListener('click', (e)=>{
       APP._pendingXjChatFile = null;
       const fi = document.getElementById('xj-chat-file-input'); if(fi) fi.value = '';
       const pv = document.getElementById('xj-chat-preview'); if(pv) pv.innerHTML = '';
+      return;
+    }
+    if(action==='clear-xj-thread'){
+      const threadUid = el.dataset.thread;
+      if(!isCore() && threadUid!==effectiveUid()) return;
+      openConfirm(`確定要清空跟${el.dataset.name||'對方'}的所有對話紀錄嗎？此動作無法復原。`, ()=>{
+        clearXiaojiangThread(threadUid).then(()=>{ render(); });
+      });
       return;
     }
     if(action==='delete-xiaojiang-upload'){
