@@ -378,17 +378,18 @@
   }
   #notif-panel.open{ display:block; }
   #notif-bell-flyout{
-    position:fixed; top:16px; right:70px; z-index:151; max-width:260px;
+    position:fixed; top:20px; right:66px; z-index:151; max-width:260px;
     background:var(--navy); color:#fff; padding:11px 16px; border-radius:20px; font-size:13px; line-height:1.4;
     box-shadow:0 4px 14px rgba(0,0,0,.22); cursor:pointer;
-    opacity:0; transform:translateX(16px) scale(.94); pointer-events:none;
-    transition:opacity .28s ease, transform .28s ease;
+    transform-origin:top right;
+    opacity:0; transform:scale(.25) translateY(-6px); pointer-events:none;
+    transition:opacity .22s ease, transform .22s cubic-bezier(.34,1.56,.64,1);
   }
-  #notif-bell-flyout.show{ opacity:1; transform:translateX(0) scale(1); pointer-events:auto; }
+  #notif-bell-flyout.show{ opacity:1; transform:scale(1) translateY(0); pointer-events:auto; }
   @media (max-width:900px){
     #notif-bell{ top:8px; right:52px; width:34px; height:34px; font-size:16px; }
     #notif-panel{ top:52px; right:12px; left:12px; width:auto; }
-    #notif-bell-flyout{ top:7px; right:96px; max-width:170px; font-size:11.5px; padding:8px 12px; }
+    #notif-bell-flyout{ top:12px; right:92px; max-width:170px; font-size:11.5px; padding:8px 12px; }
   }
   .rank-diamond{ position:relative; overflow:hidden; }
   .rank-diamond::before{
@@ -1981,7 +1982,7 @@ function flashBellNotification(text, onClick){
   flyout.onclick = ()=>{ flyout.classList.remove('show'); (onClick||(()=>toggleNotifPanel(true)))(); };
   requestAnimationFrame(()=>{ flyout.classList.add('show'); });
   clearTimeout(flyout._hideTimer);
-  flyout._hideTimer = setTimeout(()=>{ flyout.classList.remove('show'); }, 4500);
+  flyout._hideTimer = setTimeout(()=>{ flyout.classList.remove('show'); }, 2000);
 }
 function updateNotifBell(){
   const bell = document.getElementById('notif-bell');
