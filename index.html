@@ -366,6 +366,13 @@
     display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px;
     box-shadow:0 2px 10px rgba(0,0,0,.25);
   }
+  #notif-bell.has-unread{
+    animation:notif-bell-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes notif-bell-pulse{
+    0%,100%{ box-shadow:0 2px 10px rgba(0,0,0,.25), 0 0 0 0 rgba(47,95,234,.55); }
+    50%{ box-shadow:0 2px 10px rgba(0,0,0,.25), 0 0 0 8px rgba(47,95,234,0); }
+  }
   #notif-bell .notif-badge{
     position:absolute; top:-4px; right:-4px; background:var(--red); color:#fff; font-size:10px; font-weight:700;
     min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 4px;
@@ -1989,7 +1996,7 @@ function showUpdateBanner(){
   bar.id = 'update-banner';
   bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9998;background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:14px;font-size:13.5px;box-shadow:0 -4px 16px rgba(0,0,0,.2);';
   bar.innerHTML = `<span>🔄 系統有新版本可以用，重新整理就能更新</span><button type="button" style="background:#fff;color:var(--navy);border:none;padding:7px 16px;border-radius:8px;font-weight:700;cursor:pointer;">立即更新</button>`;
-  bar.querySelector('button').addEventListener('click', ()=>location.reload());
+  bar.querySelector('button').addEventListener('click', ()=>{ bar.remove(); location.reload(); });
   document.body.appendChild(bar);
 }
 function notifyEveryoneToUpdate(){
@@ -2067,6 +2074,7 @@ function updateNotifBell(){
     unreadChat = (APP.data.xiaojiangInbox||[]).filter(m=>m.senderIsXiaojiang && m.threadUid===APP.user.uid && !APP._notifReadIds.has(m.id)).length;
   }
   const total = unreadAnnouncements + unreadChat;
+  bell.classList.toggle('has-unread', total>0);
   const badge = bell.querySelector('.notif-badge');
   if(badge){
     if(total>0){ badge.textContent = total>9?'9+':String(total); badge.style.display='flex'; }
