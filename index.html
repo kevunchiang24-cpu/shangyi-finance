@@ -491,7 +491,7 @@ import {
   getStorage, ref, uploadBytes, getDownloadURL, deleteObject
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 
-const APP_BUILD = '2026-08-27-01';
+const APP_BUILD = '2026-08-27-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1926,7 +1926,7 @@ function usersHTML(){
     </div>
     <div class="card" style="margin-bottom:16px;background:#EEF1FB;">
       <div class="card-head-row"><h3>通知全公司系統更新</h3></div>
-      <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px;">上傳新版 index.html 之後按這個按鈕，所有目前開著網頁的人（不管是業務、行政還是其他核心）畫面下方都會跳出「有新版本可以用」的提示，點一下就能更新，不用自己按 F5 或猜有沒有更新到最新版。</p>
+      <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px;">上傳新版 index.html 之後，<b>先自己把這個網頁強制重新整理一次(Ctrl+Shift+R)</b>確認你自己已經是最新版，再按下面這個按鈕——所有目前開著網頁的人（不管是業務、行政還是其他核心）畫面下方都會跳出「有新版本可以用」的提示，點一下就能更新，不用自己按 F5 或猜有沒有更新到最新版。</p>
       <button class="btn ghost" data-action="notify-everyone-update">🔄 通知全公司更新</button>
     </div>
     ${isAdmin() && salaryStaff.length>0 ? `
@@ -1994,13 +1994,14 @@ function showUpdateBanner(){
   if(document.getElementById('update-banner')) return;
   const bar = document.createElement('div');
   bar.id = 'update-banner';
-  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9998;background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:14px;font-size:13.5px;box-shadow:0 -4px 16px rgba(0,0,0,.2);';
-  bar.innerHTML = `<span>🔄 系統有新版本可以用，重新整理就能更新</span><button type="button" style="background:#fff;color:var(--navy);border:none;padding:7px 16px;border-radius:8px;font-weight:700;cursor:pointer;">立即更新</button>`;
-  bar.querySelector('button').addEventListener('click', ()=>{ bar.remove(); location.reload(); });
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9998;background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:13.5px;box-shadow:0 -4px 16px rgba(0,0,0,.2);flex-wrap:wrap;';
+  bar.innerHTML = `<span>🔄 系統有新版本可以用，重新整理就能更新</span><button type="button" class="ub-now" style="background:#fff;color:var(--navy);border:none;padding:7px 16px;border-radius:8px;font-weight:700;cursor:pointer;">立即更新</button><button type="button" class="ub-later" style="background:none;color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.4);padding:6px 14px;border-radius:8px;cursor:pointer;">稍後再說</button>`;
+  bar.querySelector('.ub-now').addEventListener('click', ()=>{ bar.remove(); location.reload(); });
+  bar.querySelector('.ub-later').addEventListener('click', ()=>{ bar.remove(); });
   document.body.appendChild(bar);
 }
 function notifyEveryoneToUpdate(){
-  return setDoc(doc(db,'appdata','version'), { build: 'push-'+Date.now(), _at: new Date().toISOString() });
+  return setDoc(doc(db,'appdata','version'), { build: APP_BUILD, _at: new Date().toISOString() });
 }
 /* ---- 分頁沒在看時，工作列(瀏覽器分頁/工作列縮圖)閃黃色圖示提醒 ---- */
 let taskbarFlashTimer = null;
