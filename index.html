@@ -738,6 +738,7 @@ function subscribeAll(){
     APP.role = me ? me.role : 'pending';
     if(!personalSubsInitialized && APP.role){
       personalSubsInitialized = true;
+      if(isCore() && me && me.landingView==='simple'){ APP.view = 'bossOverview'; }
       unsubs.push(onSnapshot(collection(db,'staffPublicProfiles'), snap2=>{
         APP.publicProfiles = {};
         snap2.docs.forEach(d=>{ APP.publicProfiles[d.id] = d.data(); });
@@ -1095,6 +1096,7 @@ function shellHTML(){
     ${core ? `
     <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
     <div class="nav-item" data-action="nav" data-view="dashboard"><span class="nav-icon">▦</span>總覽</div>
+    <div class="nav-item" data-action="nav" data-view="bossOverview"><span class="nav-icon">🧭</span>老闆總覽</div>
     ${meIsXiaojiang ? `<div class="nav-item" data-action="nav" data-view="xiaojiangDashboard"><span class="nav-icon">🌙</span>我的個人空間</div>` : ''}
     <div class="nav-group-label">財務</div>
     <div class="nav-item" data-action="nav" data-view="transactions"><span class="nav-icon">≣</span>收支明細</div>
@@ -1155,6 +1157,123 @@ function shellHTML(){
       <button type="submit">送出</button>
     </form>
   </div>` : ''}`;
+}
+
+/* ================= BOSS OVERVIEW（簡化總覽，任何核心成員都能切換使用，登入後可設為預設頁面）================= */
+function bossOverviewHTML(){
+  const t = todayStr();
+  const xjName = APP.data.caseSettings.xiaojiangName || '小江';
+
+  /* ---- 今日 ---- */
+  const adToday = APP.data.casesAd.filter(c=>c.date===t);
+  const chToday = APP.data.casesChannel.filter(c=>c.date===t);
+  const todayProfit = sum([...adToday, ...chToday].map(c=>({amount:c.companyProfit})));
+  const todayCaseCount = adToday.length + chToday.length;
+
+  const todayByPerson = {};
+  adToday.forEach(c=>{
+    const bb = Number(c.businessBonus)||0;
+    if(bb>0){ const k=c.staff||'（未填）'; todayByPerson[k]=(todayByPerson[k]||0)+bb; }
+    const xj = Number(c.xiaojiangBonus)||0;
+    if(xj>0) todayByPerson[xjName]=(todayByPerson[xjName]||0)+xj;
+  });
+  chToday.forEach(c=>{
+    const bb = channelCaseBusinessBonus(c);
+    if(bb>0){ const k=c.staff||'（未填）'; todayByPerson[k]=(todayByPerson[k]||0)+bb; }
+    const hb = channelCaseHuangBonus(c);
+    if(hb>0) todayByPerson['煌']=(todayByPerson['煌']||0)+hb;
+    const ct = channelCaseChannelTake(c);
+    if(ct>0){ const k=c.referrer||c.staff||'（未填通路夥伴）'; todayByPerson[k]=(todayByPerson[k]||0)+ct; }
+  });
+  [...adToday, ...chToday].filter(c=>c.specialHandling && Number(c.specialFee)>0).forEach(c=>{
+    todayByPerson[xjName]=(todayByPerson[xjName]||0)+Number(c.specialFee);
+  });
+  const todayPeopleList = Object.entries(todayByPerson).sort((a,b)=>b[1]-a[1]);
+  const todayBonusTotal = todayPeopleList.reduce((a,[,v])=>a+v,0);
+
+  /* ---- 本月 ---- */
+  const adThisMonth = APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey);
+  const chThisMonth = APP.data.casesChannel.filter(c=>monthKey(c.date)===nowMonthKey);
+  const monthProfit = sum([...adThisMonth, ...chThisMonth].map(c=>({amount:c.companyProfit})));
+  const monthCaseCount = adThisMonth.length + chThisMonth.length;
+
+  const profitByStaff = {};
+  adThisMonth.forEach(c=>{ const k=c.staff||'（未填）'; profitByStaff[k]=(profitByStaff[k]||0)+(Number(c.companyProfit)||0); });
+  chThisMonth.forEach(c=>{ const k=c.staff||'（未填）'; profitByStaff[k]=(profitByStaff[k]||0)+(Number(c.companyProfit)||0); });
+  const ranking = Object.entries(profitByStaff).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  /* ---- 需要留意 ---- */
+  const unpaidAd = APP.data.casesAd.filter(c=>!c.bonusPaid);
+  const unpaidCh = APP.data.casesChannel.filter(c=>!c.profitPaid && channelCaseTotalPayout(c)>0);
+  const unpaidTotal = sum(unpaidAd.map(c=>({amount:(Number(c.businessBonus)||0)+(Number(c.xiaojiangBonus)||0)})))
+    + sum(unpaidCh.map(c=>({amount:channelCaseTotalPayout(c)})));
+  const unpaidByPerson = {};
+  unpaidAd.forEach(c=>{
+    const bb=(Number(c.businessBonus)||0); if(bb>0){ const k=c.staff||'（未填）'; unpaidByPerson[k]=(unpaidByPerson[k]||0)+bb; }
+    const xj=(Number(c.xiaojiangBonus)||0); if(xj>0) unpaidByPerson[xjName]=(unpaidByPerson[xjName]||0)+xj;
+  });
+  unpaidCh.forEach(c=>{
+    const bb=channelCaseBusinessBonus(c); if(bb>0){ const k=c.staff||'（未填）'; unpaidByPerson[k]=(unpaidByPerson[k]||0)+bb; }
+    const hb=channelCaseHuangBonus(c); if(hb>0) unpaidByPerson['煌']=(unpaidByPerson['煌']||0)+hb;
+    const ct=channelCaseChannelTake(c); if(ct>0){ const k=c.referrer||c.staff||'（未填通路夥伴）'; unpaidByPerson[k]=(unpaidByPerson[k]||0)+ct; }
+  });
+  const unpaidList = Object.entries(unpaidByPerson).sort((a,b)=>b[1]-a[1]);
+
+  const nowMs = Date.now();
+  const staleThresholdMs = 7*24*60*60*1000;
+  function isStale(c){
+    if(STATUS_DONE.includes(c.status) || STATUS_CLOSED.includes(c.status)) return false;
+    const ref = c._at ? new Date(c._at).getTime() : (c.date ? new Date(c.date).getTime() : 0);
+    return ref && (nowMs-ref) > staleThresholdMs;
+  }
+  const staleCount = APP.data.progressAd.filter(isStale).length + APP.data.progressChannel.filter(isStale).length;
+
+  const bigCard = (label, value, color, sub) => `<div class="card" style="text-align:center;padding:26px 18px;">
+    <div style="font-size:14px;color:var(--muted);margin-bottom:8px;">${label}</div>
+    <div style="font-size:36px;font-weight:800;color:${color};line-height:1.1;">${value}</div>
+    ${sub?`<div style="font-size:12.5px;color:var(--muted);margin-top:6px;">${sub}</div>`:''}
+  </div>`;
+
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">老闆總覽</h1><p class="page-sub">公司現在的狀況，一眼看完</p></div>
+      <button type="button" class="btn ghost" data-action="switch-landing-view" data-mode="full">切換成完整總覽</button>
+    </div>
+
+    <div class="grid grid-3" style="margin-bottom:20px;">
+      ${bigCard('今日賺多少', money(todayProfit), 'var(--green)', `共 ${todayCaseCount} 件案件入帳`)}
+      ${bigCard('今日過件數', todayCaseCount+' 件', 'var(--blue)', todayCaseCount>0?'今天有進帳':'今天目前還沒有案件')}
+      ${bigCard('今日待發獎金', money(todayBonusTotal), todayBonusTotal>0?'var(--amber)':'var(--muted)', todayPeopleList.length>0?`共 ${todayPeopleList.length} 人`:'目前沒有')}
+    </div>
+
+    ${todayPeopleList.length>0 ? `
+    <div class="card" style="margin-bottom:20px;cursor:pointer;" data-action="nav" data-view="dailyBonus">
+      <div class="card-head-row"><h3 style="font-size:15px;">今天誰要領錢</h3><span class="hint">點擊查看完整每日獎金明細 →</span></div>
+      ${todayPeopleList.map(([name,val])=>`<div class="cat-row"><div class="name" style="width:auto;flex:1;">${escHtml(name)}</div><div class="val" style="width:auto;font-weight:700;color:var(--ink);">${money(val)}</div></div>`).join('')}
+    </div>` : ''}
+
+    <div class="card-head-row" style="margin-top:6px;"><h3 style="font-size:15px;">本月狀況（${nowMonthKey}）</h3></div>
+    <div class="grid grid-3" style="margin-bottom:20px;">
+      ${bigCard('本月公司淨利', money(monthProfit), monthProfit>=0?'var(--green)':'var(--red)')}
+      ${bigCard('本月過件數', monthCaseCount+' 件', 'var(--blue)')}
+      ${bigCard('本月尚未發放獎金', money(unpaidTotal), unpaidTotal>0?'var(--red)':'var(--muted)', unpaidList.length>0?`共 ${unpaidList.length} 人`:'全部已發放')}
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-head-row"><h3 style="font-size:15px;">本月業務排行</h3><span class="hint">利潤貢獻前三名</span></div>
+        ${ranking.length===0 ? `<div class="empty" style="padding:20px 0;">本月尚無資料</div>` :
+          ranking.map(([name,val],i)=>`<div class="cat-row"><div class="name">${i+1}. ${escHtml(name)}</div>
+            <div class="track"><div class="fill" style="width:${Math.min(100,Math.round(val/(ranking[0][1]||1)*100))}%;background:var(--blue)"></div></div>
+            <div class="val">${money(val)}</div></div>`).join('')}
+      </div>
+      <div class="card">
+        <div class="card-head-row"><h3 style="font-size:15px;">需要留意</h3></div>
+        <div class="cat-row"><div class="name" style="width:auto;flex:1;">案件超過 7 天未更新</div><div class="val" style="width:auto;font-weight:700;color:${staleCount>0?'var(--red)':'var(--muted)'};">${staleCount} 件</div></div>
+        ${unpaidList.length>0 ? unpaidList.map(([name,val])=>`<div class="cat-row"><div class="name" style="width:auto;flex:1;">${escHtml(name)} 有獎金未發</div><div class="val" style="width:auto;font-weight:700;color:var(--amber);">${money(val)}</div></div>`).join('') : `<div class="cat-row"><div class="name" style="width:auto;flex:1;color:var(--muted);">獎金都發放完成了</div></div>`}
+      </div>
+    </div>
+  `;
 }
 
 /* ================= DASHBOARD ================= */
@@ -1292,7 +1411,10 @@ function dashboardHTML(){
   return `
     <div class="page-header">
       <div><h1 class="page-title">總覽</h1><p class="page-sub">公司今天的體檢報告</p></div>
-      <select id="year-select">${yearOptions.join('')}</select>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button type="button" class="btn ghost sm" data-action="switch-landing-view" data-mode="simple">切換成簡化總覽</button>
+        <select id="year-select">${yearOptions.join('')}</select>
+      </div>
     </div>
 
     <div class="card-head-row" style="margin-top:6px;"><h3 style="font-size:15px;">本月營運脈動</h3></div>
@@ -2247,6 +2369,7 @@ function render(){
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
+  else if(APP.view==='bossOverview' && isCore()) main.innerHTML = bossOverviewHTML();
   else if(APP.view==='xiaojiangDashboard' && isCore()) main.innerHTML = xiaojiangDashboardView();
   else if(APP.view==='transactions' && isCore()) main.innerHTML = transactionsHTML();
   else if(APP.view==='reports' && isCore()) main.innerHTML = reportsHTML();
@@ -2804,7 +2927,7 @@ function staffOverviewHTML(){
     const ch = APP.data.progressChannel.filter(c=>c.staff===name);
     const all = [...ad, ...ch];
     const pending = all.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
-    const done = all.filter(c=>STATUS_DONE.includes(c.status)).length;
+    const done = all.filter(c=>STATUS_DONE.includes(c.status) && monthKey(c.date)===nowMonthKey).length;
     const needDocsCount = all.filter(c=>c.status==='補資料').length;
     const guarantorCheckCount = all.filter(c=>c.status==='對保').length;
     const waitingDisbursementCount = all.filter(c=>c.status==='等撥款').length;
@@ -4685,6 +4808,13 @@ document.addEventListener('click', (e)=>{
   const el = e.target.closest('[data-action]');
   if(el){
     const action = el.dataset.action;
+    if(action==='switch-landing-view'){
+      const mode = el.dataset.mode;
+      APP.view = mode==='simple' ? 'bossOverview' : 'dashboard';
+      updateDoc(doc(db,'users',APP.user.uid), { landingView: mode }).catch(()=>{});
+      render();
+      return;
+    }
     if(action==='nav'){
       const personalViews = ['progress','personalLog','attendance','calendar','personalDashboard'];
       if(!personalViews.includes(el.dataset.view)) APP.viewingStaff=null;
