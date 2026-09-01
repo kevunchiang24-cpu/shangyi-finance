@@ -424,6 +424,23 @@
   .hogwarts-btn-lg:hover{ background:rgba(139,92,246,.48); transform:scale(1.03); }
   .ai-chat-form input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:20px;font-size:13px;}
   .ai-chat-form button{background:var(--navy);color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:13px;cursor:pointer;}
+  .boss-chat-card{ display:flex; flex-direction:column; height:calc(100vh - 200px); min-height:420px; padding:0; overflow:hidden; }
+  .boss-chat-messages{ flex:1; overflow-y:auto; padding:26px; display:flex; flex-direction:column; gap:16px; background:#F5F7FC; }
+  .boss-chat-messages .ai-msg{ max-width:72%; font-size:15px; line-height:1.7; padding:14px 18px; border-radius:16px; }
+  .boss-chat-messages .ai-chat-empty{ color:var(--muted); font-size:14px; text-align:center; padding:40px 20px; }
+  .boss-quick-row{ display:flex; gap:8px; flex-wrap:wrap; padding:12px 20px 0; background:#fff; }
+  .boss-quick-btn{
+    background:#EEF1FB; color:var(--navy); border:1px solid var(--border); border-radius:100px;
+    padding:7px 14px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;
+  }
+  .boss-quick-btn:hover{ background:#DCE6FE; }
+  .boss-chat-form{ display:flex; gap:10px; padding:16px 20px; border-top:1px solid var(--border); background:#fff; }
+  .boss-chat-form input{ flex:1; padding:12px 16px; border:1px solid var(--border); border-radius:24px; font-size:14px; }
+  .boss-chat-form button{ background:var(--navy); color:#fff; border:none; border-radius:24px; padding:12px 24px; font-size:14px; font-weight:600; cursor:pointer; flex-shrink:0; }
+  @media (max-width:900px){
+    .boss-chat-card{ height:calc(100vh - 240px); }
+    .boss-chat-messages .ai-msg{ max-width:88%; font-size:14px; }
+  }
 
   #modal-overlay{position:fixed;inset:0;background:rgba(20,22,28,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
   #modal-box{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;}
@@ -585,7 +602,7 @@ const APP = {
   chatOpen:false, chatLoading:false, chatMessages:[],
   casesTab:'ad', caseAdFilter:{status:'all', month:nowMonthKey}, caseChannelFilter:{status:'all', month:nowMonthKey}, dailyBonusDate:'',
   bizToolsTab:'progress', staffOverviewName:'', staffOverviewTab:'log', viewingStaff:null,
-  myLogFilter:{month:nowMonthKey}, attendanceFilter:{month:nowMonthKey},
+  myLogFilter:{month:nowMonthKey}, myLogNoContactCollapsed:false, attendanceFilter:{month:nowMonthKey},
   progressAdSort:{key:'date',dir:'desc'}, progressChannelSort:{key:'date',dir:'desc'},
   casesAdSort:{key:'date',dir:'desc'}, casesChannelSort:{key:'date',dir:'desc'},
   txSort:{key:'date',dir:'desc'}, adSpendSort:{key:'month',dir:'desc'}, myLogSort:{key:'date',dir:'desc'},
@@ -1095,6 +1112,7 @@ function shellHTML(){
     ${core ? `
     <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
     <div class="nav-item" data-action="nav" data-view="dashboard"><span class="nav-icon">▦</span>總覽</div>
+    <div class="nav-item" data-action="nav" data-view="bossOverview"><span class="nav-icon">🧭</span>老闆總覽</div>
     ${meIsXiaojiang ? `<div class="nav-item" data-action="nav" data-view="xiaojiangDashboard"><span class="nav-icon">🌙</span>我的個人空間</div>` : ''}
     <div class="nav-group-label">財務</div>
     <div class="nav-item" data-action="nav" data-view="transactions"><span class="nav-icon">≣</span>收支明細</div>
@@ -1156,6 +1174,33 @@ function shellHTML(){
     </form>
   </div>` : ''}`;
 }
+/* ================= BOSS OVERVIEW（老闆總覽：全頁版AI對話，像助理一樣主動報告今日狀況，可直接在同一個地方繼續追問）================= */
+const BOSS_QUICK_QUESTIONS = [
+  { label:'業務排行', q:'這個月每位業務的表現排名，簡短列出來就好。' },
+  { label:'獎金發放狀況', q:'這個月還有哪些獎金沒發放，分別是誰、多少錢？' },
+  { label:'跟上月比較', q:'這個月的收入、支出、獲利，跟上個月比起來怎麼樣？' },
+  { label:'需要留意的案件', q:'有沒有案件超過7天沒更新狀態，需要留意的？' },
+];
+function bossOverviewHTML(){
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">老闆總覽</h1><p class="page-sub">像助理一樣，直接跟你說今天的公司狀況，也可以直接在下面繼續問</p></div>
+      <button type="button" class="btn ghost sm" data-action="boss-refresh-briefing">🔄 重新產生今日簡報</button>
+    </div>
+    <div class="card boss-chat-card">
+      <div class="boss-chat-messages" id="boss-chat-messages"></div>
+      <div class="boss-quick-row">
+        ${BOSS_QUICK_QUESTIONS.map((b,i)=>`<button type="button" class="boss-quick-btn" data-action="boss-quick-question" data-idx="${i}">${escHtml(b.label)}</button>`).join('')}
+      </div>
+      <form class="boss-chat-form" id="boss-chat-form">
+        <input type="text" id="boss-chat-input" placeholder="問財務、案件進度、業務排行，或直接請它再講一次今天的重點……" autocomplete="off"/>
+        <button type="submit">送出</button>
+      </form>
+    </div>
+  `;
+}
+const BOSS_BRIEFING_PROMPT = '請用簡短口語化的方式，跟我報告一下今天的公司狀況：今天入帳賺了多少錢、有沒有案件今天過件（撥款完成）、今天有沒有業務需要發放獎金（列出姓名跟金額）。只講今天實際發生的事實，不要加分析、不要加建議，簡潔一點，像口頭報告一樣。';
+
 /* ================= DASHBOARD ================= */
 function dashboardHTML(){
   const year = APP.year;
@@ -1275,16 +1320,8 @@ function dashboardHTML(){
       <div class="val">${money(val)}</div></div>`).join('');
 
   /* ---- Layer 3b: 待處理提醒 ---- */
-  const staleThresholdMs = 7*24*60*60*1000;
-  const nowMs = Date.now();
-  function isStale(c){
-    if(STATUS_DONE.includes(c.status) || STATUS_CLOSED.includes(c.status)) return false;
-    const ref = c._at ? new Date(c._at).getTime() : (c.date ? new Date(c.date).getTime() : 0);
-    return ref && (nowMs-ref) > staleThresholdMs;
-  }
-  const staleAd = APP.data.progressAd.filter(isStale);
-  const staleCh = APP.data.progressChannel.filter(isStale);
-  const staleCount = staleAd.length + staleCh.length;
+  const staleCases = getStaleCases();
+  const staleCount = staleCases.length;
   const unpaidBonusCases = APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey && !c.bonusPaid);
   const unpaidBonusTotal = sum(unpaidBonusCases.map(c=>({amount:(Number(c.businessBonus)||0)+(Number(c.xiaojiangBonus)||0)})));
 
@@ -1332,7 +1369,7 @@ function dashboardHTML(){
       </div>
       <div class="card">
         <div class="card-head-row"><h3>待處理提醒</h3></div>
-        <div class="cat-row"><div class="name" style="width:auto;flex:1;">案件超過 7 天未更新狀態</div><div class="val" style="width:auto;color:${staleCount>0?'var(--red)':'var(--muted)'};font-weight:700;">${staleCount} 件</div></div>
+        <div class="cat-row"${staleCount>0?' data-action="open-stale-cases-modal" style="cursor:pointer;"':''}><div class="name" style="width:auto;flex:1;">案件超過 7 天未更新狀態${staleCount>0?' <span style="font-size:11px;color:var(--blue);">(點擊查看明細)</span>':''}</div><div class="val" style="width:auto;color:${staleCount>0?'var(--red)':'var(--muted)'};font-weight:700;">${staleCount} 件</div></div>
         <div class="cat-row"><div class="name" style="width:auto;flex:1;">本月獎金尚未發放</div><div class="val" style="width:auto;color:${unpaidBonusCases.length>0?'var(--amber)':'var(--muted)'};font-weight:700;">${unpaidBonusCases.length} 件 · ${money(unpaidBonusTotal)}</div></div>
         ${(staleCount===0 && unpaidBonusCases.length===0) ? `<p style="color:var(--muted);font-size:12.5px;margin-top:10px;">目前沒有需要特別留意的事項</p>` : ''}
       </div>
@@ -2246,6 +2283,16 @@ function render(){
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
+  else if(APP.view==='bossOverview' && isCore()){
+    if(!document.getElementById('boss-chat-messages')){
+      main.innerHTML = bossOverviewHTML();
+    }
+    renderChat();
+    if(APP.chatMessages.length===0 && !APP.chatLoading && !APP._bossBriefingTriggered){
+      APP._bossBriefingTriggered = true;
+      sendChatMessage(BOSS_BRIEFING_PROMPT);
+    }
+  }
   else if(APP.view==='xiaojiangDashboard' && isCore()) main.innerHTML = xiaojiangDashboardView();
   else if(APP.view==='transactions' && isCore()) main.innerHTML = transactionsHTML();
   else if(APP.view==='reports' && isCore()) main.innerHTML = reportsHTML();
@@ -2549,8 +2596,15 @@ function myProgressLogView(){
   const f = APP.myLogFilter;
   let mine = f.month ? allMine.filter(c=>monthKey(c.date)===f.month) : allMine;
   mine = mine.filter(c=>matchesSearch(c, APP.myLogSearch));
-  const rows = progressLogRows(mine, APP.user.uid, false);
+  const normalList = mine.filter(c=>c.phone && c.phone.trim());
+  const noContactList = mine.filter(c=>!(c.phone && c.phone.trim()));
+  const normalRows = progressLogRows(normalList, APP.user.uid, false);
+  const noContactRows = progressLogRows(noContactList, APP.user.uid, false);
   const monthOptions = Array.from(new Set([...allMine.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
+  const tableHead = `<thead><tr>
+        ${thSort('日期','date','myLogSort')}${thSort('客戶','customer','myLogSort')}${thSort('來源','source','myLogSort')}${thSort('洽談產品','dealProduct','myLogSort')}${thSort('聯絡狀態','contactStatus','myLogSort')}${thSort('轉給誰','transferTo','myLogSort')}<th>客戶詳細資料</th>${thSort('案件狀態','caseStatus','myLogSort')}<th>案件狀況備註</th><th>${whIcon(14)}</th><th></th>
+      </tr></thead>`;
+  const noContactCollapsed = APP.myLogNoContactCollapsed;
   return `
     <div class="page-header" style="margin-bottom:14px;">
       <div><p class="hint" style="color:var(--muted);font-size:12.5px;">這裡是你自己的開發日誌，純粹自己記錄用，不會影響、也不會被拉進送件進度表或任何報表。</p></div>
@@ -2561,14 +2615,22 @@ function myProgressLogView(){
         <select data-case-filter="mylog-month"><option value="">全部月份</option>
         ${monthOptions.map(m=>`<option value="${m}" ${f.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
       ${searchBoxHtml('myLogSearch')}
+      <div class="filter-field"><label>&nbsp;</label>
+        <button type="button" class="chip" data-action="toggle-mylog-nocontact-section">📵 ${noContactCollapsed?'顯示':'隱藏'}無聯絡方式的客人（${noContactList.length}）</button>
+      </div>
     </div>
+
+    <div class="table-wrap" style="margin-bottom:20px;">
+      ${normalList.length===0?`<div class="empty">${f.month||APP.myLogSearch?'沒有符合條件的記錄':'尚無記錄'}</div>`:`
+      <table>${tableHead}<tbody>${normalRows}</tbody></table>`}
+    </div>
+
+    ${noContactCollapsed ? '' : `
+    <div class="card-head-row" style="margin-top:6px;"><h3 style="font-size:15px;">📵 無聯絡方式的客人</h3><span class="hint">共 ${noContactList.length} 筆</span></div>
     <div class="table-wrap">
-      ${mine.length===0?`<div class="empty">${f.month||APP.myLogSearch?'沒有符合條件的記錄':'尚無記錄，開始養成記錄客戶的習慣吧'}</div>`:`
-      <table><thead><tr>
-        ${thSort('日期','date','myLogSort')}${thSort('客戶','customer','myLogSort')}${thSort('來源','source','myLogSort')}${thSort('洽談產品','dealProduct','myLogSort')}${thSort('聯絡狀態','contactStatus','myLogSort')}${thSort('轉給誰','transferTo','myLogSort')}<th>客戶詳細資料</th>${thSort('案件狀態','caseStatus','myLogSort')}<th>案件狀況備註</th><th>${whIcon(14)}</th><th></th>
-      </tr></thead>
-      <tbody>${rows}</tbody></table>`}
-    </div>
+      ${noContactList.length===0?`<div class="empty">沒有這類記錄</div>`:`
+      <table>${tableHead}<tbody>${noContactRows}</tbody></table>`}
+    </div>`}
   `;
 }
 function openPersonalLogModal(existing){
@@ -2927,6 +2989,21 @@ function statusBadgeClass(s){
   return 'pending';
 }
 function monthKey(dateStr){ return dateStr ? dateStr.slice(0,7) : ''; }
+/* ---- 逾期未更新案件（超過7天沒更新狀態），總覽的數字跟明細彈窗共用同一套判斷邏輯 ---- */
+function isStaleCase(c){
+  if(STATUS_DONE.includes(c.status) || STATUS_CLOSED.includes(c.status)) return false;
+  const ref = c._at ? new Date(c._at).getTime() : (c.date ? new Date(c.date).getTime() : 0);
+  return ref && (Date.now()-ref) > 7*24*60*60*1000;
+}
+function getStaleCases(){
+  return [
+    ...APP.data.progressAd.filter(isStaleCase).map(c=>({...c, _lineType:'ad'})),
+    ...APP.data.progressChannel.filter(isStaleCase).map(c=>({...c, _lineType:'channel'})),
+  ].sort((a,b)=>{
+    const ta = a._at?new Date(a._at).getTime():0, tb = b._at?new Date(b._at).getTime():0;
+    return ta - tb; // 最久沒更新的排最前面
+  });
+}
 function sortList(list, sortState, type){
   if(!sortState || !sortState.key) return list;
   const { key, dir } = sortState;
@@ -3593,6 +3670,31 @@ function openModal(title, bodyHtml, formId, onSubmit){
     </form>`;
 }
 function closeModal(){ document.getElementById('modal-overlay').style.display = 'none'; modalOnSubmit = null; }
+function openStaleCasesModal(){
+  const list = getStaleCases();
+  const nowMs = Date.now();
+  const rows = list.map(c=>{
+    const ref = c._at ? new Date(c._at).getTime() : (c.date ? new Date(c.date).getTime() : 0);
+    const daysSince = ref ? Math.floor((nowMs-ref)/(24*60*60*1000)) : '—';
+    return `<tr>
+      <td><span class="badge ${c._lineType==='ad'?'income':'expense'}">${c._lineType==='ad'?'廣告客':'直客/通路'}</span></td>
+      <td>${escHtml(c.customer||'—')}</td>
+      <td>${escHtml(c.staff||'—')}</td>
+      <td>${optionBadgeHtml(c.status, null, 'status')}</td>
+      <td style="color:var(--red);font-weight:600;">${daysSince} 天</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-head"><h3>超過 7 天未更新狀態的案件（共 ${list.length} 件）</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <p style="color:var(--muted);font-size:12.5px;margin-top:0;">依「最久沒更新」排在最前面，點選案件可以直接去進度追蹤更新狀態。</p>
+    <div class="table-wrap" style="max-height:420px;overflow-y:auto;">
+      ${list.length===0 ? `<div class="empty">目前沒有逾期未更新的案件</div>` :
+      `<table><thead><tr><th>類型</th><th>客戶</th><th>業務</th><th>狀態</th><th>未更新天數</th></tr></thead><tbody>${rows}</tbody></table>`}
+    </div>
+    <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">關閉</button>
+    <button type="button" class="btn primary" data-action="goto-progress-from-modal">前往進度追蹤</button></div>`;
+}
 function openConfirm(message, onConfirm){
   document.getElementById('modal-overlay').style.display = 'flex';
   document.getElementById('modal-box').innerHTML = `
@@ -4600,17 +4702,17 @@ ${myAttendanceLines || '無'}
 ${upcoming || '無'}`;
 }
 
-function renderChat(){
-  const panel = document.getElementById('ai-chat-panel');
-  const box = document.getElementById('ai-chat-messages');
-  if(!panel || !box) return;
-  panel.classList.toggle('hidden', !APP.chatOpen);
+function chatEmptyStateHtml(){
+  return isCore()
+    ? `<div class="ai-chat-empty">可以問財務、案件進度、業務排行、廣告投放成效（例如「這個月 ROI 怎麼樣」「哪個業務貢獻最多」），也可以請它給建議，或直接說要記一筆帳（例如「幫我記一筆 8/15 廣告費 1200」）。</div>`
+    : isStaffSales()
+      ? `<div class="ai-chat-empty">可以問你自己的案件進度、獎金、行程，也可以直接說要記一筆客戶開發記錄（例如「幫我記一筆，陳小姐 0912345678，在談和潤，客戶還在考慮」），AI 會幫你整理成一筆個人業務進度紀錄，確認後才會真的存進去。它只看得到你自己的資料。</div>`
+      : `<div class="ai-chat-empty">可以問案件進度、獎金發放狀況，也可以直接說要登記一筆正式案件（例如「幫我新增一筆，王先生 0987654321，JET方案，指派給秉，狀態教照會」），AI 會幫你整理成一筆進度追蹤紀錄，確認後才會真的存進去。它只看得到進度追蹤資料，看不到財務數字。</div>`;
+}
+function renderChatInto(box){
+  if(!box) return;
   if(APP.chatMessages.length===0 && !APP.chatLoading){
-    box.innerHTML = isCore()
-      ? `<div class="ai-chat-empty">可以問財務、案件進度、業務排行、廣告投放成效（例如「這個月 ROI 怎麼樣」「哪個業務貢獻最多」），也可以請它給建議，或直接說要記一筆帳（例如「幫我記一筆 8/15 廣告費 1200」）。</div>`
-      : isStaffSales()
-        ? `<div class="ai-chat-empty">可以問你自己的案件進度、獎金、行程，也可以直接說要記一筆客戶開發記錄（例如「幫我記一筆，陳小姐 0912345678，在談和潤，客戶還在考慮」），AI 會幫你整理成一筆個人業務進度紀錄，確認後才會真的存進去。它只看得到你自己的資料。</div>`
-        : `<div class="ai-chat-empty">可以問案件進度、獎金發放狀況，也可以直接說要登記一筆正式案件（例如「幫我新增一筆，王先生 0987654321，JET方案，指派給秉，狀態教照會」），AI 會幫你整理成一筆進度追蹤紀錄，確認後才會真的存進去。它只看得到進度追蹤資料，看不到財務數字。</div>`;
+    box.innerHTML = chatEmptyStateHtml();
   } else {
     box.innerHTML = APP.chatMessages.map((m,i)=>{
       if(m.role==='user') return `<div class="ai-msg user">${escHtml(m.text)}</div>`;
@@ -4635,6 +4737,15 @@ function renderChat(){
     }).join('') + (APP.chatLoading ? `<div class="ai-msg loading">AI 思考中…</div>` : '');
   }
   box.scrollTop = box.scrollHeight;
+}
+function renderChat(){
+  const panel = document.getElementById('ai-chat-panel');
+  const box = document.getElementById('ai-chat-messages');
+  if(panel && box){
+    panel.classList.toggle('hidden', !APP.chatOpen);
+    renderChatInto(box);
+  }
+  renderChatInto(document.getElementById('boss-chat-messages'));
 }
 
 async function sendChatMessage(question){
@@ -4684,6 +4795,13 @@ document.addEventListener('click', (e)=>{
   const el = e.target.closest('[data-action]');
   if(el){
     const action = el.dataset.action;
+    if(action==='boss-refresh-briefing'){ sendChatMessage(BOSS_BRIEFING_PROMPT); return; }
+    if(action==='boss-quick-question'){
+      const idx = Number(el.dataset.idx);
+      const item = BOSS_QUICK_QUESTIONS[idx];
+      if(item && !APP.chatLoading) sendChatMessage(item.q);
+      return;
+    }
     if(action==='nav'){
       const personalViews = ['progress','personalLog','attendance','calendar','personalDashboard'];
       if(!personalViews.includes(el.dataset.view)) APP.viewingStaff=null;
@@ -4691,6 +4809,8 @@ document.addEventListener('click', (e)=>{
       APP.view = el.dataset.view; render(); closeSidebar(); return;
     }
     if(action==='close-modal'){ closeModal(); return; }
+    if(action==='open-stale-cases-modal'){ openStaleCasesModal(); return; }
+    if(action==='goto-progress-from-modal'){ closeModal(); APP.view='progress'; render(); return; }
     if(action==='toggle-notif-panel'){ toggleNotifPanel(); return; }
     if(action==='open-announcement-modal'){ openAnnouncementModal(); return; }
     if(action==='tx-tab'){ APP.txTab = el.dataset.tab; render(); return; }
@@ -4884,6 +5004,7 @@ document.addEventListener('click', (e)=>{
     }
     if(action==='biz-tab'){ APP.bizToolsTab = el.dataset.tab; render(); return; }
     if(action==='open-personal-log-modal'){ openPersonalLogModal(null); return; }
+    if(action==='toggle-mylog-nocontact-section'){ APP.myLogNoContactCollapsed = !APP.myLogNoContactCollapsed; render(); return; }
     if(action==='edit-personal-log'){ const c = APP.data.personalProgress.find(x=>x.id===el.dataset.id); if(c) openPersonalLogModal(c); return; }
     if(action==='delete-personal-log'){
       openConfirm('確定要刪除這筆個人記錄嗎？', ()=>{ deletePersonalProgress(el.dataset.id); }); return;
@@ -5627,6 +5748,15 @@ document.addEventListener('submit', (e)=>{
   if(e.target.id==='ai-chat-form'){
     e.preventDefault();
     const input = document.getElementById('ai-chat-input');
+    const q = input.value.trim();
+    if(!q || APP.chatLoading) return;
+    input.value = '';
+    sendChatMessage(q);
+    return;
+  }
+  if(e.target.id==='boss-chat-form'){
+    e.preventDefault();
+    const input = document.getElementById('boss-chat-input');
     const q = input.value.trim();
     if(!q || APP.chatLoading) return;
     input.value = '';
