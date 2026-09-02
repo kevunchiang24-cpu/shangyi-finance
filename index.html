@@ -424,23 +424,6 @@
   .hogwarts-btn-lg:hover{ background:rgba(139,92,246,.48); transform:scale(1.03); }
   .ai-chat-form input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:20px;font-size:13px;}
   .ai-chat-form button{background:var(--navy);color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:13px;cursor:pointer;}
-  .boss-chat-card{ display:flex; flex-direction:column; height:calc(100vh - 200px); min-height:420px; padding:0; overflow:hidden; }
-  .boss-chat-messages{ flex:1; overflow-y:auto; padding:26px; display:flex; flex-direction:column; gap:16px; background:#F5F7FC; }
-  .boss-chat-messages .ai-msg{ max-width:72%; font-size:15px; line-height:1.7; padding:14px 18px; border-radius:16px; }
-  .boss-chat-messages .ai-chat-empty{ color:var(--muted); font-size:14px; text-align:center; padding:40px 20px; }
-  .boss-quick-row{ display:flex; gap:8px; flex-wrap:wrap; padding:12px 20px 0; background:#fff; }
-  .boss-quick-btn{
-    background:#EEF1FB; color:var(--navy); border:1px solid var(--border); border-radius:100px;
-    padding:7px 14px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;
-  }
-  .boss-quick-btn:hover{ background:#DCE6FE; }
-  .boss-chat-form{ display:flex; gap:10px; padding:16px 20px; border-top:1px solid var(--border); background:#fff; }
-  .boss-chat-form input{ flex:1; padding:12px 16px; border:1px solid var(--border); border-radius:24px; font-size:14px; }
-  .boss-chat-form button{ background:var(--navy); color:#fff; border:none; border-radius:24px; padding:12px 24px; font-size:14px; font-weight:600; cursor:pointer; flex-shrink:0; }
-  @media (max-width:900px){
-    .boss-chat-card{ height:calc(100vh - 240px); }
-    .boss-chat-messages .ai-msg{ max-width:88%; font-size:14px; }
-  }
 
   #modal-overlay{position:fixed;inset:0;background:rgba(20,22,28,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
   #modal-box{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;}
@@ -1112,7 +1095,6 @@ function shellHTML(){
     ${core ? `
     <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
     <div class="nav-item" data-action="nav" data-view="dashboard"><span class="nav-icon">▦</span>總覽</div>
-    <div class="nav-item" data-action="nav" data-view="bossOverview"><span class="nav-icon">🧭</span>老闆總覽</div>
     ${meIsXiaojiang ? `<div class="nav-item" data-action="nav" data-view="xiaojiangDashboard"><span class="nav-icon">🌙</span>我的個人空間</div>` : ''}
     <div class="nav-group-label">財務</div>
     <div class="nav-item" data-action="nav" data-view="transactions"><span class="nav-icon">≣</span>收支明細</div>
@@ -1174,33 +1156,6 @@ function shellHTML(){
     </form>
   </div>` : ''}`;
 }
-/* ================= BOSS OVERVIEW（老闆總覽：全頁版AI對話，像助理一樣主動報告今日狀況，可直接在同一個地方繼續追問）================= */
-const BOSS_QUICK_QUESTIONS = [
-  { label:'業務排行', q:'這個月每位業務的表現排名，簡短列出來就好。' },
-  { label:'獎金發放狀況', q:'這個月還有哪些獎金沒發放，分別是誰、多少錢？' },
-  { label:'跟上月比較', q:'這個月的收入、支出、獲利，跟上個月比起來怎麼樣？' },
-  { label:'需要留意的案件', q:'有沒有案件超過7天沒更新狀態，需要留意的？' },
-];
-function bossOverviewHTML(){
-  return `
-    <div class="page-header">
-      <div><h1 class="page-title">老闆總覽</h1><p class="page-sub">像助理一樣，直接跟你說今天的公司狀況，也可以直接在下面繼續問</p></div>
-      <button type="button" class="btn ghost sm" data-action="boss-refresh-briefing">🔄 重新產生今日簡報</button>
-    </div>
-    <div class="card boss-chat-card">
-      <div class="boss-chat-messages" id="boss-chat-messages"></div>
-      <div class="boss-quick-row">
-        ${BOSS_QUICK_QUESTIONS.map((b,i)=>`<button type="button" class="boss-quick-btn" data-action="boss-quick-question" data-idx="${i}">${escHtml(b.label)}</button>`).join('')}
-      </div>
-      <form class="boss-chat-form" id="boss-chat-form">
-        <input type="text" id="boss-chat-input" placeholder="問財務、案件進度、業務排行，或直接請它再講一次今天的重點……" autocomplete="off"/>
-        <button type="submit">送出</button>
-      </form>
-    </div>
-  `;
-}
-const BOSS_BRIEFING_PROMPT = '請用簡短口語化的方式，跟我報告一下今天的公司狀況：今天入帳賺了多少錢、有沒有案件今天過件（撥款完成）、今天有沒有業務需要發放獎金（列出姓名跟金額）。只講今天實際發生的事實，不要加分析、不要加建議，簡潔一點，像口頭報告一樣。';
-
 /* ================= DASHBOARD ================= */
 function dashboardHTML(){
   const year = APP.year;
@@ -2283,16 +2238,6 @@ function render(){
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
-  else if(APP.view==='bossOverview' && isCore()){
-    if(!document.getElementById('boss-chat-messages')){
-      main.innerHTML = bossOverviewHTML();
-    }
-    renderChat();
-    if(APP.chatMessages.length===0 && !APP.chatLoading && !APP._bossBriefingTriggered){
-      APP._bossBriefingTriggered = true;
-      sendChatMessage(BOSS_BRIEFING_PROMPT);
-    }
-  }
   else if(APP.view==='xiaojiangDashboard' && isCore()) main.innerHTML = xiaojiangDashboardView();
   else if(APP.view==='transactions' && isCore()) main.innerHTML = transactionsHTML();
   else if(APP.view==='reports' && isCore()) main.innerHTML = reportsHTML();
@@ -2596,8 +2541,8 @@ function myProgressLogView(){
   const f = APP.myLogFilter;
   let mine = f.month ? allMine.filter(c=>monthKey(c.date)===f.month) : allMine;
   mine = mine.filter(c=>matchesSearch(c, APP.myLogSearch));
-  const normalList = mine.filter(c=>c.phone && c.phone.trim());
-  const noContactList = mine.filter(c=>!(c.phone && c.phone.trim()));
+  const normalList = mine.filter(c=>hasValidPhone(c.phone));
+  const noContactList = mine.filter(c=>!hasValidPhone(c.phone));
   const normalRows = progressLogRows(normalList, APP.user.uid, false);
   const noContactRows = progressLogRows(noContactList, APP.user.uid, false);
   const monthOptions = Array.from(new Set([...allMine.map(c=>monthKey(c.date)), nowMonthKey])).filter(Boolean).sort().reverse();
@@ -2989,6 +2934,16 @@ function statusBadgeClass(s){
   return 'pending';
 }
 function monthKey(dateStr){ return dateStr ? dateStr.slice(0,7) : ''; }
+/* ---- 判斷「電話」欄位是否真的填了有效聯絡方式（電話號碼或LINE ID），而不是隨便填字
+   （例如有人會打「未留聯絡方式」這種說明文字進去，這不該被當成「有留聯絡方式」）
+   做法：①抓出欄位裡的數字，數量達到門檻(6碼，市話最短約7碼、手機10碼，6碼當保守門檻避免漏判)就算電話號碼
+        ②否則找看看有沒有連續4碼以上的英數字/底線/點/減號組合(不含中文)，符合LINE ID常見格式的話也算有效聯絡方式 ---- */
+function hasValidPhone(phone){
+  if(!phone) return false;
+  const digits = String(phone).replace(/\D/g, '');
+  if(digits.length >= 6) return true;
+  return /[A-Za-z0-9._-]{4,}/.test(String(phone));
+}
 /* ---- 逾期未更新案件（超過7天沒更新狀態），總覽的數字跟明細彈窗共用同一套判斷邏輯 ---- */
 function isStaleCase(c){
   if(STATUS_DONE.includes(c.status) || STATUS_CLOSED.includes(c.status)) return false;
@@ -4745,7 +4700,6 @@ function renderChat(){
     panel.classList.toggle('hidden', !APP.chatOpen);
     renderChatInto(box);
   }
-  renderChatInto(document.getElementById('boss-chat-messages'));
 }
 
 async function sendChatMessage(question){
@@ -4795,13 +4749,6 @@ document.addEventListener('click', (e)=>{
   const el = e.target.closest('[data-action]');
   if(el){
     const action = el.dataset.action;
-    if(action==='boss-refresh-briefing'){ sendChatMessage(BOSS_BRIEFING_PROMPT); return; }
-    if(action==='boss-quick-question'){
-      const idx = Number(el.dataset.idx);
-      const item = BOSS_QUICK_QUESTIONS[idx];
-      if(item && !APP.chatLoading) sendChatMessage(item.q);
-      return;
-    }
     if(action==='nav'){
       const personalViews = ['progress','personalLog','attendance','calendar','personalDashboard'];
       if(!personalViews.includes(el.dataset.view)) APP.viewingStaff=null;
@@ -5748,15 +5695,6 @@ document.addEventListener('submit', (e)=>{
   if(e.target.id==='ai-chat-form'){
     e.preventDefault();
     const input = document.getElementById('ai-chat-input');
-    const q = input.value.trim();
-    if(!q || APP.chatLoading) return;
-    input.value = '';
-    sendChatMessage(q);
-    return;
-  }
-  if(e.target.id==='boss-chat-form'){
-    e.preventDefault();
-    const input = document.getElementById('boss-chat-input');
     const q = input.value.trim();
     if(!q || APP.chatLoading) return;
     input.value = '';
