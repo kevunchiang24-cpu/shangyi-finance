@@ -4352,12 +4352,11 @@ function openAdSpendModal(existing){
 }
 
 function postBonusPayoutToTransactions(caseRec, amount, noteText){
-  if(!amount || amount<=0) return;
-  const tx = stamp({ id:uid(), date:caseRec.date, type:'expense', mainCategory:'佣金支出', subCategory:caseRec.plan||'',
-    amount:Number(amount)||0, vendor:caseRec.staff||caseRec.referrer||'', note:noteText, pending:false });
-  APP.data.transactions.push(tx);
-  caseRec.bonusTxId = tx.id;
-  saveTransactions();
+  // 停用：案件的「公司利潤」欄位本身已經是扣除業務獎金/小江獎金後的結果，
+  // 如果這裡再把獎金金額另外記一筆「佣金支出」進收支明細，會讓同一筆獎金被扣兩次，
+  // 導致收支明細加總出來的利潤數字比實際偏低。發放狀態(bonusPaid/profitPaid)仍然照常標記，
+  // 只是不再產生對應的收支明細紀錄；發放明細改用「每日獎金」頁面查看即可，不需要重複記帳。
+  return;
 }
 function postAdCaseToTransactions(caseId){
   const c = APP.data.casesAd.find(x=>x.id===caseId);
@@ -5309,14 +5308,8 @@ document.addEventListener('change', (e)=>{
     const rec = arr.find(x=>x.id===id);
     if(rec){
       rec.specialFeePaid = e.target.checked;
-      if(rec.specialFeePaid && !rec.specialFeeTxId && Number(rec.specialFee)>0){
-        const xjName = APP.data.caseSettings.xiaojiangName || '小江';
-        const tx = stamp({ id:uid(), date:rec.date, type:'expense', mainCategory:'佣金支出', subCategory:'🎩',
-          amount:Number(rec.specialFee)||0, vendor:xjName, note:`🎩特殊處理費（${rec.customer}）`, pending:false });
-        APP.data.transactions.push(tx);
-        rec.specialFeeTxId = tx.id;
-        saveTransactions();
-      }
+      // 停用自動記帳：巫師帽費用(specialFee)已經在計算公司利潤時從案件金額扣除過，
+      // 這裡不再另外記一筆收支明細，避免同一筆費用被扣兩次。發放狀態照常標記。
       Object.assign(rec, stamp({}));
       if(listName==='casesAd') saveCasesAd(); else saveCasesChannel();
       render();
@@ -5380,14 +5373,8 @@ document.addEventListener('change', (e)=>{
     });
     wizardMatches.forEach(c=>{
       c.specialFeePaid = checked;
-      if(checked && !c.specialFeeTxId){
-        const tx = stamp({ id:uid(), date:c.date, type:'expense', mainCategory:'佣金支出', subCategory:'🎩',
-          amount:Number(c.specialFee)||0, vendor:xjName, note:`🎩特殊處理費（${c.customer}）`, pending:false });
-        APP.data.transactions.push(tx);
-        c.specialFeeTxId = tx.id;
-      }
+      // 停用自動記帳：理由同上，巫師帽費用已經在案件利潤裡扣除過，不再重複記一筆收支明細
     });
-    if(wizardMatches.length>0) saveTransactions();
     if(adMatches.length>0 || wizardMatches.some(c=>APP.data.casesAd.includes(c))) saveCasesAd();
     if(chMatches.length>0 || wizardMatches.some(c=>APP.data.casesChannel.includes(c))) saveCasesChannel();
     render();
