@@ -957,19 +957,6 @@ function hidePushBanner(){
   if(el) el.remove();
   localStorage.setItem('xj_push_banner_dismissed', '1');
 }
-function showPushBanner(){
-  if(document.getElementById('push-banner')) return;
-  if(localStorage.getItem('xj_push_enabled')==='1') return;
-  if(localStorage.getItem('xj_push_banner_dismissed')==='1') return;
-  if(!('Notification' in window) || Notification.permission === 'denied') return;
-  const bar = document.createElement('div');
-  bar.id = 'push-banner';
-  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9997;background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:13.5px;box-shadow:0 -4px 16px rgba(0,0,0,.2);flex-wrap:wrap;';
-  bar.innerHTML = `<span>🔔 開啟推播通知，不錯過對話與公告訊息</span><button type="button" class="pb-on" style="background:#fff;color:var(--navy);border:none;padding:7px 16px;border-radius:8px;font-weight:700;cursor:pointer;">開啟通知</button><button type="button" class="pb-later" style="background:none;color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.4);padding:6px 14px;border-radius:8px;cursor:pointer;">先不要</button>`;
-  bar.querySelector('.pb-on').addEventListener('click', requestPushPermission);
-  bar.querySelector('.pb-later').addEventListener('click', hidePushBanner);
-  document.body.appendChild(bar);
-}
 function initPushForegroundListener(){
   if(!fcmMessaging) return;
   onMessage(fcmMessaging, (payload)=>{
@@ -1037,8 +1024,6 @@ function renderRoot(){
       initPushForegroundListener();
       if(localStorage.getItem('xj_push_enabled')==='1' && Notification.permission==='granted'){
         requestPushPermission(); // token可能過期/換裝置，每次登入靜默刷新一次
-      } else {
-        setTimeout(showPushBanner, 1500);
       }
     }).catch(()=>{});
   }
@@ -1141,6 +1126,7 @@ function shellHTML(){
     <div class="sidebar-footer">
       <div class="user-chip">${escHtml(APP.userEmail)}</div>
       <span class="role-chip ${APP.role}">${roleLabel}</span>
+      ${(localStorage.getItem('xj_push_enabled')!=='1')?`<button class="logout-btn" data-action="enable-push" style="margin-bottom:8px;">🔔 開啟推播通知</button>`:''}
       <button class="logout-btn" id="logout-btn">登出</button>
     </div>
   </div>
@@ -4991,7 +4977,7 @@ document.addEventListener('click', (e)=>{
       const pv = document.getElementById('xj-chat-preview'); if(pv) pv.innerHTML = '';
       return;
     }
-    if(action==='enable-push'){ requestPushPermission().then(()=>render()); return; }
+    if(action==='enable-push'){ requestPushPermission().then(()=>renderRoot()); return; }
     if(action==='clear-xj-thread'){
       const threadUid = el.dataset.thread;
       if(!isCore() && threadUid!==effectiveUid()) return;
