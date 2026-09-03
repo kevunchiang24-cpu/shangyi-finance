@@ -5225,6 +5225,10 @@ document.addEventListener('change', (e)=>{
     const rec = arr && arr.find(x=>x.id===id);
     if(rec){
       rec[field] = e.target.value;
+      // 進度追蹤的狀態欄位跳到「對保」時，記下今天的日期，讓後端的對保提醒定時任務可以算出天數
+      if(field==='status' && e.target.value==='對保' && (listName==='progressAd'||listName==='progressChannel')){
+        rec.guarantorStatusDate = todayStr();
+      }
       Object.assign(rec, stamp({}));
       saveFn(listName==='transactions'||listName==='casesAd'||listName==='casesChannel' ? undefined : rec);
       render();
