@@ -474,6 +474,10 @@
     .grid-2{grid-template-columns:1fr;}
     .page-header{flex-direction:column;align-items:stretch;}
     .filter-row{flex-direction:column;align-items:stretch;}
+    .daily-bonus-filter-row{ align-items:center !important; }
+    .daily-bonus-filter-row > *{ align-self:center !important; width:fit-content !important; max-width:100%; }
+    .daily-bonus-shift-group{ display:flex; gap:8px; justify-content:center; width:fit-content; }
+    .daily-bonus-shift-group > button{ width:auto !important; }
     .filter-field select, .filter-field input{min-width:0;width:100%;}
     table{font-size:12.5px;}
     th, td{padding:9px 8px;}
@@ -589,7 +593,7 @@ const APP = {
   showResigned:false, txTab:'list', txFilter:{type:'all',main:'all',start:monthBoundsStart(nowMonthKey),end:monthBoundsEnd(nowMonthKey),search:'',month:nowMonthKey},
   vendorSearch:'', reportYear:nowYear, reportRange:null, reportCompareMode:'none',
   chatOpen:false, chatLoading:false, chatMessages:[],
-  casesTab:'ad', caseAdFilter:{status:'all', month:nowMonthKey}, caseChannelFilter:{status:'all', month:nowMonthKey}, dailyBonusDate:'',
+  casesTab:'ad', caseAdFilter:{status:'all', month:nowMonthKey}, caseChannelFilter:{status:'all', month:nowMonthKey}, dailyBonusDate:'', dailyBonusShowUnpaidOnly:false,
   bizToolsTab:'progress', staffOverviewName:'', staffOverviewTab:'log', viewingStaff:null,
   myLogFilter:{month:nowMonthKey}, myLogNoContactCollapsed:false, attendanceFilter:{month:nowMonthKey},
   socialAccountFilter:{status:'all', stage:'all', bmGroup:'all'},
@@ -1094,6 +1098,7 @@ function shellHTML(){
     ${core ? `
     <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
     <div class="nav-item" data-action="nav" data-view="dashboard"><span class="nav-icon">▦</span>總覽</div>
+    <div class="nav-item${hasUnpaidToday?' nav-item-pulse':''}" data-action="nav" data-view="dailyBonus"><span class="nav-icon">💰</span>每日獎金${hasUnpaidToday?'<span class="nav-pulse-dot"></span>':''}</div>
     ${meIsXiaojiang ? `<div class="nav-item" data-action="nav" data-view="xiaojiangDashboard"><span class="nav-icon">🌙</span>我的個人空間</div>` : ''}
     <div class="nav-group-label">財務</div>
     <div class="nav-item" data-action="nav" data-view="transactions"><span class="nav-icon">≣</span>收支明細</div>
@@ -1101,7 +1106,6 @@ function shellHTML(){
     <div class="nav-group-label">業務營運</div>
     <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
     <div class="nav-item" data-action="nav" data-view="cases"><span class="nav-icon">📋</span>獲利報表</div>
-    <div class="nav-item${hasUnpaidToday?' nav-item-pulse':''}" data-action="nav" data-view="dailyBonus"><span class="nav-icon">💰</span>每日獎金${hasUnpaidToday?'<span class="nav-pulse-dot"></span>':''}</div>
     <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
     <div class="nav-group-label">公司管理</div>
     <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">☺</span>人事管理</div>
@@ -3330,9 +3334,10 @@ function dailyBonusPageHTML(){
 }
 
 function dailyBonusView(){
+  const showUnpaidOnly = !!APP.dailyBonusShowUnpaidOnly;
   const d = APP.dailyBonusDate || todayStr();
-  const adToday = APP.data.casesAd.filter(c=>c.date===d);
-  const chToday = APP.data.casesChannel.filter(c=>c.date===d);
+  const adToday = showUnpaidOnly ? APP.data.casesAd.filter(c=>!c.bonusPaid) : APP.data.casesAd.filter(c=>c.date===d);
+  const chToday = showUnpaidOnly ? APP.data.casesChannel.filter(c=>!c.profitPaid && channelCaseTotalPayout(c)>0) : APP.data.casesChannel.filter(c=>c.date===d);
 
   const byPerson = {};
   const xiaojiangName = APP.data.caseSettings.xiaojiangName || '小江';
@@ -3412,7 +3417,7 @@ function dailyBonusView(){
           </div>
         </div>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px;border-radius:20px;background:${isXj?'rgba(255,255,255,.15)':(allPaid?'#DCFCE7':'#FEF3C7')};">
-          <input type="checkbox" class="daily-bonus-checkbox" data-name="${escAttr(p.name)}" data-date="${d}" ${allPaid?'checked':''}/>
+          <input type="checkbox" class="daily-bonus-checkbox" data-name="${escAttr(p.name)}" data-date="${d}" data-unpaid-mode="${showUnpaidOnly?'1':'0'}" ${allPaid?'checked':''}/>
           <span style="font-size:12px;font-weight:600;${isXj?'color:#fff;':(allPaid?'color:#166534;':'color:#92400E;')}">${statusText}</span>
         </label>
       </div>
@@ -3434,19 +3439,24 @@ function dailyBonusView(){
   }).join('');
 
   return `
-    <div class="filter-row" style="align-items:flex-end;">
+    <div class="filter-row daily-bonus-filter-row" style="align-items:flex-end;">
+      ${showUnpaidOnly ? '' : `
       <div class="filter-field"><label>日期</label><input type="date" id="daily-bonus-date" value="${d}"/></div>
-      <button class="btn ghost sm" data-action="daily-bonus-shift" data-days="-1">← 前一天</button>
-      <button class="btn ghost sm" data-action="daily-bonus-shift" data-days="0">今天</button>
-      <button class="btn ghost sm" data-action="daily-bonus-shift" data-days="1">後一天 →</button>
+      <div class="daily-bonus-shift-group">
+        <button class="btn ghost sm" data-action="daily-bonus-shift" data-days="-1">← 前一天</button>
+        <button class="btn ghost sm" data-action="daily-bonus-shift" data-days="0">今天</button>
+        <button class="btn ghost sm" data-action="daily-bonus-shift" data-days="1">後一天 →</button>
+      </div>
+      `}
+      <button class="btn ghost sm" style="${showUnpaidOnly?'':'background:#F59E0B;color:#fff;border-color:#F59E0B;'}" data-action="toggle-daily-bonus-unpaid-mode">${showUnpaidOnly?'✕ 返回單日檢視':'⚠ 只看未發獎金（不限日期）'}</button>
     </div>
     <div class="card" style="margin:16px 0;background:linear-gradient(135deg,var(--navy),var(--navy-hover));color:#fff;">
-      <div style="font-size:13px;opacity:.85;">${d}　當日應發總額</div>
+      <div style="font-size:13px;opacity:.85;">${showUnpaidOnly?'全部尚未發放總額':`${d}　當日應發總額`}</div>
       <div style="font-size:34px;font-weight:800;margin:4px 0;">${money(grandTotal)}</div>
-      <div style="font-size:12.5px;opacity:.85;">共 ${adToday.length + chToday.length} 筆案件，${people.length} 位業務／通路　${totalUnpaid>0?`· 尚有 ${totalUnpaid} 筆未發放`:'· 全部已發放'}</div>
+      <div style="font-size:12.5px;opacity:.85;">${showUnpaidOnly?`共 ${adToday.length + chToday.length} 筆未發放案件，${people.length} 位業務／通路` : `共 ${adToday.length + chToday.length} 筆案件，${people.length} 位業務／通路　${totalUnpaid>0?`· 尚有 ${totalUnpaid} 筆未發放`:'· 全部已發放'}`}</div>
     </div>
     <div class="grid grid-3">
-      ${cards || `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">這天沒有任何案件</div></div>`}
+      ${cards || `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">${showUnpaidOnly?'目前沒有任何未發放的獎金，全部都發完了':'這天沒有任何案件'}</div></div>`}
     </div>
   `;
 }
@@ -5256,6 +5266,10 @@ document.addEventListener('click', (e)=>{
       }
       render(); return;
     }
+    if(action==='toggle-daily-bonus-unpaid-mode'){
+      APP.dailyBonusShowUnpaidOnly = !APP.dailyBonusShowUnpaidOnly;
+      render(); return;
+    }
     if(action==='sort-table'){
       const stateKey = el.dataset.statekey;
       const sortKey = el.dataset.sortkey;
@@ -5589,21 +5603,24 @@ document.addEventListener('change', (e)=>{
   if(e.target.classList && e.target.classList.contains('daily-bonus-checkbox')){
     const name = e.target.dataset.name;
     const d = e.target.dataset.date;
+    const unpaidMode = e.target.dataset.unpaidMode==='1';
     const checked = e.target.checked;
     const xjName = APP.data.caseSettings.xiaojiangName || '小江';
     const isXj = name===xjName;
+    const dateMatch = c => unpaidMode ? true : c.date===d;
     const adMatches = isXj
-      ? APP.data.casesAd.filter(c=>c.date===d && (Number(c.xiaojiangBonus)||0)>0)
-      : APP.data.casesAd.filter(c=>c.date===d && c.staff===name);
+      ? APP.data.casesAd.filter(c=>dateMatch(c) && (unpaidMode?!c.bonusPaid:true) && (Number(c.xiaojiangBonus)||0)>0)
+      : APP.data.casesAd.filter(c=>dateMatch(c) && (unpaidMode?!c.bonusPaid:true) && c.staff===name);
     const chMatches = isXj ? [] : APP.data.casesChannel.filter(c=>{
-      if(c.date!==d) return false;
+      if(!dateMatch(c)) return false;
+      if(unpaidMode && c.profitPaid) return false;
       if(c.staff===name && channelCaseBusinessBonus(c)>0) return true;
       if(name==='煌' && channelCaseHuangBonus(c)>0) return true;
       if((c.referrer||c.staff)===name && channelCaseChannelTake(c)>0) return true;
       return false;
     });
     const wizardMatches = isXj
-      ? [...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>c.date===d && c.specialHandling && Number(c.specialFee)>0)
+      ? [...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>dateMatch(c) && (unpaidMode?!c.specialFeePaid:true) && c.specialHandling && Number(c.specialFee)>0)
       : [];
     adMatches.forEach(c=>{
       c.bonusPaid = checked;
