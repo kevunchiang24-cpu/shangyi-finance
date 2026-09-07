@@ -261,6 +261,12 @@
     0%,100%{ opacity:.55; transform:scale(0.85); }
     50%{ opacity:1; transform:scale(1.15); }
   }
+  .social-live-dot{
+    width:9px; height:9px; border-radius:50%; background:#22C55E; flex-shrink:0;
+    box-shadow:0 0 7px 2px rgba(34,197,94,.7);
+    animation:nav-pulse-dot 1.6s ease-in-out infinite;
+  }
+  .social-live-card{ border:2px solid #22C55E !important; }
   /* ========== 霍格華茲卡片：背景圖+呼吸光+煙霧+極光+星星閃爍，全部 hogwarts- 開頭命名，不會影響其他頁面 ========== */
   .hogwarts-card{
     position:relative; overflow:hidden; border:1px solid rgba(167,139,250,.45);
@@ -586,6 +592,7 @@ const APP = {
   casesTab:'ad', caseAdFilter:{status:'all', month:nowMonthKey}, caseChannelFilter:{status:'all', month:nowMonthKey}, dailyBonusDate:'',
   bizToolsTab:'progress', staffOverviewName:'', staffOverviewTab:'log', viewingStaff:null,
   myLogFilter:{month:nowMonthKey}, myLogNoContactCollapsed:false, attendanceFilter:{month:nowMonthKey},
+  socialAccountFilter:{status:'all', stage:'all', bmGroup:'all'},
   progressAdSort:{key:'date',dir:'desc'}, progressChannelSort:{key:'date',dir:'desc'},
   casesAdSort:{key:'date',dir:'desc'}, casesChannelSort:{key:'date',dir:'desc'},
   txSort:{key:'date',dir:'desc'}, adSpendSort:{key:'month',dir:'desc'}, myLogSort:{key:'date',dir:'desc'},
@@ -596,7 +603,7 @@ const APP = {
     companyPublic:{systemName:'',systemSubtitle:'',logoDataUrl:''},
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
-    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[],
+    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[],
     optionColors:{ plan:{}, status:{}, dealProduct:{}, contactStatus:{} },
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
       rankBronze:50000, rankSilver:100000, rankGold:200000, rankDiamond:400000,
@@ -738,6 +745,12 @@ function subscribeAll(){
     APP.role = me ? me.role : 'pending';
     if(!personalSubsInitialized && APP.role){
       personalSubsInitialized = true;
+      if(me && me.isXiaojiang){
+        unsubs.push(onSnapshot(collection(db,'socialAccounts'), snap2=>{
+          APP.data.socialAccounts = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+          render();
+        }));
+      }
       unsubs.push(onSnapshot(collection(db,'staffPublicProfiles'), snap2=>{
         APP.publicProfiles = {};
         snap2.docs.forEach(d=>{ APP.publicProfiles[d.id] = d.data(); });
@@ -2228,6 +2241,7 @@ function render(){
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
   else if(APP.view==='xiaojiangDashboard' && isCore()) main.innerHTML = xiaojiangDashboardView();
+  else if(APP.view==='socialAccounts' && isCore() && (APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang) main.innerHTML = socialAccountsHTML();
   else if(APP.view==='transactions' && isCore()) main.innerHTML = transactionsHTML();
   else if(APP.view==='reports' && isCore()) main.innerHTML = reportsHTML();
   else if(APP.view==='settings' && isCore()) main.innerHTML = settingsHTML();
@@ -2350,7 +2364,179 @@ function xiaojiangDashboardView(){
         <span style="font-size:20px;color:var(--muted);">→</span>
       </div>
     </div>
+    <div class="card" style="cursor:pointer;margin-top:14px;" data-action="nav" data-view="socialAccounts">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h3 style="margin:0 0 4px;">🔐 社群帳號庫</h3>
+          <p style="margin:0;color:var(--muted);font-size:12.5px;">廣告帳號、養號進度與登入資訊，只有你自己看得到，連核心都看不到</p>
+        </div>
+        <span style="font-size:20px;color:var(--muted);">→</span>
+      </div>
+    </div>
   `;
+}
+const SOCIAL_ACCOUNT_STATUS_OPTIONS = ['養號中','使用中','已鎖帳','休息中'];
+const SOCIAL_ACCOUNT_PLATFORM_OPTIONS = ['Facebook','Instagram','LINE','其他'];
+const SOCIAL_ACCOUNT_STRATEGY_STAGES = ['新建','養號中','小額測試','正式上線'];
+function strategyStageBadge(stage){
+  const map = { '新建':'resigned', '養號中':'pending', '小額測試':'income', '正式上線':'active' };
+  return `<span class="badge ${map[stage]||'pending'}">${escHtml(stage||'—')}</span>`;
+}
+function socialAccountStatusBadge(status){
+  const map = { '養號中':'pending', '使用中':'active', '已鎖帳':'expense', '休息中':'resigned' };
+  return `<span class="badge ${map[status]||'pending'}">${escHtml(status||'—')}</span>`;
+}
+const SOCIAL_ACCOUNT_COMPLIANCE_ITEMS = [
+  { key:'adVerification', label:'出資者／受益者驗證' },
+  { key:'twoFactorDone', label:'2FA 已開啟' },
+  { key:'domainVerification', label:'網域驗證' },
+  { key:'companyDocsReady', label:'公司登記資料備妥' },
+];
+/* ---- 依教戰守則的養號時間表，算出這個帳號從建立日到今天是第幾天、對應到哪個階段 ---- */
+function daysSinceDate(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr+'T00:00:00');
+  if(isNaN(d)) return null;
+  return Math.floor((Date.now()-d.getTime())/86400000);
+}
+function warmingStageInfo(days){
+  if(days===null || days===undefined) return null;
+  if(days<=3) return { label:'冷啟動期', range:'Day 1-3', budget:'NT$150–300/日', badge:'pending' };
+  if(days<=7) return { label:'建立信任期', range:'Day 4-7', budget:'NT$300–600/日', badge:'expense' };
+  if(days<=14) return { label:'輕度轉化期', range:'Day 8-14', budget:'NT$600–1,500/日', badge:'income' };
+  return { label:'正常放量期', range:'Day 15+', budget:'依業務需求', badge:'active' };
+}
+const COPY_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+const CHECK_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+function copyableFieldHtml(id, field, value, label){
+  const has = value && String(value).trim();
+  return `<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 0;">
+    <span style="color:var(--muted);width:64px;flex-shrink:0;">${label}</span>
+    <span style="flex:1;font-family:monospace;word-break:break-all;">${has?escHtml(value):'—'}</span>
+    ${has?`<button type="button" class="social-copy-btn" data-action="copy-social-field" data-value="${escAttr(value)}" style="flex-shrink:0;display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:#F3F5FB;color:var(--navy);border:none;border-radius:6px;cursor:pointer;padding:0;">${COPY_ICON_SVG}</button>`:''}
+  </div>`;
+}
+function socialAccountsHTML(){
+  const f = APP.socialAccountFilter || {status:'all', stage:'all', bmGroup:'all'};
+  const allList = APP.data.socialAccounts||[];
+  const bmGroups = Array.from(new Set(allList.map(a=>a.bmGroup).filter(Boolean))).sort();
+  let list = allList.slice().sort((a,b)=>(a.accountName||'').localeCompare(b.accountName||''));
+  if(f.status!=='all') list = list.filter(a=>a.status===f.status);
+  if(f.stage!=='all') list = list.filter(a=>a.strategyStage===f.stage);
+  if(f.bmGroup!=='all') list = list.filter(a=>(a.bmGroup||'（未分組）')===f.bmGroup);
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">🔐 社群帳號庫</h1><p class="page-sub">廣告帳號、養號進度與登入資訊，只有你自己看得到</p></div>
+      <button class="btn primary" data-action="open-social-account-modal">＋ 新增帳號</button>
+    </div>
+    <div class="card" style="margin-bottom:16px;background:#FFF8E6;">
+      <p style="font-size:12.5px;color:var(--muted);margin:0;">這個頁面跟裡面的所有資料，Firestore 規則已經設定成連核心帳號都完全讀不到，只有你自己的帳號能存取。</p>
+    </div>
+    <div class="filter-row">
+      <div class="filter-field"><label>狀態</label>
+        <select data-case-filter="social-status"><option value="all" ${f.status==='all'?'selected':''}>全部</option>
+        ${SOCIAL_ACCOUNT_STATUS_OPTIONS.map(s=>`<option value="${s}" ${f.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="filter-field"><label>培養策略</label>
+        <select data-case-filter="social-stage"><option value="all" ${f.stage==='all'?'selected':''}>全部</option>
+        ${SOCIAL_ACCOUNT_STRATEGY_STAGES.map(s=>`<option value="${s}" ${f.stage===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="filter-field"><label>所屬BM</label>
+        <select data-case-filter="social-bm"><option value="all" ${f.bmGroup==='all'?'selected':''}>全部</option>
+        ${bmGroups.map(g=>`<option value="${escAttr(g)}" ${f.bmGroup===g?'selected':''}>${escHtml(g)}</option>`).join('')}</select></div>
+    </div>
+    <div class="grid grid-3">
+      ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">${(f.status!=='all'||f.stage!=='all'||f.bmGroup!=='all')?'沒有符合篩選條件的帳號':'尚無帳號資料，點右上角新增'}</div></div>` :
+      list.map(a=>{
+        const days = daysSinceDate(a.createdDate);
+        const stageInfo = warmingStageInfo(days);
+        const idleDays = daysSinceDate(a.lastLoginDate);
+        const idleWarning = idleDays!==null && idleDays>=30;
+        const compliance = a.compliance || {};
+        const doneCount = SOCIAL_ACCOUNT_COMPLIANCE_ITEMS.filter(item=>compliance[item.key]).length;
+        const isLive = a.strategyStage==='正式上線';
+        return `
+        <div class="card${isLive?' social-live-card':''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:7px;">
+              ${isLive?`<span class="social-live-dot" title="可正式投放"></span>`:''}
+              <div>
+                <h3 style="margin:0 0 4px;">${escHtml(a.accountName||'（未命名）')}</h3>
+                <span style="font-size:12px;color:var(--muted);">${escHtml(a.platform||'—')}${a.bmGroup?`　·　${escHtml(a.bmGroup)}`:''}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">${socialAccountStatusBadge(a.status)}${strategyStageBadge(a.strategyStage)}</div>
+          </div>
+          ${stageInfo?`<div style="background:#F5F7FC;border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;"><span class="badge ${stageInfo.badge}">${stageInfo.label}（第${days}天／${stageInfo.range}）</span></div>
+            <div style="color:var(--muted);margin-top:4px;">建議日預算：${stageInfo.budget}</div>
+          </div>`:''}
+          ${idleWarning?`<div style="background:#FEE2E2;color:var(--red);border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;font-weight:600;">⚠ 已閒置 ${idleDays} 天未登入，超過建議的每月1次，記得上去輕度活躍一下</div>`:''}
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:12px;color:var(--muted);">
+            <span>合規檢查：${doneCount}/${SOCIAL_ACCOUNT_COMPLIANCE_ITEMS.length}</span>
+            <div style="flex:1;height:6px;background:#EEF1F8;border-radius:3px;overflow:hidden;"><div style="height:100%;width:${(doneCount/SOCIAL_ACCOUNT_COMPLIANCE_ITEMS.length*100)}%;background:${doneCount===SOCIAL_ACCOUNT_COMPLIANCE_ITEMS.length?'var(--green)':'var(--amber)'};"></div></div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:8px;margin-bottom:10px;">
+            ${copyableFieldHtml(a.id,'loginAccount',a.loginAccount,'登入帳號')}
+            ${copyableFieldHtml(a.id,'password',a.password,'密碼')}
+            ${copyableFieldHtml(a.id,'twoFactor',a.twoFactor,'2FA')}
+            ${copyableFieldHtml(a.id,'boundPhone',a.boundPhone,'綁定手機')}
+            ${copyableFieldHtml(a.id,'boundEmail',a.boundEmail,'綁定信箱')}
+          </div>
+          ${a.adSpendNote?`<div style="font-size:12.5px;color:var(--ink);background:#F5F7FC;padding:7px 9px;border-radius:8px;margin-bottom:10px;">💰 ${escHtml(a.adSpendNote)}</div>`:''}
+          ${a.note?`<div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;">${escHtml(a.note)}</div>`:''}
+          <div class="row-actions">
+            <button class="icon-btn" data-action="mark-social-login" data-id="${a.id}">標記今天登入過</button>
+            <button class="icon-btn" data-action="edit-social-account" data-id="${a.id}">編輯</button>
+            <button class="icon-btn" data-action="delete-social-account" data-id="${a.id}">刪除</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+function saveSocialAccount(rec){ return setDoc(doc(db,'socialAccounts', rec.id), rec); }
+function deleteSocialAccount(id){ return deleteDoc(doc(db,'socialAccounts', id)); }
+function openSocialAccountModal(existing){
+  const a = existing || {accountName:'',platform:'Facebook',status:'養號中',strategyStage:'新建',bmGroup:'',createdDate:todayStr(),lastLoginDate:'',loginAccount:'',password:'',twoFactor:'',boundPhone:'',boundEmail:'',adSpendNote:'',note:'',compliance:{}};
+  const existingBmGroups = Array.from(new Set((APP.data.socialAccounts||[]).map(x=>x.bmGroup).filter(Boolean)));
+  const compliance = a.compliance || {};
+  openModal(existing?'編輯帳號':'新增帳號', `
+    <label class="field"><span>帳號名稱／暱稱</span><input type="text" name="accountName" value="${escAttr(a.accountName)}" required placeholder="方便自己辨識用的名字"/></label>
+    <div class="grid grid-2">
+      <label class="field"><span>平台</span><select name="platform">${SOCIAL_ACCOUNT_PLATFORM_OPTIONS.map(p=>`<option value="${p}" ${a.platform===p?'selected':''}>${p}</option>`).join('')}</select></label>
+      <label class="field"><span>狀態</span><select name="status">${SOCIAL_ACCOUNT_STATUS_OPTIONS.map(s=>`<option value="${s}" ${a.status===s?'selected':''}>${s}</option>`).join('')}</select></label>
+    </div>
+    <div class="grid grid-2">
+      <label class="field"><span>培養策略階段</span><select name="strategyStage">${SOCIAL_ACCOUNT_STRATEGY_STAGES.map(s=>`<option value="${s}" ${a.strategyStage===s?'selected':''}>${s}</option>`).join('')}</select></label>
+      <label class="field"><span>所屬BM</span><input type="text" name="bmGroup" list="bm-group-suggest" value="${escAttr(a.bmGroup||'')}" placeholder="例如：投放BM A、備用BM"/>
+        <datalist id="bm-group-suggest">${existingBmGroups.map(g=>`<option value="${escAttr(g)}">`).join('')}</datalist>
+      </label>
+    </div>
+    <div class="grid grid-2">
+      <label class="field"><span>帳號建立日期</span><input type="date" name="createdDate" value="${a.createdDate||''}"/><span style="color:var(--muted);font-size:11px;">用來自動算養號天數</span></label>
+      <label class="field"><span>上次登入日期</span><input type="date" name="lastLoginDate" value="${a.lastLoginDate||''}"/><span style="color:var(--muted);font-size:11px;">備用帳號閒置超過30天會警示</span></label>
+    </div>
+    <label class="field"><span>登入帳號</span><input type="text" name="loginAccount" value="${escAttr(a.loginAccount)}"/></label>
+    <label class="field"><span>密碼</span><input type="text" name="password" value="${escAttr(a.password)}"/></label>
+    <label class="field"><span>2FA（金鑰或備用碼）</span><input type="text" name="twoFactor" value="${escAttr(a.twoFactor)}"/></label>
+    <div class="grid grid-2">
+      <label class="field"><span>綁定手機</span><input type="text" name="boundPhone" value="${escAttr(a.boundPhone)}"/></label>
+      <label class="field"><span>綁定信箱</span><input type="text" name="boundEmail" value="${escAttr(a.boundEmail)}"/></label>
+    </div>
+    <label class="field"><span>花費／成效備註</span><input type="text" name="adSpendNote" value="${escAttr(a.adSpendNote)}" placeholder="例如：累計花費 $12,000，CPM表現穩定"/></label>
+    <div class="field"><span>合規檢查</span>
+      ${SOCIAL_ACCOUNT_COMPLIANCE_ITEMS.map(item=>`<label class="field checkbox" style="margin-bottom:6px;"><input type="checkbox" name="compliance_${item.key}" ${compliance[item.key]?'checked':''}/><span>${item.label}</span></label>`).join('')}
+    </div>
+    <label class="field"><span>備註</span><textarea name="note">${escHtml(a.note||'')}</textarea></label>
+  `, 'social-account-form', (data)=>{
+    const complianceResult = {};
+    SOCIAL_ACCOUNT_COMPLIANCE_ITEMS.forEach(item=>{
+      complianceResult[item.key] = data['compliance_'+item.key]==='on';
+      delete data['compliance_'+item.key];
+    });
+    data.compliance = complianceResult;
+    const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
+    saveSocialAccount(rec);
+  });
 }
 function personalDashboardPageHTML(){
   return `
@@ -4737,6 +4923,26 @@ document.addEventListener('click', (e)=>{
   const el = e.target.closest('[data-action]');
   if(el){
     const action = el.dataset.action;
+    if(action==='open-social-account-modal'){ openSocialAccountModal(null); return; }
+    if(action==='edit-social-account'){ const a = (APP.data.socialAccounts||[]).find(x=>x.id===el.dataset.id); if(a) openSocialAccountModal(a); return; }
+    if(action==='mark-social-login'){
+      const a = (APP.data.socialAccounts||[]).find(x=>x.id===el.dataset.id);
+      if(a){ a.lastLoginDate = todayStr(); Object.assign(a, stamp({})); saveSocialAccount(a); }
+      return;
+    }
+    if(action==='delete-social-account'){
+      openConfirm('確定要刪除這個帳號的所有資料嗎？此動作無法復原。', ()=>{ deleteSocialAccount(el.dataset.id); });
+      return;
+    }
+    if(action==='copy-social-field'){
+      const value = el.dataset.value;
+      navigator.clipboard.writeText(value).then(()=>{
+        const original = el.innerHTML;
+        el.innerHTML = CHECK_ICON_SVG;
+        setTimeout(()=>{ el.innerHTML = original; }, 1200);
+      }).catch(()=>{ alert('複製失敗，請手動選取文字複製'); });
+      return;
+    }
     if(action==='nav'){
       const personalViews = ['progress','personalLog','attendance','calendar','personalDashboard'];
       if(!personalViews.includes(el.dataset.view)) APP.viewingStaff=null;
@@ -5403,6 +5609,9 @@ document.addEventListener('change', (e)=>{
     else if(key==='channel-month') APP.caseChannelFilter.month = e.target.value;
     else if(key==='mylog-month') APP.myLogFilter.month = e.target.value;
     else if(key==='attendance-month') APP.attendanceFilter.month = e.target.value;
+    else if(key==='social-status') APP.socialAccountFilter.status = e.target.value;
+    else if(key==='social-stage') APP.socialAccountFilter.stage = e.target.value;
+    else if(key==='social-bm') APP.socialAccountFilter.bmGroup = e.target.value;
     render(); return;
   }
   if(e.target.id==='daily-bonus-date'){ APP.dailyBonusDate = e.target.value; render(); return; }
@@ -5748,7 +5957,7 @@ document.addEventListener('submit', (e)=>{
     renderRoot();
     return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form'].includes(e.target.id)){
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = {};
