@@ -618,6 +618,7 @@ function isCore(){ return APP.role==='admin' || APP.role==='editor'; }
 function isStaffAdmin(){ return APP.role==='staffAdmin'; }
 function isStaffSales(){ return APP.role==='staffSales'; }
 function isStaffAny(){ return isStaffAdmin() || isStaffSales(); }
+function isMeXiaojiang(){ return !!(APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang; }
 function myStaffName(){ const me = APP.users.find(u=>u.id===APP.user.uid); return me ? (me.staffName||'') : ''; }
 function displayNameFor(uidVal, fallbackName){
   const pub = APP.publicProfiles[uidVal];
@@ -4015,6 +4016,32 @@ function buildEmployeeRowHtml(r, idx){
     <input type="date" class="ai-row-field" data-key="startDate" value="${r.startDate||todayStr()}" style="width:140px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
   </div>`;
 }
+function buildSocialAccountRowHtml(r, idx){
+  return `<div class="tx-row" style="display:flex;flex-direction:column;gap:6px;padding:8px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;">
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <input type="checkbox" class="ai-row-check" checked/>
+      <input type="text" class="ai-row-field" data-key="accountName" value="${escAttr(r.accountName||'')}" placeholder="帳號名稱/暱稱" style="width:130px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+      <select class="ai-row-field" data-key="platform" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+        ${SOCIAL_ACCOUNT_PLATFORM_OPTIONS.map(p=>`<option value="${p}" ${(r.platform||'Facebook')===p?'selected':''}>${p}</option>`).join('')}
+      </select>
+      <select class="ai-row-field" data-key="status" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+        ${SOCIAL_ACCOUNT_STATUS_OPTIONS.map(s=>`<option value="${s}" ${(r.status||'養號中')===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <select class="ai-row-field" data-key="strategyStage" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+        ${SOCIAL_ACCOUNT_STRATEGY_STAGES.map(s=>`<option value="${s}" ${(r.strategyStage||'新建')===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <input type="text" class="ai-row-field" data-key="bmGroup" value="${escAttr(r.bmGroup||'')}" placeholder="所屬BM(選填)" style="width:110px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <input type="text" class="ai-row-field" data-key="loginAccount" value="${escAttr(r.loginAccount||'')}" placeholder="登入帳號" style="width:160px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+      <input type="text" class="ai-row-field" data-key="password" value="${escAttr(r.password||'')}" placeholder="密碼" style="width:130px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+      <input type="text" class="ai-row-field" data-key="twoFactor" value="${escAttr(r.twoFactor||'')}" placeholder="2FA(選填)" style="width:130px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+      <input type="text" class="ai-row-field" data-key="boundPhone" value="${escAttr(r.boundPhone||'')}" placeholder="綁定手機(選填)" style="width:120px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+      <input type="text" class="ai-row-field" data-key="boundEmail" value="${escAttr(r.boundEmail||'')}" placeholder="綁定信箱(選填)" style="width:150px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    </div>
+    <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="備註(選填)" style="width:100%;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+  </div>`;
+}
 function openAiImportModal(){
   document.getElementById('modal-overlay').style.display = 'flex';
   document.getElementById('modal-box').innerHTML = `
@@ -4832,6 +4859,9 @@ ${upcoming || '無'}`;
 }
 
 function chatEmptyStateHtml(){
+  if(isMeXiaojiang()){
+    return `<div class="ai-chat-empty">可以問財務、案件進度、廣告投放成效，也可以直接說要新增一個社群帳號（例如「幫我新增一個帳號，Facebook，帳號demo@example.com，密碼abc123，2FA是XXXX，狀態養號中」），AI 會幫你整理成一筆待確認的帳號記錄，確認後才會真的存進社群帳號庫，密碼2FA也會一併存進去。</div>`;
+  }
   return isCore()
     ? `<div class="ai-chat-empty">可以問財務、案件進度、業務排行、廣告投放成效（例如「這個月 ROI 怎麼樣」「哪個業務貢獻最多」），也可以請它給建議，或直接說要記一筆帳（例如「幫我記一筆 8/15 廣告費 1200」）。</div>`
     : isStaffSales()
@@ -4850,7 +4880,7 @@ function renderChatInto(box){
         const kind = m.pendingKind || 'tx';
         const rowBuilder = kind==='personallog' ? buildPersonalLogRowHtml : kind==='progresstrack' ? buildProgressTrackRowHtml
           : kind==='attendance' ? buildAttendanceRowHtml : kind==='calendar' ? buildCalendarRowHtml
-          : kind==='vendor' ? buildVendorRowHtml : kind==='employee' ? buildEmployeeRowHtml : buildTxRowHtml;
+          : kind==='vendor' ? buildVendorRowHtml : kind==='employee' ? buildEmployeeRowHtml : kind==='socialaccount' ? buildSocialAccountRowHtml : buildTxRowHtml;
         inner += `<div id="chat-pending-${i}" style="margin-top:10px;background:#fff;border-radius:8px;padding:8px;" data-kind="${kind}">
           ${m.pendingTx.map((r,j)=>rowBuilder(r,j)).join('')}
           <button type="button" class="btn primary sm" style="margin-top:6px;width:100%;" data-action="chat-tx-confirm" data-msgidx="${i}">確認新增選取的紀錄</button>
@@ -4881,6 +4911,7 @@ async function sendChatMessage(question){
   APP.chatLoading = true;
   renderChat();
   try{
+    const iAmXj = isMeXiaojiang();
     const ctx = isCore() ? buildFinanceContext() : buildStaffContext();
     const resp = await fetch(AI_WORKER_URL, {
       method:'POST',
@@ -4889,7 +4920,10 @@ async function sendChatMessage(question){
         question, context: ctx, today: todayStr(),
         role: APP.role,
         categories: isCore() ? { expense: APP.data.categories.expense.map(c=>c.name), income: APP.data.categories.income.map(c=>c.name) } : { expense:[], income:[] },
-        caseOptions: { plan: APP.data.caseSettings.planOptions, staff: APP.data.caseSettings.staffOptions, dealProduct: DEAL_PRODUCT_OPTIONS, contactStatus: CONTACT_STATUS_OPTIONS, status: STATUS_OPTIONS }
+        caseOptions: { plan: APP.data.caseSettings.planOptions, staff: APP.data.caseSettings.staffOptions, dealProduct: DEAL_PRODUCT_OPTIONS, contactStatus: CONTACT_STATUS_OPTIONS, status: STATUS_OPTIONS,
+          socialAccountStatus: iAmXj ? SOCIAL_ACCOUNT_STATUS_OPTIONS : undefined,
+          socialAccountStage: iAmXj ? SOCIAL_ACCOUNT_STRATEGY_STAGES : undefined,
+          socialAccountPlatform: iAmXj ? SOCIAL_ACCOUNT_PLATFORM_OPTIONS : undefined }
       })
     });
     const data = await resp.json();
@@ -4899,7 +4933,8 @@ async function sendChatMessage(question){
     const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor']];
     const TAG_MAP_STAFFSALES = [['personallog','personallog'],['attendance','attendance'],['calendar','calendar']];
     const TAG_MAP_STAFFADMIN = [['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar']];
-    const tagMap = isCore() ? TAG_MAP_CORE : isStaffSales() ? TAG_MAP_STAFFSALES : isStaffAdmin() ? TAG_MAP_STAFFADMIN : [];
+    let tagMap = isCore() ? TAG_MAP_CORE : isStaffSales() ? TAG_MAP_STAFFSALES : isStaffAdmin() ? TAG_MAP_STAFFADMIN : [];
+    if(iAmXj) tagMap = [['socialaccount','socialaccount'], ...tagMap];
     for(const [tag, kind] of tagMap){
       const re = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i');
       const match = text.match(re);
@@ -5355,6 +5390,14 @@ document.addEventListener('click', (e)=>{
           if(!data.name){ skipped++; return; }
           APP.data.hr.employees.push(stamp({ id:uid(), name:data.name, title:data.title||'', salary:Number(data.salary)||0, startDate:data.startDate||todayStr(), status:'active' }));
           savePromises.push(saveHR());
+        } else if(kind==='socialaccount'){
+          if(!data.accountName){ skipped++; return; }
+          savePromises.push(saveSocialAccount(stamp({
+            id:uid(), accountName:data.accountName, platform:data.platform||'Facebook', status:data.status||'養號中',
+            strategyStage:data.strategyStage||'新建', bmGroup:data.bmGroup||'', createdDate:todayStr(), lastLoginDate:todayStr(),
+            loginAccount:data.loginAccount||'', password:data.password||'', twoFactor:data.twoFactor||'',
+            boundPhone:data.boundPhone||'', boundEmail:data.boundEmail||'', adSpendNote:'', note:data.note||'', compliance:{}
+          })));
         }
       });
       Promise.allSettled(savePromises).then(results=>{
