@@ -4310,44 +4310,48 @@ function openAdCaseModal(existing){
 
   document.getElementById('ad-case-form').addEventListener('submit', (e)=>{
     e.preventDefault();
-    const fd = new FormData(e.target);
-    const approvedAmount = Number(document.getElementById('ac-approvedAmount').value)||0;
-    const deductionPercent = Number(document.getElementById('ac-deductionPercent').value)||0;
-    const setupFee = Number(document.getElementById('ac-setupFee').value)||0;
-    const deductionAmount = approvedAmount * (deductionPercent/100);
-    const specialHandling = document.getElementById('ac-special').checked;
-    const specialFee = specialHandling ? (Number(document.getElementById('ac-specialFee').value)||0) : 0;
-    const withholding = Number(document.getElementById('ac-withholding').value)||0;
-    const disbursement = Number(document.getElementById('ac-disbursement').value)||0;
-    const afterCost = approvedAmount - deductionAmount - setupFee - withholding - specialFee - disbursement;
-    const base = afterCost;
-    const businessBonusOverride = document.getElementById('ac-bb-override').checked;
-    const xiaojiangBonusOverride = document.getElementById('ac-xj-override').checked;
-    const businessBonus = Number(document.getElementById('ac-businessBonus').value)||0;
-    const xiaojiangBonus = Number(document.getElementById('ac-xiaojiangBonus').value)||0;
-    const companyProfit = base - businessBonus - xiaojiangBonus;
-    const bonusPaidChecked = fd.get('bonusPaid')==='on';
-    const data = {
-      date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'),
-      staff: fd.get('staff'), approvedAmount, deductionPercent, setupFee, deductionAmount, withholding, disbursement, afterCost, businessBonus, businessBonusOverride,
-      xiaojiangBonus, xiaojiangBonusOverride, companyProfit, bonusPaid: bonusPaidChecked, businessBonusPaid: bonusPaidChecked, xiaojiangBonusPaid: bonusPaidChecked, note: fd.get('note'),
-      specialHandling, specialFee
-    };
-    const caseId = existing ? existing.id : uid();
-    const wasPaidBefore = existing ? adAllPaid(existing) : false;
-    if(existing) Object.assign(existing, stamp(data));
-    else APP.data.casesAd.push(stamp({id:caseId, _createdSeq:Date.now(), linkedTxId:null, bonusTxId:null, ...data}));
-    const rec = existing || APP.data.casesAd.find(x=>x.id===caseId);
-    if(data.bonusPaid && !wasPaidBefore && !rec.bonusTxId){
-      postBonusPayoutToTransactions(rec, businessBonus+xiaojiangBonus, `業務獎金＋小江獎金發放（${data.staff}／${data.customer}）`);
+    try{
+      const fd = new FormData(e.target);
+      const approvedAmount = Number(document.getElementById('ac-approvedAmount').value)||0;
+      const deductionPercent = Number(document.getElementById('ac-deductionPercent').value)||0;
+      const setupFee = Number(document.getElementById('ac-setupFee').value)||0;
+      const deductionAmount = approvedAmount * (deductionPercent/100);
+      const specialHandling = document.getElementById('ac-special').checked;
+      const specialFee = specialHandling ? (Number(document.getElementById('ac-specialFee').value)||0) : 0;
+      const withholding = Number(document.getElementById('ac-withholding').value)||0;
+      const disbursement = Number(document.getElementById('ac-disbursement').value)||0;
+      const afterCost = approvedAmount - deductionAmount - setupFee - withholding - specialFee - disbursement;
+      const base = afterCost;
+      const businessBonusOverride = document.getElementById('ac-bb-override').checked;
+      const xiaojiangBonusOverride = document.getElementById('ac-xj-override').checked;
+      const businessBonus = Number(document.getElementById('ac-businessBonus').value)||0;
+      const xiaojiangBonus = Number(document.getElementById('ac-xiaojiangBonus').value)||0;
+      const companyProfit = base - businessBonus - xiaojiangBonus;
+      const bonusPaidChecked = fd.get('bonusPaid')==='on';
+      const data = {
+        date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'),
+        staff: fd.get('staff'), approvedAmount, deductionPercent, setupFee, deductionAmount, withholding, disbursement, afterCost, businessBonus, businessBonusOverride,
+        xiaojiangBonus, xiaojiangBonusOverride, companyProfit, bonusPaid: bonusPaidChecked, businessBonusPaid: bonusPaidChecked, xiaojiangBonusPaid: bonusPaidChecked, note: fd.get('note'),
+        specialHandling, specialFee
+      };
+      const caseId = existing ? existing.id : uid();
+      if(existing) Object.assign(existing, stamp(data));
+      else APP.data.casesAd.push(stamp({id:caseId, _createdSeq:Date.now(), linkedTxId:null, bonusTxId:null, ...data}));
+      const rec = existing || APP.data.casesAd.find(x=>x.id===caseId);
+      // 註：自動記帳已停用（見postBonusPayoutToTransactions的說明），這裡不再呼叫
+      saveCasesAd();
+      saveBonusLedgerEntry(stamp({ id:caseId, staffName:data.staff, date:data.date, businessBonus, xiaojiangBonus:0, customer:data.customer }));
+      if(xiaojiangBonus>0){
+        saveBonusLedgerEntry(stamp({ id:'xj-'+caseId, staffName:APP.data.caseSettings.xiaojiangName||'小江', date:data.date, businessBonus:0, xiaojiangBonus, customer:data.customer }));
+      }
+      syncWizardHatLedger(caseId, data.date, data.customer, specialFee);
+    } catch(err){
+      console.error('新增/編輯廣告客案件時發生錯誤：', err);
+      alert('儲存時發生非預期錯誤，請截圖這則訊息回報給開發者：\n' + (err && err.message ? err.message : err));
+    } finally{
+      closeModal();
+      render();
     }
-    saveCasesAd();
-    saveBonusLedgerEntry(stamp({ id:caseId, staffName:data.staff, date:data.date, businessBonus, xiaojiangBonus:0, customer:data.customer }));
-    if(xiaojiangBonus>0){
-      saveBonusLedgerEntry(stamp({ id:'xj-'+caseId, staffName:APP.data.caseSettings.xiaojiangName||'小江', date:data.date, businessBonus:0, xiaojiangBonus, customer:data.customer }));
-    }
-    syncWizardHatLedger(caseId, data.date, data.customer, specialFee);
-    closeModal();
   });
 }
 
@@ -4515,56 +4519,60 @@ function openChannelCaseModal(existing){
 
   document.getElementById('channel-case-form').addEventListener('submit',(e)=>{
     e.preventDefault();
-    const fd = new FormData(e.target);
-    const approvedAmount = Number(document.getElementById('cc-approvedAmount').value)||0;
-    const deductionPercent = Number(document.getElementById('cc-deductionPercent').value)||0;
-    const setupFee = Number(document.getElementById('cc-setupFee').value)||0;
-    const withholding = Number(document.getElementById('cc-withholding').value)||0;
-    const deductionAmount = approvedAmount * (deductionPercent/100);
-    const specialHandling = document.getElementById('cc-special').checked;
-    const specialFee = specialHandling ? (Number(document.getElementById('cc-specialFee').value)||0) : 0;
-    const disbursement = Number(document.getElementById('cc-disbursement').value)||0;
-    const afterCost = approvedAmount - deductionAmount - setupFee - withholding - specialFee - disbursement;
+    try{
+      const fd = new FormData(e.target);
+      const approvedAmount = Number(document.getElementById('cc-approvedAmount').value)||0;
+      const deductionPercent = Number(document.getElementById('cc-deductionPercent').value)||0;
+      const setupFee = Number(document.getElementById('cc-setupFee').value)||0;
+      const withholding = Number(document.getElementById('cc-withholding').value)||0;
+      const deductionAmount = approvedAmount * (deductionPercent/100);
+      const specialHandling = document.getElementById('cc-special').checked;
+      const specialFee = specialHandling ? (Number(document.getElementById('cc-specialFee').value)||0) : 0;
+      const disbursement = Number(document.getElementById('cc-disbursement').value)||0;
+      const afterCost = approvedAmount - deductionAmount - setupFee - withholding - specialFee - disbursement;
 
-    const businessBonusEnabled = document.getElementById('cc-bb-enabled').checked;
-    const channelTakeEnabled = document.getElementById('cc-ct-enabled').checked;
-    const huangBonusEnabled = document.getElementById('cc-hb-enabled').checked;
-    const businessBonus = businessBonusEnabled ? (Number(document.getElementById('cc-businessBonus').value)||0) : 0;
-    const channelTake = channelTakeEnabled ? (Number(document.getElementById('cc-channelTake').value)||0) : 0;
-    const huangBonus = huangBonusEnabled ? (Number(document.getElementById('cc-huangBonus').value)||0) : 0;
-    const companyProfit = afterCost - businessBonus - channelTake - huangBonus;
+      const businessBonusEnabled = document.getElementById('cc-bb-enabled').checked;
+      const channelTakeEnabled = document.getElementById('cc-ct-enabled').checked;
+      const huangBonusEnabled = document.getElementById('cc-hb-enabled').checked;
+      const businessBonus = businessBonusEnabled ? (Number(document.getElementById('cc-businessBonus').value)||0) : 0;
+      const channelTake = channelTakeEnabled ? (Number(document.getElementById('cc-channelTake').value)||0) : 0;
+      const huangBonus = huangBonusEnabled ? (Number(document.getElementById('cc-huangBonus').value)||0) : 0;
+      const companyProfit = afterCost - businessBonus - channelTake - huangBonus;
 
-    const profitPaidChecked = fd.get('profitPaid')==='on';
-    const data = {
-      date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'), staff: fd.get('staff'),
-      source: fd.get('source'), referrer: fd.get('referrer'), profitPaid: profitPaidChecked,
-      businessBonusPaid: profitPaidChecked, channelTakePaid: profitPaidChecked, huangBonusPaid: profitPaidChecked,
-      approvedAmount, deductionPercent, setupFee, deductionAmount, withholding, disbursement, afterCost,
-      businessBonusEnabled, businessBonus, channelTakeEnabled, channelTake, huangBonusEnabled, huangBonus,
-      companyProfit, note: fd.get('note'), specialHandling, specialFee
-    };
-    const wasPaidBefore = existing ? chAllPaid(existing) : false;
-    const chCaseId = existing ? existing.id : uid();
-    if(existing) Object.assign(existing, stamp(data));
-    else APP.data.casesChannel.push(stamp({id:chCaseId, linkedTxId:null, profitTxId:null, ...data}));
-    const chRec = existing || APP.data.casesChannel[APP.data.casesChannel.length-1];
-    const totalPayout = businessBonus + channelTake + huangBonus;
-    if(data.profitPaid && !wasPaidBefore && !chRec.profitTxId && totalPayout>0){
-      postBonusPayoutToTransactions(chRec, totalPayout, `業務／通路獎金發放（${data.staff}／${data.customer}）`);
-      chRec.profitTxId = chRec.bonusTxId; // reuse same tx-id field set by helper
+      const profitPaidChecked = fd.get('profitPaid')==='on';
+      const data = {
+        date: fd.get('date'), customer: fd.get('customer'), plan: fd.get('plan'), staff: fd.get('staff'),
+        source: fd.get('source'), referrer: fd.get('referrer'), profitPaid: profitPaidChecked,
+        businessBonusPaid: profitPaidChecked, channelTakePaid: profitPaidChecked, huangBonusPaid: profitPaidChecked,
+        approvedAmount, deductionPercent, setupFee, deductionAmount, withholding, disbursement, afterCost,
+        businessBonusEnabled, businessBonus, channelTakeEnabled, channelTake, huangBonusEnabled, huangBonus,
+        companyProfit, note: fd.get('note'), specialHandling, specialFee
+      };
+      const chCaseId = existing ? existing.id : uid();
+      if(existing) Object.assign(existing, stamp(data));
+      else APP.data.casesChannel.push(stamp({id:chCaseId, linkedTxId:null, profitTxId:null, ...data}));
+      const chRec = existing || APP.data.casesChannel[APP.data.casesChannel.length-1];
+      // 註：自動記帳已停用（見postBonusPayoutToTransactions的說明），這裡不再呼叫、也不再嘗試讀取它設定的bonusTxId，
+      // 之前這裡有一行 chRec.profitTxId = chRec.bonusTxId 會把undefined存進Firestore導致整筆存檔失敗，已經移除。
+      if(businessBonus>0){
+        saveBonusLedgerEntry(stamp({ id:'ch-'+chCaseId, staffName:data.staff, date:data.date, businessBonus, xiaojiangBonus:0, customer:data.customer }));
+      } else {
+        deleteBonusLedgerEntry('ch-'+chCaseId);
+      }
+      if(huangBonus>0){
+        saveBonusLedgerEntry(stamp({ id:'huang-'+chCaseId, staffName:'煌', date:data.date, businessBonus:huangBonus, xiaojiangBonus:0, customer:data.customer }));
+      } else {
+        deleteBonusLedgerEntry('huang-'+chCaseId);
+      }
+      syncWizardHatLedger(chCaseId, data.date, data.customer, specialFee);
+      saveCasesChannel();
+    } catch(err){
+      console.error('新增/編輯通路案件時發生錯誤：', err);
+      alert('儲存時發生非預期錯誤，請截圖這則訊息回報給開發者：\n' + (err && err.message ? err.message : err));
+    } finally{
+      closeModal();
+      render();
     }
-    if(businessBonus>0){
-      saveBonusLedgerEntry(stamp({ id:'ch-'+chCaseId, staffName:data.staff, date:data.date, businessBonus, xiaojiangBonus:0, customer:data.customer }));
-    } else {
-      deleteBonusLedgerEntry('ch-'+chCaseId);
-    }
-    if(huangBonus>0){
-      saveBonusLedgerEntry(stamp({ id:'huang-'+chCaseId, staffName:'煌', date:data.date, businessBonus:huangBonus, xiaojiangBonus:0, customer:data.customer }));
-    } else {
-      deleteBonusLedgerEntry('huang-'+chCaseId);
-    }
-    syncWizardHatLedger(chCaseId, data.date, data.customer, specialFee);
-    saveCasesChannel(); closeModal();
   });
 }
 
@@ -4645,15 +4653,23 @@ function openTransactionModal(existing){
   });
   document.getElementById('tx-form').addEventListener('submit', (e)=>{
     e.preventDefault();
-    const fd = new FormData(e.target);
-    const data = {
-      date: fd.get('date'), type: fd.get('type'), mainCategory: fd.get('mainCategory'),
-      subCategory: fd.get('subCategory'), amount: Number(fd.get('amount'))||0,
-      vendor: fd.get('vendor'), note: fd.get('note'), pending: fd.get('pending')==='on'
-    };
-    if(existing) Object.assign(existing, stamp(data));
-    else APP.data.transactions.push(stamp({id:uid(), ...data}));
-    saveTransactions(); closeModal();
+    try{
+      const fd = new FormData(e.target);
+      const data = {
+        date: fd.get('date'), type: fd.get('type'), mainCategory: fd.get('mainCategory'),
+        subCategory: fd.get('subCategory'), amount: Number(fd.get('amount'))||0,
+        vendor: fd.get('vendor'), note: fd.get('note'), pending: fd.get('pending')==='on'
+      };
+      if(existing) Object.assign(existing, stamp(data));
+      else APP.data.transactions.push(stamp({id:uid(), ...data}));
+      saveTransactions();
+    } catch(err){
+      console.error('新增/編輯收支明細時發生錯誤：', err);
+      alert('儲存時發生非預期錯誤，請截圖這則訊息回報給開發者：\n' + (err && err.message ? err.message : err));
+    } finally{
+      closeModal();
+      render();
+    }
   });
 }
 
@@ -6037,11 +6053,18 @@ document.addEventListener('submit', (e)=>{
   }
   if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form'].includes(e.target.id)){
     e.preventDefault();
-    const fd = new FormData(e.target);
-    const data = {};
-    fd.forEach((v,k)=>{ data[k]=v; });
-    if(modalOnSubmit) modalOnSubmit(data);
-    closeModal();
+    try{
+      const fd = new FormData(e.target);
+      const data = {};
+      fd.forEach((v,k)=>{ data[k]=v; });
+      if(modalOnSubmit) modalOnSubmit(data);
+    } catch(err){
+      console.error('表單送出時發生錯誤（'+e.target.id+'）：', err);
+      alert('儲存時發生非預期錯誤，請截圖這則訊息回報給開發者：\n' + (err && err.message ? err.message : err));
+    } finally{
+      closeModal();
+      render();
+    }
   }
 });
 document.addEventListener('click', (e)=>{

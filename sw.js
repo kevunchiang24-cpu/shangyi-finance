@@ -18,6 +18,11 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(fetch(e.request).catch(() => caches.match('./index.html')));
     return;
   }
+  // Cache API 只支援 GET 請求，POST/PUT 等寫入類請求（例如 Firestore 的寫入）直接跳過快取，
+  // 不然 cache.put() 會丟出 "Request method 'POST' is unsupported" 這個錯誤
+  if (e.request.method !== 'GET') {
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then((cached) => {
       const fetchPromise = fetch(e.request).then((res) => {
