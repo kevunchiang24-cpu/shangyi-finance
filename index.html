@@ -596,7 +596,7 @@ const APP = {
   casesTab:'ad', caseAdFilter:{status:'all', month:nowMonthKey}, caseChannelFilter:{status:'all', month:nowMonthKey}, dailyBonusDate:'', dailyBonusShowUnpaidOnly:false,
   bizToolsTab:'progress', staffOverviewName:'', staffOverviewTab:'log', viewingStaff:null,
   myLogFilter:{month:nowMonthKey}, myLogNoContactCollapsed:false, attendanceFilter:{month:nowMonthKey},
-  socialAccountFilter:{status:'all', stage:'all', bmGroup:'all'},
+  socialAccountFilter:{status:'all', stage:'all', bmGroup:'all'}, socialPersonalFilter:{status:'all'}, socialFanPageFilter:{status:'all'},
   progressAdSort:{key:'date',dir:'desc'}, progressChannelSort:{key:'date',dir:'desc'},
   casesAdSort:{key:'date',dir:'desc'}, casesChannelSort:{key:'date',dir:'desc'},
   txSort:{key:'date',dir:'desc'}, adSpendSort:{key:'month',dir:'desc'}, myLogSort:{key:'date',dir:'desc'},
@@ -623,6 +623,18 @@ function isStaffAdmin(){ return APP.role==='staffAdmin'; }
 function isStaffSales(){ return APP.role==='staffSales'; }
 function isStaffAny(){ return isStaffAdmin() || isStaffSales(); }
 function isMeXiaojiang(){ return !!(APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang; }
+function isMeHuang(){ return !!(APP.users.find(u=>u.id===APP.user.uid)||{}).isHuang; }
+function mySocialScope(){
+  const me = APP.users.find(u=>u.id===APP.user.uid) || {};
+  if(me.isXiaojiang) return 'xiaojiang';
+  if(me.isHuang) return 'huang';
+  return null;
+}
+function socialCollName(base){
+  const scope = mySocialScope();
+  if(scope==='huang') return 'huang'+base.charAt(0).toUpperCase()+base.slice(1);
+  return base;
+}
 function myStaffName(){ const me = APP.users.find(u=>u.id===APP.user.uid); return me ? (me.staffName||'') : ''; }
 function displayNameFor(uidVal, fallbackName){
   const pub = APP.publicProfiles[uidVal];
@@ -750,24 +762,26 @@ function subscribeAll(){
     APP.role = me ? me.role : 'pending';
     if(!personalSubsInitialized && APP.role){
       personalSubsInitialized = true;
-      if(me && me.isXiaojiang){
-        unsubs.push(onSnapshot(collection(db,'socialAccounts'), snap2=>{
+      if(me && (me.isXiaojiang || me.isHuang)){
+        const prefix = me.isXiaojiang ? '' : 'huang';
+        const collName = (base)=> prefix ? prefix+base.charAt(0).toUpperCase()+base.slice(1) : base;
+        unsubs.push(onSnapshot(collection(db,collName('socialAccounts')), snap2=>{
           APP.data.socialAccounts = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }));
-        unsubs.push(onSnapshot(collection(db,'personalAccounts'), snap2=>{
+        unsubs.push(onSnapshot(collection(db,collName('personalAccounts')), snap2=>{
           APP.data.personalAccounts = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }));
-        unsubs.push(onSnapshot(collection(db,'fanPages'), snap2=>{
+        unsubs.push(onSnapshot(collection(db,collName('fanPages')), snap2=>{
           APP.data.fanPages = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }));
-        unsubs.push(onSnapshot(collection(db,'teamRoster'), snap2=>{
+        unsubs.push(onSnapshot(collection(db,collName('teamRoster')), snap2=>{
           APP.data.teamRoster = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }));
-        unsubs.push(onSnapshot(collection(db,'spareEmails'), snap2=>{
+        unsubs.push(onSnapshot(collection(db,collName('spareEmails')), snap2=>{
           APP.data.spareEmails = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }));
@@ -1099,6 +1113,7 @@ function shellHTML(){
   );
   const meCoreUser = core ? APP.users.find(u=>u.id===APP.user.uid) : null;
   const meIsXiaojiang = !!(meCoreUser && meCoreUser.isXiaojiang);
+  const meIsHuang = !!(APP.users.find(u=>u.id===APP.user.uid)||{}).isHuang;
   return `
   <div id="mobile-topbar">
     <button id="hamburger-btn" aria-label="選單">☰</button>
@@ -1156,6 +1171,7 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">📅</span>行事曆</div>
     <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
     ${isStaffAdmin() ? `<div class="nav-item" data-action="nav" data-view="optionColors"><span class="nav-icon">🎨</span>選單顏色設定</div>` : ''}
+    ${meIsHuang ? `<div class="nav-item" data-action="nav" data-view="socialAccounts"><span class="nav-icon">🔐</span>社群帳號庫</div>` : ''}
     ` : ''}
     <div class="sidebar-footer">
       <div class="user-chip">${escHtml(APP.userEmail)}</div>
@@ -2006,6 +2022,10 @@ function usersHTML(){
       </select>
       <input type="number" class="staff-salary-input" data-uid="${u.id}" value="${profile.baseSalary||''}" placeholder="底薪" style="margin-top:6px;margin-left:6px;width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;"/>
       ${profile.baseSalary>0 ? `<div style="margin-top:6px;"><span class="badge ${paidThisMonth?'active':'pending'}">${nowMonthKey} ${paidThisMonth?'已發放':'未發放'}</span></div>` : ''}
+      <label style="margin-top:6px;display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);">
+        <input type="checkbox" class="huang-toggle" data-uid="${u.id}" ${u.isHuang?'checked':''}/>
+        開放獨立的社群帳號庫（自己專用，跟其他人分開，連核心都看不到）
+      </label>
     ` : showXiaojiangToggle ? `
       <label style="margin-top:6px;display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);">
         <input type="checkbox" class="xiaojiang-toggle" data-uid="${u.id}" ${u.isXiaojiang?'checked':''}/>
@@ -2257,12 +2277,12 @@ function render(){
   updateNotifBell();
   const main = document.getElementById('main');
   if(!main) return;
-  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox'];
+  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
   else if(APP.view==='xiaojiangDashboard' && isCore()) main.innerHTML = xiaojiangDashboardView();
-  else if(APP.view==='socialAccounts' && isCore() && (APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang) main.innerHTML = socialAccountsHTML();
+  else if(APP.view==='socialAccounts' && (isMeXiaojiang() || isMeHuang())) main.innerHTML = socialAccountsHTML();
   else if(APP.view==='transactions' && isCore()) main.innerHTML = transactionsHTML();
   else if(APP.view==='reports' && isCore()) main.innerHTML = reportsHTML();
   else if(APP.view==='settings' && isCore()) main.innerHTML = settingsHTML();
@@ -2474,14 +2494,21 @@ function socialAccountsHTML(){
   `;
 }
 function socialPersonalAccountsTab(){
-  const list = (APP.data.personalAccounts||[]).slice().sort((a,b)=>(a.accountName||'').localeCompare(b.accountName||''));
+  const f = APP.socialPersonalFilter || {status:'all'};
+  let list = (APP.data.personalAccounts||[]).slice().sort((a,b)=>(a.accountName||'').localeCompare(b.accountName||''));
+  if(f.status!=='all') list = list.filter(a=>a.status===f.status);
   return `
     <div class="page-header" style="margin:14px 0;"><div></div><button class="btn primary" data-action="open-personal-account-modal">＋ 新增個人帳號</button></div>
     <div class="card" style="margin-bottom:16px;">
       <p style="font-size:12.5px;color:var(--muted);margin:0;">建議帳號年齡至少 3 個月以上、且有正常社交行為（加朋友、按讚、發文），才適合拿去當 BM 管理員，不要剛註冊就直接用。</p>
     </div>
+    <div class="filter-row">
+      <div class="filter-field"><label>狀態</label>
+        <select data-case-filter="social-personal-status"><option value="all" ${f.status==='all'?'selected':''}>全部</option>
+        ${SOCIAL_ACCOUNT_STATUS_OPTIONS.map(s=>`<option value="${s}" ${f.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    </div>
     <div class="grid grid-3">
-      ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">尚無個人帳號資料，點上方新增</div></div>` :
+      ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">${f.status!=='all'?'沒有符合篩選條件的帳號':'尚無個人帳號資料，點上方新增'}</div></div>` :
       list.map(a=>{
         const ageInfo = personalAccountAgeInfo(a.createdDate);
         const linkedFanPages = (APP.data.fanPages||[]).filter(p=>p.personalAccountId===a.id);
@@ -2493,6 +2520,7 @@ function socialPersonalAccountsTab(){
               ${ageInfo&&ageInfo.ready?`<span class="social-live-dot" title="帳號夠成熟，可安心使用"></span>`:''}
               <h3 style="margin:0;">${escHtml(a.accountName||'（未命名）')}</h3>
             </div>
+            ${socialAccountStatusBadge(a.status)}
           </div>
           ${ageInfo?`<div style="background:#F5F7FC;border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;">
             <span class="badge ${ageInfo.ready?'active':'pending'}">帳號年齡 ${ageInfo.label}${ageInfo.ready?'（已達建議門檻）':'（建議滿3個月再用）'}</span>
@@ -2519,14 +2547,21 @@ function socialPersonalAccountsTab(){
   `;
 }
 function socialFanPagesTab(){
-  const list = (APP.data.fanPages||[]).slice().sort((a,b)=>(a.pageName||'').localeCompare(b.pageName||''));
+  const f = APP.socialFanPageFilter || {status:'all'};
+  let list = (APP.data.fanPages||[]).slice().sort((a,b)=>(a.pageName||'').localeCompare(b.pageName||''));
+  if(f.status!=='all') list = list.filter(a=>a.status===f.status);
   return `
     <div class="page-header" style="margin:14px 0;"><div></div><button class="btn primary" data-action="open-fanpage-modal">＋ 新增粉絲專頁</button></div>
     <div class="card" style="margin-bottom:16px;">
       <p style="font-size:12.5px;color:var(--muted);margin:0;">建議先養 1-2 週以上再綁廣告帳號，期間先自然發幾篇貼文、累積一些真實互動，不要粉專才建立幾天就直接掛廣告。</p>
     </div>
+    <div class="filter-row">
+      <div class="filter-field"><label>狀態</label>
+        <select data-case-filter="social-fanpage-status"><option value="all" ${f.status==='all'?'selected':''}>全部</option>
+        ${SOCIAL_ACCOUNT_STATUS_OPTIONS.map(s=>`<option value="${s}" ${f.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    </div>
     <div class="grid grid-3">
-      ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">尚無粉絲專頁資料，點上方新增</div></div>` :
+      ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">${f.status!=='all'?'沒有符合篩選條件的粉專':'尚無粉絲專頁資料，點上方新增'}</div></div>` :
       list.map(a=>{
         const ageInfo = fanPageAgeInfo(a.createdDate);
         return `
@@ -2536,6 +2571,7 @@ function socialFanPagesTab(){
               ${ageInfo&&ageInfo.ready?`<span class="social-live-dot" title="粉專夠成熟，可安心綁定廣告帳號"></span>`:''}
               <h3 style="margin:0;">${escHtml(a.pageName||'（未命名）')}</h3>
             </div>
+            ${socialAccountStatusBadge(a.status)}
           </div>
           ${ageInfo?`<div style="background:#F5F7FC;border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;">
             <span class="badge ${ageInfo.ready?'active':'pending'}">粉專年齡 ${ageInfo.label}${ageInfo.ready?'（已達建議門檻）':'（建議滿1-2週再用）'}</span>
@@ -2699,16 +2735,16 @@ function socialSpareEmailTab(){
     </div>
   `;
 }
-function saveSocialAccount(rec){ return setDoc(doc(db,'socialAccounts', rec.id), rec); }
-function deleteSocialAccount(id){ return deleteDoc(doc(db,'socialAccounts', id)); }
-function savePersonalAccount(rec){ return setDoc(doc(db,'personalAccounts', rec.id), rec); }
-function deletePersonalAccount(id){ return deleteDoc(doc(db,'personalAccounts', id)); }
-function saveFanPage(rec){ return setDoc(doc(db,'fanPages', rec.id), rec); }
-function deleteFanPage(id){ return deleteDoc(doc(db,'fanPages', id)); }
-function saveTeamRosterEntry(rec){ return setDoc(doc(db,'teamRoster', rec.id), rec); }
-function deleteTeamRosterEntry(id){ return deleteDoc(doc(db,'teamRoster', id)); }
-function saveSpareEmail(rec){ return setDoc(doc(db,'spareEmails', rec.id), rec); }
-function deleteSpareEmail(id){ return deleteDoc(doc(db,'spareEmails', id)); }
+function saveSocialAccount(rec){ return setDoc(doc(db,socialCollName('socialAccounts'), rec.id), rec); }
+function deleteSocialAccount(id){ return deleteDoc(doc(db,socialCollName('socialAccounts'), id)); }
+function savePersonalAccount(rec){ return setDoc(doc(db,socialCollName('personalAccounts'), rec.id), rec); }
+function deletePersonalAccount(id){ return deleteDoc(doc(db,socialCollName('personalAccounts'), id)); }
+function saveFanPage(rec){ return setDoc(doc(db,socialCollName('fanPages'), rec.id), rec); }
+function deleteFanPage(id){ return deleteDoc(doc(db,socialCollName('fanPages'), id)); }
+function saveTeamRosterEntry(rec){ return setDoc(doc(db,socialCollName('teamRoster'), rec.id), rec); }
+function deleteTeamRosterEntry(id){ return deleteDoc(doc(db,socialCollName('teamRoster'), id)); }
+function saveSpareEmail(rec){ return setDoc(doc(db,socialCollName('spareEmails'), rec.id), rec); }
+function deleteSpareEmail(id){ return deleteDoc(doc(db,socialCollName('spareEmails'), id)); }
 function openSocialAccountModal(existing){
   const a = existing || {accountName:'',platform:'Facebook',status:'養號中',strategyStage:'新建',bmGroup:'',createdDate:todayStr(),lastLoginDate:'',loginAccount:'',password:'',twoFactor:'',boundPhone:'',boundEmail:'',adSpendNote:'',note:'',compliance:{},personalAccountId:'',fanPageId:''};
   const existingBmGroups = Array.from(new Set((APP.data.socialAccounts||[]).map(x=>x.bmGroup).filter(Boolean)));
@@ -2759,10 +2795,13 @@ function openSocialAccountModal(existing){
   });
 }
 function openPersonalAccountModal(existing){
-  const a = existing || {accountName:'',createdDate:'',loginAccount:'',password:'',twoFactor:'',boundPhone:'',boundEmail:'',note:''};
+  const a = existing || {accountName:'',status:'養號中',createdDate:'',loginAccount:'',password:'',twoFactor:'',boundPhone:'',boundEmail:'',note:''};
   openModal(existing?'編輯個人帳號':'新增個人帳號', `
     <label class="field"><span>帳號名稱／暱稱</span><input type="text" name="accountName" value="${escAttr(a.accountName)}" required placeholder="方便自己辨識用的名字"/></label>
-    <label class="field"><span>帳號建立日期</span><input type="date" name="createdDate" value="${a.createdDate||''}"/><span style="color:var(--muted);font-size:11px;">用來判斷帳號夠不夠成熟（建議滿3個月）</span></label>
+    <div class="grid grid-2">
+      <label class="field"><span>狀態</span><select name="status">${SOCIAL_ACCOUNT_STATUS_OPTIONS.map(s=>`<option value="${s}" ${a.status===s?'selected':''}>${s}</option>`).join('')}</select></label>
+      <label class="field"><span>帳號建立日期</span><input type="date" name="createdDate" value="${a.createdDate||''}"/><span style="color:var(--muted);font-size:11px;">用來判斷帳號夠不夠成熟（建議滿3個月）</span></label>
+    </div>
     <label class="field"><span>登入帳號</span><input type="text" name="loginAccount" value="${escAttr(a.loginAccount)}"/></label>
     <label class="field"><span>密碼</span><input type="text" name="password" value="${escAttr(a.password)}"/></label>
     <label class="field"><span>2FA（金鑰或備用碼）</span><input type="text" name="twoFactor" value="${escAttr(a.twoFactor)}"/></label>
@@ -2777,11 +2816,14 @@ function openPersonalAccountModal(existing){
   });
 }
 function openFanPageModal(existing){
-  const a = existing || {pageName:'',createdDate:'',note:'',personalAccountId:''};
+  const a = existing || {pageName:'',status:'養號中',createdDate:'',note:'',personalAccountId:''};
   const personalAccounts = APP.data.personalAccounts||[];
   openModal(existing?'編輯粉絲專頁':'新增粉絲專頁', `
     <label class="field"><span>粉專名稱</span><input type="text" name="pageName" value="${escAttr(a.pageName)}" required placeholder="方便自己辨識用的名字"/></label>
-    <label class="field"><span>粉專建立日期</span><input type="date" name="createdDate" value="${a.createdDate||''}"/><span style="color:var(--muted);font-size:11px;">用來判斷粉專夠不夠成熟（建議滿1-2週）</span></label>
+    <div class="grid grid-2">
+      <label class="field"><span>狀態</span><select name="status">${SOCIAL_ACCOUNT_STATUS_OPTIONS.map(s=>`<option value="${s}" ${a.status===s?'selected':''}>${s}</option>`).join('')}</select></label>
+      <label class="field"><span>粉專建立日期</span><input type="date" name="createdDate" value="${a.createdDate||''}"/><span style="color:var(--muted);font-size:11px;">用來判斷粉專夠不夠成熟（建議滿1-2週）</span></label>
+    </div>
     <label class="field"><span>由哪個個人帳號建立／管理</span><select name="personalAccountId"><option value="">（未指定）</option>${personalAccounts.map(p=>`<option value="${p.id}" ${a.personalAccountId===p.id?'selected':''}>${escHtml(p.accountName)}</option>`).join('')}</select></label>
     <label class="field"><span>備註</span><textarea name="note">${escHtml(a.note||'')}</textarea></label>
   `, 'fanpage-form', (data)=>{
@@ -6013,6 +6055,8 @@ document.addEventListener('change', (e)=>{
     else if(key==='social-status') APP.socialAccountFilter.status = e.target.value;
     else if(key==='social-stage') APP.socialAccountFilter.stage = e.target.value;
     else if(key==='social-bm') APP.socialAccountFilter.bmGroup = e.target.value;
+    else if(key==='social-personal-status') APP.socialPersonalFilter.status = e.target.value;
+    else if(key==='social-fanpage-status') APP.socialFanPageFilter.status = e.target.value;
     render(); return;
   }
   if(e.target.id==='daily-bonus-date'){ APP.dailyBonusDate = e.target.value; render(); return; }
@@ -6057,6 +6101,22 @@ document.addEventListener('change', (e)=>{
       APP.users.forEach(u=>{
         if(u.id!==uidTarget && u.isXiaojiang){
           updates.push(updateDoc(doc(db,'users',u.id), { isXiaojiang: false }));
+        }
+      });
+    }
+    Promise.all(updates).then(()=>render());
+    return;
+  }
+  if(e.target.classList && e.target.classList.contains('huang-toggle')){
+    const uidTarget = e.target.dataset.uid;
+    const checked = e.target.checked;
+    const updates = [updateDoc(doc(db,'users',uidTarget), { isHuang: checked })];
+    if(checked){
+      // 防呆：跟isXiaojiang一樣，同一時間只能有一個人被標記，因為huang開頭的集合名稱是固定的、不分uid，
+      // 如果同時有兩人被標記，會共用同一份資料而不是各自獨立
+      APP.users.forEach(u=>{
+        if(u.id!==uidTarget && u.isHuang){
+          updates.push(updateDoc(doc(db,'users',u.id), { isHuang: false }));
         }
       });
     }
