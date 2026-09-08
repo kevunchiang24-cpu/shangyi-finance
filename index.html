@@ -607,7 +607,7 @@ const APP = {
     companyPublic:{systemName:'',systemSubtitle:'',logoDataUrl:''},
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
-    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[],
+    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[],
     optionColors:{ plan:{}, status:{}, dealProduct:{}, contactStatus:{} },
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
       rankBronze:50000, rankSilver:100000, rankGold:200000, rankDiamond:400000,
@@ -753,6 +753,22 @@ function subscribeAll(){
       if(me && me.isXiaojiang){
         unsubs.push(onSnapshot(collection(db,'socialAccounts'), snap2=>{
           APP.data.socialAccounts = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+          render();
+        }));
+        unsubs.push(onSnapshot(collection(db,'personalAccounts'), snap2=>{
+          APP.data.personalAccounts = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+          render();
+        }));
+        unsubs.push(onSnapshot(collection(db,'fanPages'), snap2=>{
+          APP.data.fanPages = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+          render();
+        }));
+        unsubs.push(onSnapshot(collection(db,'teamRoster'), snap2=>{
+          APP.data.teamRoster = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+          render();
+        }));
+        unsubs.push(onSnapshot(collection(db,'spareEmails'), snap2=>{
+          APP.data.spareEmails = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }));
       }
@@ -2397,6 +2413,7 @@ const SOCIAL_ACCOUNT_COMPLIANCE_ITEMS = [
   { key:'domainVerification', label:'網域驗證' },
   { key:'companyDocsReady', label:'公司登記資料備妥' },
 ];
+const BM_PERMISSION_LEVELS = ['完整控制權','廣告投放權限','僅檢視效能','其他'];
 /* ---- 依教戰守則的養號時間表，算出這個帳號從建立日到今天是第幾天、對應到哪個階段 ---- */
 function daysSinceDate(dateStr){
   if(!dateStr) return null;
@@ -2421,7 +2438,113 @@ function copyableFieldHtml(id, field, value, label){
     ${has?`<button type="button" class="social-copy-btn" data-action="copy-social-field" data-value="${escAttr(value)}" style="flex-shrink:0;display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:#F3F5FB;color:var(--navy);border:none;border-radius:6px;cursor:pointer;padding:0;">${COPY_ICON_SVG}</button>`:''}
   </div>`;
 }
+/* ---- 個人帳號／粉絲專頁／廣告帳號是三種生命週期不同的獨立資源，各自有自己的「養多久才安全」門檻：
+   個人帳號要以「月」為單位（建議3個月以上），粉專要以「週」為單位（建議1-2週以上），廣告帳號才是原本的14天漸進節奏 ---- */
+function personalAccountAgeInfo(createdDate){
+  const days = daysSinceDate(createdDate);
+  if(days===null) return null;
+  const months = Math.floor(days/30);
+  const ready = days>=90; // 建議至少3個月
+  return { days, months, ready, label: months>0?`${months}個月`:`${days}天` };
+}
+function fanPageAgeInfo(createdDate){
+  const days = daysSinceDate(createdDate);
+  if(days===null) return null;
+  const weeks = Math.floor(days/7);
+  const ready = days>=14; // 建議至少1-2週，取上限14天
+  return { days, weeks, ready, label: weeks>0?`${weeks}週`:`${days}天` };
+}
 function socialAccountsHTML(){
+  const tab = APP.socialAccountsTab || 'personal';
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">🔐 社群帳號庫</h1><p class="page-sub">個人帳號、粉絲專頁、廣告帳號分開管理，各自有自己的養號時間邏輯</p></div>
+    </div>
+    <div class="card" style="margin-bottom:16px;background:#FFF8E6;">
+      <p style="font-size:12.5px;color:var(--muted);margin:0;">這個頁面跟裡面的所有資料，Firestore 規則已經設定成連核心帳號都完全讀不到，只有你自己的帳號能存取。</p>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn ${tab==='personal'?'active':''}" data-action="social-tab" data-tab="personal">個人帳號</button>
+      <button class="tab-btn ${tab==='fanpage'?'active':''}" data-action="social-tab" data-tab="fanpage">粉絲專頁</button>
+      <button class="tab-btn ${tab==='ad'?'active':''}" data-action="social-tab" data-tab="ad">廣告帳號</button>
+      <button class="tab-btn ${tab==='roster'?'active':''}" data-action="social-tab" data-tab="roster">團隊帳號盤點表</button>
+      <button class="tab-btn ${tab==='spareEmail'?'active':''}" data-action="social-tab" data-tab="spareEmail">備用信箱</button>
+    </div>
+    ${tab==='personal' ? socialPersonalAccountsTab() : tab==='fanpage' ? socialFanPagesTab() : tab==='roster' ? socialTeamRosterTab() : tab==='spareEmail' ? socialSpareEmailTab() : socialAdAccountsTab()}
+  `;
+}
+function socialPersonalAccountsTab(){
+  const list = (APP.data.personalAccounts||[]).slice().sort((a,b)=>(a.accountName||'').localeCompare(b.accountName||''));
+  return `
+    <div class="page-header" style="margin:14px 0;"><div></div><button class="btn primary" data-action="open-personal-account-modal">＋ 新增個人帳號</button></div>
+    <div class="card" style="margin-bottom:16px;">
+      <p style="font-size:12.5px;color:var(--muted);margin:0;">建議帳號年齡至少 3 個月以上、且有正常社交行為（加朋友、按讚、發文），才適合拿去當 BM 管理員，不要剛註冊就直接用。</p>
+    </div>
+    <div class="grid grid-3">
+      ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">尚無個人帳號資料，點上方新增</div></div>` :
+      list.map(a=>{
+        const ageInfo = personalAccountAgeInfo(a.createdDate);
+        return `
+        <div class="card${ageInfo&&ageInfo.ready?' social-live-card':''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:7px;">
+              ${ageInfo&&ageInfo.ready?`<span class="social-live-dot" title="帳號夠成熟，可安心使用"></span>`:''}
+              <h3 style="margin:0;">${escHtml(a.accountName||'（未命名）')}</h3>
+            </div>
+          </div>
+          ${ageInfo?`<div style="background:#F5F7FC;border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;">
+            <span class="badge ${ageInfo.ready?'active':'pending'}">帳號年齡 ${ageInfo.label}${ageInfo.ready?'（已達建議門檻）':'（建議滿3個月再用）'}</span>
+          </div>`:''}
+          <div style="border-top:1px solid var(--border);padding-top:8px;margin-bottom:10px;">
+            ${copyableFieldHtml(a.id,'loginAccount',a.loginAccount,'登入帳號')}
+            ${copyableFieldHtml(a.id,'password',a.password,'密碼')}
+            ${copyableFieldHtml(a.id,'twoFactor',a.twoFactor,'2FA')}
+            ${copyableFieldHtml(a.id,'boundPhone',a.boundPhone,'綁定手機')}
+            ${copyableFieldHtml(a.id,'boundEmail',a.boundEmail,'綁定信箱')}
+          </div>
+          ${a.note?`<div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;">${escHtml(a.note)}</div>`:''}
+          <div class="row-actions">
+            <button class="icon-btn" data-action="edit-personal-account" data-id="${a.id}">編輯</button>
+            <button class="icon-btn" data-action="delete-personal-account" data-id="${a.id}">刪除</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+function socialFanPagesTab(){
+  const list = (APP.data.fanPages||[]).slice().sort((a,b)=>(a.pageName||'').localeCompare(b.pageName||''));
+  return `
+    <div class="page-header" style="margin:14px 0;"><div></div><button class="btn primary" data-action="open-fanpage-modal">＋ 新增粉絲專頁</button></div>
+    <div class="card" style="margin-bottom:16px;">
+      <p style="font-size:12.5px;color:var(--muted);margin:0;">建議先養 1-2 週以上再綁廣告帳號，期間先自然發幾篇貼文、累積一些真實互動，不要粉專才建立幾天就直接掛廣告。</p>
+    </div>
+    <div class="grid grid-3">
+      ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">尚無粉絲專頁資料，點上方新增</div></div>` :
+      list.map(a=>{
+        const ageInfo = fanPageAgeInfo(a.createdDate);
+        return `
+        <div class="card${ageInfo&&ageInfo.ready?' social-live-card':''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:7px;">
+              ${ageInfo&&ageInfo.ready?`<span class="social-live-dot" title="粉專夠成熟，可安心綁定廣告帳號"></span>`:''}
+              <h3 style="margin:0;">${escHtml(a.pageName||'（未命名）')}</h3>
+            </div>
+          </div>
+          ${ageInfo?`<div style="background:#F5F7FC;border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;">
+            <span class="badge ${ageInfo.ready?'active':'pending'}">粉專年齡 ${ageInfo.label}${ageInfo.ready?'（已達建議門檻）':'（建議滿1-2週再用）'}</span>
+          </div>`:''}
+          ${a.note?`<div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;">${escHtml(a.note)}</div>`:''}
+          <div class="row-actions">
+            <button class="icon-btn" data-action="edit-fanpage" data-id="${a.id}">編輯</button>
+            <button class="icon-btn" data-action="delete-fanpage" data-id="${a.id}">刪除</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+function socialAdAccountsTab(){
   const f = APP.socialAccountFilter || {status:'all', stage:'all', bmGroup:'all'};
   const allList = APP.data.socialAccounts||[];
   const bmGroups = Array.from(new Set(allList.map(a=>a.bmGroup).filter(Boolean))).sort();
@@ -2430,13 +2553,7 @@ function socialAccountsHTML(){
   if(f.stage!=='all') list = list.filter(a=>a.strategyStage===f.stage);
   if(f.bmGroup!=='all') list = list.filter(a=>(a.bmGroup||'（未分組）')===f.bmGroup);
   return `
-    <div class="page-header">
-      <div><h1 class="page-title">🔐 社群帳號庫</h1><p class="page-sub">廣告帳號、養號進度與登入資訊，只有你自己看得到</p></div>
-      <button class="btn primary" data-action="open-social-account-modal">＋ 新增帳號</button>
-    </div>
-    <div class="card" style="margin-bottom:16px;background:#FFF8E6;">
-      <p style="font-size:12.5px;color:var(--muted);margin:0;">這個頁面跟裡面的所有資料，Firestore 規則已經設定成連核心帳號都完全讀不到，只有你自己的帳號能存取。</p>
-    </div>
+    <div class="page-header" style="margin:14px 0;"><div></div><button class="btn primary" data-action="open-social-account-modal">＋ 新增廣告帳號</button></div>
     <div class="filter-row">
       <div class="filter-field"><label>狀態</label>
         <select data-case-filter="social-status"><option value="all" ${f.status==='all'?'selected':''}>全部</option>
@@ -2449,7 +2566,7 @@ function socialAccountsHTML(){
         ${bmGroups.map(g=>`<option value="${escAttr(g)}" ${f.bmGroup===g?'selected':''}>${escHtml(g)}</option>`).join('')}</select></div>
     </div>
     <div class="grid grid-3">
-      ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">${(f.status!=='all'||f.stage!=='all'||f.bmGroup!=='all')?'沒有符合篩選條件的帳號':'尚無帳號資料，點右上角新增'}</div></div>` :
+      ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">${(f.status!=='all'||f.stage!=='all'||f.bmGroup!=='all')?'沒有符合篩選條件的帳號':'尚無帳號資料，點上方新增'}</div></div>` :
       list.map(a=>{
         const days = daysSinceDate(a.createdDate);
         const stageInfo = warmingStageInfo(days);
@@ -2458,6 +2575,10 @@ function socialAccountsHTML(){
         const compliance = a.compliance || {};
         const doneCount = SOCIAL_ACCOUNT_COMPLIANCE_ITEMS.filter(item=>compliance[item.key]).length;
         const isLive = a.strategyStage==='正式上線';
+        const linkedPersonal = a.personalAccountId ? (APP.data.personalAccounts||[]).find(p=>p.id===a.personalAccountId) : null;
+        const linkedFanPage = a.fanPageId ? (APP.data.fanPages||[]).find(p=>p.id===a.fanPageId) : null;
+        const personalAge = linkedPersonal ? personalAccountAgeInfo(linkedPersonal.createdDate) : null;
+        const fanPageAge = linkedFanPage ? fanPageAgeInfo(linkedFanPage.createdDate) : null;
         return `
         <div class="card${isLive?' social-live-card':''}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
@@ -2473,6 +2594,10 @@ function socialAccountsHTML(){
           ${stageInfo?`<div style="background:#F5F7FC;border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;">
             <div style="display:flex;justify-content:space-between;align-items:center;"><span class="badge ${stageInfo.badge}">${stageInfo.label}（第${days}天／${stageInfo.range}）</span></div>
             <div style="color:var(--muted);margin-top:4px;">建議日預算：${stageInfo.budget}</div>
+          </div>`:''}
+          ${(linkedPersonal||linkedFanPage)?`<div style="border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;background:#F5F7FC;">
+            ${linkedPersonal?`<div>👤 個人帳號：${escHtml(linkedPersonal.accountName)}　<span class="badge ${personalAge&&personalAge.ready?'active':'pending'}" style="font-size:10.5px;">${personalAge?personalAge.label:'—'}${personalAge&&!personalAge.ready?' 尚未達3個月':''}</span></div>`:''}
+            ${linkedFanPage?`<div style="margin-top:${linkedPersonal?'4px':'0'};">📄 粉絲專頁：${escHtml(linkedFanPage.pageName)}　<span class="badge ${fanPageAge&&fanPageAge.ready?'active':'pending'}" style="font-size:10.5px;">${fanPageAge?fanPageAge.label:'—'}${fanPageAge&&!fanPageAge.ready?' 尚未達1-2週':''}</span></div>`:''}
           </div>`:''}
           ${idleWarning?`<div style="background:#FEE2E2;color:var(--red);border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;font-weight:600;">⚠ 已閒置 ${idleDays} 天未登入，超過建議的每月1次，記得上去輕度活躍一下</div>`:''}
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:12px;color:var(--muted);">
@@ -2498,12 +2623,92 @@ function socialAccountsHTML(){
     </div>
   `;
 }
+function socialTeamRosterTab(){
+  const list = (APP.data.teamRoster||[]).slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0) || (a.name||'').localeCompare(b.name||''));
+  return `
+    <div class="page-header" style="margin:14px 0;"><div></div><button class="btn primary" data-action="open-roster-modal">＋ 新增成員</button></div>
+    <div class="card" style="margin-bottom:16px;">
+      <p style="font-size:12.5px;color:var(--muted);margin:0;">這裡是真實成員自己的帳號盤點，重點是「復原信箱」——帳號被盜或登入異常時，能立刻知道要用哪個信箱走 Google/Meta 的帳號救援流程。信箱本身還是綁定在真實使用者身上。批量申辦、拿來開新帳號用的信箱請改用「備用信箱」分頁記錄。</p>
+    </div>
+    <div class="table-wrap">
+      ${list.length===0 ? `<div class="empty">尚無成員資料，點上方新增</div>` : `
+      <table class="responsive-table"><thead><tr>
+        <th>姓名／角色</th><th>個人帳號年資</th><th>目前BM權限層級</th><th>綁定復原信箱</th><th>2FA狀態</th><th>備援序位</th><th>上次登入／活躍</th><th></th>
+      </tr></thead><tbody>
+        ${list.map(m=>{
+          const ageInfo = personalAccountAgeInfo(m.accountCreatedDate);
+          const activeDays = daysSinceDate(m.lastActiveDate);
+          const activeWarning = activeDays!==null && activeDays>=30;
+          return `<tr>
+            <td data-label="姓名／角色">${escHtml(m.name||'（未命名）')}</td>
+            <td data-label="個人帳號年資">${ageInfo?ageInfo.label:'—'}</td>
+            <td data-label="目前BM權限層級">${escHtml(m.bmPermissionLevel||'—')}</td>
+            <td data-label="綁定復原信箱">${escHtml(m.recoveryEmail||'—')}</td>
+            <td data-label="2FA狀態">${m.twoFactorEnabled?'<span class="badge active">已開啟</span>':'<span class="badge pending">未開啟</span>'}</td>
+            <td data-label="備援序位">${escHtml(m.backupPriority||'—')}</td>
+            <td data-label="上次登入／活躍">${activeDays!==null?`${activeDays}天前${activeWarning?' ⚠':''}`:'—'}</td>
+            <td class="rt-actions"><div class="row-actions">
+              <button class="icon-btn" data-action="edit-roster" data-id="${m.id}">編輯</button>
+              <button class="icon-btn" data-action="delete-roster" data-id="${m.id}">刪除</button>
+            </div></td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>`}
+    </div>
+  `;
+}
+function socialSpareEmailTab(){
+  const list = (APP.data.spareEmails||[]).slice().sort((a,b)=>(a.email||'').localeCompare(b.email||''));
+  return `
+    <div class="page-header" style="margin:14px 0;"><div></div><button class="btn primary" data-action="open-spare-email-modal">＋ 新增備用信箱</button></div>
+    <div class="card" style="margin-bottom:16px;">
+      <p style="font-size:12.5px;color:var(--muted);margin:0;">這裡是批量申辦、準備拿去開新帳號用的信箱庫存，不是綁定在真實成員身上的復原信箱（那個用「團隊帳號盤點表」分頁）。信箱本身的辦理時間也是一種信任訊號，太新的信箱去申辦社群帳號同樣容易被判定為高風險。</p>
+    </div>
+    <div class="grid grid-3">
+      ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">尚無備用信箱資料，點上方新增</div></div>` :
+      list.map(a=>{
+        const ageInfo = personalAccountAgeInfo(a.createdDate);
+        return `
+        <div class="card${ageInfo&&ageInfo.ready?' social-live-card':''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:7px;">
+              ${ageInfo&&ageInfo.ready?`<span class="social-live-dot" title="信箱夠成熟，可安心使用"></span>`:''}
+              <h3 style="margin:0;word-break:break-all;">${escHtml(a.email||'（未命名）')}</h3>
+            </div>
+          </div>
+          ${ageInfo?`<div style="background:#F5F7FC;border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;">
+            <span class="badge ${ageInfo.ready?'active':'pending'}">信箱年資 ${ageInfo.label}${ageInfo.ready?'（已達建議門檻）':'（建議滿3個月再用）'}</span>
+          </div>`:''}
+          <div style="border-top:1px solid var(--border);padding-top:8px;margin-bottom:10px;">
+            ${copyableFieldHtml(a.id,'password',a.password,'密碼')}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">${a.used?'<span class="badge resigned">已使用</span>':'<span class="badge active">可用</span>'}</div>
+          ${a.note?`<div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;">${escHtml(a.note)}</div>`:''}
+          <div class="row-actions">
+            <button class="icon-btn" data-action="edit-spare-email" data-id="${a.id}">編輯</button>
+            <button class="icon-btn" data-action="delete-spare-email" data-id="${a.id}">刪除</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
 function saveSocialAccount(rec){ return setDoc(doc(db,'socialAccounts', rec.id), rec); }
 function deleteSocialAccount(id){ return deleteDoc(doc(db,'socialAccounts', id)); }
+function savePersonalAccount(rec){ return setDoc(doc(db,'personalAccounts', rec.id), rec); }
+function deletePersonalAccount(id){ return deleteDoc(doc(db,'personalAccounts', id)); }
+function saveFanPage(rec){ return setDoc(doc(db,'fanPages', rec.id), rec); }
+function deleteFanPage(id){ return deleteDoc(doc(db,'fanPages', id)); }
+function saveTeamRosterEntry(rec){ return setDoc(doc(db,'teamRoster', rec.id), rec); }
+function deleteTeamRosterEntry(id){ return deleteDoc(doc(db,'teamRoster', id)); }
+function saveSpareEmail(rec){ return setDoc(doc(db,'spareEmails', rec.id), rec); }
+function deleteSpareEmail(id){ return deleteDoc(doc(db,'spareEmails', id)); }
 function openSocialAccountModal(existing){
-  const a = existing || {accountName:'',platform:'Facebook',status:'養號中',strategyStage:'新建',bmGroup:'',createdDate:todayStr(),lastLoginDate:'',loginAccount:'',password:'',twoFactor:'',boundPhone:'',boundEmail:'',adSpendNote:'',note:'',compliance:{}};
+  const a = existing || {accountName:'',platform:'Facebook',status:'養號中',strategyStage:'新建',bmGroup:'',createdDate:todayStr(),lastLoginDate:'',loginAccount:'',password:'',twoFactor:'',boundPhone:'',boundEmail:'',adSpendNote:'',note:'',compliance:{},personalAccountId:'',fanPageId:''};
   const existingBmGroups = Array.from(new Set((APP.data.socialAccounts||[]).map(x=>x.bmGroup).filter(Boolean)));
   const compliance = a.compliance || {};
+  const personalAccounts = APP.data.personalAccounts||[];
+  const fanPages = APP.data.fanPages||[];
   openModal(existing?'編輯帳號':'新增帳號', `
     <label class="field"><span>帳號名稱／暱稱</span><input type="text" name="accountName" value="${escAttr(a.accountName)}" required placeholder="方便自己辨識用的名字"/></label>
     <div class="grid grid-2">
@@ -2515,6 +2720,10 @@ function openSocialAccountModal(existing){
       <label class="field"><span>所屬BM</span><input type="text" name="bmGroup" list="bm-group-suggest" value="${escAttr(a.bmGroup||'')}" placeholder="例如：投放BM A、備用BM"/>
         <datalist id="bm-group-suggest">${existingBmGroups.map(g=>`<option value="${escAttr(g)}">`).join('')}</datalist>
       </label>
+    </div>
+    <div class="grid grid-2">
+      <label class="field"><span>管理此帳號的個人帳號</span><select name="personalAccountId"><option value="">（未指定）</option>${personalAccounts.map(p=>`<option value="${p.id}" ${a.personalAccountId===p.id?'selected':''}>${escHtml(p.accountName)}</option>`).join('')}</select></label>
+      <label class="field"><span>綁定的粉絲專頁</span><select name="fanPageId"><option value="">（未指定）</option>${fanPages.map(p=>`<option value="${p.id}" ${a.fanPageId===p.id?'selected':''}>${escHtml(p.pageName)}</option>`).join('')}</select></label>
     </div>
     <div class="grid grid-2">
       <label class="field"><span>帳號建立日期</span><input type="date" name="createdDate" value="${a.createdDate||''}"/><span style="color:var(--muted);font-size:11px;">用來自動算養號天數</span></label>
@@ -2541,6 +2750,71 @@ function openSocialAccountModal(existing){
     data.compliance = complianceResult;
     const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
     saveSocialAccount(rec);
+  });
+}
+function openPersonalAccountModal(existing){
+  const a = existing || {accountName:'',createdDate:'',loginAccount:'',password:'',twoFactor:'',boundPhone:'',boundEmail:'',note:''};
+  openModal(existing?'編輯個人帳號':'新增個人帳號', `
+    <label class="field"><span>帳號名稱／暱稱</span><input type="text" name="accountName" value="${escAttr(a.accountName)}" required placeholder="方便自己辨識用的名字"/></label>
+    <label class="field"><span>帳號建立日期</span><input type="date" name="createdDate" value="${a.createdDate||''}"/><span style="color:var(--muted);font-size:11px;">用來判斷帳號夠不夠成熟（建議滿3個月）</span></label>
+    <label class="field"><span>登入帳號</span><input type="text" name="loginAccount" value="${escAttr(a.loginAccount)}"/></label>
+    <label class="field"><span>密碼</span><input type="text" name="password" value="${escAttr(a.password)}"/></label>
+    <label class="field"><span>2FA（金鑰或備用碼）</span><input type="text" name="twoFactor" value="${escAttr(a.twoFactor)}"/></label>
+    <div class="grid grid-2">
+      <label class="field"><span>綁定手機</span><input type="text" name="boundPhone" value="${escAttr(a.boundPhone)}"/></label>
+      <label class="field"><span>綁定信箱</span><input type="text" name="boundEmail" value="${escAttr(a.boundEmail)}"/></label>
+    </div>
+    <label class="field"><span>備註</span><textarea name="note">${escHtml(a.note||'')}</textarea></label>
+  `, 'personal-account-form', (data)=>{
+    const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
+    savePersonalAccount(rec);
+  });
+}
+function openFanPageModal(existing){
+  const a = existing || {pageName:'',createdDate:'',note:''};
+  openModal(existing?'編輯粉絲專頁':'新增粉絲專頁', `
+    <label class="field"><span>粉專名稱</span><input type="text" name="pageName" value="${escAttr(a.pageName)}" required placeholder="方便自己辨識用的名字"/></label>
+    <label class="field"><span>粉專建立日期</span><input type="date" name="createdDate" value="${a.createdDate||''}"/><span style="color:var(--muted);font-size:11px;">用來判斷粉專夠不夠成熟（建議滿1-2週）</span></label>
+    <label class="field"><span>備註</span><textarea name="note">${escHtml(a.note||'')}</textarea></label>
+  `, 'fanpage-form', (data)=>{
+    const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
+    saveFanPage(rec);
+  });
+}
+function openRosterModal(existing){
+  const m = existing || {name:'',accountCreatedDate:'',bmPermissionLevel:'完整控制權',recoveryEmail:'',twoFactorEnabled:false,backupPriority:'',lastActiveDate:'',sortOrder:(APP.data.teamRoster||[]).length,note:''};
+  openModal(existing?'編輯成員':'新增成員', `
+    <label class="field"><span>姓名／角色</span><input type="text" name="name" value="${escAttr(m.name)}" required placeholder="例如：Kevin、Admin、業務阿明，自由填寫"/></label>
+    <div class="grid grid-2">
+      <label class="field"><span>個人帳號建立日期</span><input type="date" name="accountCreatedDate" value="${m.accountCreatedDate||''}"/><span style="color:var(--muted);font-size:11px;">用來自動算帳號年資</span></label>
+      <label class="field"><span>目前BM權限層級</span><select name="bmPermissionLevel">${BM_PERMISSION_LEVELS.map(p=>`<option value="${p}" ${m.bmPermissionLevel===p?'selected':''}>${p}</option>`).join('')}</select></label>
+    </div>
+    <label class="field"><span>綁定復原信箱</span><input type="text" name="recoveryEmail" value="${escAttr(m.recoveryEmail)}" placeholder="這個帳號被盜/登入異常時要用哪個信箱救援"/></label>
+    <div class="grid grid-2">
+      <label class="field checkbox"><input type="checkbox" name="twoFactorEnabled" ${m.twoFactorEnabled?'checked':''}/><span>2FA 已開啟</span></label>
+      <label class="field"><span>備援序位</span><input type="text" name="backupPriority" value="${escAttr(m.backupPriority)}" placeholder="例如：主要管理員、備援1"/></label>
+    </div>
+    <label class="field"><span>上次登入／活躍日期</span><input type="date" name="lastActiveDate" value="${m.lastActiveDate||''}"/><span style="color:var(--muted);font-size:11px;">超過30天沒更新會有提醒標示</span></label>
+    <label class="field"><span>備註</span><textarea name="note">${escHtml(m.note||'')}</textarea></label>
+  `, 'roster-form', (data)=>{
+    data.twoFactorEnabled = data.twoFactorEnabled==='on';
+    data.sortOrder = m.sortOrder;
+    const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
+    saveTeamRosterEntry(rec);
+  });
+}
+function openSpareEmailModal(existing){
+  const a = existing || {email:'',createdDate:'',password:'',used:false,note:''};
+  openModal(existing?'編輯備用信箱':'新增備用信箱', `
+    <label class="field"><span>信箱地址</span><input type="text" name="email" value="${escAttr(a.email)}" required placeholder="example@gmail.com"/></label>
+    <label class="field"><span>信箱辦理日期</span><input type="date" name="createdDate" value="${a.createdDate||''}"/><span style="color:var(--muted);font-size:11px;">用來自動算這個信箱辦了多久</span></label>
+    <label class="field"><span>密碼</span><input type="text" name="password" value="${escAttr(a.password)}"/></label>
+    <label class="field checkbox"><input type="checkbox" name="used" ${a.used?'checked':''}/><span>已經使用（拿去申辦過帳號了）</span></label>
+    <label class="field"><span>備註</span><textarea name="note">${escHtml(a.note||'')}</textarea></label>
+  `, 'spare-email-form', (data)=>{
+    data.used = data.used==='on';
+    const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
+    saveSpareEmail(rec);
   });
 }
 function personalDashboardPageHTML(){
@@ -5022,6 +5296,31 @@ document.addEventListener('click', (e)=>{
       openConfirm('確定要刪除這個帳號的所有資料嗎？此動作無法復原。', ()=>{ deleteSocialAccount(el.dataset.id); });
       return;
     }
+    if(action==='social-tab'){ APP.socialAccountsTab = el.dataset.tab; render(); return; }
+    if(action==='open-personal-account-modal'){ openPersonalAccountModal(null); return; }
+    if(action==='edit-personal-account'){ const a = (APP.data.personalAccounts||[]).find(x=>x.id===el.dataset.id); if(a) openPersonalAccountModal(a); return; }
+    if(action==='delete-personal-account'){
+      openConfirm('確定要刪除這個個人帳號的資料嗎？如果有廣告帳號綁定它，綁定關係也會失效。此動作無法復原。', ()=>{ deletePersonalAccount(el.dataset.id); });
+      return;
+    }
+    if(action==='open-fanpage-modal'){ openFanPageModal(null); return; }
+    if(action==='edit-fanpage'){ const a = (APP.data.fanPages||[]).find(x=>x.id===el.dataset.id); if(a) openFanPageModal(a); return; }
+    if(action==='delete-fanpage'){
+      openConfirm('確定要刪除這個粉絲專頁的資料嗎？如果有廣告帳號綁定它，綁定關係也會失效。此動作無法復原。', ()=>{ deleteFanPage(el.dataset.id); });
+      return;
+    }
+    if(action==='open-roster-modal'){ openRosterModal(null); return; }
+    if(action==='edit-roster'){ const m = (APP.data.teamRoster||[]).find(x=>x.id===el.dataset.id); if(m) openRosterModal(m); return; }
+    if(action==='delete-roster'){
+      openConfirm('確定要刪除這位成員的帳號盤點資料嗎？此動作無法復原。', ()=>{ deleteTeamRosterEntry(el.dataset.id); });
+      return;
+    }
+    if(action==='open-spare-email-modal'){ openSpareEmailModal(null); return; }
+    if(action==='edit-spare-email'){ const a = (APP.data.spareEmails||[]).find(x=>x.id===el.dataset.id); if(a) openSpareEmailModal(a); return; }
+    if(action==='delete-spare-email'){
+      openConfirm('確定要刪除這個備用信箱的資料嗎？此動作無法復原。', ()=>{ deleteSpareEmail(el.dataset.id); });
+      return;
+    }
     if(action==='copy-social-field'){
       const value = el.dataset.value;
       navigator.clipboard.writeText(value).then(()=>{
@@ -6051,7 +6350,7 @@ document.addEventListener('submit', (e)=>{
     renderRoot();
     return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form'].includes(e.target.id)){
     e.preventDefault();
     try{
       const fd = new FormData(e.target);
