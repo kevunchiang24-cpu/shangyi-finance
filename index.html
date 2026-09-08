@@ -2484,6 +2484,8 @@ function socialPersonalAccountsTab(){
       ${list.length===0 ? `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">尚無個人帳號資料，點上方新增</div></div>` :
       list.map(a=>{
         const ageInfo = personalAccountAgeInfo(a.createdDate);
+        const linkedFanPages = (APP.data.fanPages||[]).filter(p=>p.personalAccountId===a.id);
+        const linkedAdAccounts = (APP.data.socialAccounts||[]).filter(s=>s.personalAccountId===a.id);
         return `
         <div class="card${ageInfo&&ageInfo.ready?' social-live-card':''}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
@@ -2494,6 +2496,10 @@ function socialPersonalAccountsTab(){
           </div>
           ${ageInfo?`<div style="background:#F5F7FC;border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;">
             <span class="badge ${ageInfo.ready?'active':'pending'}">帳號年齡 ${ageInfo.label}${ageInfo.ready?'（已達建議門檻）':'（建議滿3個月再用）'}</span>
+          </div>`:''}
+          ${(linkedFanPages.length>0||linkedAdAccounts.length>0)?`<div style="border-radius:8px;padding:7px 9px;margin-bottom:8px;font-size:12px;background:#F5F7FC;color:var(--red);">
+            ${linkedFanPages.length>0?`<div style="margin-bottom:${linkedAdAccounts.length>0?'4px':'0'};">已建立粉專：${linkedFanPages.map(p=>escHtml(p.pageName)).join('、')}</div>`:''}
+            ${linkedAdAccounts.length>0?`<div>已開通廣告帳號：${linkedAdAccounts.map(s=>escHtml(s.accountName)).join('、')}</div>`:''}
           </div>`:''}
           <div style="border-top:1px solid var(--border);padding-top:8px;margin-bottom:10px;">
             ${copyableFieldHtml(a.id,'loginAccount',a.loginAccount,'登入帳號')}
@@ -2771,10 +2777,12 @@ function openPersonalAccountModal(existing){
   });
 }
 function openFanPageModal(existing){
-  const a = existing || {pageName:'',createdDate:'',note:''};
+  const a = existing || {pageName:'',createdDate:'',note:'',personalAccountId:''};
+  const personalAccounts = APP.data.personalAccounts||[];
   openModal(existing?'編輯粉絲專頁':'新增粉絲專頁', `
     <label class="field"><span>粉專名稱</span><input type="text" name="pageName" value="${escAttr(a.pageName)}" required placeholder="方便自己辨識用的名字"/></label>
     <label class="field"><span>粉專建立日期</span><input type="date" name="createdDate" value="${a.createdDate||''}"/><span style="color:var(--muted);font-size:11px;">用來判斷粉專夠不夠成熟（建議滿1-2週）</span></label>
+    <label class="field"><span>由哪個個人帳號建立／管理</span><select name="personalAccountId"><option value="">（未指定）</option>${personalAccounts.map(p=>`<option value="${p.id}" ${a.personalAccountId===p.id?'selected':''}>${escHtml(p.accountName)}</option>`).join('')}</select></label>
     <label class="field"><span>備註</span><textarea name="note">${escHtml(a.note||'')}</textarea></label>
   `, 'fanpage-form', (data)=>{
     const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
