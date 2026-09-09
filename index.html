@@ -2427,6 +2427,11 @@ function socialAccountStatusBadge(status){
   const map = { '養號中':'pending', '使用中':'active', '已鎖帳':'expense', '休息中':'resigned' };
   return `<span class="badge ${map[status]||'pending'}">${escHtml(status||'—')}</span>`;
 }
+/* ---- 卡片外框顏色依狀態而定，不是每張都用同一個顏色：養號中=黃、使用中=綠、已鎖帳=紅、休息中=灰 ---- */
+function socialStatusBorderColor(status){
+  const map = { '養號中':'#F59E0B', '使用中':'#22C55E', '已鎖帳':'#EF4444', '休息中':'#9CA3AF' };
+  return map[status] || '#E2E5EC';
+}
 const SOCIAL_ACCOUNT_COMPLIANCE_ITEMS = [
   { key:'adVerification', label:'出資者／受益者驗證' },
   { key:'twoFactorDone', label:'2FA 已開啟' },
@@ -2514,10 +2519,9 @@ function socialPersonalAccountsTab(){
         const linkedFanPages = (APP.data.fanPages||[]).filter(p=>p.personalAccountId===a.id);
         const linkedAdAccounts = (APP.data.socialAccounts||[]).filter(s=>s.personalAccountId===a.id);
         return `
-        <div class="card${ageInfo&&ageInfo.ready?' social-live-card':''}">
+        <div class="card" style="border:2px solid ${socialStatusBorderColor(a.status)};">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:7px;">
-              ${ageInfo&&ageInfo.ready?`<span class="social-live-dot" title="帳號夠成熟，可安心使用"></span>`:''}
               <h3 style="margin:0;">${escHtml(a.accountName||'（未命名）')}</h3>
             </div>
             ${socialAccountStatusBadge(a.status)}
@@ -2565,10 +2569,9 @@ function socialFanPagesTab(){
       list.map(a=>{
         const ageInfo = fanPageAgeInfo(a.createdDate);
         return `
-        <div class="card${ageInfo&&ageInfo.ready?' social-live-card':''}">
+        <div class="card" style="border:2px solid ${socialStatusBorderColor(a.status)};">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:7px;">
-              ${ageInfo&&ageInfo.ready?`<span class="social-live-dot" title="粉專夠成熟，可安心綁定廣告帳號"></span>`:''}
               <h3 style="margin:0;">${escHtml(a.pageName||'（未命名）')}</h3>
             </div>
             ${socialAccountStatusBadge(a.status)}
@@ -2622,7 +2625,7 @@ function socialAdAccountsTab(){
         const personalAge = linkedPersonal ? personalAccountAgeInfo(linkedPersonal.createdDate) : null;
         const fanPageAge = linkedFanPage ? fanPageAgeInfo(linkedFanPage.createdDate) : null;
         return `
-        <div class="card${isLive?' social-live-card':''}">
+        <div class="card" style="border:2px solid ${socialStatusBorderColor(a.status)};">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:7px;">
               ${isLive?`<span class="social-live-dot" title="可正式投放"></span>`:''}
