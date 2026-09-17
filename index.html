@@ -56,6 +56,14 @@
   .nav-item:hover{background:rgba(255,255,255,.14);}
   .nav-item.active{background:#FFFFFF;color:var(--navy);font-weight:700;}
   .nav-icon{width:18px;text-align:center;font-size:14px;}
+  .chat-nav-button{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;cursor:pointer;
+    background:linear-gradient(135deg,#4A78F5,#7B6CFA);color:#fff;font-size:14.5px;font-weight:700;
+    margin-bottom:2px;box-shadow:0 4px 14px rgba(74,120,245,.45);position:relative;transition:transform .12s,box-shadow .12s;}
+  .chat-nav-button:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(74,120,245,.55);}
+  .chat-nav-icon{font-size:19px;}
+  .chat-nav-badge{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#EF4444;color:#fff;
+    font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px;min-width:18px;text-align:center;line-height:1.4;}
+  .nav-section-divider{height:1px;background:rgba(255,255,255,.16);margin:12px 6px 14px;}
   .sidebar-footer{margin-top:auto;padding:14px 10px 0 10px;border-top:1px solid #4A78F5;}
   .user-chip{font-size:12.5px;color:#FFFFFF;margin-bottom:2px;word-break:break-all;}
   .role-chip{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:100px;margin-top:6px;margin-bottom:10px;}
@@ -1175,6 +1183,7 @@ function shellHTML(){
   const meCoreUser = core ? APP.users.find(u=>u.id===APP.user.uid) : null;
   const meIsXiaojiang = !!(meCoreUser && meCoreUser.isXiaojiang);
   const meIsHuang = !!(APP.users.find(u=>u.id===APP.user.uid)||{}).isHuang;
+  const totalDmUnread = (APP.data.directMessages||[]).filter(m=>m.recipientUid===APP.user.uid && !m.read).length;
   return `
   <div id="mobile-topbar">
     <button id="hamburger-btn" aria-label="選單">☰</button>
@@ -1187,7 +1196,11 @@ function shellHTML(){
       <div class="brand-logo" style="background:transparent;padding:0;"><img src="${APP.data.companyPublic.logoDataUrl || ('data:image/png;base64,'+DEFAULT_LOGO_B64)}" style="width:100%;height:100%;object-fit:contain;" alt="尚益資產"/></div>
       <div class="brand-text"><div class="t1">${escHtml(APP.data.companyPublic.systemName || '財務管理系統')}</div><div class="t2">${escHtml(APP.data.companyPublic.systemSubtitle || '尚益資產 · 內部工具')}</div></div>
     </div>
-    <div class="nav-item" data-action="nav" data-view="chatRoom"><span class="nav-icon">💬</span>聊天室</div>
+    <div class="chat-nav-button" data-action="nav" data-view="chatRoom">
+      <span class="chat-nav-icon">💬</span><span>聊天室</span>
+      ${totalDmUnread>0?`<span class="chat-nav-badge">${totalDmUnread>9?'9+':totalDmUnread}</span>`:''}
+    </div>
+    <div class="nav-section-divider"></div>
     ${core ? `
     <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
     <div class="nav-item" data-action="nav" data-view="dashboard"><span class="nav-icon">▦</span>總覽</div>
