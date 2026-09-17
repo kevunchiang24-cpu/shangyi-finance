@@ -267,6 +267,25 @@
     animation:nav-pulse-dot 1.6s ease-in-out infinite;
   }
   .social-live-card{ border:2px solid #22C55E !important; }
+  .chat-room-split{ display:flex; height:calc(100vh - 130px); min-height:480px; border:1px solid var(--border); border-radius:14px; overflow:hidden; background:#fff; }
+  .chat-room-sidebar{ width:320px; flex-shrink:0; border-right:1px solid var(--border); overflow-y:auto; padding:6px; }
+  .chat-room-main{ flex:1; display:flex; flex-direction:column; background:#FAFBFD; min-width:0; }
+  .chat-hide-desktop{ display:none; }
+  .chat-contact-header{ padding:18px 14px 14px; }
+  .chat-contact-header h1{ margin:0; font-size:19px; font-weight:800; color:var(--ink); }
+  .chat-contact-row{ display:flex; align-items:center; gap:13px; padding:12px 10px; border-radius:12px; cursor:pointer; transition:background .12s; }
+  .chat-contact-row:hover{ background:#F5F7FB; }
+  .chat-contact-row.active{ background:#EEF1FB; }
+  .chat-contact-info{ flex:1; min-width:0; }
+  .chat-contact-name{ font-size:14.5px; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:7px; line-height:1.3; }
+  .chat-contact-preview{ font-size:12.5px; color:var(--muted); margin-top:3px; line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  @media (max-width:900px){
+    .chat-room-split{ display:block; height:calc(100vh - 170px); border-radius:0; border-left:none; border-right:none; }
+    .chat-room-sidebar{ width:100%; height:100%; border-right:none; }
+    .chat-room-main{ height:100%; }
+    .chat-hide-mobile{ display:none !important; }
+    .chat-hide-desktop{ display:inline-flex; }
+  }
   /* ========== 霍格華茲卡片：背景圖+呼吸光+煙霧+極光+星星閃爍，全部 hogwarts- 開頭命名，不會影響其他頁面 ========== */
   .hogwarts-card{
     position:relative; overflow:hidden; border:1px solid rgba(167,139,250,.45);
@@ -495,7 +514,7 @@ import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, updateDoc, query, where, writeBatch
+  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, updateDoc, query, where, writeBatch, addDoc
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   getStorage, ref, uploadBytes, getDownloadURL, deleteObject
@@ -607,7 +626,7 @@ const APP = {
     companyPublic:{systemName:'',systemSubtitle:'',logoDataUrl:''},
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
-    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[],
+    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[], directMessages:[],
     optionColors:{ plan:{}, status:{}, dealProduct:{}, contactStatus:{} },
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
       rankBronze:50000, rankSilver:100000, rankGold:200000, rankDiamond:400000,
@@ -705,6 +724,31 @@ function subscribeAll(){
       const t = a._at ? new Date(a._at).getTime() : 0;
       return !t || t >= cutoff;
     }).sort((a,b)=>(b._at||'').localeCompare(a._at||''));
+    render();
+  }));
+  let dmFirstSnapshot = true;
+  unsubs.push(onSnapshot(query(collection(db,'directMessages'), where('participants','array-contains',APP.user.uid)), snap2=>{
+    if(!dmFirstSnapshot){
+      snap2.docChanges().forEach(ch=>{
+        if(ch.type==='added'){
+          const m = ch.doc.data();
+          if(m.senderUid!==APP.user.uid){
+            const isViewingThisThread = APP.view==='chatRoom' && APP.chatRoomActivePeer===m.senderUid;
+            if(isViewingThisThread){
+              updateDoc(doc(db,'directMessages', ch.doc.id), {read:true}).catch(()=>{});
+            } else {
+              flashBellNotification(`${escHtml(m.senderName||'有人')}：${(m.message||'（附件）').slice(0,30)}`, ()=>{
+                APP.view='chatRoom'; APP.chatRoomActivePeer = m.senderUid; render();
+                (APP.data.directMessages||[]).filter(x=>x.senderUid===m.senderUid && x.recipientUid===APP.user.uid && !x.read)
+                  .forEach(x=>{ updateDoc(doc(db,'directMessages', x.id), {read:true}).catch(()=>{}); });
+              });
+            }
+          }
+        }
+      });
+    }
+    dmFirstSnapshot = false;
+    APP.data.directMessages = snap2.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(a._at||'').localeCompare(b._at||''));
     render();
   }));
   unsubs.push(onSnapshot(doc(db,'appdata','categories'), snap=>{
@@ -961,6 +1005,22 @@ function clearXiaojiangThread(threadUid){
   });
 }
 function saveXiaojiangUpload(rec){ return setDoc(doc(db,'xiaojiangInbox', rec.id), rec); }
+function sendDirectMessage(peerUid, peerName, message, attachments){
+  const myName = displayNameFor(APP.user.uid, APP.userEmail);
+  return addDoc(collection(db,'directMessages'), {
+    participants: [APP.user.uid, peerUid].sort(),
+    senderUid: APP.user.uid, senderName: myName,
+    recipientUid: peerUid, recipientName: peerName,
+    message: message||'', attachments: attachments||[], read:false, _at: new Date().toISOString()
+  });
+}
+/* ---- 聊天室檔案上傳：直接上傳原始檔案，不經過canvas重繪/壓縮，圖片畫質不打折 ---- */
+function uploadChatFile(peerUid, file){
+  const safeName = (file.name||'file').replace(/[^\w.\-]/g, '_');
+  const path = `directMessages/${[APP.user.uid, peerUid].sort().join('_')}/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${safeName}`;
+  const storageRef = ref(storage, path);
+  return uploadBytes(storageRef, file).then(()=>getDownloadURL(storageRef)).then(url=>({url, name:file.name, type:file.type||'application/octet-stream', size:file.size}));
+}
 function uploadXjAttachment(pathPrefix, item){
   const safeName = (item.name||'file').replace(/[^\w.\-]/g, '_');
   const path = `${pathPrefix}/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${safeName}`;
@@ -1012,6 +1072,7 @@ function initPushForegroundListener(){
     flashBellNotification('🔔 '+text, ()=>{
       const url = payload.data && payload.data.url;
       if(url === 'xiaojiangInbox'){ APP.view='xiaojiangInbox'; APP.xjActiveThread = (payload.data && payload.data.threadUid) || APP.xjActiveThread; render(); }
+      if(url === 'chatRoom'){ APP.view='chatRoom'; APP.chatRoomActivePeer = (payload.data && payload.data.peerUid) || APP.chatRoomActivePeer; render(); }
       else toggleNotifPanel(true);
     });
   });
@@ -1126,6 +1187,7 @@ function shellHTML(){
       <div class="brand-logo" style="background:transparent;padding:0;"><img src="${APP.data.companyPublic.logoDataUrl || ('data:image/png;base64,'+DEFAULT_LOGO_B64)}" style="width:100%;height:100%;object-fit:contain;" alt="尚益資產"/></div>
       <div class="brand-text"><div class="t1">${escHtml(APP.data.companyPublic.systemName || '財務管理系統')}</div><div class="t2">${escHtml(APP.data.companyPublic.systemSubtitle || '尚益資產 · 內部工具')}</div></div>
     </div>
+    <div class="nav-item" data-action="nav" data-view="chatRoom"><span class="nav-icon">💬</span>聊天室</div>
     ${core ? `
     <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
     <div class="nav-item" data-action="nav" data-view="dashboard"><span class="nav-icon">▦</span>總覽</div>
@@ -1353,7 +1415,7 @@ function dashboardHTML(){
     <div class="grid grid-3" style="margin-bottom:20px;">
       <div class="card"><div class="stat-label">當月收入</div><div class="stat-value green">${money(monthIncome)}</div></div>
       <div class="card"><div class="stat-label">當月支出</div><div class="stat-value red">${money(monthExpense)}</div></div>
-      <div class="card"><div class="stat-label">當月結餘</div><div class="stat-value blue">${money(monthIncome-monthExpense)}</div></div>
+      <div class="card"><div class="stat-label">當月結餘（公司淨利模型）</div><div class="stat-value blue">${money(computeCompanyFinalNet(nowMonthKey))}</div></div>
     </div>
 
     <div class="grid grid-2" style="margin-bottom:20px;">
@@ -2277,7 +2339,7 @@ function render(){
   updateNotifBell();
   const main = document.getElementById('main');
   if(!main) return;
-  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts'];
+  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
@@ -2293,6 +2355,11 @@ function render(){
   else if(APP.view==='dailyBonus' && isCore()) main.innerHTML = dailyBonusPageHTML();
   else if(APP.view==='staffOverview' && (isCore() || isStaffAny())) main.innerHTML = staffOverviewHTML();
   else if(APP.view==='xiaojiangInbox' && (isCore() || isStaffAny())) main.innerHTML = xiaojiangInboxView();
+  else if(APP.view==='chatRoom' && (isCore() || isStaffAny())){
+    main.innerHTML = chatRoomView();
+    const msgBox = document.getElementById('chat-thread-messages');
+    if(msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+  }
   else if(APP.view==='progress') main.innerHTML = progressHTML();
   else if(APP.view==='personalLog' && roomOk) main.innerHTML = personalLogPageHTML();
   else if(APP.view==='attendance' && roomOk) main.innerHTML = attendancePageHTML();
@@ -3245,6 +3312,119 @@ function xiaojiangChatView(threadUid, threadName){
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px;">${xiaojiangChatInputHtml(threadUid)}</div>
     </div>`;
 }
+function renderChatFilePreview(){
+  const box = document.getElementById('chat-file-preview');
+  if(!box) return;
+  const files = APP._pendingChatFiles||[];
+  if(files.length===0){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='flex';
+  box.innerHTML = files.map((f,i)=>`
+    <div style="position:relative;">
+      ${f.previewUrl ? `<img src="${f.previewUrl}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);"/>`
+                      : `<div style="width:56px;height:56px;background:#F1F2F6;border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;">📄</div>`}
+      <button type="button" data-action="remove-pending-chat-file" data-idx="${i}" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0;">✕</button>
+    </div>
+  `).join('');
+}
+function chatRoomView(){
+  const myUid = APP.user.uid;
+  const activePeer = APP.chatRoomActivePeer;
+  const others = APP.users.filter(u => u.id !== myUid && u.role !== 'pending');
+
+  const contactList = others.map(u => {
+    const name = displayNameFor(u.id, u.staffName || u.email);
+    const threadMsgs = (APP.data.directMessages||[]).filter(m =>
+      (m.senderUid===myUid && m.recipientUid===u.id) || (m.senderUid===u.id && m.recipientUid===myUid)
+    );
+    const lastMsg = threadMsgs[threadMsgs.length-1];
+    const unreadCount = threadMsgs.filter(m => m.recipientUid===myUid && !m.read).length;
+    return { uid: u.id, name, lastMsg, unreadCount };
+  }).sort((a,b) => {
+    if((a.unreadCount>0) !== (b.unreadCount>0)) return b.unreadCount>0 ? 1 : -1;
+    const at = a.lastMsg ? a.lastMsg._at : '';
+    const bt = b.lastMsg ? b.lastMsg._at : '';
+    return bt.localeCompare(at);
+  });
+
+  const sidebarHtml = `
+    <div class="chat-room-sidebar${activePeer?' chat-hide-mobile':''}">
+      <div class="chat-contact-header"><h1>💬 聊天室</h1></div>
+      ${contactList.length===0 ? `<div class="empty" style="padding:20px;">目前系統裡沒有其他人可以聊天</div>` :
+      contactList.map(c=>`
+        <div class="chat-contact-row${c.uid===activePeer?' active':''}" data-action="open-chat-thread" data-peer="${c.uid}">
+          ${avatarHtml(c.uid, c.name, 44)}
+          <div class="chat-contact-info">
+            <div class="chat-contact-name">${escHtml(c.name)}${c.unreadCount>0?`<span class="badge expense">${c.unreadCount}</span>`:''}</div>
+            <div class="chat-contact-preview">${c.lastMsg ? escHtml((c.lastMsg.message||'（附件）').slice(0,26)) : '還沒有對話紀錄'}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  let mainHtml;
+  if(!activePeer){
+    mainHtml = `<div class="chat-room-main chat-hide-mobile" style="align-items:center;justify-content:center;color:var(--muted);font-size:13.5px;">選一位同事開始聊天</div>`;
+  } else {
+    const peer = APP.users.find(u=>u.id===activePeer);
+    const peerName = peer ? displayNameFor(peer.id, peer.staffName||peer.email) : '（找不到這個人）';
+    const threadMsgs = (APP.data.directMessages||[]).filter(m =>
+      (m.senderUid===myUid && m.recipientUid===activePeer) || (m.senderUid===activePeer && m.recipientUid===myUid)
+    );
+    let lastDateLabel = '';
+    const bubbles = threadMsgs.map(m=>{
+      const isMine = m.senderUid===myUid;
+      const dateLabel = m._at ? new Date(m._at).toLocaleDateString('zh-TW',{month:'long',day:'numeric'}) : '';
+      let separator = '';
+      if(dateLabel && dateLabel!==lastDateLabel){
+        separator = `<div style="text-align:center;color:var(--muted);font-size:11.5px;margin:10px 0;">${dateLabel}</div>`;
+        lastDateLabel = dateLabel;
+      }
+      const timeStr = m._at ? new Date(m._at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : '';
+      const attachments = m.attachments||[];
+      const attachmentsHtml = attachments.map(a=>{
+        const isImg = a.type && a.type.startsWith('image/');
+        if(isImg){
+          return `<a href="${a.url}" target="_blank" rel="noopener"><img src="${a.url}" style="max-width:220px;max-height:220px;border-radius:12px;display:block;margin-top:4px;object-fit:cover;"/></a>`;
+        }
+        return `<a href="${a.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;background:${isMine?'rgba(255,255,255,.15)':'#fff'};border:1px solid ${isMine?'rgba(255,255,255,.3)':'var(--border)'};border-radius:10px;padding:8px 12px;margin-top:4px;text-decoration:none;color:${isMine?'#fff':'var(--ink)'};font-size:12.5px;">📎 ${escHtml(a.name||'檔案')}</a>`;
+      }).join('');
+      return `${separator}<div style="display:flex;align-items:flex-end;gap:10px;justify-content:${isMine?'flex-end':'flex-start'};">
+        ${isMine?'':avatarHtml(m.senderUid, m.senderName, 32)}
+        <div style="max-width:62%;display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};">
+          ${m.message?`<div style="background:${isMine?'var(--navy)':'#F1F2F6'};color:${isMine?'#fff':'var(--ink)'};padding:11px 16px;border-radius:18px;${isMine?'border-bottom-right-radius:4px;':'border-bottom-left-radius:4px;'}font-size:14.5px;line-height:1.5;word-break:break-word;">${escHtml(m.message)}</div>`:''}
+          ${attachmentsHtml}
+          <div style="font-size:10.5px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:5px;">
+            <span>${timeStr}</span>${isMine?`<span style="color:${m.read?'#4A78F5':'var(--muted)'};">${m.read?'已讀':'已送出'}</span>`:''}
+          </div>
+        </div>
+        ${isMine?avatarHtml(myUid, '我', 32):''}
+      </div>`;
+    }).join('');
+
+    mainHtml = `
+      <div class="chat-room-main">
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--border);background:#fff;">
+          <button class="icon-btn chat-hide-desktop" data-action="close-chat-thread">←</button>
+          ${avatarHtml(activePeer, peerName, 38)}
+          <h3 style="margin:0;font-size:16px;font-weight:700;">${escHtml(peerName)}</h3>
+        </div>
+        <div id="chat-thread-messages" style="flex:1;overflow-y:auto;padding:24px 26px;display:flex;flex-direction:column;gap:16px;">
+          ${threadMsgs.length===0 ? `<div class="empty">還沒有任何對話，說聲嗨吧</div>` : bubbles}
+        </div>
+        <div id="chat-file-preview" style="display:none;gap:8px;flex-wrap:wrap;padding:0 20px;"></div>
+        <form id="chat-thread-form" style="display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--border);background:#fff;align-items:center;">
+          <input type="file" id="chat-file-input" multiple style="display:none;"/>
+          <button type="button" class="icon-btn" data-action="pick-chat-file" style="flex-shrink:0;font-size:18px;padding:8px 10px;">📎</button>
+          <input type="text" id="chat-thread-input" placeholder="輸入訊息……" autocomplete="off" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:20px;font-size:14px;"/>
+          <button type="submit" class="btn primary" style="border-radius:20px;">送出</button>
+        </form>
+      </div>
+    `;
+  }
+
+  return `<div class="chat-room-split">${sidebarHtml}${mainHtml}</div>`;
+}
 function xiaojiangInboxView(){
   const xjName = APP.data.caseSettings.xiaojiangName || '小江';
   if(!isCore()){
@@ -3346,6 +3526,8 @@ function staffOverviewHTML(){
       ? `border:2px solid ${rankTier.border};background:${rankTier.cardBg};${viewerIsCore?'cursor:pointer;':''}`
       : (viewerIsCore?`cursor:pointer;`:``);
 
+    const dmUnread = (APP.data.directMessages||[]).filter(m=>m.senderUid===u.id && m.recipientUid===APP.user.uid && !m.read).length;
+
     return `<div class="card${rankTier&&rankTier.cssClass?' '+rankTier.cssClass:''}"${cardStyleAttr?` style="${cardStyleAttr}"`:''}${viewerIsCore?` data-action="enter-staff-room" data-name="${escAttr(name)}" data-uid="${escAttr(u.id)}"`:''}>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -3359,6 +3541,7 @@ function staffOverviewHTML(){
           ${rankTier?`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;background:${rankTier.border};color:#fff;font-size:11px;font-weight:700;">${rankTier.icon} ${rankTier.label}</span>`:''}
           ${onLeaveToday?`<span class="badge expense">今日請假</span>`:''}
           <span class="badge pending">${roleLabel}</span>
+          <button type="button" class="icon-btn" style="position:relative;padding:5px 7px;" data-action="open-chat-thread" data-peer="${u.id}" title="跟${escHtml(disp)}聊天">💬${dmUnread>0?`<span style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;">${dmUnread>9?'9+':dmUnread}</span>`:''}</button>
         </div>
       </div>
       <div style="border:1.5px solid #DC2626;background:rgba(255,255,255,.5);border-radius:12px;padding:8px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
@@ -4086,6 +4269,22 @@ function computeFixedCost(mk){
   const list = APP.data.transactions.filter(t=>t.type==='expense' && monthKey(t.date)===mk && (t.mainCategory==='房租水電' || t.mainCategory==='薪資支出'));
   return sum(list);
 }
+/* ---- 公司月淨利模型：跟廣告支出報表用同一套公式，讓總覽的「當月結餘」跟獲利報表的「全公司最終淨利」永遠是同一個數字，
+   不會再各自算出不一樣的結果。公式：(廣告案件利潤－固定成本－廣告投放金額－投手獎金) + 通路案件利潤 ---- */
+function computeCompanyFinalNet(mk){
+  const cs = APP.data.caseSettings;
+  const adCasesInMonth = APP.data.casesAd.filter(c=>monthKey(c.date)===mk);
+  const chCasesInMonth = APP.data.casesChannel.filter(c=>monthKey(c.date)===mk);
+  const adRevenue = sum(adCasesInMonth.map(c=>({amount:c.companyProfit})));
+  const chProfit = sum(chCasesInMonth.map(c=>({amount:c.companyProfit})));
+  const adSpendRec = APP.data.adSpend.find(a=>a.month===mk);
+  const spend = adSpendRec ? Number(adSpendRec.spend||0) : 0;
+  const fixedCostThisMonth = computeFixedCost(mk);
+  const adTotalNet = adRevenue - fixedCostThisMonth - spend;
+  const pilotBonus = Math.max(0, adTotalNet) * cs.pilotBonusRate;
+  const adFinalNet = adTotalNet - pilotBonus;
+  return adFinalNet + chProfit;
+}
 function adSpendView(){
   const editable = canEdit();
   const list = sortList(APP.data.adSpend.slice(), APP.adSpendSort, 'text');
@@ -4103,7 +4302,7 @@ function adSpendView(){
     const adTotalNet = adRevenue - fixedCostThisMonth - spend;
     const pilotBonus = Math.max(0, adTotalNet) * cs.pilotBonusRate;
     const adFinalNet = adTotalNet - pilotBonus;
-    const companyFinalNet = adFinalNet + chProfit;
+    const companyFinalNet = computeCompanyFinalNet(a.month);
     const cpc = a.messages ? (spend/Number(a.messages)) : 0;
     const cpa = a.approved ? (spend/Number(a.approved)) : 0;
     const approveRate = a.submitted ? (Number(a.approved||0)/Number(a.submitted)) : 0;
@@ -5350,6 +5549,24 @@ document.addEventListener('click', (e)=>{
       return;
     }
     if(action==='social-tab'){ APP.socialAccountsTab = el.dataset.tab; render(); return; }
+    if(action==='open-chat-thread'){
+      APP.view = 'chatRoom';
+      APP.chatRoomActivePeer = el.dataset.peer;
+      render();
+      const msgBox = document.getElementById('chat-thread-messages');
+      if(msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+      (APP.data.directMessages||[]).filter(m=>m.senderUid===el.dataset.peer && m.recipientUid===APP.user.uid && !m.read)
+        .forEach(m=>{ updateDoc(doc(db,'directMessages', m.id), {read:true}).catch(()=>{}); });
+      return;
+    }
+    if(action==='close-chat-thread'){ APP.chatRoomActivePeer = null; render(); return; }
+    if(action==='pick-chat-file'){ const inp = document.getElementById('chat-file-input'); if(inp) inp.click(); return; }
+    if(action==='remove-pending-chat-file'){
+      const idx = Number(el.dataset.idx);
+      (APP._pendingChatFiles||[]).splice(idx,1);
+      renderChatFilePreview();
+      return;
+    }
     if(action==='open-personal-account-modal'){ openPersonalAccountModal(null); return; }
     if(action==='edit-personal-account'){ const a = (APP.data.personalAccounts||[]).find(x=>x.id===el.dataset.id); if(a) openPersonalAccountModal(a); return; }
     if(action==='delete-personal-account'){
@@ -6181,6 +6398,18 @@ document.addEventListener('change', (e)=>{
     reader.readAsDataURL(file);
     return;
   }
+  if(e.target.id==='chat-file-input'){
+    const files = Array.from(e.target.files||[]);
+    if(!files.length) return;
+    if(!APP._pendingChatFiles) APP._pendingChatFiles = [];
+    for(const f of files){
+      if(f.size > 25*1024*1024){ alert(`「${f.name}」超過 25MB，請選小一點的檔案。`); continue; }
+      APP._pendingChatFiles.push({ file:f, name:f.name, type:f.type||'application/octet-stream', previewUrl: f.type.startsWith('image/') ? URL.createObjectURL(f) : null });
+    }
+    e.target.value = '';
+    renderChatFilePreview();
+    return;
+  }
   if(e.target.id==='xj-chat-file-input'){
     const file2 = e.target.files[0];
     const xjPreview = document.getElementById('xj-chat-preview');
@@ -6357,6 +6586,34 @@ document.addEventListener('submit', (e)=>{
     if(!q || APP.chatLoading) return;
     input.value = '';
     sendChatMessage(q);
+    return;
+  }
+  if(e.target.id==='chat-thread-form'){
+    e.preventDefault();
+    const input = document.getElementById('chat-thread-input');
+    const msg = input.value.trim();
+    const pendingFiles = APP._pendingChatFiles||[];
+    if(!msg && pendingFiles.length===0) return;
+    if(!APP.chatRoomActivePeer) return;
+    input.value = '';
+    const peer = APP.users.find(u=>u.id===APP.chatRoomActivePeer);
+    const peerName = peer ? displayNameFor(peer.id, peer.staffName||peer.email) : '';
+    const peerUid = APP.chatRoomActivePeer;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if(pendingFiles.length===0){
+      sendDirectMessage(peerUid, peerName, msg);
+    } else {
+      if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '上傳中…'; }
+      APP._pendingChatFiles = [];
+      renderChatFilePreview();
+      Promise.all(pendingFiles.map(f=>uploadChatFile(peerUid, f.file)))
+        .then(attachments=>{
+          pendingFiles.forEach(f=>{ if(f.previewUrl) URL.revokeObjectURL(f.previewUrl); });
+          return sendDirectMessage(peerUid, peerName, msg, attachments);
+        })
+        .catch(err=>{ alert('檔案上傳失敗：' + (err&&err.message?err.message:err)); })
+        .finally(()=>{ if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = '送出'; } });
+    }
     return;
   }
   if(e.target.id==='login-form'){
