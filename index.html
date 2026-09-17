@@ -534,7 +534,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-08-27-02';
+const APP_BUILD = '2026-09-17-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -708,7 +708,19 @@ function subscribeAll(){
   }));
   unsubs.push(onSnapshot(doc(db,'appdata','version'), snap=>{
     const d = snap.data();
-    if(d && d.build && d.build !== APP_BUILD) showUpdateBanner();
+    if(!d || !d.build){
+      // Firestore 裡還沒有任何版本紀錄，我是第一個載入的人，主動寫入
+      notifyEveryoneToUpdate().catch(()=>{});
+    } else if(d.build !== APP_BUILD){
+      if(APP_BUILD > d.build){
+        // 我執行的版本比 Firestore 記錄的還新，代表我是第一個載入這次新部署的人，
+        // 自動廣播讓其他還在舊版本的人知道要更新，不用等人手動點「通知大家更新」按鈕
+        notifyEveryoneToUpdate().catch(()=>{});
+      } else {
+        // Firestore 記錄的版本比我手上的新，代表我落後了，跳出更新提示
+        showUpdateBanner();
+      }
+    }
   }));
   let announceFirstSnapshot = true;
   unsubs.push(onSnapshot(collection(db,'announcements'), snap2=>{
