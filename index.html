@@ -534,7 +534,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-09-17-01';
+const APP_BUILD = '2026-09-17-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2477,6 +2477,9 @@ function xiaojiangDashboardView(){
     pilotBonusThisMonth = Math.max(0, adTotalNet) * APP.data.caseSettings.pilotBonusRate;
   }
   const unreadCount = (APP.data.xiaojiangInbox||[]).filter(m=>!m.senderIsXiaojiang && !m.readByXiaojiang).length;
+  const xjEntries = monthXjLedger.slice().sort((a,b)=> b.date.localeCompare(a.date));
+  const xjEntryAmount = e => (Number(e.xiaojiangBonus)||0) + (Number(e.specialFee)||0);
+  const xjRows = xjEntries.map(e=>`<tr><td>${e.date}</td><td>${escHtml(e.customer||'—')}</td><td class="amount-pos">${money(xjEntryAmount(e))}</td></tr>`).join('');
 
   return `
     <div class="page-header"><div><h1 class="page-title">🌙 我的個人空間</h1><p class="page-sub">${escHtml(xjName)}自己的獎金與資料，其他核心成員看不到這個頁面</p></div></div>
@@ -2490,6 +2493,11 @@ function xiaojiangDashboardView(){
         <div><div style="font-size:11.5px;opacity:.85;">本月${whIcon(13)}</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthWizardFee)}</div></div>
         <div><div style="font-size:11.5px;opacity:.85;">本月合計</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthXjTiered+pilotBonusThisMonth+monthWizardFee)}</div></div>
       </div>
+    </div>
+    <div class="card-head-row"><h3 style="font-size:15px;">本月獎金明細</h3></div>
+    <div class="table-wrap" style="margin-bottom:20px;">
+      ${xjEntries.length===0?`<div class="empty">本月尚無獎金紀錄</div>`:`
+      <table><thead><tr><th>日期</th><th>客戶</th><th>金額</th></tr></thead><tbody>${xjRows}</tbody></table>`}
     </div>
     <div class="card" style="cursor:pointer;" data-action="nav" data-view="xiaojiangInbox">
       <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -3036,14 +3044,11 @@ function myDashboardView(){
   }
   const thisMonth = nowMonthKey;
   const myEntries = getCleanBonusLedger().filter(e=>e.staffName===me && monthKey(e.date)===thisMonth);
-  const byDay = {};
-  myEntries.forEach(e=>{
-    const total = (Number(e.businessBonus)||0) + (Number(e.xiaojiangBonus)||0);
-    byDay[e.date] = (byDay[e.date]||0) + total;
-  });
-  const days = Object.keys(byDay).sort().reverse();
-  const monthTotal = Object.values(byDay).reduce((a,b)=>a+b,0);
-  const rows = days.map(d=>`<tr><td>${d}</td><td class="amount-pos">${money(byDay[d])}</td></tr>`).join('');
+  const sortedEntries = myEntries.slice().sort((a,b)=> b.date.localeCompare(a.date));
+  const entryAmount = e => (Number(e.businessBonus)||0) + (Number(e.xiaojiangBonus)||0) + (Number(e.specialFee)||0);
+  const monthTotal = sortedEntries.reduce((sum,e)=> sum + entryAmount(e), 0);
+  const todayAmount = sortedEntries.filter(e=>e.date===todayStr()).reduce((sum,e)=> sum + entryAmount(e), 0);
+  const rows = sortedEntries.map(e=>`<tr><td>${e.date}</td><td>${escHtml(e.customer||'—')}</td><td class="amount-pos">${money(entryAmount(e))}</td></tr>`).join('');
 
   /* 本月自己的案件狀態統計 */
   const myAd = APP.data.progressAd.filter(c=>c.staff===me && monthKey(c.date)===thisMonth);
@@ -3056,8 +3061,6 @@ function myDashboardView(){
   /* 近期行事曆 */
   const today = todayStr();
   const upcoming = APP.data.calendar.filter(c=>c.staffUid===meUid && c.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
-
-  const todayAmount = byDay[todayStr()] || 0;
 
   return `
     <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,var(--navy),var(--navy-hover));color:#fff;">
@@ -3082,8 +3085,8 @@ function myDashboardView(){
 
     <div class="grid grid-2">
       <div class="table-wrap">
-        ${days.length===0?`<div class="empty">本月尚無獎金紀錄</div>`:`
-        <table><thead><tr><th>日期</th><th>當日獎金</th></tr></thead><tbody>${rows}</tbody></table>`}
+        ${sortedEntries.length===0?`<div class="empty">本月尚無獎金紀錄</div>`:`
+        <table><thead><tr><th>日期</th><th>客戶</th><th>金額</th></tr></thead><tbody>${rows}</tbody></table>`}
       </div>
       <div class="card">
         <h3 style="margin-top:0;">即將到來的行程</h3>
