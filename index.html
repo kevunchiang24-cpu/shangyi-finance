@@ -64,6 +64,24 @@
   .chat-nav-badge{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#EF4444;color:#fff;
     font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px;min-width:18px;text-align:center;line-height:1.4;}
   .nav-section-divider{height:1px;background:rgba(255,255,255,.16);margin:12px 6px 14px;}
+  .bonus-cal{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px;width:100%;}
+  .bonus-cal-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .bonus-cal-title{font-size:14.5px;font-weight:700;color:var(--ink);}
+  .bonus-cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;text-align:center;font-size:11.5px;color:var(--muted);font-weight:700;}
+  .bonus-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .bonus-cal-cell{aspect-ratio:2.2/1;border-radius:9px;background:#FAFBFD;border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;overflow:hidden;}
+  .bonus-cal-cell.empty{background:transparent;border:none;}
+  .bonus-cal-cell.today{border:2px solid var(--navy);}
+  .bonus-cal-cell.has-bonus{background:#EAFBF3;border-color:#A7F3D0;cursor:pointer;transition:transform .1s;}
+  .bonus-cal-cell.has-bonus:hover{transform:scale(1.06);box-shadow:0 4px 10px rgba(0,0,0,.1);}
+  .bonus-cal-daynum{font-size:13px;color:var(--muted);font-weight:600;}
+  .bonus-cal-cell.has-bonus .bonus-cal-daynum{color:var(--ink);}
+  .bonus-cal-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+  @media (max-width:640px){
+    .bonus-cal{padding:10px;}
+    .bonus-cal-cell{aspect-ratio:1.6/1;}
+    .bonus-cal-daynum{font-size:11px;}
+  }
   .chat-burn-btn{opacity:.25;background:none;border:none;cursor:pointer;font-size:15px;padding:6px;border-radius:50%;transition:opacity .12s,background .12s;flex-shrink:0;}
   .chat-msg-row:hover .chat-burn-btn{opacity:.6;}
   .chat-burn-btn:hover{opacity:1 !important;background:rgba(239,68,68,.12);}
@@ -534,7 +552,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-09-17-02';
+const APP_BUILD = '2026-09-23-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2477,9 +2495,9 @@ function xiaojiangDashboardView(){
     pilotBonusThisMonth = Math.max(0, adTotalNet) * APP.data.caseSettings.pilotBonusRate;
   }
   const unreadCount = (APP.data.xiaojiangInbox||[]).filter(m=>!m.senderIsXiaojiang && !m.readByXiaojiang).length;
-  const xjEntries = monthXjLedger.slice().sort((a,b)=> b.date.localeCompare(a.date));
   const xjEntryAmount = e => (Number(e.xiaojiangBonus)||0) + (Number(e.specialFee)||0);
-  const xjRows = xjEntries.map(e=>`<tr><td>${e.date}</td><td>${escHtml(e.customer||'—')}</td><td class="amount-pos">${money(xjEntryAmount(e))}</td></tr>`).join('');
+  const allXjLedgerEntries = getCleanBonusLedger().filter(e=>e.staffName===xjName);
+  const allXjEntries = allXjLedgerEntries.map(e=>({date:e.date, customer:e.customer, amount:xjEntryAmount(e)}));
 
   return `
     <div class="page-header"><div><h1 class="page-title">🌙 我的個人空間</h1><p class="page-sub">${escHtml(xjName)}自己的獎金與資料，其他核心成員看不到這個頁面</p></div></div>
@@ -2495,9 +2513,8 @@ function xiaojiangDashboardView(){
       </div>
     </div>
     <div class="card-head-row"><h3 style="font-size:15px;">本月獎金明細</h3></div>
-    <div class="table-wrap" style="margin-bottom:20px;">
-      ${xjEntries.length===0?`<div class="empty">本月尚無獎金紀錄</div>`:`
-      <table><thead><tr><th>日期</th><th>客戶</th><th>金額</th></tr></thead><tbody>${xjRows}</tbody></table>`}
+    <div style="margin-bottom:20px;">
+      ${allXjEntries.length===0?`<div class="table-wrap"><div class="empty">尚無獎金紀錄</div></div>`:bonusCalendarGrid(allXjEntries, 'xjDash')}
     </div>
     <div class="card" style="cursor:pointer;" data-action="nav" data-view="xiaojiangInbox">
       <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -3035,6 +3052,63 @@ function myProgressView(){
   `;
 }
 
+/* ---- 獎金日曆格狀顯示：把逐筆的{date,customer,amount}紀錄，畫成傳統月曆的樣子，
+   每一天一個格子，有獎金的格子顯示總金額跟人數，點下去彈窗看當天詳細的每一筆 ---- */
+function bonusCalendarGrid(allEntries, idPrefix){
+  if(!APP.bonusCalMonth) APP.bonusCalMonth = {};
+  const mk = APP.bonusCalMonth[idPrefix] || nowMonthKey;
+  const entries = allEntries.filter(e=>monthKey(e.date)===mk);
+  if(!APP._bonusCalEntries) APP._bonusCalEntries = {};
+  APP._bonusCalEntries[idPrefix] = entries;
+  const [year, month] = mk.split('-').map(Number);
+  const firstWeekday = new Date(year, month-1, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const byDate = {};
+  entries.forEach(e=>{
+    if(!byDate[e.date]) byDate[e.date] = [];
+    byDate[e.date].push(e);
+  });
+  const todayD = todayStr();
+  const cells = [];
+  for(let i=0;i<firstWeekday;i++) cells.push('');
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayEntries = byDate[dateStr]||[];
+    const isToday = dateStr===todayD;
+    cells.push(`<div class="bonus-cal-cell${isToday?' today':''}${dayEntries.length>0?' has-bonus':''}"${dayEntries.length>0?` data-action="show-bonus-day" data-prefix="${idPrefix}" data-date="${dateStr}"`:''}>
+      <div class="bonus-cal-daynum">${month}/${d}</div>
+      ${dayEntries.length>0?`<div class="bonus-cal-dot"></div>`:''}
+    </div>`);
+  }
+  while(cells.length % 7 !== 0) cells.push('<div class="bonus-cal-cell empty"></div>');
+  const weekdayLabels = ['日','一','二','三','四','五','六'];
+  return `
+    <div class="bonus-cal">
+      <div class="bonus-cal-title-row">
+        <button type="button" class="icon-btn" data-action="bonus-cal-shift" data-prefix="${idPrefix}" data-dir="-1">←</button>
+        <div class="bonus-cal-title">${year}年${month}月</div>
+        <button type="button" class="icon-btn" data-action="bonus-cal-shift" data-prefix="${idPrefix}" data-dir="1">→</button>
+      </div>
+      <div class="bonus-cal-weekdays">${weekdayLabels.map(w=>`<div>${w}</div>`).join('')}</div>
+      <div class="bonus-cal-grid">${cells.join('')}</div>
+    </div>
+  `;
+}
+function showBonusDayModal(entries, dateStr){
+  const dayEntries = entries.filter(e=>e.date===dateStr);
+  const total = dayEntries.reduce((s,e)=>s+e.amount,0);
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-head"><h3>${dateStr} 的獎金明細</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <div style="margin-bottom:12px;font-size:14px;color:var(--muted);">當天合計：<span style="color:var(--ink);font-weight:700;">${money(total)}</span></div>
+    <div class="table-wrap">
+      <table><thead><tr><th>客戶</th><th>金額</th></tr></thead><tbody>
+        ${dayEntries.map(e=>`<tr><td>${escHtml(e.customer||'—')}</td><td class="amount-pos">${money(e.amount)}</td></tr>`).join('')}
+      </tbody></table>
+    </div>
+    <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">關閉</button></div>`;
+}
+
 function myDashboardView(){
   const me = effectiveStaffName();
   const meUid = effectiveUid();
@@ -3043,12 +3117,12 @@ function myDashboardView(){
     return `<div class="table-wrap"><div class="empty">你的帳號還沒有設定「對應業務姓名」，請聯絡管理員設定後才能看到獎金資料。</div></div>`;
   }
   const thisMonth = nowMonthKey;
-  const myEntries = getCleanBonusLedger().filter(e=>e.staffName===me && monthKey(e.date)===thisMonth);
-  const sortedEntries = myEntries.slice().sort((a,b)=> b.date.localeCompare(a.date));
   const entryAmount = e => (Number(e.businessBonus)||0) + (Number(e.xiaojiangBonus)||0) + (Number(e.specialFee)||0);
-  const monthTotal = sortedEntries.reduce((sum,e)=> sum + entryAmount(e), 0);
-  const todayAmount = sortedEntries.filter(e=>e.date===todayStr()).reduce((sum,e)=> sum + entryAmount(e), 0);
-  const rows = sortedEntries.map(e=>`<tr><td>${e.date}</td><td>${escHtml(e.customer||'—')}</td><td class="amount-pos">${money(entryAmount(e))}</td></tr>`).join('');
+  const allMyLedgerEntries = getCleanBonusLedger().filter(e=>e.staffName===me);
+  const allMyEntries = allMyLedgerEntries.map(e=>({date:e.date, customer:e.customer, amount:entryAmount(e)}));
+  const myEntriesThisMonth = allMyEntries.filter(e=>monthKey(e.date)===thisMonth);
+  const monthTotal = myEntriesThisMonth.reduce((sum,e)=> sum + e.amount, 0);
+  const todayAmount = myEntriesThisMonth.filter(e=>e.date===todayStr()).reduce((sum,e)=> sum + e.amount, 0);
 
   /* 本月自己的案件狀態統計 */
   const myAd = APP.data.progressAd.filter(c=>c.staff===me && monthKey(c.date)===thisMonth);
@@ -3083,16 +3157,14 @@ function myDashboardView(){
       <div class="card"><div class="stat-label">本月預估總收入</div><div class="stat-value blue" style="font-size:22px;">${money((profile.baseSalary||0)+monthTotal)}</div></div>
     </div>
 
-    <div class="grid grid-2">
-      <div class="table-wrap">
-        ${sortedEntries.length===0?`<div class="empty">本月尚無獎金紀錄</div>`:`
-        <table><thead><tr><th>日期</th><th>客戶</th><th>金額</th></tr></thead><tbody>${rows}</tbody></table>`}
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0;">即將到來的行程</h3>
-        ${upcoming.length===0?`<div class="empty">目前沒有即將到來的行程</div>`:
-        upcoming.map(c=>`<div class="cat-row"><div class="name" style="width:80px;">${c.date}</div><div class="val" style="width:auto;flex:1;text-align:left;color:var(--ink);">${escHtml(c.title)}</div></div>`).join('')}
-      </div>
+    <div class="card-head-row"><h3 style="font-size:15px;">本月獎金明細</h3></div>
+    <div style="margin-bottom:20px;">
+      ${allMyEntries.length===0?`<div class="table-wrap"><div class="empty">尚無獎金紀錄</div></div>`:bonusCalendarGrid(allMyEntries, 'myDash')}
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">即將到來的行程</h3>
+      ${upcoming.length===0?`<div class="empty">目前沒有即將到來的行程</div>`:
+      upcoming.map(c=>`<div class="cat-row"><div class="name" style="width:80px;">${c.date}</div><div class="val" style="width:auto;flex:1;text-align:left;color:var(--ink);">${escHtml(c.title)}</div></div>`).join('')}
     </div>
   `;
 }
@@ -5624,6 +5696,21 @@ document.addEventListener('click', (e)=>{
           deleteDoc(doc(db,'directMessages', m.id)).catch(()=>{});
         });
       });
+      return;
+    }
+    if(action==='show-bonus-day'){
+      const entries = (APP._bonusCalEntries||{})[el.dataset.prefix] || [];
+      showBonusDayModal(entries, el.dataset.date);
+      return;
+    }
+    if(action==='bonus-cal-shift'){
+      if(!APP.bonusCalMonth) APP.bonusCalMonth = {};
+      const prefix = el.dataset.prefix;
+      const cur = APP.bonusCalMonth[prefix] || nowMonthKey;
+      const [y, m] = cur.split('-').map(Number);
+      const dt = new Date(y, m-1+Number(el.dataset.dir), 1);
+      APP.bonusCalMonth[prefix] = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+      render();
       return;
     }
     if(action==='open-personal-account-modal'){ openPersonalAccountModal(null); return; }
