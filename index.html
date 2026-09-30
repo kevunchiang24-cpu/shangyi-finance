@@ -552,7 +552,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-09-23-01';
+const APP_BUILD = '2026-09-30-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -644,7 +644,7 @@ const APP = {
   casesTab:'ad', caseAdFilter:{status:'all', month:nowMonthKey}, caseChannelFilter:{status:'all', month:nowMonthKey}, dailyBonusDate:'', dailyBonusShowUnpaidOnly:false,
   bizToolsTab:'progress', staffOverviewName:'', staffOverviewTab:'log', viewingStaff:null,
   myLogFilter:{month:nowMonthKey}, myLogNoContactCollapsed:false, attendanceFilter:{month:nowMonthKey},
-  socialAccountFilter:{status:'all', stage:'all', bmGroup:'all'}, socialPersonalFilter:{status:'all'}, socialFanPageFilter:{status:'all'},
+  socialAccountFilter:{status:'all', stage:'all', bmGroup:'all'}, socialPersonalFilter:{status:'all'}, socialFanPageFilter:{status:'all'}, followupOverviewFilter:{staff:'all'},
   progressAdSort:{key:'date',dir:'desc'}, progressChannelSort:{key:'date',dir:'desc'},
   casesAdSort:{key:'date',dir:'desc'}, casesChannelSort:{key:'date',dir:'desc'},
   txSort:{key:'date',dir:'desc'}, adSpendSort:{key:'month',dir:'desc'}, myLogSort:{key:'date',dir:'desc'},
@@ -655,7 +655,7 @@ const APP = {
     companyPublic:{systemName:'',systemSubtitle:'',logoDataUrl:''},
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
-    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[], directMessages:[],
+    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[], directMessages:[], customerFollowups:[],
     optionColors:{ plan:{}, status:{}, dealProduct:{}, contactStatus:{} },
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
       rankBronze:50000, rankSilver:100000, rankGold:200000, rankDiamond:400000,
@@ -818,6 +818,10 @@ function subscribeAll(){
   }));
   unsubs.push(onSnapshot(collection(db,'progressChannelCases'), snap=>{
     APP.data.progressChannel = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+  }));
+  unsubs.push(onSnapshot(collection(db,'customerFollowups'), snap=>{
+    APP.data.customerFollowups = snap.docs.map(d=>({id:d.id, ...d.data()}));
     render();
   }));
   unsubs.push(onSnapshot(doc(db,'appdata','casesAd'), snap=>{
@@ -1001,6 +1005,21 @@ function saveTransactions(){ return setDoc(doc(db,'appdata','transactions'), {li
 function saveHR(){ return setDoc(doc(db,'appdata','hr'), APP.data.hr); }
 function saveVendors(){ return setDoc(doc(db,'appdata','vendors'), {list:APP.data.vendors}); }
 function saveProgressAdCase(rec){ return setDoc(doc(db,'progressAdCases', rec.id), rec); }
+function saveCustomerFollowup(rec){ return setDoc(doc(db,'customerFollowups', rec.id), rec); }
+function deleteCustomerFollowup(id){ return deleteDoc(doc(db,'customerFollowups', id)); }
+/* ---- 案件狀態剛跳到「撥款完成」時呼叫：如果這個案件還沒有對應的關懷追蹤紀錄，就自動建一筆，
+   3次提醒(撥款後第20/40/60天)都預設未完成，等業務自己打勾備註 ---- */
+function ensureFollowupOnDisbursed(caseRec, sourceType){
+  const exists = (APP.data.customerFollowups||[]).some(f=>f.sourceCaseId===caseRec.id);
+  if(exists) return;
+  const rec = stamp({
+    id: uid(), sourceCaseId: caseRec.id, sourceType,
+    customer: caseRec.customer||'', staff: caseRec.staff||'', phone: caseRec.phone||'', plan: caseRec.plan||'',
+    disbursedDate: caseRec.disbursedDate || todayStr(),
+    reminder1: {done:false, note:''}, reminder2: {done:false, note:''}, reminder3: {done:false, note:''}
+  });
+  saveCustomerFollowup(rec);
+}
 function deleteProgressAdCase(id){ return deleteDoc(doc(db,'progressAdCases', id)); }
 function saveProgressChannelCase(rec){ return setDoc(doc(db,'progressChannelCases', rec.id), rec); }
 function deleteProgressChannelCase(id){ return deleteDoc(doc(db,'progressChannelCases', id)); }
@@ -1217,6 +1236,10 @@ function shellHTML(){
   const meIsXiaojiang = !!(meCoreUser && meCoreUser.isXiaojiang);
   const meIsHuang = !!(APP.users.find(u=>u.id===APP.user.uid)||{}).isHuang;
   const totalDmUnread = (APP.data.directMessages||[]).filter(m=>m.recipientUid===APP.user.uid && !m.read).length;
+  const myStaffNameForNav = staffAny ? myStaffName() : null;
+  const hasMyOverdueFollowup = myStaffNameForNav && (APP.data.customerFollowups||[]).some(f=>f.staff===myStaffNameForNav && followupOverallStatus(f)==='overdue');
+  const hasRoomOverdueFollowup = inRoom && (APP.data.customerFollowups||[]).some(f=>f.staff===APP.viewingStaff.name && followupOverallStatus(f)==='overdue');
+  const hasAnyOverdueFollowup = core && (APP.data.customerFollowups||[]).some(f=>followupOverallStatus(f)==='overdue');
   return `
   <div id="mobile-topbar">
     <button id="hamburger-btn" aria-label="選單">☰</button>
@@ -1246,6 +1269,7 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
     <div class="nav-item" data-action="nav" data-view="cases"><span class="nav-icon">📋</span>獲利報表</div>
     <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
+    <div class="nav-item${hasAnyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupOverview"><span class="nav-icon">📞</span>客戶關懷追蹤${hasAnyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>
     <div class="nav-group-label">公司管理</div>
     <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">☺</span>人事管理</div>
     <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">▣</span>廠商管理</div>
@@ -1262,6 +1286,7 @@ function shellHTML(){
       <div class="nav-group-label" style="color:#E9D5FF;">${escHtml(displayNameFor(APP.viewingStaff.uid, APP.viewingStaff.name))} 的房間</div>
       <div class="nav-item" data-action="nav" data-view="personalDashboard"><span class="nav-icon">📊</span>個人儀表板</div>
       <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
+      <div class="nav-item${hasRoomOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupPersonal"><span class="nav-icon">📞</span>客戶關懷追蹤${hasRoomOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>
       <div class="nav-group-label" style="color:#E9D5FF;">個人空間</div>
       <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>個人業務進度紀錄</div>
       <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
@@ -1273,6 +1298,7 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="personalDashboard"><span class="nav-icon">📊</span>個人儀表板</div>
     <div class="nav-group-label">工作項目</div>
     <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
+    <div class="nav-item${hasMyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupPersonal"><span class="nav-icon">📞</span>客戶關懷追蹤${hasMyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>
     <div class="nav-group-label">個人空間</div>
     <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>個人業務進度紀錄</div>
     <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
@@ -2385,7 +2411,7 @@ function render(){
   updateNotifBell();
   const main = document.getElementById('main');
   if(!main) return;
-  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom'];
+  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
@@ -2400,6 +2426,8 @@ function render(){
   else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
   else if(APP.view==='dailyBonus' && isCore()) main.innerHTML = dailyBonusPageHTML();
   else if(APP.view==='staffOverview' && (isCore() || isStaffAny())) main.innerHTML = staffOverviewHTML();
+  else if(APP.view==='customerFollowupOverview' && isCore()) main.innerHTML = customerFollowupOverviewHTML();
+  else if(APP.view==='customerFollowupPersonal' && (isCore() || isStaffAny())) main.innerHTML = customerFollowupPersonalView();
   else if(APP.view==='xiaojiangInbox' && (isCore() || isStaffAny())) main.innerHTML = xiaojiangInboxView();
   else if(APP.view==='chatRoom' && (isCore() || isStaffAny())){
     main.innerHTML = chatRoomView();
@@ -2565,6 +2593,26 @@ function daysSinceDate(dateStr){
   const d = new Date(dateStr+'T00:00:00');
   if(isNaN(d)) return null;
   return Math.floor((Date.now()-d.getTime())/86400000);
+}
+const FOLLOWUP_THRESHOLDS = [20, 40, 60];
+/* ---- 客戶關懷追蹤的三階段提醒狀態：撥款完成後第20/40/60天各一次，
+   isDue=已經到了該提醒的天數，isOverdue=到了天數但業務還沒打勾完成 ---- */
+function followupStages(f){
+  const days = daysSinceDate(f.disbursedDate);
+  const dataKeys = ['reminder1','reminder2','reminder3'];
+  return FOLLOWUP_THRESHOLDS.map((threshold, i)=>{
+    const data = f[dataKeys[i]] || {done:false, note:''};
+    const isDue = days!==null && days>=threshold;
+    return { num:i+1, threshold, key:dataKeys[i], done:!!data.done, note:data.note||'', isDue, isOverdue: isDue && !data.done };
+  });
+}
+function followupOverallStatus(f){
+  const stages = followupStages(f);
+  const allDone = stages.every(s=>s.done);
+  const anyOverdue = stages.some(s=>s.isOverdue);
+  if(allDone) return 'done';
+  if(anyOverdue) return 'overdue';
+  return 'tracking';
 }
 function warmingStageInfo(days){
   if(days===null || days===undefined) return null;
@@ -3054,6 +3102,62 @@ function myProgressView(){
 
 /* ---- 獎金日曆格狀顯示：把逐筆的{date,customer,amount}紀錄，畫成傳統月曆的樣子，
    每一天一個格子，有獎金的格子顯示總金額跟人數，點下去彈窗看當天詳細的每一筆 ---- */
+/* ---- 客戶關懷追蹤清單：依撥款月份分組顯示，showStaffColumn決定要不要多顯示業務欄位(核心/小江總覽用) ---- */
+function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
+  if(followups.length===0) return `<div class="table-wrap"><div class="empty">目前沒有需要關懷的客戶</div></div>`;
+  const byMonth = {};
+  followups.forEach(f=>{
+    const mk = monthKey(f.disbursedDate);
+    if(!byMonth[mk]) byMonth[mk] = [];
+    byMonth[mk].push(f);
+  });
+  const months = Object.keys(byMonth).sort().reverse();
+  if(!APP.followupMonthFilter) APP.followupMonthFilter = {};
+  const selectedMonth = (APP.followupMonthFilter[idPrefix] && months.includes(APP.followupMonthFilter[idPrefix]))
+    ? APP.followupMonthFilter[idPrefix]
+    : (months.includes(nowMonthKey) ? nowMonthKey : months[0]);
+  const list = (byMonth[selectedMonth]||[]).slice().sort((a,b)=>{
+    const aOverdue = followupOverallStatus(a)==='overdue', bOverdue = followupOverallStatus(b)==='overdue';
+    if(aOverdue!==bOverdue) return aOverdue?-1:1;
+    return (b.disbursedDate||'').localeCompare(a.disbursedDate||'');
+  });
+  return `
+    <div class="filter-row">
+      <div class="filter-field"><label>月份</label>
+        <select data-case-filter="followup-month-${idPrefix}">${months.map(mk=>{
+          const [y,m] = mk.split('-');
+          return `<option value="${mk}" ${mk===selectedMonth?'selected':''}>${y}年${Number(m)}月</option>`;
+        }).join('')}</select>
+      </div>
+    </div>
+    <div class="table-wrap" style="margin-bottom:16px;">
+      <table><thead><tr>
+        <th>客戶</th><th>電話</th><th>核准方案</th>${showStaffColumn?'<th>業務</th>':''}<th>撥款日</th><th>第1次（20天）</th><th>第2次（40天）</th><th>第3次（60天）</th>
+      </tr></thead><tbody>
+        ${list.map(f=>{
+          const stages = followupStages(f);
+          return `<tr>
+            <td>${escHtml(f.customer||'—')}</td>
+            <td>${escHtml(f.phone||'—')}</td>
+            <td>${escHtml(f.plan||'—')}</td>
+            ${showStaffColumn?`<td>${escHtml(f.staff||'—')}</td>`:''}
+            <td>${f.disbursedDate||'—'}</td>
+            ${stages.map(s=>`<td>${followupStageCellHtml(f.id, s)}</td>`).join('')}
+          </tr>`;
+        }).join('')}
+      </tbody></table>
+    </div>
+  `;
+}
+function followupStageCellHtml(followupId, stage){
+  if(stage.done){
+    return `<span class="badge active">✓ 已完成</span>${stage.note?`<div style="font-size:11px;color:var(--muted);margin-top:2px;max-width:140px;">${escHtml(stage.note)}</div>`:''}`;
+  }
+  if(!stage.isDue){
+    return `<span style="color:var(--muted);font-size:12px;">未到期</span>`;
+  }
+  return `<button type="button" class="btn ${stage.isOverdue?'primary':'ghost'} sm" data-action="mark-followup-stage" data-id="${followupId}" data-stage="${stage.key}">${stage.isOverdue?'⚠ ':''}打勾完成</button>`;
+}
 function bonusCalendarGrid(allEntries, idPrefix){
   if(!APP.bonusCalMonth) APP.bonusCalMonth = {};
   const mk = APP.bonusCalMonth[idPrefix] || nowMonthKey;
@@ -3109,6 +3213,17 @@ function showBonusDayModal(entries, dateStr){
     <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">關閉</button></div>`;
 }
 
+function openMarkFollowupModal(followupId, stageKey){
+  const f = (APP.data.customerFollowups||[]).find(x=>x.id===followupId);
+  if(!f) return;
+  openModal('標記這次關懷已完成', `
+    <label class="field"><span>備註（選填，例如：有沒有新的資金需求）</span><textarea name="note" placeholder="沒有特別狀況可以留空"></textarea></label>
+  `, 'mark-followup-form', (data)=>{
+    f[stageKey] = { done:true, note:data.note||'', doneDate:todayStr() };
+    Object.assign(f, stamp({}));
+    saveCustomerFollowup(f);
+  });
+}
 function myDashboardView(){
   const me = effectiveStaffName();
   const meUid = effectiveUid();
@@ -3593,6 +3708,32 @@ function openCalendarModal(){
 }
 
 /* ---------------- Staff overview (核心視角看業務房間) ---------------- */
+function customerFollowupPersonalView(){
+  const me = effectiveStaffName();
+  if(!me){
+    return `<div class="table-wrap"><div class="empty">你的帳號還沒有設定「對應業務姓名」，請聯絡管理員設定後才能看到客戶關懷資料。</div></div>`;
+  }
+  const myFollowups = (APP.data.customerFollowups||[]).filter(f=>f.staff===me);
+  return `
+    <div class="page-header"><div><h1 class="page-title">📞 客戶關懷追蹤${roomTitleSuffix()}</h1><p class="page-sub">撥款完成後第20/40/60天的客戶關懷提醒，記得詢問繳費狀況跟有沒有新的資金需求</p></div></div>
+    ${customerFollowupListHtml(myFollowups, false, 'personal')}
+  `;
+}
+function customerFollowupOverviewHTML(){
+  const f = APP.followupOverviewFilter || {staff:'all'};
+  let list = APP.data.customerFollowups||[];
+  const staffList = Array.from(new Set(list.map(x=>x.staff).filter(Boolean))).sort();
+  if(f.staff!=='all') list = list.filter(x=>x.staff===f.staff);
+  return `
+    <div class="page-header"><div><h1 class="page-title">客戶關懷追蹤總覽</h1><p class="page-sub">所有業務的客戶撥款後關懷提醒，全公司彙整檢視</p></div></div>
+    <div class="filter-row">
+      <div class="filter-field"><label>業務</label>
+        <select data-case-filter="followup-staff"><option value="all" ${f.staff==='all'?'selected':''}>全部</option>
+        ${staffList.map(s=>`<option value="${escAttr(s)}" ${f.staff===s?'selected':''}>${escHtml(s)}</option>`).join('')}</select></div>
+    </div>
+    ${customerFollowupListHtml(list, true, 'overview')}
+  `;
+}
 function staffOverviewHTML(){
   const viewerIsCore = isCore();
   const names = Array.from(new Set(APP.users.filter(u=>u.staffName).map(u=>u.staffName))).sort();
@@ -4791,7 +4932,12 @@ function openProgressAdModal(existing){
     <label class="field"><span>送件狀態</span><select name="status">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></label>
     <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
   `, 'progress-ad-form', (data)=>{
+    const wasDisbursed = existing && existing.status==='撥款完成';
     const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
+    if(rec.status==='撥款完成' && !wasDisbursed){
+      rec.disbursedDate = todayStr();
+      ensureFollowupOnDisbursed(rec, 'ad');
+    }
     saveProgressAdCase(rec);
   });
 }
@@ -4808,7 +4954,12 @@ function openProgressChannelModal(existing){
     <label class="field"><span>送件狀態</span><select name="status">${STATUS_OPTIONS.map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}</select></label>
     <label class="field"><span>備註</span><textarea name="note">${escHtml(c.note||'')}</textarea></label>
   `, 'progress-channel-form', (data)=>{
+    const wasDisbursed = existing && existing.status==='撥款完成';
     const rec = existing ? Object.assign(existing, stamp(data)) : stamp({id:uid(), ...data});
+    if(rec.status==='撥款完成' && !wasDisbursed){
+      rec.disbursedDate = todayStr();
+      ensureFollowupOnDisbursed(rec, 'channel');
+    }
     saveProgressChannelCase(rec);
   });
 }
@@ -5713,6 +5864,7 @@ document.addEventListener('click', (e)=>{
       render();
       return;
     }
+    if(action==='mark-followup-stage'){ openMarkFollowupModal(el.dataset.id, el.dataset.stage); return; }
     if(action==='open-personal-account-modal'){ openPersonalAccountModal(null); return; }
     if(action==='edit-personal-account'){ const a = (APP.data.personalAccounts||[]).find(x=>x.id===el.dataset.id); if(a) openPersonalAccountModal(a); return; }
     if(action==='delete-personal-account'){
@@ -6243,6 +6395,7 @@ document.addEventListener('change', (e)=>{
       // 而不是案件原本記錄的送件日期，避免上個月送件、這個月才撥款完成的案件被算到錯的月份去
       if(field==='status' && e.target.value==='撥款完成' && (listName==='progressAd'||listName==='progressChannel')){
         rec.disbursedDate = todayStr();
+        ensureFollowupOnDisbursed(rec, listName==='progressAd'?'ad':'channel');
       }
       Object.assign(rec, stamp({}));
       saveFn(listName==='transactions'||listName==='casesAd'||listName==='casesChannel' ? undefined : rec);
@@ -6423,6 +6576,11 @@ document.addEventListener('change', (e)=>{
     else if(key==='social-bm') APP.socialAccountFilter.bmGroup = e.target.value;
     else if(key==='social-personal-status') APP.socialPersonalFilter.status = e.target.value;
     else if(key==='social-fanpage-status') APP.socialFanPageFilter.status = e.target.value;
+    else if(key==='followup-staff') APP.followupOverviewFilter.staff = e.target.value;
+    else if(key.startsWith('followup-month-')){
+      if(!APP.followupMonthFilter) APP.followupMonthFilter = {};
+      APP.followupMonthFilter[key.replace('followup-month-','')] = e.target.value;
+    }
     render(); return;
   }
   if(e.target.id==='daily-bonus-date'){ APP.dailyBonusDate = e.target.value; render(); return; }
@@ -6824,7 +6982,7 @@ document.addEventListener('submit', (e)=>{
     renderRoot();
     return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form','mark-followup-form'].includes(e.target.id)){
     e.preventDefault();
     try{
       const fd = new FormData(e.target);
