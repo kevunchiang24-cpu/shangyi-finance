@@ -552,7 +552,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-09-30-02';
+const APP_BUILD = '2026-09-30-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1015,6 +1015,7 @@ function ensureFollowupOnDisbursed(caseRec, sourceType){
   const rec = stamp({
     id: uid(), sourceCaseId: caseRec.id, sourceType,
     customer: caseRec.customer||'', staff: caseRec.staff||'', phone: caseRec.phone||'', plan: caseRec.plan||'',
+    referrer: sourceType==='channel' ? (caseRec.referrer||'') : '',
     disbursedDate: caseRec.disbursedDate || caseRec.date || todayStr(),
     reminder1: {done:false, note:''}, reminder2: {done:false, note:''}, reminder3: {done:false, note:''}
   });
@@ -1240,7 +1241,7 @@ function shellHTML(){
   const myStaffNameForNav = staffAny ? myStaffName() : null;
   const hasMyOverdueFollowup = myStaffNameForNav && (APP.data.customerFollowups||[]).some(f=>f.staff===myStaffNameForNav && followupOverallStatus(f)==='overdue');
   const hasRoomOverdueFollowup = inRoom && (APP.data.customerFollowups||[]).some(f=>f.staff===APP.viewingStaff.name && followupOverallStatus(f)==='overdue');
-  const hasAnyOverdueFollowup = core && (APP.data.customerFollowups||[]).some(f=>followupOverallStatus(f)==='overdue');
+  const hasAnyOverdueFollowup = (core || isStaffAdmin()) && (APP.data.customerFollowups||[]).some(f=>followupOverallStatus(f)==='overdue');
   return `
   <div id="mobile-topbar">
     <button id="hamburger-btn" aria-label="選單">☰</button>
@@ -1299,7 +1300,9 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="personalDashboard"><span class="nav-icon">📊</span>個人儀表板</div>
     <div class="nav-group-label">工作項目</div>
     <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
-    <div class="nav-item${hasMyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupPersonal"><span class="nav-icon">📞</span>客戶關懷追蹤${hasMyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>
+    ${isStaffAdmin()
+      ? `<div class="nav-item${hasAnyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupOverview"><span class="nav-icon">📞</span>客戶關懷追蹤${hasAnyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>`
+      : `<div class="nav-item${hasMyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupPersonal"><span class="nav-icon">📞</span>客戶關懷追蹤${hasMyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>`}
     <div class="nav-group-label">個人空間</div>
     <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>個人業務進度紀錄</div>
     <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
@@ -2412,7 +2415,7 @@ function render(){
   updateNotifBell();
   const main = document.getElementById('main');
   if(!main) return;
-  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal'];
+  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal','customerFollowupOverview'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
@@ -2427,7 +2430,7 @@ function render(){
   else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
   else if(APP.view==='dailyBonus' && isCore()) main.innerHTML = dailyBonusPageHTML();
   else if(APP.view==='staffOverview' && (isCore() || isStaffAny())) main.innerHTML = staffOverviewHTML();
-  else if(APP.view==='customerFollowupOverview' && isCore()) main.innerHTML = customerFollowupOverviewHTML();
+  else if(APP.view==='customerFollowupOverview' && (isCore() || isStaffAdmin())) main.innerHTML = customerFollowupOverviewHTML();
   else if(APP.view==='customerFollowupPersonal' && (isCore() || isStaffAny())) main.innerHTML = customerFollowupPersonalView();
   else if(APP.view==='xiaojiangInbox' && (isCore() || isStaffAny())) main.innerHTML = xiaojiangInboxView();
   else if(APP.view==='chatRoom' && (isCore() || isStaffAny())){
@@ -2595,17 +2598,36 @@ function daysSinceDate(dateStr){
   if(isNaN(d)) return null;
   return Math.floor((Date.now()-d.getTime())/86400000);
 }
-const FOLLOWUP_THRESHOLDS = [20, 40, 60];
-/* ---- 客戶關懷追蹤的三階段提醒狀態：撥款完成後第20/40/60天各一次，
+const FOLLOWUP_STAGE2_3_GAP = 25;
+const FOLLOWUP_MEDICAL_FIRST_DAYS = 12;
+const FOLLOWUP_DEFAULT_FIRST_DAYS = 25;
+/* ---- 客戶關懷追蹤的三階段提醒狀態：
+   第1次——依方案不同，醫美是撥款後12天，其他方案都是撥款後25天；
+   第2次——不是固定從撥款日算，而是「第1次完成後」再過25天；
+   第3次——同樣是「第2次完成後」再過25天。
+   所以第2/3次要等前一次真的打勾完成、才會有到期日；前一次還沒完成時，下一次視為「還沒開始」。
    isDue=已經到了該提醒的天數，isOverdue=到了天數但業務還沒打勾完成 ---- */
 function followupStages(f){
-  const days = daysSinceDate(f.disbursedDate);
-  const dataKeys = ['reminder1','reminder2','reminder3'];
-  return FOLLOWUP_THRESHOLDS.map((threshold, i)=>{
-    const data = f[dataKeys[i]] || {done:false, note:''};
-    const isDue = days!==null && days>=threshold;
-    return { num:i+1, threshold, key:dataKeys[i], done:!!data.done, note:data.note||'', isDue, isOverdue: isDue && !data.done };
-  });
+  const isMedical = (f.plan||'').includes('醫美');
+  const stage1Days = isMedical ? FOLLOWUP_MEDICAL_FIRST_DAYS : FOLLOWUP_DEFAULT_FIRST_DAYS;
+  const r1 = f.reminder1 || {done:false, note:''};
+  const r2 = f.reminder2 || {done:false, note:''};
+  const r3 = f.reminder3 || {done:false, note:''};
+
+  const disbursedDays = daysSinceDate(f.disbursedDate);
+  const stage1IsDue = disbursedDays!==null && disbursedDays>=stage1Days;
+
+  const daysSinceR1Done = r1.done ? daysSinceDate(r1.doneDate) : null;
+  const stage2IsDue = daysSinceR1Done!==null && daysSinceR1Done>=FOLLOWUP_STAGE2_3_GAP;
+
+  const daysSinceR2Done = r2.done ? daysSinceDate(r2.doneDate) : null;
+  const stage3IsDue = daysSinceR2Done!==null && daysSinceR2Done>=FOLLOWUP_STAGE2_3_GAP;
+
+  return [
+    { num:1, thresholdLabel:`撥款後${stage1Days}天`, key:'reminder1', done:!!r1.done, note:r1.note||'', isDue:stage1IsDue, isOverdue: stage1IsDue && !r1.done, waitingOnPrevious:false },
+    { num:2, thresholdLabel:'前次完成後25天', key:'reminder2', done:!!r2.done, note:r2.note||'', isDue:stage2IsDue, isOverdue: stage2IsDue && !r2.done, waitingOnPrevious: !r1.done },
+    { num:3, thresholdLabel:'前次完成後25天', key:'reminder3', done:!!r3.done, note:r3.note||'', isDue:stage3IsDue, isOverdue: stage3IsDue && !r3.done, waitingOnPrevious: !r2.done },
+  ];
 }
 function followupOverallStatus(f){
   const stages = followupStages(f);
@@ -3105,9 +3127,49 @@ function myProgressView(){
    每一天一個格子，有獎金的格子顯示總金額跟人數，點下去彈窗看當天詳細的每一筆 ---- */
 /* ---- 客戶關懷追蹤清單：依撥款月份分組顯示，showStaffColumn決定要不要多顯示業務欄位(核心/小江總覽用) ---- */
 function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
-  if(followups.length===0) return `<div class="table-wrap"><div class="empty">目前沒有需要關懷的客戶</div></div>`;
+  const canEditPayment = isCore() || isStaffAdmin();
+  if(!APP.followupTableFilter) APP.followupTableFilter = {};
+  const tf = APP.followupTableFilter[idPrefix] || {plan:'all', cared:'all', sort:'overdue'};
+  const planList = Array.from(new Set(followups.map(f=>f.plan).filter(Boolean))).sort();
+
+  let filtered = followups;
+  if(tf.plan!=='all') filtered = filtered.filter(f=>f.plan===tf.plan);
+  if(tf.cared==='done') filtered = filtered.filter(f=>followupOverallStatus(f)==='done');
+  else if(tf.cared==='notdone') filtered = filtered.filter(f=>followupOverallStatus(f)!=='done');
+
+  const sortMode = tf.sort || 'overdue';
+  const SORT_OPTIONS = [
+    {value:'overdue', label:'逾期優先（預設）'},
+    {value:'date-desc', label:'撥款日：新到舊'},
+    {value:'date-asc', label:'撥款日：舊到新'},
+    {value:'name', label:'客戶姓名'},
+  ];
+
+  const filterRowHtml = `
+    <div class="filter-row">
+      <div class="filter-field"><label>方案</label>
+        <select data-case-filter="followup-plan-${idPrefix}"><option value="all" ${tf.plan==='all'?'selected':''}>全部</option>
+        ${planList.map(p=>`<option value="${escAttr(p)}" ${tf.plan===p?'selected':''}>${escHtml(p)}</option>`).join('')}</select>
+      </div>
+      <div class="filter-field"><label>關懷狀態</label>
+        <select data-case-filter="followup-cared-${idPrefix}">
+          <option value="all" ${tf.cared==='all'?'selected':''}>全部</option>
+          <option value="done" ${tf.cared==='done'?'selected':''}>已關懷（三次都完成）</option>
+          <option value="notdone" ${tf.cared==='notdone'?'selected':''}>未關懷</option>
+        </select>
+      </div>
+      <div class="filter-field"><label>排序</label>
+        <select data-case-filter="followup-sort-${idPrefix}">
+          ${SORT_OPTIONS.map(o=>`<option value="${o.value}" ${sortMode===o.value?'selected':''}>${o.label}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `;
+
+  if(filtered.length===0) return filterRowHtml + `<div class="table-wrap"><div class="empty">沒有符合條件的客戶</div></div>`;
+
   const byMonth = {};
-  followups.forEach(f=>{
+  filtered.forEach(f=>{
     const mk = monthKey(f.disbursedDate);
     if(!byMonth[mk]) byMonth[mk] = [];
     byMonth[mk].push(f);
@@ -3118,11 +3180,15 @@ function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
     ? APP.followupMonthFilter[idPrefix]
     : (months.includes(nowMonthKey) ? nowMonthKey : months[0]);
   const list = (byMonth[selectedMonth]||[]).slice().sort((a,b)=>{
+    if(sortMode==='date-desc') return (b.disbursedDate||'').localeCompare(a.disbursedDate||'');
+    if(sortMode==='date-asc') return (a.disbursedDate||'').localeCompare(b.disbursedDate||'');
+    if(sortMode==='name') return (a.customer||'').localeCompare(b.customer||'');
     const aOverdue = followupOverallStatus(a)==='overdue', bOverdue = followupOverallStatus(b)==='overdue';
     if(aOverdue!==bOverdue) return aOverdue?-1:1;
     return (b.disbursedDate||'').localeCompare(a.disbursedDate||'');
   });
   return `
+    ${filterRowHtml}
     <div class="filter-row">
       <div class="filter-field"><label>月份</label>
         <select data-case-filter="followup-month-${idPrefix}">${months.map(mk=>{
@@ -3133,17 +3199,26 @@ function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
     </div>
     <div class="table-wrap" style="margin-bottom:16px;">
       <table><thead><tr>
-        <th>客戶</th><th>電話</th><th>核准方案</th>${showStaffColumn?'<th>業務</th>':''}<th>撥款日</th><th>第1次（20天）</th><th>第2次（40天）</th><th>第3次（60天）</th>
+        <th>客戶</th><th>電話</th><th>客源</th><th>通路</th><th>核准方案</th>${showStaffColumn?'<th>業務</th>':''}<th>撥款日</th><th>第1次</th><th>第2次</th><th>第3次</th><th>繳費狀態</th>
       </tr></thead><tbody>
         ${list.map(f=>{
           const stages = followupStages(f);
-          return `<tr>
+          const isUnpaid = f.paymentStatus==='unpaid';
+          return `<tr${isUnpaid?' style="background:#FEE2E2;"':''}>
             <td>${escHtml(f.customer||'—')}</td>
             <td>${escHtml(f.phone||'—')}</td>
+            <td>${f.sourceType==='channel'?'直客/通路':'廣告客'}</td>
+            <td>${escHtml(f.referrer||'—')}</td>
             <td>${escHtml(f.plan||'—')}</td>
             ${showStaffColumn?`<td>${escHtml(f.staff||'—')}</td>`:''}
             <td>${f.disbursedDate||'—'}</td>
             ${stages.map(s=>`<td>${followupStageCellHtml(f.id, s)}</td>`).join('')}
+            <td>${canEditPayment?`
+              <select class="payment-status-select" data-id="${f.id}">
+                <option value="" ${!isUnpaid?'selected':''}>正常</option>
+                <option value="unpaid" ${isUnpaid?'selected':''}>未繳費</option>
+              </select>
+            `:(isUnpaid?`<span class="badge expense">未繳費</span>`:`<span style="color:var(--muted);font-size:12px;">正常</span>`)}</td>
           </tr>`;
         }).join('')}
       </tbody></table>
@@ -3155,9 +3230,12 @@ function followupStageCellHtml(followupId, stage){
     return `<span class="badge active">✓ 已完成</span>${stage.note?`<div style="font-size:11px;color:var(--muted);margin-top:2px;max-width:140px;">${escHtml(stage.note)}</div>`:''}`;
   }
   if(!stage.isDue){
-    return `<span style="color:var(--muted);font-size:12px;">未到期</span>`;
+    if(stage.waitingOnPrevious){
+      return `<span style="color:var(--muted);font-size:12px;">待前次完成</span>`;
+    }
+    return `<span style="color:var(--muted);font-size:12px;">未到期（${stage.thresholdLabel}）</span>`;
   }
-  return `<button type="button" class="btn ${stage.isOverdue?'primary':'ghost'} sm" data-action="mark-followup-stage" data-id="${followupId}" data-stage="${stage.key}">${stage.isOverdue?'⚠ ':''}打勾完成</button>`;
+  return `<button type="button" class="btn sm" style="${stage.isOverdue?'background:var(--red);color:#fff;':''}" data-action="mark-followup-stage" data-id="${followupId}" data-stage="${stage.key}">${stage.isOverdue?'⚠ ':''}打勾完成</button>`;
 }
 function bonusCalendarGrid(allEntries, idPrefix){
   if(!APP.bonusCalMonth) APP.bonusCalMonth = {};
@@ -6391,6 +6469,28 @@ document.addEventListener('change', (e)=>{
     }
     return;
   }
+  if(e.target.classList && e.target.classList.contains('payment-status-select')){
+    const id = e.target.dataset.id;
+    const f = (APP.data.customerFollowups||[]).find(x=>x.id===id);
+    if(f){
+      const newStatus = e.target.value;
+      f.paymentStatus = newStatus;
+      Object.assign(f, stamp({}));
+      saveCustomerFollowup(f);
+      if(newStatus==='unpaid'){
+        const staffUser = APP.users.find(u=>u.staffName===f.staff);
+        if(staffUser){
+          addDoc(collection(db,'announcements'), {
+            scope:'targeted', targetUid: staffUser.id,
+            message: `⚠️ 客戶「${f.customer||'未填'}」被標記為未繳費，請盡快聯絡確認。`,
+            senderName: displayNameFor(APP.user.uid, APP.userEmail), senderUid: APP.user.uid,
+            _at: new Date().toISOString()
+          }).catch(()=>{});
+        }
+      }
+    }
+    return;
+  }
   if(e.target.classList && e.target.classList.contains('inline-status-select')){
     const listName = e.target.dataset.list, id = e.target.dataset.id;
     const field = e.target.dataset.field || 'status';
@@ -6596,6 +6696,24 @@ document.addEventListener('change', (e)=>{
     else if(key.startsWith('followup-month-')){
       if(!APP.followupMonthFilter) APP.followupMonthFilter = {};
       APP.followupMonthFilter[key.replace('followup-month-','')] = e.target.value;
+    }
+    else if(key.startsWith('followup-plan-')){
+      const prefix = key.replace('followup-plan-','');
+      if(!APP.followupTableFilter) APP.followupTableFilter = {};
+      if(!APP.followupTableFilter[prefix]) APP.followupTableFilter[prefix] = {plan:'all', cared:'all', sort:'overdue'};
+      APP.followupTableFilter[prefix].plan = e.target.value;
+    }
+    else if(key.startsWith('followup-cared-')){
+      const prefix = key.replace('followup-cared-','');
+      if(!APP.followupTableFilter) APP.followupTableFilter = {};
+      if(!APP.followupTableFilter[prefix]) APP.followupTableFilter[prefix] = {plan:'all', cared:'all', sort:'overdue'};
+      APP.followupTableFilter[prefix].cared = e.target.value;
+    }
+    else if(key.startsWith('followup-sort-')){
+      const prefix = key.replace('followup-sort-','');
+      if(!APP.followupTableFilter) APP.followupTableFilter = {};
+      if(!APP.followupTableFilter[prefix]) APP.followupTableFilter[prefix] = {plan:'all', cared:'all', sort:'overdue'};
+      APP.followupTableFilter[prefix].sort = e.target.value;
     }
     render(); return;
   }
