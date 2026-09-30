@@ -552,7 +552,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-09-30-01';
+const APP_BUILD = '2026-09-30-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1011,14 +1011,15 @@ function deleteCustomerFollowup(id){ return deleteDoc(doc(db,'customerFollowups'
    3次提醒(撥款後第20/40/60天)都預設未完成，等業務自己打勾備註 ---- */
 function ensureFollowupOnDisbursed(caseRec, sourceType){
   const exists = (APP.data.customerFollowups||[]).some(f=>f.sourceCaseId===caseRec.id);
-  if(exists) return;
+  if(exists) return false;
   const rec = stamp({
     id: uid(), sourceCaseId: caseRec.id, sourceType,
     customer: caseRec.customer||'', staff: caseRec.staff||'', phone: caseRec.phone||'', plan: caseRec.plan||'',
-    disbursedDate: caseRec.disbursedDate || todayStr(),
+    disbursedDate: caseRec.disbursedDate || caseRec.date || todayStr(),
     reminder1: {done:false, note:''}, reminder2: {done:false, note:''}, reminder3: {done:false, note:''}
   });
   saveCustomerFollowup(rec);
+  return true;
 }
 function deleteProgressAdCase(id){ return deleteDoc(doc(db,'progressAdCases', id)); }
 function saveProgressChannelCase(rec){ return setDoc(doc(db,'progressChannelCases', rec.id), rec); }
@@ -3725,7 +3726,10 @@ function customerFollowupOverviewHTML(){
   const staffList = Array.from(new Set(list.map(x=>x.staff).filter(Boolean))).sort();
   if(f.staff!=='all') list = list.filter(x=>x.staff===f.staff);
   return `
-    <div class="page-header"><div><h1 class="page-title">客戶關懷追蹤總覽</h1><p class="page-sub">所有業務的客戶撥款後關懷提醒，全公司彙整檢視</p></div></div>
+    <div class="page-header">
+      <div><h1 class="page-title">客戶關懷追蹤總覽</h1><p class="page-sub">所有業務的客戶撥款後關懷提醒，全公司彙整檢視</p></div>
+      <button class="btn ghost" data-action="backfill-followups">整理現有撥款客戶</button>
+    </div>
     <div class="filter-row">
       <div class="filter-field"><label>業務</label>
         <select data-case-filter="followup-staff"><option value="all" ${f.staff==='all'?'selected':''}>全部</option>
@@ -5865,6 +5869,18 @@ document.addEventListener('click', (e)=>{
       return;
     }
     if(action==='mark-followup-stage'){ openMarkFollowupModal(el.dataset.id, el.dataset.stage); return; }
+    if(action==='backfill-followups'){
+      const allDone = [
+        ...APP.data.progressAd.filter(c=>STATUS_DONE.includes(c.status)).map(c=>({c, sourceType:'ad'})),
+        ...APP.data.progressChannel.filter(c=>STATUS_DONE.includes(c.status)).map(c=>({c, sourceType:'channel'})),
+      ];
+      let createdCount = 0;
+      allDone.forEach(({c, sourceType})=>{
+        if(ensureFollowupOnDisbursed(c, sourceType)) createdCount++;
+      });
+      alert(createdCount>0 ? `已補建 ${createdCount} 筆客戶關懷追蹤紀錄。` : '沒有需要補建的紀錄，現有撥款完成的客戶都已經有追蹤紀錄了。');
+      return;
+    }
     if(action==='open-personal-account-modal'){ openPersonalAccountModal(null); return; }
     if(action==='edit-personal-account'){ const a = (APP.data.personalAccounts||[]).find(x=>x.id===el.dataset.id); if(a) openPersonalAccountModal(a); return; }
     if(action==='delete-personal-account'){
