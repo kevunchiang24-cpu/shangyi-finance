@@ -552,7 +552,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-01-02';
+const APP_BUILD = '2026-10-01-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2641,7 +2641,7 @@ function followupOverallStatus(f){
 function ensureFollowupFilter(prefix){
   if(!APP.followupTableFilter) APP.followupTableFilter = {};
   if(!APP.followupTableFilter[prefix]){
-    APP.followupTableFilter[prefix] = {plan:'all', cared:'all', sort:'overdue', payment:'all', source:'all', referrer:'all', overdueOnly:false};
+    APP.followupTableFilter[prefix] = {plan:'all', cared:'all', sort:'overdue', payment:'all', source:'all', referrer:'all'};
   }
   return APP.followupTableFilter[prefix];
 }
@@ -3144,12 +3144,13 @@ function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
   if(tf.plan!=='all') filtered = filtered.filter(f=>f.plan===tf.plan);
   if(tf.cared==='done') filtered = filtered.filter(f=>followupOverallStatus(f)==='done');
   else if(tf.cared==='notdone') filtered = filtered.filter(f=>followupOverallStatus(f)!=='done');
+  else if(tf.cared==='needcare') filtered = filtered.filter(f=>followupOverallStatus(f)==='overdue');
+  else if(tf.cared==='tracking') filtered = filtered.filter(f=>followupOverallStatus(f)==='tracking');
   if(tf.payment==='unpaid') filtered = filtered.filter(f=>f.paymentStatus==='unpaid');
   else if(tf.payment==='normal') filtered = filtered.filter(f=>f.paymentStatus!=='unpaid');
   if(tf.source==='ad') filtered = filtered.filter(f=>f.sourceType!=='channel');
   else if(tf.source==='channel') filtered = filtered.filter(f=>f.sourceType==='channel');
   if(tf.referrer!=='all') filtered = filtered.filter(f=>f.referrer===tf.referrer);
-  if(tf.overdueOnly) filtered = filtered.filter(f=>followupOverallStatus(f)==='overdue');
 
   const sortMode = tf.sort || 'overdue';
   const SORT_OPTIONS = [
@@ -3179,8 +3180,10 @@ function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
       <div class="filter-field"><label>關懷狀態</label>
         <select data-case-filter="followup-cared-${idPrefix}">
           <option value="all" ${tf.cared==='all'?'selected':''}>全部</option>
+          <option value="needcare" ${tf.cared==='needcare'?'selected':''}>⚠ 需要關懷（逾期未處理）</option>
+          <option value="tracking" ${tf.cared==='tracking'?'selected':''}>追蹤中（尚未到期）</option>
           <option value="done" ${tf.cared==='done'?'selected':''}>已關懷（三次都完成）</option>
-          <option value="notdone" ${tf.cared==='notdone'?'selected':''}>未關懷</option>
+          <option value="notdone" ${tf.cared==='notdone'?'selected':''}>未關懷（含追蹤中＋逾期）</option>
         </select>
       </div>
       <div class="filter-field"><label>繳費狀態</label>
@@ -3195,9 +3198,6 @@ function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
           ${SORT_OPTIONS.map(o=>`<option value="${o.value}" ${sortMode===o.value?'selected':''}>${o.label}</option>`).join('')}
         </select>
       </div>
-    </div>
-    <div class="filter-row">
-      <button type="button" class="btn ${tf.overdueOnly?'primary':'ghost'} sm" data-action="toggle-followup-overdue-only" data-prefix="${idPrefix}">⚠ 只看逾期${tf.overdueOnly?'（已開啟，點一下取消）':''}</button>
     </div>
   `;
 
@@ -3234,12 +3234,14 @@ function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
     </div>
     <div class="table-wrap" style="margin-bottom:16px;">
       <table><thead><tr>
-        <th>客戶</th><th>電話</th><th>客源</th><th>通路</th><th>核准方案</th>${showStaffColumn?'<th>業務</th>':''}<th>撥款日</th><th>第1次</th><th>第2次</th><th>第3次</th><th>繳費狀態</th>
+        <th>需要關懷</th><th>客戶</th><th>電話</th><th>客源</th><th>通路</th><th>核准方案</th>${showStaffColumn?'<th>業務</th>':''}<th>撥款日</th><th>第1次</th><th>第2次</th><th>第3次</th><th>繳費狀態</th>
       </tr></thead><tbody>
         ${list.map(f=>{
           const stages = followupStages(f);
           const isUnpaid = f.paymentStatus==='unpaid';
+          const needsCare = followupOverallStatus(f)==='overdue';
           return `<tr${isUnpaid?' style="background:#FEE2E2;"':''}>
+            <td>${needsCare?`<span class="badge expense">⚠ 需要關懷</span>`:''}</td>
             <td>${escHtml(f.customer||'—')}</td>
             <td>${escHtml(f.phone||'—')}</td>
             <td>${f.sourceType==='channel'?'直客/通路':'廣告客'}</td>
@@ -6080,12 +6082,6 @@ document.addEventListener('click', (e)=>{
         if(ensureFollowupOnDisbursed(c, sourceType)) createdCount++;
       });
       alert(createdCount>0 ? `已補建 ${createdCount} 筆客戶關懷追蹤紀錄。` : '沒有需要補建的紀錄，現有撥款完成的客戶都已經有追蹤紀錄了。');
-      return;
-    }
-    if(action==='toggle-followup-overdue-only'){
-      const f = ensureFollowupFilter(el.dataset.prefix);
-      f.overdueOnly = !f.overdueOnly;
-      render();
       return;
     }
     if(action==='open-personal-account-modal'){ openPersonalAccountModal(null); return; }
