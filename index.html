@@ -552,7 +552,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-09-30-03';
+const APP_BUILD = '2026-10-01-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2637,6 +2637,14 @@ function followupOverallStatus(f){
   if(anyOverdue) return 'overdue';
   return 'tracking';
 }
+/* ---- 取得（必要時初始化）某個清單的篩選狀態物件，所有預設值集中在這裡維護，不用每個地方重複寫一份 ---- */
+function ensureFollowupFilter(prefix){
+  if(!APP.followupTableFilter) APP.followupTableFilter = {};
+  if(!APP.followupTableFilter[prefix]){
+    APP.followupTableFilter[prefix] = {plan:'all', cared:'all', sort:'overdue', payment:'all', source:'all', referrer:'all', overdueOnly:false};
+  }
+  return APP.followupTableFilter[prefix];
+}
 function warmingStageInfo(days){
   if(days===null || days===undefined) return null;
   if(days<=3) return { label:'冷啟動期', range:'Day 1-3', budget:'NT$150–300/日', badge:'pending' };
@@ -3128,14 +3136,20 @@ function myProgressView(){
 /* ---- 客戶關懷追蹤清單：依撥款月份分組顯示，showStaffColumn決定要不要多顯示業務欄位(核心/小江總覽用) ---- */
 function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
   const canEditPayment = isCore() || isStaffAdmin();
-  if(!APP.followupTableFilter) APP.followupTableFilter = {};
-  const tf = APP.followupTableFilter[idPrefix] || {plan:'all', cared:'all', sort:'overdue'};
+  const tf = ensureFollowupFilter(idPrefix);
   const planList = Array.from(new Set(followups.map(f=>f.plan).filter(Boolean))).sort();
+  const referrerList = Array.from(new Set(followups.map(f=>f.referrer).filter(Boolean))).sort();
 
   let filtered = followups;
   if(tf.plan!=='all') filtered = filtered.filter(f=>f.plan===tf.plan);
   if(tf.cared==='done') filtered = filtered.filter(f=>followupOverallStatus(f)==='done');
   else if(tf.cared==='notdone') filtered = filtered.filter(f=>followupOverallStatus(f)!=='done');
+  if(tf.payment==='unpaid') filtered = filtered.filter(f=>f.paymentStatus==='unpaid');
+  else if(tf.payment==='normal') filtered = filtered.filter(f=>f.paymentStatus!=='unpaid');
+  if(tf.source==='ad') filtered = filtered.filter(f=>f.sourceType!=='channel');
+  else if(tf.source==='channel') filtered = filtered.filter(f=>f.sourceType==='channel');
+  if(tf.referrer!=='all') filtered = filtered.filter(f=>f.referrer===tf.referrer);
+  if(tf.overdueOnly) filtered = filtered.filter(f=>followupOverallStatus(f)==='overdue');
 
   const sortMode = tf.sort || 'overdue';
   const SORT_OPTIONS = [
@@ -3151,6 +3165,17 @@ function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
         <select data-case-filter="followup-plan-${idPrefix}"><option value="all" ${tf.plan==='all'?'selected':''}>全部</option>
         ${planList.map(p=>`<option value="${escAttr(p)}" ${tf.plan===p?'selected':''}>${escHtml(p)}</option>`).join('')}</select>
       </div>
+      <div class="filter-field"><label>客源</label>
+        <select data-case-filter="followup-source-${idPrefix}">
+          <option value="all" ${tf.source==='all'?'selected':''}>全部</option>
+          <option value="ad" ${tf.source==='ad'?'selected':''}>廣告客</option>
+          <option value="channel" ${tf.source==='channel'?'selected':''}>直客/通路</option>
+        </select>
+      </div>
+      <div class="filter-field"><label>通路夥伴</label>
+        <select data-case-filter="followup-referrer-${idPrefix}"><option value="all" ${tf.referrer==='all'?'selected':''}>全部</option>
+        ${referrerList.map(r=>`<option value="${escAttr(r)}" ${tf.referrer===r?'selected':''}>${escHtml(r)}</option>`).join('')}</select>
+      </div>
       <div class="filter-field"><label>關懷狀態</label>
         <select data-case-filter="followup-cared-${idPrefix}">
           <option value="all" ${tf.cared==='all'?'selected':''}>全部</option>
@@ -3158,11 +3183,21 @@ function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
           <option value="notdone" ${tf.cared==='notdone'?'selected':''}>未關懷</option>
         </select>
       </div>
+      <div class="filter-field"><label>繳費狀態</label>
+        <select data-case-filter="followup-payment-${idPrefix}">
+          <option value="all" ${tf.payment==='all'?'selected':''}>全部</option>
+          <option value="normal" ${tf.payment==='normal'?'selected':''}>正常</option>
+          <option value="unpaid" ${tf.payment==='unpaid'?'selected':''}>未繳費</option>
+        </select>
+      </div>
       <div class="filter-field"><label>排序</label>
         <select data-case-filter="followup-sort-${idPrefix}">
           ${SORT_OPTIONS.map(o=>`<option value="${o.value}" ${sortMode===o.value?'selected':''}>${o.label}</option>`).join('')}
         </select>
       </div>
+    </div>
+    <div class="filter-row">
+      <button type="button" class="btn ${tf.overdueOnly?'primary':'ghost'} sm" data-action="toggle-followup-overdue-only" data-prefix="${idPrefix}">⚠ 只看逾期${tf.overdueOnly?'（已開啟，點一下取消）':''}</button>
     </div>
   `;
 
@@ -3209,7 +3244,7 @@ function customerFollowupListHtml(followups, showStaffColumn, idPrefix){
             <td>${escHtml(f.phone||'—')}</td>
             <td>${f.sourceType==='channel'?'直客/通路':'廣告客'}</td>
             <td>${escHtml(f.referrer||'—')}</td>
-            <td>${escHtml(f.plan||'—')}</td>
+            <td>${optionBadgeHtml(f.plan, '—', 'plan')}</td>
             ${showStaffColumn?`<td>${escHtml(f.staff||'—')}</td>`:''}
             <td>${f.disbursedDate||'—'}</td>
             ${stages.map(s=>`<td>${followupStageCellHtml(f.id, s)}</td>`).join('')}
@@ -4882,6 +4917,32 @@ function buildCalendarRowHtml(r, idx){
     <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="備註（選填）" style="flex:1;min-width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
   </div>`;
 }
+function buildAdSpendRowHtml(r, idx){
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    <input type="month" class="ai-row-field" data-key="month" value="${escAttr(r.month||'')}" style="padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="number" class="ai-row-field" data-key="spend" value="${escAttr(r.spend||'')}" placeholder="投放金額" style="width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="number" class="ai-row-field" data-key="messages" value="${escAttr(r.messages||'')}" placeholder="私訊數" style="width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="number" class="ai-row-field" data-key="submitted" value="${escAttr(r.submitted||'')}" placeholder="送件數" style="width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="number" class="ai-row-field" data-key="approved" value="${escAttr(r.approved||'')}" placeholder="核准數" style="width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="備註" style="flex:1;min-width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+  </div>`;
+}
+function buildMarkBonusPaidRowHtml(r, idx){
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    <input type="text" class="ai-row-field" data-key="customer" value="${escAttr(r.customer||'')}" placeholder="客戶姓名" style="width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <select class="ai-row-field" data-key="caseType" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+      <option value="ad" ${r.caseType==='ad'?'selected':''}>廣告客</option>
+      <option value="channel" ${r.caseType==='channel'?'selected':''}>直客/通路</option>
+    </select>
+    <span style="color:var(--muted);">標記業務獎金為</span>
+    <select class="ai-row-field" data-key="markPaid" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+      <option value="true" ${r.markPaid!=='false'?'selected':''}>已發放</option>
+      <option value="false" ${r.markPaid==='false'?'selected':''}>未發放</option>
+    </select>
+  </div>`;
+}
 function buildVendorRowHtml(r, idx){
   return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
     <input type="checkbox" class="ai-row-check" checked/>
@@ -4889,6 +4950,24 @@ function buildVendorRowHtml(r, idx){
     <input type="text" class="ai-row-field" data-key="contact" value="${escAttr(r.contact||'')}" placeholder="聯絡人" style="width:90px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
     <input type="text" class="ai-row-field" data-key="phone" value="${escAttr(r.phone||'')}" placeholder="電話" style="width:110px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
     <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="備註" style="flex:1;min-width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+  </div>`;
+}
+function buildCustomerFollowupRowHtml(r, idx){
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    <input type="text" class="ai-row-field" data-key="customer" value="${escAttr(r.customer||'')}" placeholder="客戶姓名" style="width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <select class="ai-row-field" data-key="stage" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+      <option value="" ${!r.stage?'selected':''}>不改關懷階段</option>
+      <option value="1" ${r.stage==='1'?'selected':''}>標記第1次完成</option>
+      <option value="2" ${r.stage==='2'?'selected':''}>標記第2次完成</option>
+      <option value="3" ${r.stage==='3'?'selected':''}>標記第3次完成</option>
+    </select>
+    <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="關懷備註(選填)" style="width:160px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    <select class="ai-row-field" data-key="payment" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+      <option value="" ${!r.payment?'selected':''}>不改繳費狀態</option>
+      <option value="normal" ${r.payment==='normal'?'selected':''}>標記正常</option>
+      <option value="unpaid" ${r.payment==='unpaid'?'selected':''}>標記未繳費</option>
+    </select>
   </div>`;
 }
 function buildEmployeeRowHtml(r, idx){
@@ -5573,6 +5652,15 @@ function buildFinanceContext(){
     return rows.join('、') || '無';
   }
 
+  /* ---- 客戶關懷追蹤摘要：撥款完成後第1/2/3次關懷的逾期/已完成/追蹤中統計，讓AI能回答「誰還沒關懷」「未繳費有哪些人」這類問題 ---- */
+  const allFollowups = APP.data.customerFollowups||[];
+  const followupOverdueList = allFollowups.filter(f=>followupOverallStatus(f)==='overdue');
+  const followupDoneCount = allFollowups.filter(f=>followupOverallStatus(f)==='done').length;
+  const followupTrackingCount = allFollowups.filter(f=>followupOverallStatus(f)==='tracking').length;
+  const followupUnpaidList = allFollowups.filter(f=>f.paymentStatus==='unpaid');
+  const followupOverdueLines = followupOverdueList.map(f=>`${f.customer||'未填'}（業務：${f.staff||'未填'}，方案：${f.plan||'未填'}，撥款日：${f.disbursedDate||'未填'}）`).join('\n');
+  const followupUnpaidLines = followupUnpaidList.map(f=>`${f.customer||'未填'}（業務：${f.staff||'未填'}）`).join('、');
+
   const recent = APP.data.transactions.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,25)
     .map(t=>`${t.date} ${t.type==='income'?'收入':'支出'} ${t.mainCategory} ${money(t.amount)}${t.vendor?(' 對象:'+t.vendor):''}${t.note?(' 備註:'+t.note):''}`).join('\n');
 
@@ -5590,6 +5678,12 @@ function buildFinanceContext(){
 
   /* ---- 廠商名單 ---- */
   const vendorLines = APP.data.vendors.map(v=>`${v.name||'未填'}${v.contact?(' 聯絡人:'+v.contact):''}${v.phone?(' 電話:'+v.phone):''}${v.note?(' 備註:'+v.note):''}`).join('\n');
+
+  /* ---- 資產負債 ---- */
+  const assetTotal = sum(APP.data.assets||[]);
+  const liabilityTotal = sum(APP.data.liabilities||[]);
+  const assetLines = (APP.data.assets||[]).map(a=>`${a.name||'未填'}:${money(a.amount)}`).join('、');
+  const liabilityLines = (APP.data.liabilities||[]).map(a=>`${a.name||'未填'}:${money(a.amount)}`).join('、');
 
   /* ---- 案件分潤參數 ---- */
   const cs = APP.data.caseSettings;
@@ -5680,6 +5774,11 @@ ${empLines || '無'}
 【廠商名單】
 ${vendorLines || '無'}
 
+【資產負債】
+資產總額：${money(assetTotal)}（${assetLines || '無'}）
+負債總額：${money(liabilityTotal)}（${liabilityLines || '無'}）
+淨資產：${money(assetTotal-liabilityTotal)}
+
 【案件分潤參數設定】
 ${settingsSummary}
 
@@ -5705,6 +5804,12 @@ ${personalLogLines || '無'}
 
 【霍格華茲信箱】（客戶特殊處理事務，透過${cs.xiaojiangName||'小江'}處理）
 目前共 ${hogwartsThreadUids.size} 組對話、${hogwartsInbox.length} 則訊息（1小時內），有未讀訊息的對話 ${hogwartsUnreplied} 組
+
+【客戶關懷追蹤】（撥款完成後第1次依方案不同天數、第2/3次是前一次完成後25天提醒業務關懷客戶）
+全公司統計：逾期未處理 ${followupOverdueList.length} 位、追蹤中（還沒到期）${followupTrackingCount} 位、三次都已完成 ${followupDoneCount} 位、標記未繳費 ${followupUnpaidList.length} 位
+逾期名單（業務／方案／撥款日）：
+${followupOverdueLines || '無'}
+未繳費名單：${followupUnpaidLines || '無'}
 
 【廣告投放成效】（近 ${adSpendSorted.length} 個月，由新到舊）
 ${adSpendLines || '無資料'}`;
@@ -5758,6 +5863,19 @@ function buildStaffContext(){
   const upcoming = APP.data.calendar.filter(c=>c.staffUid===meUid && c.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,10)
     .map(c=>`${c.date} ${c.title}${c.note?('：'+c.note):''}`).join('\n');
 
+  /* ---- 客戶關懷追蹤：行政看全公司，業務只看自己名下的客戶 ---- */
+  const myFollowups = isAdminRole
+    ? (APP.data.customerFollowups||[])
+    : (APP.data.customerFollowups||[]).filter(f=>f.staff===meName);
+  const myFollowupOverdue = myFollowups.filter(f=>followupOverallStatus(f)==='overdue');
+  const myFollowupDoneCount = myFollowups.filter(f=>followupOverallStatus(f)==='done').length;
+  const myFollowupOverdueLines = myFollowupOverdue.map(f=>
+    isAdminRole
+      ? `${f.customer||'未填'}（業務：${f.staff||'未填'}，方案：${f.plan||'未填'}，撥款日：${f.disbursedDate||'未填'}）`
+      : `${f.customer||'未填'}（方案：${f.plan||'未填'}，撥款日：${f.disbursedDate||'未填'}）`
+  ).join('\n');
+  const myFollowupUnpaidCount = myFollowups.filter(f=>f.paymentStatus==='unpaid').length;
+
   return `你正在跟「${meName || APP.userEmail}」對話（${isAdminRole?'行政':'業務'}），以下是他能看到的資料摘要（${isAdminRole?'進度追蹤是全公司的案件資料（行政負責管理全部案件的送件狀態），但完全不含公司財務數字（成本、利潤、獎金金額），也不知道其他同事的個人開發紀錄、請假、獎金等私人資料':'只有他自己的資料，不包含公司財務、其他同事的資料，你也不知道其他人的任何數字'}，遇到問這類問題請直接說明你看不到）：
 
 本月底薪：${money(profile.baseSalary||0)}
@@ -5773,7 +5891,12 @@ ${myLogLines || '無'}
 本月請假紀錄（${myAttendance.length} 次）：
 ${myAttendanceLines || '無'}
 即將到來的行程：
-${upcoming || '無'}`;
+${upcoming || '無'}
+
+【客戶關懷追蹤】（撥款完成後的關懷提醒，${isAdminRole?'這裡是全公司的資料':'只有自己名下的客戶'}）
+逾期未處理 ${myFollowupOverdue.length} 位、三次都已完成 ${myFollowupDoneCount} 位、標記未繳費 ${myFollowupUnpaidCount} 位
+逾期名單：
+${myFollowupOverdueLines || '無'}`;
 }
 
 function chatEmptyStateHtml(){
@@ -5781,10 +5904,10 @@ function chatEmptyStateHtml(){
     return `<div class="ai-chat-empty">可以問財務、案件進度、廣告投放成效，也可以直接說要新增一個社群帳號（例如「幫我新增一個帳號，Facebook，帳號demo@example.com，密碼abc123，2FA是XXXX，狀態養號中」），AI 會幫你整理成一筆待確認的帳號記錄，確認後才會真的存進社群帳號庫，密碼2FA也會一併存進去。</div>`;
   }
   return isCore()
-    ? `<div class="ai-chat-empty">可以問財務、案件進度、業務排行、廣告投放成效（例如「這個月 ROI 怎麼樣」「哪個業務貢獻最多」），也可以請它給建議，或直接說要記一筆帳（例如「幫我記一筆 8/15 廣告費 1200」）。</div>`
+    ? `<div class="ai-chat-empty">可以問財務、案件進度、業務排行、廣告投放成效、客戶關懷追蹤、資產負債（例如「這個月 ROI 怎麼樣」「有哪些客戶還沒關懷」「淨資產多少」），也可以請它給建議，或直接說要記一筆帳、新增廣告投放資料、標記某客戶關懷完成或獎金已發放（例如「幫我記一筆 8/15 廣告費 1200」「幫我記 9 月廣告投放，花了 5 萬，送件 20 件」「幫我把陳先生的第一次關懷標記完成」「幫我把王先生的業務獎金標記已發放」）。</div>`
     : isStaffSales()
-      ? `<div class="ai-chat-empty">可以問你自己的案件進度、獎金、行程，也可以直接說要記一筆客戶開發記錄（例如「幫我記一筆，陳小姐 0912345678，在談和潤，客戶還在考慮」），AI 會幫你整理成一筆個人業務進度紀錄，確認後才會真的存進去。它只看得到你自己的資料。</div>`
-      : `<div class="ai-chat-empty">可以問案件進度、獎金發放狀況，也可以直接說要登記一筆正式案件（例如「幫我新增一筆，王先生 0987654321，JET方案，指派給秉，狀態教照會」），AI 會幫你整理成一筆進度追蹤紀錄，確認後才會真的存進去。它只看得到進度追蹤資料，看不到財務數字。</div>`;
+      ? `<div class="ai-chat-empty">可以問你自己的案件進度、獎金、行程、客戶關懷追蹤，也可以直接說要記一筆客戶開發記錄、或標記某客戶關懷完成（例如「幫我記一筆，陳小姐 0912345678，在談和潤，客戶還在考慮」「幫我把王先生的第一次關懷標記完成」），AI 會幫你整理成待確認的紀錄，確認後才會真的存進去。它只看得到你自己的資料。</div>`
+      : `<div class="ai-chat-empty">可以問案件進度、獎金發放狀況、全公司客戶關懷追蹤，也可以直接說要登記一筆正式案件、或標記某客戶關懷完成（例如「幫我新增一筆，王先生 0987654321，JET方案，指派給秉，狀態教照會」），AI 會幫你整理成待確認的紀錄，確認後才會真的存進去。它只看得到進度追蹤跟客戶關懷資料，看不到財務數字。</div>`;
 }
 function renderChatInto(box){
   if(!box) return;
@@ -5798,7 +5921,7 @@ function renderChatInto(box){
         const kind = m.pendingKind || 'tx';
         const rowBuilder = kind==='personallog' ? buildPersonalLogRowHtml : kind==='progresstrack' ? buildProgressTrackRowHtml
           : kind==='attendance' ? buildAttendanceRowHtml : kind==='calendar' ? buildCalendarRowHtml
-          : kind==='vendor' ? buildVendorRowHtml : kind==='employee' ? buildEmployeeRowHtml : kind==='socialaccount' ? buildSocialAccountRowHtml : buildTxRowHtml;
+          : kind==='vendor' ? buildVendorRowHtml : kind==='employee' ? buildEmployeeRowHtml : kind==='socialaccount' ? buildSocialAccountRowHtml : kind==='customerfollowup' ? buildCustomerFollowupRowHtml : kind==='adspend' ? buildAdSpendRowHtml : kind==='markbonuspaid' ? buildMarkBonusPaidRowHtml : buildTxRowHtml;
         inner += `<div id="chat-pending-${i}" style="margin-top:10px;background:#fff;border-radius:8px;padding:8px;" data-kind="${kind}">
           ${m.pendingTx.map((r,j)=>rowBuilder(r,j)).join('')}
           <button type="button" class="btn primary sm" style="margin-top:6px;width:100%;" data-action="chat-tx-confirm" data-msgidx="${i}">確認新增選取的紀錄</button>
@@ -5848,9 +5971,9 @@ async function sendChatMessage(question){
     let text = data.answer || data.error || '沒有取得回應，請再試一次。';
     let rows = null;
     let pendingKind = 'tx';
-    const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor']];
-    const TAG_MAP_STAFFSALES = [['personallog','personallog'],['attendance','attendance'],['calendar','calendar']];
-    const TAG_MAP_STAFFADMIN = [['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar']];
+    const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor'],['customerfollowup','customerfollowup'],['adspend','adspend'],['markbonuspaid','markbonuspaid']];
+    const TAG_MAP_STAFFSALES = [['personallog','personallog'],['attendance','attendance'],['calendar','calendar'],['customerfollowup','customerfollowup']];
+    const TAG_MAP_STAFFADMIN = [['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['customerfollowup','customerfollowup']];
     let tagMap = isCore() ? TAG_MAP_CORE : isStaffSales() ? TAG_MAP_STAFFSALES : isStaffAdmin() ? TAG_MAP_STAFFADMIN : [];
     if(iAmXj) tagMap = [['socialaccount','socialaccount'], ...tagMap];
     for(const [tag, kind] of tagMap){
@@ -5957,6 +6080,12 @@ document.addEventListener('click', (e)=>{
         if(ensureFollowupOnDisbursed(c, sourceType)) createdCount++;
       });
       alert(createdCount>0 ? `已補建 ${createdCount} 筆客戶關懷追蹤紀錄。` : '沒有需要補建的紀錄，現有撥款完成的客戶都已經有追蹤紀錄了。');
+      return;
+    }
+    if(action==='toggle-followup-overdue-only'){
+      const f = ensureFollowupFilter(el.dataset.prefix);
+      f.overdueOnly = !f.overdueOnly;
+      render();
       return;
     }
     if(action==='open-personal-account-modal'){ openPersonalAccountModal(null); return; }
@@ -6416,6 +6545,37 @@ document.addEventListener('click', (e)=>{
             loginAccount:data.loginAccount||'', password:data.password||'', twoFactor:data.twoFactor||'',
             boundPhone:data.boundPhone||'', boundEmail:data.boundEmail||'', adSpendNote:'', note:data.note||'', compliance:{}
           })));
+        } else if(kind==='customerfollowup'){
+          if(!data.customer){ skipped++; return; }
+          const myName = myStaffName();
+          const candidates = (APP.data.customerFollowups||[]).filter(f=>f.customer===data.customer && (isCore()||isStaffAdmin() ? true : f.staff===myName));
+          if(candidates.length!==1){ skipped++; return; } // 找不到或姓名重複無法判斷，交給使用者自己去頁面裡確認
+          const f = candidates[0];
+          if(data.stage){
+            f['reminder'+data.stage] = { done:true, note:data.note||'', doneDate:todayStr() };
+          }
+          if(data.payment){
+            f.paymentStatus = data.payment==='unpaid' ? 'unpaid' : '';
+          }
+          Object.assign(f, stamp({}));
+          savePromises.push(saveCustomerFollowup(f));
+        } else if(kind==='adspend'){
+          if(!data.month){ skipped++; return; }
+          const existing = APP.data.adSpend.find(a=>a.month===data.month);
+          const fields = {
+            spend: Number(data.spend)||0, messages: Number(data.messages)||0,
+            submitted: Number(data.submitted)||0, approved: Number(data.approved)||0, note: data.note||''
+          };
+          if(existing) Object.assign(existing, stamp(fields));
+          else APP.data.adSpend.push(stamp({id:uid(), month:data.month, ...fields}));
+          savePromises.push(saveAdSpend());
+        } else if(kind==='markbonuspaid'){
+          if(!data.customer){ skipped++; return; }
+          const arr = data.caseType==='channel' ? APP.data.casesChannel : APP.data.casesAd;
+          const candidates = arr.filter(c=>c.customer===data.customer);
+          if(candidates.length!==1){ skipped++; return; } // 找不到或同名案件不只一筆，交給使用者自己去頁面裡確認
+          candidates[0].businessBonusPaid = data.markPaid!=='false';
+          savePromises.push(data.caseType==='channel' ? saveCasesChannel() : saveCasesAd());
         }
       });
       Promise.allSettled(savePromises).then(results=>{
@@ -6698,22 +6858,22 @@ document.addEventListener('change', (e)=>{
       APP.followupMonthFilter[key.replace('followup-month-','')] = e.target.value;
     }
     else if(key.startsWith('followup-plan-')){
-      const prefix = key.replace('followup-plan-','');
-      if(!APP.followupTableFilter) APP.followupTableFilter = {};
-      if(!APP.followupTableFilter[prefix]) APP.followupTableFilter[prefix] = {plan:'all', cared:'all', sort:'overdue'};
-      APP.followupTableFilter[prefix].plan = e.target.value;
+      ensureFollowupFilter(key.replace('followup-plan-','')).plan = e.target.value;
     }
     else if(key.startsWith('followup-cared-')){
-      const prefix = key.replace('followup-cared-','');
-      if(!APP.followupTableFilter) APP.followupTableFilter = {};
-      if(!APP.followupTableFilter[prefix]) APP.followupTableFilter[prefix] = {plan:'all', cared:'all', sort:'overdue'};
-      APP.followupTableFilter[prefix].cared = e.target.value;
+      ensureFollowupFilter(key.replace('followup-cared-','')).cared = e.target.value;
     }
     else if(key.startsWith('followup-sort-')){
-      const prefix = key.replace('followup-sort-','');
-      if(!APP.followupTableFilter) APP.followupTableFilter = {};
-      if(!APP.followupTableFilter[prefix]) APP.followupTableFilter[prefix] = {plan:'all', cared:'all', sort:'overdue'};
-      APP.followupTableFilter[prefix].sort = e.target.value;
+      ensureFollowupFilter(key.replace('followup-sort-','')).sort = e.target.value;
+    }
+    else if(key.startsWith('followup-payment-')){
+      ensureFollowupFilter(key.replace('followup-payment-','')).payment = e.target.value;
+    }
+    else if(key.startsWith('followup-source-')){
+      ensureFollowupFilter(key.replace('followup-source-','')).source = e.target.value;
+    }
+    else if(key.startsWith('followup-referrer-')){
+      ensureFollowupFilter(key.replace('followup-referrer-','')).referrer = e.target.value;
     }
     render(); return;
   }
