@@ -74,9 +74,12 @@
   .bonus-cal-cell.today{border:2px solid var(--navy);}
   .bonus-cal-cell.has-bonus{background:#EAFBF3;border-color:#A7F3D0;cursor:pointer;transition:transform .1s;}
   .bonus-cal-cell.has-bonus:hover{transform:scale(1.06);box-shadow:0 4px 10px rgba(0,0,0,.1);}
+  .bonus-cal-cell.has-leave{background:#FEF2F2;border-color:#FECACA;cursor:pointer;transition:transform .1s;}
+  .bonus-cal-cell.has-leave:hover{transform:scale(1.06);box-shadow:0 4px 10px rgba(0,0,0,.1);}
   .bonus-cal-daynum{font-size:13px;color:var(--muted);font-weight:600;}
-  .bonus-cal-cell.has-bonus .bonus-cal-daynum{color:var(--ink);}
+  .bonus-cal-cell.has-bonus .bonus-cal-daynum, .bonus-cal-cell.has-leave .bonus-cal-daynum{color:var(--ink);}
   .bonus-cal-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+  .bonus-cal-dot.leave-dot{background:var(--red);}
   @media (max-width:640px){
     .bonus-cal{padding:10px;}
     .bonus-cal-cell{aspect-ratio:1.6/1;}
@@ -552,7 +555,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-01-03';
+const APP_BUILD = '2026-10-02-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -3274,6 +3277,59 @@ function followupStageCellHtml(followupId, stage){
   }
   return `<button type="button" class="btn sm" style="${stage.isOverdue?'background:var(--red);color:#fff;':''}" data-action="mark-followup-stage" data-id="${followupId}" data-stage="${stage.key}">${stage.isOverdue?'⚠ ':''}打勾完成</button>`;
 }
+/* ---- 請假日曆：沿用獎金日曆同一套月份瀏覽狀態（APP.bonusCalMonth）跟CSS樣式，有請假的格子顯示圓點，點進去看當天詳細假別 ---- */
+function attendanceCalendarGrid(records, idPrefix){
+  if(!APP.bonusCalMonth) APP.bonusCalMonth = {};
+  const mk = APP.bonusCalMonth[idPrefix] || nowMonthKey;
+  const monthRecords = records.filter(a=>monthKey(a.date)===mk);
+  if(!APP._bonusCalEntries) APP._bonusCalEntries = {};
+  APP._bonusCalEntries[idPrefix] = monthRecords;
+  const [year, month] = mk.split('-').map(Number);
+  const firstWeekday = new Date(year, month-1, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const byDate = {};
+  monthRecords.forEach(a=>{
+    if(!byDate[a.date]) byDate[a.date] = [];
+    byDate[a.date].push(a);
+  });
+  const todayD = todayStr();
+  const cells = [];
+  for(let i=0;i<firstWeekday;i++) cells.push('');
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayRecords = byDate[dateStr]||[];
+    const isToday = dateStr===todayD;
+    cells.push(`<div class="bonus-cal-cell${isToday?' today':''}${dayRecords.length>0?' has-leave':''}"${dayRecords.length>0?` data-action="show-attendance-day" data-prefix="${idPrefix}" data-date="${dateStr}"`:''}>
+      <div class="bonus-cal-daynum">${month}/${d}</div>
+      ${dayRecords.length>0?`<div class="bonus-cal-dot leave-dot"></div>`:''}
+    </div>`);
+  }
+  while(cells.length % 7 !== 0) cells.push('<div class="bonus-cal-cell empty"></div>');
+  const weekdayLabels = ['日','一','二','三','四','五','六'];
+  return `
+    <div class="bonus-cal">
+      <div class="bonus-cal-title-row">
+        <button type="button" class="icon-btn" data-action="bonus-cal-shift" data-prefix="${idPrefix}" data-dir="-1">←</button>
+        <div class="bonus-cal-title">${year}年${month}月</div>
+        <button type="button" class="icon-btn" data-action="bonus-cal-shift" data-prefix="${idPrefix}" data-dir="1">→</button>
+      </div>
+      <div class="bonus-cal-weekdays">${weekdayLabels.map(w=>`<div>${w}</div>`).join('')}</div>
+      <div class="bonus-cal-grid">${cells.join('')}</div>
+    </div>
+  `;
+}
+function showAttendanceDayModal(records, dateStr){
+  const dayRecords = records.filter(a=>a.date===dateStr);
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-head"><h3>${dateStr} 的請假紀錄</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <div class="table-wrap">
+      <table><thead><tr><th>假別</th><th>看診單</th><th>備註</th></tr></thead><tbody>
+        ${dayRecords.map(a=>`<tr><td>${attendanceLeaveTypeDisplay(a)}</td><td>${attendanceCertCellHtml(a)}</td><td>${escHtml(a.note||'—')}</td></tr>`).join('')}
+      </tbody></table>
+    </div>
+    <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">關閉</button></div>`;
+}
 function bonusCalendarGrid(allEntries, idPrefix){
   if(!APP.bonusCalMonth) APP.bonusCalMonth = {};
   const mk = APP.bonusCalMonth[idPrefix] || nowMonthKey;
@@ -3329,6 +3385,22 @@ function showBonusDayModal(entries, dateStr){
     <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">關閉</button></div>`;
 }
 
+function openUploadCertModal(recordId){
+  const a = APP.data.attendance.find(x=>x.id===recordId);
+  if(!a) return;
+  openModal('補上傳看診單', `
+    <p style="color:var(--muted);font-size:12.5px;margin-top:0;">${a.date} 的病假紀錄</p>
+    <label class="field"><span>看診單附件</span><input type="file" name="certificateFile" accept="image/*,.pdf" required/></label>
+  `, 'upload-cert-form', async (data)=>{
+    if(!data.certificateFile || data.certificateFile.size===0){ alert('請選擇檔案'); return; }
+    try{
+      const up = await uploadXjAttachment(`attendanceCerts/${a.staffUid}`, {blob:data.certificateFile, name:data.certificateFile.name, type:data.certificateFile.type});
+      a.certificateUrl = up.url;
+      a.certificateUploadedAt = new Date().toISOString();
+      saveAttendance(a);
+    }catch(err){ alert('上傳失敗：' + (err&&err.message?err.message:err)); }
+  });
+}
 function openMarkFollowupModal(followupId, stageKey){
   const f = (APP.data.customerFollowups||[]).find(x=>x.id===followupId);
   if(!f) return;
@@ -3520,21 +3592,46 @@ function openCustomerDetailModal(recId){
 }
 
 /* ---- 出勤請假 ---- */
+/* ---- 病假看診單狀態：notneeded=不是病假不用管、uploaded=已上傳、pending=還沒到23:59期限、overdue=過了期限還沒上傳(只是畫面警示，不影響已請的假) ---- */
+function attendanceCertStatus(a){
+  if(a.leaveType!=='病假') return 'notneeded';
+  if(a.certificateUrl) return 'uploaded';
+  const deadline = new Date(a.date+'T23:59:59');
+  return Date.now() > deadline.getTime() ? 'overdue' : 'pending';
+}
+function attendanceLeaveTypeDisplay(a){
+  if(LEAVE_TYPES_HOURLY.includes(a.leaveType) && a.hours!=null){
+    return `${escHtml(a.leaveType)}（${a.startTime||'?'}~${a.endTime||'?'}，共${a.hours}小時）`;
+  }
+  return escHtml(a.leaveType);
+}
+function attendanceCertCellHtml(a){
+  const status = attendanceCertStatus(a);
+  if(status==='notneeded') return '—';
+  if(status==='uploaded') return `<a href="${a.certificateUrl}" target="_blank" rel="noopener">📎 查看看診單</a>`;
+  const warnHtml = status==='overdue' ? `<span style="color:var(--red);font-weight:700;">⚠ 已逾23:59未上傳</span>` : `<span style="color:var(--muted);font-size:12px;">尚未上傳（今天23:59前）</span>`;
+  return `${warnHtml}<br/><button type="button" class="btn ghost sm" data-action="upload-attendance-cert" data-id="${a.id}">補上傳</button>`;
+}
 function myAttendanceView(){
   const allMine = APP.data.attendance.filter(a=>a.staffUid===effectiveUid());
   const f = APP.attendanceFilter;
   const mine = (f.month ? allMine.filter(a=>monthKey(a.date)===f.month) : allMine).slice().sort((a,b)=>b.date.localeCompare(a.date));
   const monthOptions = Array.from(new Set([...allMine.map(a=>monthKey(a.date)), nowMonthKey])).filter(Boolean).sort().reverse();
   const rows = mine.map(a=>`
-    <tr><td>${a.date}</td><td><span class="badge pending">${escHtml(a.leaveType)}</span></td>
+    <tr><td>${a.date}</td><td><span class="badge pending">${attendanceLeaveTypeDisplay(a)}</span></td>
+    <td>${attendanceCertCellHtml(a)}</td>
     <td style="color:var(--muted);font-size:12.5px;">${escHtml(a.note||'—')}</td>
     <td><div class="row-actions">
+      <button class="icon-btn" data-action="edit-attendance" data-id="${a.id}">編輯</button>
       <button class="icon-btn" data-action="delete-attendance" data-id="${a.id}">刪除</button>
     </div></td></tr>`).join('');
   return `
     <div class="page-header" style="margin-bottom:14px;">
       <div><p class="hint" style="color:var(--muted);font-size:12.5px;">純記錄用途，不需要簽核，登記完管理層看得到就好。</p></div>
       <button class="btn primary" data-action="open-attendance-modal">＋ 新增請假紀錄</button>
+    </div>
+    <div style="margin-bottom:20px;">
+      ${attendanceCalendarGrid(allMine, 'attendance-'+effectiveUid())}
     </div>
     <div class="filter-row">
       <div class="filter-field"><label>月份</label>
@@ -3543,19 +3640,38 @@ function myAttendanceView(){
     </div>
     <div class="table-wrap">
       ${mine.length===0?`<div class="empty">${f.month?'這個月份尚無請假紀錄':'尚無請假紀錄'}</div>`:`
-      <table><thead><tr><th>日期</th><th>假別</th><th>備註</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+      <table><thead><tr><th>日期</th><th>假別</th><th>看診單</th><th>備註</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
     </div>
   `;
+}
+function notifyCompanyLeave(staffName, leaveType, dateDesc){
+  return addDoc(collection(db,'announcements'), {
+    scope:'all',
+    message:`📋 ${staffName||'有人'} 請假：${dateDesc}（${leaveType}）`,
+    senderName:'系統通知', senderUid:'system',
+    _at:new Date().toISOString(), _by:''
+  }).catch(()=>{});
 }
 function openAttendanceModal(){
   const today = todayStr();
   openModal('新增請假紀錄', `
     <label class="field"><span>開始日期</span><input type="date" name="startDate" value="${today}" required/></label>
     <label class="field"><span>結束日期</span><input type="date" name="endDate" value="${today}" required/></label>
-    <p style="color:var(--muted);font-size:12px;margin:-8px 0 12px;">單天請假：開始日期跟結束日期填同一天即可；請多天連續假，系統會自動幫你展開成每一天各一筆紀錄。</p>
-    <label class="field"><span>假別</span><select name="leaveType">${LEAVE_TYPE_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></label>
+    <p style="color:var(--muted);font-size:12px;margin:-8px 0 12px;">單天請假：開始日期跟結束日期填同一天即可；請多天連續假，系統會自動幫你展開成每一天各一筆紀錄。中途離開／外出(時數)僅限單天。</p>
+    <label class="field"><span>假別</span><select name="leaveType" onchange="
+      document.getElementById('attendance-time-fields').style.display = ${JSON.stringify(LEAVE_TYPES_HOURLY)}.includes(this.value) ? 'block' : 'none';
+      document.getElementById('attendance-cert-field').style.display = this.value==='病假' ? 'block' : 'none';
+    ">${LEAVE_TYPE_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></label>
+    <div id="attendance-time-fields" style="display:none;">
+      <label class="field"><span>開始時間</span><input type="time" name="startTime"/></label>
+      <label class="field"><span>結束時間</span><input type="time" name="endTime"/></label>
+    </div>
+    <div id="attendance-cert-field" style="display:none;">
+      <label class="field"><span>看診單附件（選填，可以之後再補傳）</span><input type="file" name="certificateFile" accept="image/*,.pdf"/></label>
+      <p style="color:var(--muted);font-size:11.5px;margin:-6px 0 10px;">請在請假當天 23:59 前上傳，逾時系統只會在畫面上顯示警示，不影響已經請的假</p>
+    </div>
     <label class="field"><span>備註</span><textarea name="note" placeholder="原因（選填）"></textarea></label>
-  `, 'attendance-form', (data)=>{
+  `, 'attendance-form', async (data)=>{
     const start = new Date(data.startDate+'T00:00:00');
     const end = new Date(data.endDate+'T00:00:00');
     if(isNaN(start) || isNaN(end)){ alert('日期格式有誤，請重新選擇'); return; }
@@ -3563,11 +3679,74 @@ function openAttendanceModal(){
     const dayMs = 24*60*60*1000;
     const totalDays = Math.round((end-start)/dayMs) + 1;
     if(totalDays > 60){ alert('一次最多請 60 天，天數太多的話請分開新增'); return; }
+    if(LEAVE_TYPES_HOURLY.includes(data.leaveType) && totalDays > 1){ alert('中途離開／外出(時數)僅限單天，請把開始日期跟結束日期填同一天'); return; }
+    const myUidForCheck = effectiveUid();
+    const conflictDates = [];
+    for(let i=0;i<totalDays;i++){
+      const dateStr = formatDateLocal(new Date(start.getTime() + i*24*60*60*1000));
+      if(APP.data.attendance.some(a=>a.staffUid===myUidForCheck && a.date===dateStr)) conflictDates.push(dateStr);
+    }
+    if(conflictDates.length>0){
+      const proceed = confirm(`這些日期已經有請假紀錄了：${conflictDates.join('、')}\n確定要再新增一筆嗎？（不會刪掉原本的紀錄，兩筆都會保留）`);
+      if(!proceed) return;
+    }
+    let hours = null;
+    if(LEAVE_TYPES_HOURLY.includes(data.leaveType)){
+      if(!data.startTime || !data.endTime){ alert('請填開始時間跟結束時間'); return; }
+      const [sh,sm] = data.startTime.split(':').map(Number);
+      const [eh,em] = data.endTime.split(':').map(Number);
+      hours = Math.round(((eh*60+em)-(sh*60+sm))/60*10)/10;
+      if(hours<=0){ alert('結束時間必須晚於開始時間'); return; }
+    }
+    let certificateUrl = '';
+    if(data.leaveType==='病假' && data.certificateFile && data.certificateFile.size>0){
+      try{
+        const up = await uploadXjAttachment(`attendanceCerts/${effectiveUid()}`, {blob:data.certificateFile, name:data.certificateFile.name, type:data.certificateFile.type});
+        certificateUrl = up.url;
+      }catch(err){ alert('看診單上傳失敗，其他資料仍會照常儲存：' + (err&&err.message?err.message:err)); }
+    }
+    const staffNameForNotify = effectiveStaffName();
     for(let i=0;i<totalDays;i++){
       const d = new Date(start.getTime() + i*dayMs);
       const dateStr = formatDateLocal(d);
-      saveAttendance(stamp({id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), date:dateStr, leaveType:data.leaveType, note:data.note}));
+      saveAttendance(stamp({
+        id:uid(), staffUid:effectiveUid(), staffName:staffNameForNotify, date:dateStr, leaveType:data.leaveType, note:data.note,
+        startTime:data.startTime||'', endTime:data.endTime||'', hours,
+        certificateUrl, certificateUploadedAt: certificateUrl?new Date().toISOString():''
+      }));
     }
+    let dateDesc = totalDays===1 ? data.startDate : `${data.startDate} ～ ${data.endDate}`;
+    if(hours!=null) dateDesc += `（${data.startTime}～${data.endTime}，預計回來時間 ${data.endTime}）`;
+    notifyCompanyLeave(staffNameForNotify, data.leaveType, dateDesc);
+  });
+}
+function openEditAttendanceModal(recordId){
+  const a = APP.data.attendance.find(x=>x.id===recordId);
+  if(!a) return;
+  const isHourly = LEAVE_TYPES_HOURLY.includes(a.leaveType);
+  openModal('編輯請假紀錄', `
+    <label class="field"><span>日期</span><input type="date" name="date" value="${a.date}" required/></label>
+    <label class="field"><span>假別</span><select name="leaveType" onchange="
+      document.getElementById('edit-attendance-time-fields').style.display = ${JSON.stringify(LEAVE_TYPES_HOURLY)}.includes(this.value) ? 'block' : 'none';
+    ">${LEAVE_TYPE_OPTIONS.map(o=>`<option value="${o}" ${a.leaveType===o?'selected':''}>${o}</option>`).join('')}</select></label>
+    <div id="edit-attendance-time-fields" style="display:${isHourly?'block':'none'};">
+      <label class="field"><span>開始時間</span><input type="time" name="startTime" value="${a.startTime||''}"/></label>
+      <label class="field"><span>結束時間</span><input type="time" name="endTime" value="${a.endTime||''}"/></label>
+    </div>
+    <label class="field"><span>備註</span><textarea name="note">${escHtml(a.note||'')}</textarea></label>
+  `, 'edit-attendance-form', (data)=>{
+    let hours = a.hours!=null ? a.hours : null;
+    if(LEAVE_TYPES_HOURLY.includes(data.leaveType)){
+      if(!data.startTime || !data.endTime){ alert('請填開始時間跟結束時間'); return; }
+      const [sh,sm] = data.startTime.split(':').map(Number);
+      const [eh,em] = data.endTime.split(':').map(Number);
+      hours = Math.round(((eh*60+em)-(sh*60+sm))/60*10)/10;
+      if(hours<=0){ alert('結束時間必須晚於開始時間'); return; }
+    } else {
+      hours = null;
+    }
+    Object.assign(a, stamp({ date:data.date, leaveType:data.leaveType, note:data.note, startTime:data.startTime||'', endTime:data.endTime||'', hours }));
+    saveAttendance(a);
   });
 }
 
@@ -3983,7 +4162,8 @@ const STATUS_CLOSED = ['婉拒','客拒'];
 const CONTACT_STATUS_OPTIONS = ['無需求','封鎖我','客不要','不回應','失聯','放棄','中途退','轉單','未聯絡','已聯絡','未接','持續聯絡中'];
 const DEAL_PRODUCT_OPTIONS = ['瑪吉','和潤','亞太','JET','無方案','房土','信貸','維力','廿一','公司代書','外面代書','當鋪'];
 const LOG_CASE_STATUS_OPTIONS = ['收資','審核','補資','核准','婉拒','取消'];
-const LEAVE_TYPE_OPTIONS = ['事假','病假','特休','其他'];
+const LEAVE_TYPE_OPTIONS = ['事假','病假','特休','中途離開','外出(時數)','晚到','其他'];
+const LEAVE_TYPES_HOURLY = ['中途離開','外出(時數)','晚到'];
 function statusBadgeClass(s){
   if(STATUS_DONE.includes(s)) return 'active';
   if(STATUS_CLOSED.includes(s)) return 'resigned';
@@ -4900,13 +5080,22 @@ function buildProgressTrackRowHtml(r, idx){
   </div>`;
 }
 function buildAttendanceRowHtml(r, idx){
+  const isHourly = LEAVE_TYPES_HOURLY.includes(r.leaveType);
   return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
     <input type="checkbox" class="ai-row-check" checked/>
     ${isCore()?`<input type="text" class="ai-row-field" data-key="staffName" value="${escAttr(r.staffName||'')}" placeholder="員工姓名" style="width:80px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>`:''}
     <input type="date" class="ai-row-field" data-key="date" value="${r.date||todayStr()}" style="width:140px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
-    <select class="ai-row-field" data-key="leaveType" style="padding:4px;border:1px solid var(--border);border-radius:6px;">
+    <select class="ai-row-field" data-key="leaveType" onchange="
+      const wrap = this.closest('.tx-row').querySelector('.ai-attendance-time-wrap');
+      if(wrap) wrap.style.display = ${JSON.stringify(LEAVE_TYPES_HOURLY)}.includes(this.value) ? 'flex' : 'none';
+    " style="padding:4px;border:1px solid var(--border);border-radius:6px;">
       ${LEAVE_TYPE_OPTIONS.map(o=>`<option value="${o}" ${(r.leaveType||'事假')===o?'selected':''}>${o}</option>`).join('')}
     </select>
+    <div class="ai-attendance-time-wrap" style="display:${isHourly?'flex':'none'};gap:4px;align-items:center;">
+      <input type="time" class="ai-row-field" data-key="startTime" value="${escAttr(r.startTime||'')}" style="padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+      <span style="color:var(--muted);">～</span>
+      <input type="time" class="ai-row-field" data-key="endTime" value="${escAttr(r.endTime||'')}" style="padding:4px;border:1px solid var(--border);border-radius:6px;"/>
+    </div>
     <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="原因（選填）" style="flex:1;min-width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
   </div>`;
 }
@@ -6061,6 +6250,11 @@ document.addEventListener('click', (e)=>{
       showBonusDayModal(entries, el.dataset.date);
       return;
     }
+    if(action==='show-attendance-day'){
+      const records = (APP._bonusCalEntries||{})[el.dataset.prefix] || [];
+      showAttendanceDayModal(records, el.dataset.date);
+      return;
+    }
     if(action==='bonus-cal-shift'){
       if(!APP.bonusCalMonth) APP.bonusCalMonth = {};
       const prefix = el.dataset.prefix;
@@ -6072,6 +6266,8 @@ document.addEventListener('click', (e)=>{
       return;
     }
     if(action==='mark-followup-stage'){ openMarkFollowupModal(el.dataset.id, el.dataset.stage); return; }
+    if(action==='upload-attendance-cert'){ openUploadCertModal(el.dataset.id); return; }
+    if(action==='edit-attendance'){ openEditAttendanceModal(el.dataset.id); return; }
     if(action==='backfill-followups'){
       const allDone = [
         ...APP.data.progressAd.filter(c=>STATUS_DONE.includes(c.status)).map(c=>({c, sourceType:'ad'})),
@@ -6513,7 +6709,21 @@ document.addEventListener('click', (e)=>{
             targetUid = effectiveUid(); targetName = effectiveStaffName();
           }
           if(!data.date){ skipped++; return; }
-          savePromises.push(saveAttendance(stamp({ id:uid(), staffUid:targetUid, staffName:targetName, date:data.date, leaveType:data.leaveType||'事假', note:data.note||'' })));
+          const leaveType = data.leaveType||'事假';
+          let hours = null;
+          if(LEAVE_TYPES_HOURLY.includes(leaveType)){
+            if(!data.startTime || !data.endTime){ skipped++; return; } // 時數假別缺時間，交給使用者自己去頁面裡補
+            const [sh,sm] = data.startTime.split(':').map(Number);
+            const [eh,em] = data.endTime.split(':').map(Number);
+            hours = Math.round(((eh*60+em)-(sh*60+sm))/60*10)/10;
+            if(hours<=0){ skipped++; return; }
+          }
+          savePromises.push(saveAttendance(stamp({
+            id:uid(), staffUid:targetUid, staffName:targetName, date:data.date, leaveType,
+            startTime:data.startTime||'', endTime:data.endTime||'', hours, note:data.note||''
+          })));
+          const dateDesc = hours!=null ? `${data.date}（${data.startTime}～${data.endTime}）` : data.date;
+          notifyCompanyLeave(targetName, leaveType, dateDesc);
         } else if(kind==='calendar'){
           let targetUid;
           if(isCore()){
@@ -7272,7 +7482,7 @@ document.addEventListener('submit', (e)=>{
     renderRoot();
     return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form','mark-followup-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form','mark-followup-form','upload-cert-form','edit-attendance-form'].includes(e.target.id)){
     e.preventDefault();
     try{
       const fd = new FormData(e.target);
