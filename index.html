@@ -558,7 +558,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-15-07';
+const APP_BUILD = '2026-10-15-08';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5335,6 +5335,18 @@ function buildCalendarRowHtml(r, idx){
     <input type="text" class="ai-row-field" data-key="note" value="${escAttr(r.note||'')}" placeholder="備註（選填）" style="flex:1;min-width:100px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>
   </div>`;
 }
+function buildValuationRowHtml(r, idx){
+  const existing = r.id ? (APP.data.valuationCases||[]).find(x=>x.id===r.id) : null;
+  const inp = (key, ph, w, type)=>`<input type="${type||'text'}" class="ai-row-field" data-key="${key}" value="${escAttr(r[key]||'')}" placeholder="${ph}" style="width:${w}px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>`;
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" checked/>
+    <input type="hidden" class="ai-row-field" data-key="id" value="${escAttr(existing?existing.id:'')}"/>
+    <span class="badge ${existing?'pending':'active'}">${existing?'修改':'新增'}</span>
+    ${inp('date','日期',130,'date')}${inp('customerName','客戶姓名',90)}${inp('handler','經手人',70)}${inp('area','地區',80)}
+    <select class="ai-row-field" data-key="category" style="padding:4px;border:1px solid var(--border);border-radius:6px;"><option value="">類別</option><option value="銀行" ${r.category==='銀行'?'selected':''}>銀行</option><option value="民間" ${r.category==='民間'?'selected':''}>民間</option></select>
+    ${inp('status','狀態',80)}${inp('valuation','估價資訊',140)}${inp('plan','方案(填寫/改動會推播LINE)',170)}${inp('memo','備註',110)}
+  </div>`;
+}
 function buildAdSpendRowHtml(r, idx){
   return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
     <input type="checkbox" class="ai-row-check" checked/>
@@ -6230,7 +6242,24 @@ ${followupOverdueLines || '無'}
 未繳費名單：${followupUnpaidLines || '無'}
 
 【廣告投放成效】（近 ${adSpendSorted.length} 個月，由新到舊）
-${adSpendLines || '無資料'}`;
+${adSpendLines || '無資料'}
+${buildValuationContext()}`;
+}
+function buildValuationContext(){
+  const all = APP.data.valuationCases || [];
+  if(all.length===0) return '【房屋土地估價】目前沒有資料';
+  const cut = (v, n)=>{ const t = String(v||'').replace(/\s+/g,' ').trim(); return t.length>n ? t.slice(0,n)+'…' : t; };
+  const byMonth = {};
+  all.forEach(c=>{ const m = c.month||'未知'; (byMonth[m] = byMonth[m] || {n:0, noPlan:0}); byMonth[m].n++; if(!String(c.plan||'').trim()) byMonth[m].noPlan++; });
+  const monthLines = Object.keys(byMonth).sort().reverse().map(m=>`${m}：${byMonth[m].n} 筆（未填方案 ${byMonth[m].noPlan} 筆）`).join('；');
+  const recent = Object.keys(byMonth).sort().reverse().slice(0,2);
+  const lines = all.filter(c=>recent.includes(c.month||'未知'))
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))
+    .slice(0,150)
+    .map(c=>`[id:${c.id}] ${c.date||''}｜狀態:${c.status||'—'}｜經手人:${c.handler||'—'}｜客戶:${c.customerName||''}｜地區:${c.area||'—'}｜類別:${c.category||'—'}｜估價:${cut(c.valuation,60)}｜方案:${cut(c.plan,60)}｜備註:${cut(c.memo,50)}`);
+  return `【房屋土地估價】（只有核心看得到；共 ${all.length} 筆，各月份筆數：${monthLines}）
+近兩個月明細（最多 150 筆，由新到舊；更早的月份只有上面的筆數統計，沒有逐筆明細）：
+${lines.join('\n') || '無'}`;
 }
 
 /* 業務／行政專用的資料摘要——只包含本人自己的資料，完全不含公司財務數字、其他同事的資料 */
@@ -6339,7 +6368,7 @@ function renderChatInto(box){
         const kind = m.pendingKind || 'tx';
         const rowBuilder = kind==='personallog' ? buildPersonalLogRowHtml : kind==='progresstrack' ? buildProgressTrackRowHtml
           : kind==='attendance' ? buildAttendanceRowHtml : kind==='calendar' ? buildCalendarRowHtml
-          : kind==='vendor' ? buildVendorRowHtml : kind==='employee' ? buildEmployeeRowHtml : kind==='socialaccount' ? buildSocialAccountRowHtml : kind==='customerfollowup' ? buildCustomerFollowupRowHtml : kind==='adspend' ? buildAdSpendRowHtml : kind==='markbonuspaid' ? buildMarkBonusPaidRowHtml : buildTxRowHtml;
+          : kind==='vendor' ? buildVendorRowHtml : kind==='employee' ? buildEmployeeRowHtml : kind==='socialaccount' ? buildSocialAccountRowHtml : kind==='customerfollowup' ? buildCustomerFollowupRowHtml : kind==='valuation' ? buildValuationRowHtml : kind==='adspend' ? buildAdSpendRowHtml : kind==='markbonuspaid' ? buildMarkBonusPaidRowHtml : buildTxRowHtml;
         inner += `<div id="chat-pending-${i}" style="margin-top:10px;background:#fff;border-radius:8px;padding:8px;" data-kind="${kind}">
           ${m.pendingTx.map((r,j)=>rowBuilder(r,j)).join('')}
           <button type="button" class="btn primary sm" style="margin-top:6px;width:100%;" data-action="chat-tx-confirm" data-msgidx="${i}">確認新增選取的紀錄</button>
@@ -6389,7 +6418,7 @@ async function sendChatMessage(question){
     let text = data.answer || data.error || '沒有取得回應，請再試一次。';
     let rows = null;
     let pendingKind = 'tx';
-    const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor'],['customerfollowup','customerfollowup'],['adspend','adspend'],['markbonuspaid','markbonuspaid']];
+    const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor'],['customerfollowup','customerfollowup'],['adspend','adspend'],['markbonuspaid','markbonuspaid'],['valuation','valuation']];
     const TAG_MAP_STAFFSALES = [['personallog','personallog'],['attendance','attendance'],['calendar','calendar'],['customerfollowup','customerfollowup']];
     const TAG_MAP_STAFFADMIN = [['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['customerfollowup','customerfollowup']];
     let tagMap = isCore() ? TAG_MAP_CORE : isStaffSales() ? TAG_MAP_STAFFSALES : isStaffAdmin() ? TAG_MAP_STAFFADMIN : [];
@@ -7013,6 +7042,15 @@ document.addEventListener('click', (e)=>{
           }
           Object.assign(f, stamp({}));
           savePromises.push(saveCustomerFollowup(f));
+        } else if(kind==='valuation'){
+          if(!data.customerName || !data.date){ skipped++; return; }
+          const old = data.id ? (APP.data.valuationCases||[]).find(x=>x.id===data.id) : null;
+          const fields = {};
+          ['status','date','handler','customerName','area','category','valuation','plan','memo'].forEach(k=>{ fields[k] = String(data[k]||'').trim(); });
+          fields.month = monthKey(fields.date);
+          const rec = old ? Object.assign({}, old, fields) : { id:uid(), ...fields };
+          if(old) delete rec._silent; // 經過手動確認的修改視為正常編輯,方案有變動就會推播
+          savePromises.push(saveValuationCase(stamp(rec)));
         } else if(kind==='adspend'){
           if(!data.month){ skipped++; return; }
           const existing = APP.data.adSpend.find(a=>a.month===data.month);
