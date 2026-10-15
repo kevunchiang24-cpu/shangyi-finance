@@ -558,7 +558,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-15-05';
+const APP_BUILD = '2026-10-15-06';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -826,12 +826,6 @@ function subscribeAll(){
     APP.data.progressChannel = snap.docs.map(d=>({id:d.id, ...d.data()}));
     render();
   }));
-  if(isCore()){
-    unsubs.push(onSnapshot(collection(db,'valuationCases'), snap=>{
-      APP.data.valuationCases = snap.docs.map(d=>({id:d.id, ...d.data()}));
-      render();
-    }, err=>console.error('valuationCases 訂閱失敗', err)));
-  }
   unsubs.push(onSnapshot(collection(db,'customerFollowups'), snap=>{
     APP.data.customerFollowups = snap.docs.map(d=>({id:d.id, ...d.data()}));
     render();
@@ -915,6 +909,11 @@ function subscribeAll(){
           APP.data.staffBonusLedger = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }));
+        // 房屋土地估價：只有核心能讀，要等角色載入後（這裡）才訂閱，放在外層時 APP.role 還是 null 會永遠訂閱不到
+        unsubs.push(onSnapshot(collection(db,'valuationCases'), snap2=>{
+          APP.data.valuationCases = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+          render();
+        }, err=>console.error('valuationCases 訂閱失敗', err)));
         unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap2=>{
           APP.staffProfiles = {};
           snap2.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
