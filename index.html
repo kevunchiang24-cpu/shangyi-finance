@@ -60,6 +60,9 @@
     background:linear-gradient(135deg,#4A78F5,#7B6CFA);color:#fff;font-size:14.5px;font-weight:700;
     margin-bottom:2px;box-shadow:0 4px 14px rgba(74,120,245,.45);position:relative;transition:transform .12s,box-shadow .12s;}
   .chat-nav-button:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(74,120,245,.55);}
+  .valuation-nav-button{background:linear-gradient(135deg,#10B981,#0EA5A4);box-shadow:0 4px 14px rgba(16,185,129,.4);margin-top:8px;}
+  .valuation-nav-button:hover{box-shadow:0 6px 18px rgba(16,185,129,.55);}
+  .valuation-nav-button.is-active{outline:2px solid #fff;}
   .chat-nav-icon{font-size:19px;}
   .chat-nav-badge{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#EF4444;color:#fff;
     font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px;min-width:18px;text-align:center;line-height:1.4;}
@@ -555,7 +558,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-02-01';
+const APP_BUILD = '2026-10-15-05';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -649,7 +652,7 @@ const APP = {
   myLogFilter:{month:nowMonthKey}, myLogNoContactCollapsed:false, attendanceFilter:{month:nowMonthKey},
   socialAccountFilter:{status:'all', stage:'all', bmGroup:'all'}, socialPersonalFilter:{status:'all'}, socialFanPageFilter:{status:'all'}, followupOverviewFilter:{staff:'all'},
   progressAdSort:{key:'date',dir:'desc'}, progressChannelSort:{key:'date',dir:'desc'},
-  casesAdSort:{key:'date',dir:'desc'}, casesChannelSort:{key:'date',dir:'desc'},
+  casesAdSort:{key:'date',dir:'desc'}, valuationSort:{key:'date',dir:'desc'}, valuationSearch:'', valuationMonth:'', casesChannelSort:{key:'date',dir:'desc'},
   txSort:{key:'date',dir:'desc'}, adSpendSort:{key:'month',dir:'desc'}, myLogSort:{key:'date',dir:'desc'},
   progressAdSearch:'', progressChannelSearch:'', caseAdSearch:'', caseChannelSearch:'', myLogSearch:'',
   progressTab:'ad', progressAdFilter:{status:'all', month:nowMonthKey}, progressChannelFilter:{status:'all', month:nowMonthKey},
@@ -658,7 +661,7 @@ const APP = {
     companyPublic:{systemName:'',systemSubtitle:'',logoDataUrl:''},
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
-    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[], directMessages:[], customerFollowups:[],
+    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[], directMessages:[], customerFollowups:[], valuationCases:[],
     optionColors:{ plan:{}, status:{}, dealProduct:{}, contactStatus:{} },
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
       rankBronze:50000, rankSilver:100000, rankGold:200000, rankDiamond:400000,
@@ -823,6 +826,12 @@ function subscribeAll(){
     APP.data.progressChannel = snap.docs.map(d=>({id:d.id, ...d.data()}));
     render();
   }));
+  if(isCore()){
+    unsubs.push(onSnapshot(collection(db,'valuationCases'), snap=>{
+      APP.data.valuationCases = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      render();
+    }, err=>console.error('valuationCases 訂閱失敗', err)));
+  }
   unsubs.push(onSnapshot(collection(db,'customerFollowups'), snap=>{
     APP.data.customerFollowups = snap.docs.map(d=>({id:d.id, ...d.data()}));
     render();
@@ -1008,6 +1017,8 @@ function saveTransactions(){ return setDoc(doc(db,'appdata','transactions'), {li
 function saveHR(){ return setDoc(doc(db,'appdata','hr'), APP.data.hr); }
 function saveVendors(){ return setDoc(doc(db,'appdata','vendors'), {list:APP.data.vendors}); }
 function saveProgressAdCase(rec){ return setDoc(doc(db,'progressAdCases', rec.id), rec); }
+function saveValuationCase(rec){ return setDoc(doc(db,'valuationCases', rec.id), rec); }
+function deleteValuationCase(id){ return deleteDoc(doc(db,'valuationCases', id)); }
 function saveCustomerFollowup(rec){ return setDoc(doc(db,'customerFollowups', rec.id), rec); }
 function deleteCustomerFollowup(id){ return deleteDoc(doc(db,'customerFollowups', id)); }
 /* ---- 案件狀態剛跳到「撥款完成」時呼叫：如果這個案件還沒有對應的關懷追蹤紀錄，就自動建一筆，
@@ -1261,6 +1272,7 @@ function shellHTML(){
       <span class="chat-nav-icon">💬</span><span>聊天室</span>
       ${totalDmUnread>0?`<span class="chat-nav-badge">${totalDmUnread>9?'9+':totalDmUnread}</span>`:''}
     </div>
+    ${core ? `<div class="chat-nav-button valuation-nav-button${APP.view==='valuation'?' is-active':''}" data-action="nav" data-view="valuation"><span class="chat-nav-icon">🏡</span><span>房屋土地估價</span></div>` : ''}
     <div class="nav-section-divider"></div>
     ${core ? `
     <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
@@ -2431,6 +2443,7 @@ function render(){
   else if(APP.view==='hr' && isCore()) main.innerHTML = hrHTML();
   else if(APP.view==='vendors' && isCore()) main.innerHTML = vendorsHTML();
   else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
+  else if(APP.view==='valuation' && isCore()) main.innerHTML = valuationHTML();
   else if(APP.view==='dailyBonus' && isCore()) main.innerHTML = dailyBonusPageHTML();
   else if(APP.view==='staffOverview' && (isCore() || isStaffAny())) main.innerHTML = staffOverviewHTML();
   else if(APP.view==='customerFollowupOverview' && (isCore() || isStaffAdmin())) main.innerHTML = customerFollowupOverviewHTML();
@@ -4360,6 +4373,173 @@ function progressHTML(){
     </div>
     ${body}
   `;
+}
+
+/* ===== 房屋土地估價(取代 Google 試算表 + LINE 估價小幫手;僅核心可見) ===== */
+const VALUATION_DEFAULT_TARGETS = [
+  'Udca18eca26ad2adaf9bd96180b23929f',
+  'U32ab5821c0596fb5958403ef33ae4919',
+  'U8d989b230dd7f65351f02fa469bde29b',
+  'C18c2c41f091f22c2c3a2efa56c21e360'
+];
+function valuationHTML(){
+  const all = APP.data.valuationCases || [];
+  let list = all.slice();
+  if(APP.valuationMonth) list = list.filter(c=>c.month===APP.valuationMonth);
+  list = list.filter(c=>matchesSearch(c, APP.valuationSearch));
+  list = sortList(list, APP.valuationSort, 'text');
+  const months = Array.from(new Set(all.map(c=>c.month))).filter(Boolean).sort().reverse();
+  const rows = list.map(c=>`
+    <tr>
+      <td>${escHtml(c.status||'—')}</td>
+      <td>${escHtml(c.date||'—')}</td>
+      <td>${escHtml(c.handler||'—')}</td>
+      <td>${escHtml(c.customerName||'')}</td>
+      <td>${escHtml(c.area||'—')}</td>
+      <td>${c.category?`<span class="badge ${c.category==='銀行'?'income':'expense'}">${escHtml(c.category)}</span>`:'—'}</td>
+      <td style="max-width:220px;white-space:pre-wrap;">${escHtml(c.valuation||'')}</td>
+      <td style="max-width:220px;white-space:pre-wrap;">${escHtml(c.plan||'')}</td>
+      <td style="max-width:200px;white-space:pre-wrap;">${escHtml(c.memo||'')}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn" data-action="valuation-edit" data-id="${c.id}">編輯</button>
+        <button class="icon-btn" data-action="valuation-delete" data-id="${c.id}">刪除</button>
+      </div></td>
+    </tr>`).join('');
+  return `
+    <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub">填寫「方案」時會自動推播到 LINE;在 LINE 輸入「@客戶姓名」可查詢</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn ghost" data-action="valuation-targets">🔔 推播對象</button>
+        <button class="btn ghost" data-action="valuation-import">📥 匯入 Excel</button>
+        <button class="btn primary" data-action="valuation-add">＋ 新增估價</button>
+      </div>
+    </div>
+    <div class="filter-row">
+      <div class="filter-field"><label>月份</label>
+        <select data-case-filter="valuation-month"><option value="">全部</option>
+        ${months.map(m=>`<option value="${m}" ${APP.valuationMonth===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      ${searchBoxHtml('valuationSearch')}
+    </div>
+    <div class="tx-summary-bar"><div class="item">筆數<b>${list.length} 筆</b></div></div>
+    <div class="table-wrap">
+      ${list.length===0?`<div class="empty">尚無估價資料</div>`:`
+      <table><thead><tr>
+        ${thSort('狀態','status','valuationSort')}${thSort('日期','date','valuationSort')}${thSort('經手人','handler','valuationSort')}${thSort('客戶姓名','customerName','valuationSort')}${thSort('地區','area','valuationSort')}${thSort('類別','category','valuationSort')}<th>估價資訊</th><th>方案</th><th>備註</th><th></th>
+      </tr></thead><tbody>${rows}</tbody></table>`}
+    </div>`;
+}
+function openValuationModal(existing){
+  const c = existing || {status:'', date:todayStr(), handler:'', customerName:'', area:'', category:'', valuation:'', plan:'', memo:''};
+  const statuses = Array.from(new Set((APP.data.valuationCases||[]).map(x=>x.status).filter(Boolean)));
+  openModal(existing?'編輯估價':'新增估價', `
+    <div class="grid grid-2">
+      <label class="field"><span>日期</span><input type="date" name="date" value="${escAttr(c.date||'')}" required/></label>
+      <label class="field"><span>狀態</span><input type="text" name="status" list="val-status-list" value="${escAttr(c.status||'')}"/><datalist id="val-status-list">${statuses.map(x=>`<option value="${escAttr(x)}">`).join('')}</datalist></label>
+      <label class="field"><span>經手人</span><input type="text" name="handler" value="${escAttr(c.handler||'')}"/></label>
+      <label class="field"><span>客戶姓名</span><input type="text" name="customerName" value="${escAttr(c.customerName||'')}" required/></label>
+      <label class="field"><span>地區</span><input type="text" name="area" value="${escAttr(c.area||'')}"/></label>
+      <label class="field"><span>案件類別</span><select name="category"><option value="">—</option><option value="銀行" ${c.category==='銀行'?'selected':''}>銀行</option><option value="民間" ${c.category==='民間'?'selected':''}>民間</option></select></label>
+    </div>
+    <label class="field"><span>估價資訊</span><textarea name="valuation" rows="3">${escHtml(c.valuation||'')}</textarea></label>
+    <label class="field"><span>方案(填寫或修改後會推播到 LINE)</span><textarea name="plan" rows="3">${escHtml(c.plan||'')}</textarea></label>
+    <label class="field"><span>備註</span><textarea name="memo" rows="2">${escHtml(c.memo||'')}</textarea></label>`, 'valuation-form', null);
+  document.getElementById('valuation-form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    try{
+      const fd = new FormData(e.target);
+      const data = {};
+      ['status','date','handler','customerName','area','category','valuation','plan','memo'].forEach(k=>{ data[k] = String(fd.get(k)||'').trim(); });
+      data.month = monthKey(data.date);
+      const id = existing ? existing.id : uid();
+      await saveValuationCase(stamp({id, ...data}));
+    } catch(err){
+      console.error('儲存估價時發生錯誤:', err);
+      alert('儲存失敗:' + (err && err.message ? err.message : err));
+    } finally{
+      closeModal(); render();
+    }
+  });
+}
+function valuationParseDate(v){
+  if(v instanceof Date && !isNaN(v)) return formatDateLocal(new Date(v.getTime()+12*3600*1000));
+  if(typeof v==='number' && v>20000){ return formatDateLocal(new Date(Math.round((v-25569)*86400*1000)+12*3600*1000)); }
+  return String(v==null?'':v).trim();
+}
+function openValuationImportModal(){
+  openModal('匯入舊試算表(Excel)', `
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;">請先在 Google 試算表選「檔案 → 下載 → Microsoft Excel (.xlsx)」,再選那個檔案。分頁名稱需為「4月、9月、10月…」格式,欄位順序為:狀態、日期、經手人、客戶姓名、地區、案件類別、估價資訊、方案、備註。<br>匯入的舊資料<b>不會</b>推播到 LINE。重複匯入同一份檔案會覆蓋同一筆,不會變成兩筆。</p>
+    <div class="grid grid-2">
+      <label class="field"><span>這份試算表的年份</span><input type="number" name="year" value="${new Date().getFullYear()}" required/></label>
+      <label class="field"><span>Excel 檔案</span><input type="file" name="file" accept=".xlsx,.xls" required/></label>
+    </div>
+    <div id="val-import-msg" style="font-size:13px;margin-top:8px;"></div>`, 'valuation-import-form', null);
+  document.getElementById('valuation-import-form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const msg = document.getElementById('val-import-msg');
+    try{
+      const fd = new FormData(e.target);
+      const year = Number(fd.get('year'));
+      const file = fd.get('file');
+      if(!file || !file.size) return;
+      msg.textContent = '讀取中…';
+      const wb = XLSX.read(await file.arrayBuffer(), {type:'array', cellDates:true});
+      const recs = [];
+      wb.SheetNames.forEach(name=>{
+        const m = name.trim().match(/^(\d{1,2})月$/);
+        if(!m) return;
+        const month = year + '-' + String(m[1]).padStart(2,'0');
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], {header:1, defval:''});
+        rows.slice(1).forEach((r, i)=>{
+          const customerName = String(r[3]||'').trim();
+          if(!customerName) return;
+          // 舊試算表的「4月」分頁其實裝了 4~8 月的資料，月份以每列自己的日期為準，分頁名稱只當備用
+          const date = valuationParseDate(r[1]);
+          recs.push(stamp({
+            id:`imp-${year}-${String(m[1]).padStart(2,'0')}-${i+2}`,
+            month: /^\d{4}-\d{2}/.test(date) ? date.slice(0,7) : month,
+            status:String(r[0]||'').trim(), date, handler:String(r[2]||'').trim(),
+            customerName, area:String(r[4]||'').trim(), category:String(r[5]||'').trim(),
+            valuation:String(r[6]||'').trim(), plan:String(r[7]||'').trim(), memo:String(r[8]||'').trim(),
+            status2:String(r[9]||'').trim(),
+            _silent:true
+          }));
+        });
+      });
+      if(recs.length===0){ msg.textContent = '沒有找到可匯入的資料,請確認分頁名稱(例如「4月」)與欄位順序。'; return; }
+      for(let i=0;i<recs.length;i+=400){
+        const batch = writeBatch(db);
+        recs.slice(i,i+400).forEach(r=>batch.set(doc(db,'valuationCases',r.id), r));
+        await batch.commit();
+      }
+      alert(`匯入完成,共 ${recs.length} 筆。`);
+      closeModal(); render();
+    } catch(err){
+      console.error('匯入估價資料失敗:', err);
+      msg.textContent = '匯入失敗:' + (err && err.message ? err.message : err);
+    }
+  });
+}
+async function openValuationTargetsModal(){
+  let targets = VALUATION_DEFAULT_TARGETS;
+  try{
+    const snap = await getDoc(doc(db,'appdata','lineSettings'));
+    if(snap.exists() && Array.isArray(snap.data().pushTargets) && snap.data().pushTargets.length) targets = snap.data().pushTargets;
+  }catch(err){ console.error('讀取推播對象失敗', err); }
+  openModal('LINE 推播對象', `
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每行一個 LINE ID(個人 U 開頭、群組 C 開頭)。方案欄位填寫或修改時,會推播給這裡的所有對象。</p>
+    <label class="field"><span>推播對象</span><textarea name="targets" rows="6" style="font-family:monospace;font-size:12px;">${escHtml(targets.join('\n'))}</textarea></label>`, 'valuation-targets-form', null);
+  document.getElementById('valuation-targets-form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    try{
+      const fd = new FormData(e.target);
+      const list = String(fd.get('targets')||'').split('\n').map(x=>x.trim()).filter(Boolean);
+      await setDoc(doc(db,'appdata','lineSettings'), stamp({pushTargets:list}));
+    } catch(err){
+      console.error('儲存推播對象失敗:', err);
+      alert('儲存失敗:' + (err && err.message ? err.message : err));
+    } finally{
+      closeModal(); render();
+    }
+  });
 }
 
 function casesHTML(){
@@ -6618,6 +6798,15 @@ document.addEventListener('click', (e)=>{
       openConfirm('確定要刪除這筆進度資料嗎？', ()=>{ deleteProgressChannelCase(el.dataset.id); }); return;
     }
     if(action==='open-ad-case-modal'){ openAdCaseModal(null); return; }
+    if(action==='valuation-add'){ openValuationModal(null); return; }
+    if(action==='valuation-edit'){ const c = APP.data.valuationCases.find(x=>x.id===el.dataset.id); if(c) openValuationModal(c); return; }
+    if(action==='valuation-delete'){
+      const c = APP.data.valuationCases.find(x=>x.id===el.dataset.id);
+      if(c) openConfirm(`確定要刪除「${c.customerName}」這筆估價資料嗎?`, ()=>{ deleteValuationCase(c.id); });
+      return;
+    }
+    if(action==='valuation-import'){ openValuationImportModal(); return; }
+    if(action==='valuation-targets'){ openValuationTargetsModal(); return; }
     if(action==='edit-ad-case'){ const c = APP.data.casesAd.find(x=>x.id===el.dataset.id); if(c) openAdCaseModal(c); return; }
     if(action==='delete-ad-case'){
       const caseId = el.dataset.id;
@@ -7050,6 +7239,7 @@ document.addEventListener('change', (e)=>{
     else if(key==='pch-status') APP.progressChannelFilter.status = e.target.value;
     else if(key==='pch-month') APP.progressChannelFilter.month = e.target.value;
     else if(key==='ad-month') APP.caseAdFilter.month = e.target.value;
+    else if(key==='valuation-month') APP.valuationMonth = e.target.value;
     else if(key==='channel-month') APP.caseChannelFilter.month = e.target.value;
     else if(key==='mylog-month') APP.myLogFilter.month = e.target.value;
     else if(key==='attendance-month') APP.attendanceFilter.month = e.target.value;
