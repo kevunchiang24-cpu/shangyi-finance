@@ -558,7 +558,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-15-08';
+const APP_BUILD = '2026-10-15-09';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -4399,11 +4399,25 @@ function valuationApplyFilters(all, f, ignoreKey){
     return true;
   });
 }
+const VALUATION_STATUS_COLORS = [
+  ['#DBEAFE','#1D4ED8'],['#DCFCE7','#15803D'],['#FEF3C7','#B45309'],['#FCE7F3','#BE185D'],
+  ['#EDE9FE','#6D28D9'],['#CCFBF1','#0F766E'],['#FFEDD5','#C2410C'],['#E0E7FF','#4338CA']
+];
+function valuationStatusBadge(status){
+  const t = String(status||'').trim();
+  if(!t) return '—';
+  let h = 0;
+  for(let i=0;i<t.length;i++) h = (h*31 + t.charCodeAt(i)) >>> 0;
+  const [bg, fg] = VALUATION_STATUS_COLORS[h % VALUATION_STATUS_COLORS.length];
+  return `<span style="display:inline-block;padding:3px 10px;border-radius:99px;background:${bg};color:${fg};font-weight:600;font-size:12.5px;white-space:nowrap;">${escHtml(t)}</span>`;
+}
 function valuationHTML(){
   const all = APP.data.valuationCases || [];
   const f = Object.assign(valuationFilterDefaults(), APP.valuationFilter||{});
   let list = valuationApplyFilters(all, f).filter(c=>matchesSearch(c, APP.valuationSearch));
   list = sortList(list, APP.valuationSort, 'text');
+  // 狀態欄有填東西的優先置頂(兩組內部維持原本的排序)
+  list = list.filter(c=>String(c.status||'').trim()).concat(list.filter(c=>!String(c.status||'').trim()));
   // 每個下拉選單的選項與數字,是「套用其他篩選條件後」各選項的筆數,方便預先看到選了會剩幾筆
   function optionsFor(key, field, labelFn){
     const base = valuationApplyFilters(all, f, key);
@@ -4431,7 +4445,7 @@ function valuationHTML(){
   const activeCount = ['month','status','handler','category','area','planState','from','to'].filter(k=>f[k]).length + (APP.valuationSearch?1:0);
   const rows = list.map(c=>`
     <tr>
-      <td>${escHtml(c.status||'—')}</td>
+      <td>${valuationStatusBadge(c.status)}</td>
       <td>${escHtml(c.date||'—')}</td>
       <td>${escHtml(c.handler||'—')}</td>
       <td>${escHtml(c.customerName||'')}</td>
