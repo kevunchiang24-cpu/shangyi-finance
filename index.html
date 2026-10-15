@@ -558,7 +558,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-15-06';
+const APP_BUILD = '2026-10-15-05';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -652,7 +652,7 @@ const APP = {
   myLogFilter:{month:nowMonthKey}, myLogNoContactCollapsed:false, attendanceFilter:{month:nowMonthKey},
   socialAccountFilter:{status:'all', stage:'all', bmGroup:'all'}, socialPersonalFilter:{status:'all'}, socialFanPageFilter:{status:'all'}, followupOverviewFilter:{staff:'all'},
   progressAdSort:{key:'date',dir:'desc'}, progressChannelSort:{key:'date',dir:'desc'},
-  casesAdSort:{key:'date',dir:'desc'}, valuationSort:{key:'date',dir:'desc'}, valuationSearch:'', valuationMonth:'', casesChannelSort:{key:'date',dir:'desc'},
+  casesAdSort:{key:'date',dir:'desc'}, valuationSort:{key:'date',dir:'desc'}, valuationSearch:'', valuationFilter:{}, casesChannelSort:{key:'date',dir:'desc'},
   txSort:{key:'date',dir:'desc'}, adSpendSort:{key:'month',dir:'desc'}, myLogSort:{key:'date',dir:'desc'},
   progressAdSearch:'', progressChannelSearch:'', caseAdSearch:'', caseChannelSearch:'', myLogSearch:'',
   progressTab:'ad', progressAdFilter:{status:'all', month:nowMonthKey}, progressChannelFilter:{status:'all', month:nowMonthKey},
@@ -826,6 +826,12 @@ function subscribeAll(){
     APP.data.progressChannel = snap.docs.map(d=>({id:d.id, ...d.data()}));
     render();
   }));
+  if(isCore()){
+    unsubs.push(onSnapshot(collection(db,'valuationCases'), snap=>{
+      APP.data.valuationCases = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      render();
+    }, err=>console.error('valuationCases 訂閱失敗', err)));
+  }
   unsubs.push(onSnapshot(collection(db,'customerFollowups'), snap=>{
     APP.data.customerFollowups = snap.docs.map(d=>({id:d.id, ...d.data()}));
     render();
@@ -909,11 +915,6 @@ function subscribeAll(){
           APP.data.staffBonusLedger = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }));
-        // 房屋土地估價：只有核心能讀，要等角色載入後（這裡）才訂閱，放在外層時 APP.role 還是 null 會永遠訂閱不到
-        unsubs.push(onSnapshot(collection(db,'valuationCases'), snap2=>{
-          APP.data.valuationCases = snap2.docs.map(d=>({id:d.id, ...d.data()}));
-          render();
-        }, err=>console.error('valuationCases 訂閱失敗', err)));
         unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap2=>{
           APP.staffProfiles = {};
           snap2.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
@@ -4381,13 +4382,54 @@ const VALUATION_DEFAULT_TARGETS = [
   'U8d989b230dd7f65351f02fa469bde29b',
   'C18c2c41f091f22c2c3a2efa56c21e360'
 ];
+function valuationFilterDefaults(){ return {month:'', status:'', handler:'', category:'', area:'', planState:'', from:'', to:''}; }
+function valuationApplyFilters(all, f, ignoreKey){
+  return all.filter(c=>{
+    if(ignoreKey!=='month' && f.month && c.month!==f.month) return false;
+    if(ignoreKey!=='status' && f.status){ if(f.status==='__none__' ? !!c.status : c.status!==f.status) return false; }
+    if(ignoreKey!=='handler' && f.handler){ if(f.handler==='__none__' ? !!c.handler : c.handler!==f.handler) return false; }
+    if(ignoreKey!=='category' && f.category){ if(f.category==='__none__' ? !!c.category : c.category!==f.category) return false; }
+    if(ignoreKey!=='area' && f.area && !(c.area||'').includes(f.area)) return false;
+    if(ignoreKey!=='planState' && f.planState){
+      const has = !!String(c.plan||'').trim();
+      if(f.planState==='filled' && !has) return false;
+      if(f.planState==='empty' && has) return false;
+    }
+    if(ignoreKey!=='from' && f.from && (c.date||'') < f.from) return false;
+    if(ignoreKey!=='to' && f.to && (c.date||'') > f.to) return false;
+    return true;
+  });
+}
 function valuationHTML(){
   const all = APP.data.valuationCases || [];
-  let list = all.slice();
-  if(APP.valuationMonth) list = list.filter(c=>c.month===APP.valuationMonth);
-  list = list.filter(c=>matchesSearch(c, APP.valuationSearch));
+  const f = Object.assign(valuationFilterDefaults(), APP.valuationFilter||{});
+  let list = valuationApplyFilters(all, f).filter(c=>matchesSearch(c, APP.valuationSearch));
   list = sortList(list, APP.valuationSort, 'text');
-  const months = Array.from(new Set(all.map(c=>c.month))).filter(Boolean).sort().reverse();
+  // 每個下拉選單的選項與數字,是「套用其他篩選條件後」各選項的筆數,方便預先看到選了會剩幾筆
+  function optionsFor(key, field, labelFn){
+    const base = valuationApplyFilters(all, f, key);
+    const counts = {};
+    base.forEach(c=>{ const v = c[field]||'__none__'; counts[v] = (counts[v]||0)+1; });
+    const vals = Object.keys(counts).filter(v=>v!=='__none__').sort((a,b)=> field==='month' ? b.localeCompare(a) : a.localeCompare(b,'zh-Hant'));
+    if(f[key] && f[key]!=='__none__' && !counts[f[key]]) vals.unshift(f[key]);
+    let html = `<option value="">全部 (${base.length})</option>`;
+    vals.forEach(v=>{ html += `<option value="${escAttr(v)}" ${f[key]===v?'selected':''}>${escHtml(labelFn?labelFn(v):v)} (${counts[v]||0})</option>`; });
+    if(counts['__none__']) html += `<option value="__none__" ${f[key]==='__none__'?'selected':''}>(未填) (${counts['__none__']})</option>`;
+    return html;
+  }
+  const sel = (key, label, field, labelFn)=>`<div class="filter-field"><label>${label}</label><select data-case-filter="valuation-f-${key}">${optionsFor(key, field, labelFn)}</select></div>`;
+  const today = todayStr();
+  const d = new Date(); const dow = (d.getDay()+6)%7; // 週一為一週開頭
+  const weekStart = formatDateLocal(new Date(d.getFullYear(), d.getMonth(), d.getDate()-dow));
+  const monthStart = today.slice(0,8)+'01';
+  const isQuick = (q)=>{
+    if(q==='today') return f.from===today && f.to===today;
+    if(q==='week') return f.from===weekStart && f.to===today;
+    if(q==='month') return f.from===monthStart && f.to===today;
+    return false;
+  };
+  const chip = (q,label,active)=>`<button type="button" class="btn ${active?'primary':'ghost'} sm" data-action="valuation-quick" data-q="${q}">${label}</button>`;
+  const activeCount = ['month','status','handler','category','area','planState','from','to'].filter(k=>f[k]).length + (APP.valuationSearch?1:0);
   const rows = list.map(c=>`
     <tr>
       <td>${escHtml(c.status||'—')}</td>
@@ -4412,15 +4454,26 @@ function valuationHTML(){
         <button class="btn primary" data-action="valuation-add">＋ 新增估價</button>
       </div>
     </div>
-    <div class="filter-row">
-      <div class="filter-field"><label>月份</label>
-        <select data-case-filter="valuation-month"><option value="">全部</option>
-        ${months.map(m=>`<option value="${m}" ${APP.valuationMonth===m?'selected':''}>${m}</option>`).join('')}</select></div>
-      ${searchBoxHtml('valuationSearch')}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      ${chip('all','全部',activeCount===0)}${chip('today','今天',isQuick('today'))}${chip('week','本週',isQuick('week'))}${chip('month','本月',isQuick('month'))}
+      ${chip('noplan','未填方案',f.planState==='empty')}${chip('hasplan','已填方案',f.planState==='filled')}
     </div>
-    <div class="tx-summary-bar"><div class="item">筆數<b>${list.length} 筆</b></div></div>
+    <div class="filter-row" style="flex-wrap:wrap;">
+      ${sel('month','月份','month')}
+      ${sel('status','狀態','status')}
+      ${sel('handler','經手人','handler')}
+      ${sel('category','案件類別','category')}
+      <div class="filter-field"><label>地區(關鍵字)</label><input type="text" data-case-filter="valuation-f-area" value="${escAttr(f.area)}" placeholder="例如 台中" style="min-width:110px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;"/></div>
+      <div class="filter-field"><label>方案</label><select data-case-filter="valuation-f-planState">
+        <option value="" ${!f.planState?'selected':''}>全部</option><option value="filled" ${f.planState==='filled'?'selected':''}>已填方案</option><option value="empty" ${f.planState==='empty'?'selected':''}>未填方案</option></select></div>
+      <div class="filter-field"><label>日期從</label><input type="date" data-case-filter="valuation-f-from" value="${escAttr(f.from)}" style="padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;"/></div>
+      <div class="filter-field"><label>日期到</label><input type="date" data-case-filter="valuation-f-to" value="${escAttr(f.to)}" style="padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;"/></div>
+      ${searchBoxHtml('valuationSearch','客戶、備註…任何欄位')}
+      ${activeCount>0?`<div class="filter-field"><label>&nbsp;</label><button type="button" class="btn ghost sm" data-action="valuation-clear">✕ 清除全部篩選 (${activeCount})</button></div>`:''}
+    </div>
+    <div class="tx-summary-bar"><div class="item">符合筆數<b>${list.length} 筆</b></div><div class="item">全部<b>${all.length} 筆</b></div></div>
     <div class="table-wrap">
-      ${list.length===0?`<div class="empty">尚無估價資料</div>`:`
+      ${list.length===0?`<div class="empty">${all.length===0?'尚無估價資料':'沒有符合篩選條件的資料'}</div>`:`
       <table><thead><tr>
         ${thSort('狀態','status','valuationSort')}${thSort('日期','date','valuationSort')}${thSort('經手人','handler','valuationSort')}${thSort('客戶姓名','customerName','valuationSort')}${thSort('地區','area','valuationSort')}${thSort('類別','category','valuationSort')}<th>估價資訊</th><th>方案</th><th>備註</th><th></th>
       </tr></thead><tbody>${rows}</tbody></table>`}
@@ -4490,15 +4543,11 @@ function openValuationImportModal(){
         rows.slice(1).forEach((r, i)=>{
           const customerName = String(r[3]||'').trim();
           if(!customerName) return;
-          // 舊試算表的「4月」分頁其實裝了 4~8 月的資料，月份以每列自己的日期為準，分頁名稱只當備用
-          const date = valuationParseDate(r[1]);
           recs.push(stamp({
             id:`imp-${year}-${String(m[1]).padStart(2,'0')}-${i+2}`,
-            month: /^\d{4}-\d{2}/.test(date) ? date.slice(0,7) : month,
-            status:String(r[0]||'').trim(), date, handler:String(r[2]||'').trim(),
+            month, status:String(r[0]||'').trim(), date:valuationParseDate(r[1]), handler:String(r[2]||'').trim(),
             customerName, area:String(r[4]||'').trim(), category:String(r[5]||'').trim(),
             valuation:String(r[6]||'').trim(), plan:String(r[7]||'').trim(), memo:String(r[8]||'').trim(),
-            status2:String(r[9]||'').trim(),
             _silent:true
           }));
         });
@@ -6797,6 +6846,18 @@ document.addEventListener('click', (e)=>{
       openConfirm('確定要刪除這筆進度資料嗎？', ()=>{ deleteProgressChannelCase(el.dataset.id); }); return;
     }
     if(action==='open-ad-case-modal'){ openAdCaseModal(null); return; }
+    if(action==='valuation-clear'){ APP.valuationFilter = {}; APP.valuationSearch = ''; render(); return; }
+    if(action==='valuation-quick'){
+      const q = el.dataset.q;
+      const t = todayStr(); const dd = new Date(); const dw = (dd.getDay()+6)%7;
+      if(q==='all'){ APP.valuationFilter = {}; APP.valuationSearch = ''; }
+      else if(q==='today') APP.valuationFilter = {from:t, to:t};
+      else if(q==='week') APP.valuationFilter = {from:formatDateLocal(new Date(dd.getFullYear(), dd.getMonth(), dd.getDate()-dw)), to:t};
+      else if(q==='month') APP.valuationFilter = {from:t.slice(0,8)+'01', to:t};
+      else if(q==='noplan') APP.valuationFilter = Object.assign({}, APP.valuationFilter||{}, {planState:'empty'});
+      else if(q==='hasplan') APP.valuationFilter = Object.assign({}, APP.valuationFilter||{}, {planState:'filled'});
+      render(); return;
+    }
     if(action==='valuation-add'){ openValuationModal(null); return; }
     if(action==='valuation-edit'){ const c = APP.data.valuationCases.find(x=>x.id===el.dataset.id); if(c) openValuationModal(c); return; }
     if(action==='valuation-delete'){
@@ -7238,7 +7299,16 @@ document.addEventListener('change', (e)=>{
     else if(key==='pch-status') APP.progressChannelFilter.status = e.target.value;
     else if(key==='pch-month') APP.progressChannelFilter.month = e.target.value;
     else if(key==='ad-month') APP.caseAdFilter.month = e.target.value;
-    else if(key==='valuation-month') APP.valuationMonth = e.target.value;
+    else if(key.startsWith('valuation-f-')){
+      APP.valuationFilter = Object.assign({}, APP.valuationFilter||{}, {[key.slice(12)]: e.target.value});
+      if(key==='valuation-f-area'){
+        const pos = e.target.selectionStart;
+        render();
+        const el2 = document.querySelector('[data-case-filter="valuation-f-area"]');
+        if(el2){ el2.focus(); try{ el2.setSelectionRange(pos,pos); }catch(_){} }
+        return;
+      }
+    }
     else if(key==='channel-month') APP.caseChannelFilter.month = e.target.value;
     else if(key==='mylog-month') APP.myLogFilter.month = e.target.value;
     else if(key==='attendance-month') APP.attendanceFilter.month = e.target.value;
