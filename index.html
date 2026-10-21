@@ -609,7 +609,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-21-03';
+const APP_BUILD = '2026-10-21-04';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -4657,7 +4657,7 @@ function valuationHTML(){
       ${chip('noplan','未填方案',f.planState==='empty')}${chip('hasplan','已填方案',f.planState==='filled')}
     </div>
     <button type="button" class="btn ghost m-only val-more-filter" data-action="valuation-toggle-filter" style="margin-bottom:10px;">${APP.valuationFilterOpen?'收起篩選':'更多篩選'}${activeCount>0?`(已套用 ${activeCount})`:''}</button>
-    <div class="val-filter-box${APP.valuationFilterOpen?' open':''}" style="display:contents;"><div class="filter-row" style="flex-wrap:wrap;">
+    <div class="val-filter-box${APP.valuationFilterOpen?' open':''}"><div class="filter-row" style="flex-wrap:wrap;">
       ${sel('month','月份','month')}
       ${sel('status','狀態','status')}
       ${sel('handler','經手人','handler')}
