@@ -541,6 +541,17 @@
     .val-filter-box.open{display:block;}
     .val-more-filter{width:100%;}
   }
+  /* 銀行信貸／房屋土地估價 共用版面 */
+  .bl-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
+  .bl-stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
+  .bl-stat-l{font-size:12px;color:var(--muted);}
+  .bl-stat-n{font-size:22px;font-weight:700;margin-top:2px;}
+  .bl-table th{background:#F7F8FB;color:var(--muted);font-weight:500;}
+  @media (max-width:640px){
+    .bl-stats{grid-template-columns:1fr 1fr;}
+    .bl-filter-box{display:none;}
+    .bl-filter-box.open{display:block;}
+  }
   /* Mobile top bar */
   #mobile-topbar{display:none;}
   .sidebar-backdrop{display:none;}
@@ -598,7 +609,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-21-02';
+const APP_BUILD = '2026-10-21-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -701,7 +712,7 @@ const APP = {
     companyPublic:{systemName:'',systemSubtitle:'',logoDataUrl:''},
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
     progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
-    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[], directMessages:[], customerFollowups:[], valuationCases:[],
+    personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[], directMessages:[], customerFollowups:[], valuationCases:[], bankLoanCases:[],
     optionColors:{ plan:{}, status:{}, dealProduct:{}, contactStatus:{} },
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
       rankBronze:50000, rankSilver:100000, rankGold:200000, rankDiamond:400000,
@@ -959,6 +970,11 @@ function subscribeAll(){
           APP.valuationStatusOptions = (d && Array.isArray(d.statuses)) ? d.statuses : [];
           render();
         }, err=>console.error('valuationOptions 訂閱失敗', err)));
+        // 銀行信貸：同樣只有核心能讀，放在角色載入後的核心區塊內
+        unsubs.push(onSnapshot(collection(db,'bankLoanCases'), snap2=>{
+          APP.data.bankLoanCases = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+          render();
+        }, err=>console.error('bankLoanCases 訂閱失敗', err)));
         unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap2=>{
           APP.staffProfiles = {};
           snap2.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
@@ -1317,6 +1333,7 @@ function shellHTML(){
       ${totalDmUnread>0?`<span class="chat-nav-badge">${totalDmUnread>9?'9+':totalDmUnread}</span>`:''}
     </div>
     ${core ? `<div class="chat-nav-button valuation-nav-button${APP.view==='valuation'?' is-active':''}" data-action="nav" data-view="valuation"><span class="chat-nav-icon">🏡</span><span>房屋土地估價</span></div>` : ''}
+    ${core ? `<div class="chat-nav-button valuation-nav-button${APP.view==='bankLoan'?' is-active':''}" data-action="nav" data-view="bankLoan"><span class="chat-nav-icon">🏦</span><span>銀行信貸</span></div>` : ''}
     <div class="nav-section-divider"></div>
     ${core ? `
     <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
@@ -2503,6 +2520,7 @@ function render(){
   else if(APP.view==='vendors' && isCore()) main.innerHTML = vendorsHTML();
   else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
   else if(APP.view==='valuation' && isCore()) main.innerHTML = valuationHTML();
+  else if(APP.view==='bankLoan' && isCore()) main.innerHTML = bankLoanHTML();
   else if(APP.view==='dailyBonus' && isCore()) main.innerHTML = dailyBonusPageHTML();
   else if(APP.view==='staffOverview' && (isCore() || isStaffAny())) main.innerHTML = staffOverviewHTML();
   else if(APP.view==='customerFollowupOverview' && (isCore() || isStaffAdmin())) main.innerHTML = customerFollowupOverviewHTML();
@@ -4594,15 +4612,15 @@ function valuationHTML(){
     const statusOpts = valuationStatusList(String(c.status||'').trim());
     return `
     <tr>
+      <td style="min-width:140px;"><input type="date" data-val-field="date" data-id="${c.id}" value="${escAttr(c.date||'')}" style="${VAL_CELL_STYLE}"/></td>
       <td style="min-width:120px;"><select data-val-field="status" data-id="${c.id}" style="${VAL_CELL_STYLE}border-color:#E2E8F0;font-weight:600;background:${sbg};color:${sfg};">
         <option value="" ${!c.status?'selected':''}>(空白)</option>
         ${statusOpts.map(o=>`<option value="${escAttr(o)}" ${c.status===o?'selected':''}>${escHtml(o)}</option>`).join('')}
         <option value="__edit__">⚙ 編輯選項…</option></select></td>
-      <td style="min-width:140px;"><input type="date" data-val-field="date" data-id="${c.id}" value="${escAttr(c.date||'')}" style="${VAL_CELL_STYLE}"/></td>
-      <td style="min-width:80px;">${line(c,'handler')}</td>
       <td style="min-width:100px;">${line(c,'customerName')}</td>
-      <td style="min-width:200px;">${cell(c,'area')}</td>
+      <td style="min-width:80px;">${line(c,'handler')}</td>
       <td style="min-width:90px;"><select data-val-field="category" data-id="${c.id}" style="${VAL_CELL_STYLE}border-color:#E2E8F0;"><option value="" ${!c.category?'selected':''}>—</option><option value="銀行" ${c.category==='銀行'?'selected':''}>銀行</option><option value="民間" ${c.category==='民間'?'selected':''}>民間</option></select></td>
+      <td style="min-width:200px;">${cell(c,'area')}</td>
       <td style="min-width:160px;">${cell(c,'valuation')}</td>
       <td style="min-width:230px;">${cell(c,'plan')}</td>
       <td style="min-width:230px;">${cell(c,'memo')}</td>
@@ -4623,14 +4641,17 @@ function valuationHTML(){
       <div class="val-card-foot"><span>經手:${escHtml(c.handler||'—')}</span><span style="margin-left:auto;">${escHtml((c.date||'').slice(5).replace('-','/'))}</span></div>
     </div>`).join('');
   const noPlanCount = list.filter(c=>!String(c.plan||'').trim()).length;
+  const vStat = (label, n)=>`<div class="bl-stat"><div class="bl-stat-l">${label}</div><div class="bl-stat-n">${n}</div></div>`;
+  const vStatsHtml = `<div class="bl-stats">${vStat('本月估價', all.filter(c=>(c.date||'').slice(0,7)===today.slice(0,7)).length)}${vStat('本週新增', all.filter(c=>c.date && c.date>=weekStart && c.date<=today).length)}${vStat('未填方案', all.filter(c=>!String(c.plan||'').trim()).length)}${vStat('尚未填狀態', all.filter(c=>!String(c.status||'').trim()).length)}${vStat('全部案件', all.length)}</div>`;
   return `
-    <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub" style="display:var(--val-sub,block)">狀態、日期、經手人、客戶姓名、類別可直接在表格修改;地區、估價資訊、方案、備註點一下會跳出視窗編輯;填寫或修改「方案」會推播到 LINE;在 LINE 輸入「@客戶姓名」可查詢</p></div>
+    <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub" style="display:var(--val-sub,block)">估價紀錄與方案追蹤・只有核心成員可以查看與編輯・狀態、日期、經手人、客戶姓名、類別可直接在表格修改;地區、估價資訊、方案、備註點一下會跳出視窗編輯;填寫或修改「方案」會推播到 LINE;在 LINE 輸入「@客戶姓名」可查詢</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn ghost m-hide-640" data-action="valuation-targets">🔔 推播對象</button>
         <button class="btn ghost m-hide-640" data-action="valuation-import">📥 匯入 Excel</button>
         <button class="btn primary m-hide-640" data-action="valuation-add">＋ 新增估價</button>
       </div>
     </div>
+    ${vStatsHtml}
     <div class="val-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
       ${chip('all','全部',activeCount===0)}${chip('today','今天',isQuick('today'))}${chip('week','本週',isQuick('week'))}${chip('month','本月',isQuick('month'))}
       ${chip('noplan','未填方案',f.planState==='empty')}${chip('hasplan','已填方案',f.planState==='filled')}
@@ -4654,8 +4675,8 @@ function valuationHTML(){
     <button type="button" class="val-fab" data-action="valuation-add">＋ 新增估價</button>
     <div class="table-wrap val-desktop">
       ${list.length===0?`<div class="empty">${all.length===0?'尚無估價資料':'沒有符合篩選條件的資料'}</div>`:`
-      <table><thead><tr>
-        ${thSort('狀態','status','valuationSort')}${thSort('日期','date','valuationSort')}${thSort('經手人','handler','valuationSort')}${thSort('客戶姓名','customerName','valuationSort')}${thSort('地區','area','valuationSort')}${thSort('類別','category','valuationSort')}<th>估價資訊</th><th>方案</th><th>備註</th><th></th>
+      <table class="bl-table"><thead><tr>
+        ${thSort('日期','date','valuationSort')}${thSort('狀態','status','valuationSort')}${thSort('客戶姓名','customerName','valuationSort')}${thSort('經手人','handler','valuationSort')}${thSort('類別','category','valuationSort')}${thSort('地區','area','valuationSort')}<th>估價資訊</th><th>方案</th><th>備註</th><th></th>
       </tr></thead><tbody>${rows}</tbody></table>`}
     </div>`;
 }
@@ -4746,6 +4767,347 @@ function openValuationImportModal(){
     }
   });
 }
+/* ================= 銀行信貸（只有核心；collection: bankLoanCases）================= */
+const BANKLOAN_STATUSES = [
+  ['評估中','#FFE5A0','#473821','eval'],['等客人確定','#FFC8AA','#753800','eval'],['等通路確定','#FFC8AA','#753800','eval'],
+  ['已送件','#11734B','#FFFFFF','sent'],['銀行聯絡中','#215A6C','#FFFFFF','sent'],['等照會','#FFCC03','#000000','sent'],
+  ['補資料','#BBD3FF','#0B2E6B','sent'],['喬件','#D4EDBC','#11734B','sent'],['對保','#FFB27A','#4A1E00','sign'],
+  ['撥款完成','#B10202','#FFFFFF','paid'],['結案','#B10202','#FFFFFF','end'],['培養','#215A6C','#FFFFFF','nurture'],
+  ['婉拒','#3D3D3D','#FFFFFF','end'],['客拒','#3D3D3D','#FFFFFF','end']
+];
+const BANKLOAN_ENDED = ['撥款完成','結案','婉拒','客拒'];
+function bankLoanStatusColor(s){
+  const t = String(s||'').trim();
+  const hit = BANKLOAN_STATUSES.find(x=>x[0]===t);
+  return hit ? [hit[1], hit[2]] : ['#E5E7EB','#374151'];
+}
+function bankLoanBadge(s){
+  const t = String(s||'').trim();
+  if(!t) return '—';
+  const [bg, fg] = bankLoanStatusColor(t);
+  return `<span style="display:inline-block;padding:3px 10px;border-radius:99px;background:${bg};color:${fg};font-weight:600;font-size:12.5px;white-space:nowrap;">${escHtml(t)}</span>`;
+}
+function saveBankLoanCase(rec){ return setDoc(doc(db,'bankLoanCases', rec.id), rec); }
+function deleteBankLoanCase(id){ return deleteDoc(doc(db,'bankLoanCases', id)); }
+function bankLoanNick(email){
+  if(!email) return '—';
+  const u = (APP.users||[]).find(x=>x.email===email);
+  return u ? displayNameFor(u.id, u.staffName||u.email) : email;
+}
+function bankLoanEditedText(c){
+  if(!c || !c._by) return '尚無編輯紀錄';
+  const d = c._at ? new Date(c._at) : null;
+  const t = d ? d.toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+  return `最後編輯：${bankLoanNick(c._by)}${t?'・'+t:''}`;
+}
+function bankLoanFilterState(){
+  const f = APP.bankLoanFilter || {};
+  return { month: f.month===undefined ? todayStr().slice(0,7) : f.month, status: f.status===undefined ? '__active__' : f.status, pack: f.pack||'' };
+}
+function bankLoanStatusMatch(c, st){
+  if(!st) return true;
+  if(st==='__active__') return !BANKLOAN_ENDED.includes(c.status);
+  return c.status===st;
+}
+function bankLoanMoney(n){ return (n===null||n===undefined||n==='') ? '—' : (Number(n).toLocaleString('zh-TW') + ' 萬'); }
+function bankLoanParseDate(v, year){
+  let s = valuationParseDate(v);
+  if(typeof s!=='string') return '';
+  s = s.trim();
+  let m = s.match(/^(\d{4})[\/.\-](\d{1,2})[\/.\-](\d{1,2})/);
+  if(m) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})$/);
+  if(m) return `${year}-${String(m[1]).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`;
+  return s;
+}
+function bankLoanNormPack(v){
+  const t = String(v||'').trim();
+  if(!t) return '';
+  if(t.includes('不')) return '不包裝';
+  if(t.includes('包')) return '包裝';
+  return '';
+}
+async function bankLoanSaveField(id, field, value){
+  const c = (APP.data.bankLoanCases||[]).find(x=>x.id===id);
+  if(!c) return;
+  value = String(value==null?'':value).trim();
+  if(String(c[field]||'') === value) return;
+  try{
+    await setDoc(doc(db,'bankLoanCases', id), stamp({[field]: value}), {merge:true});
+    valuationFlash('✓ 已儲存', true);
+  }catch(err){
+    console.error('銀行信貸欄位儲存失敗:', err);
+    valuationFlash('✗ 儲存失敗:' + (err && err.message ? err.message : err), false);
+    render();
+  }
+}
+document.addEventListener('change', (e)=>{
+  const t = e.target;
+  if(!t || !t.dataset || !t.dataset.blField) return;
+  bankLoanSaveField(t.dataset.id, t.dataset.blField, t.value);
+});
+function bankLoanHTML(){
+  if(!APP.bankLoanSort) APP.bankLoanSort = {key:'date', dir:'desc'};
+  const all = APP.data.bankLoanCases || [];
+  const f = bankLoanFilterState();
+  const thisMonth = todayStr().slice(0,7);
+  const months = Array.from(new Set(all.map(c=>monthKey(c.date)).filter(Boolean).concat([thisMonth]))).sort().reverse();
+  const monthBase = all.filter(c=> !f.month || (f.month==='__nodate__' ? !c.date : monthKey(c.date)===f.month));
+  const cnt = (g)=>monthBase.filter(c=>{ const h = BANKLOAN_STATUSES.find(x=>x[0]===c.status); return h && h[3]===g; }).length;
+  const paidThisMonth = monthBase.filter(c=>c.status==='撥款完成' && monthKey(c.date)===thisMonth).length;
+  let list = monthBase.filter(c=>bankLoanStatusMatch(c, f.status) && (!f.pack || (f.pack==='__none__' ? !c.packJob : c.packJob===f.pack)))
+    .filter(c=>matchesSearch(c, APP.bankLoanSearch));
+  list = sortList(list, APP.bankLoanSort, 'text');
+  const mobLimit = APP.bankLoanMobileLimit || 30;
+  const statusLabel = f.status==='__active__' ? '進行中' : (f.status ? f.status : '全部狀態');
+  const monthLabel = f.month ? (f.month==='__nodate__' ? '無日期' : (Number(f.month.slice(5))+' 月')) : '全部月份';
+  const stat = (label, n)=>`<div class="bl-stat"><div class="bl-stat-l">${label}</div><div class="bl-stat-n">${n}</div></div>`;
+  const statusSel = (c)=>{ const [bg,fg] = bankLoanStatusColor(c.status); const known = BANKLOAN_STATUSES.some(x=>x[0]===c.status);
+    return `<select data-bl-field="status" data-id="${c.id}" style="${VAL_CELL_STYLE}border-color:#E2E8F0;font-weight:600;background:${bg};color:${fg};">
+      ${(!c.status||!known)?`<option value="${escAttr(c.status||'')}" selected>${escHtml(c.status||'(空白)')}</option>`:''}
+      ${BANKLOAN_STATUSES.map(x=>`<option value="${x[0]}" ${c.status===x[0]?'selected':''}>${x[0]}</option>`).join('')}</select>`; };
+  const packSel = (c)=>`<select data-bl-field="packJob" data-id="${c.id}" style="${VAL_CELL_STYLE}border-color:#E2E8F0;">
+      <option value="" ${!c.packJob?'selected':''}>未定</option><option value="包裝" ${c.packJob==='包裝'?'selected':''}>包裝</option><option value="不包裝" ${c.packJob==='不包裝'?'selected':''}>不包裝</option></select>`;
+  const ed = (c, inner, extra)=>`<td data-action="bankloan-edit" data-id="${c.id}" style="cursor:pointer;${extra||''}">${inner}</td>`;
+  const rows = list.map(c=>`<tr>
+      ${ed(c, escHtml(c.date||'—'), 'white-space:nowrap;')}
+      <td style="min-width:130px;">${statusSel(c)}</td>
+      ${ed(c, `<b>${escHtml(c.customerName||'')}</b>${c.phone?`<div style="font-size:12px;color:var(--muted);">${escHtml(c.phone)}</div>`:''}`)}
+      ${ed(c, escHtml(c.owner||'—'))}
+      <td style="min-width:100px;">${packSel(c)}</td>
+      ${ed(c, escHtml(c.channel||'—'))}
+      ${ed(c, escHtml(c.plan||'—'))}
+      ${ed(c, bankLoanMoney(c.approvedAmount), 'text-align:right;white-space:nowrap;')}
+      ${ed(c, escHtml(c.note||''), 'min-width:200px;white-space:pre-wrap;word-break:break-word;')}
+    </tr>`).join('');
+  const cards = list.slice(0, mobLimit).map(c=>`
+    <div class="val-card" data-action="bankloan-edit" data-id="${c.id}">
+      <div class="val-card-top"><span class="val-card-name">${escHtml(c.customerName||'')}</span>${c.owner?`<span style="font-size:12px;color:var(--muted);">${escHtml(c.owner)} 的客人</span>`:''}<span style="margin-left:auto;">${bankLoanBadge(c.status)}</span></div>
+      <div class="val-card-area">${[c.phone, c.packJob||'未定', c.channel].filter(Boolean).map(escHtml).join('・')}</div>
+      ${c.note?`<div class="val-card-plan">${escHtml(c.note)}</div>`:''}
+      <div class="val-card-foot"><span>${escHtml((c.date||'—').slice(5).replace('-','/'))}</span><span style="margin-left:auto;">${c.approvedAmount!=null&&c.approvedAmount!==''?'核准 '+bankLoanMoney(c.approvedAmount):''}</span></div>
+    </div>`).join('');
+  const emptyText = all.length===0 ? '尚無銀行信貸案件' : (f.month===thisMonth ? '這個月還沒有銀行信貸案件' : '沒有符合篩選條件的案件');
+  const opt = (v, label, cur)=>`<option value="${v}" ${cur===v?'selected':''}>${label}</option>`;
+  return `
+    <div class="page-header"><div><h1 class="page-title">銀行信貸</h1><p class="page-sub">信貸送件追蹤・只有核心成員可以查看與編輯・狀態、包工作可直接在列表修改,其他欄位點一下開啟編輯視窗</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn ghost m-hide-640" data-action="bankloan-import">📥 匯入試算表</button>
+        <button class="btn primary m-hide-640" data-action="bankloan-add">＋ 新增案件</button>
+      </div>
+    </div>
+    <div class="bl-stats">${stat('評估／等確定',cnt('eval'))}${stat('送件中',cnt('sent'))}${stat('對保',cnt('sign'))}${stat('本月撥款',paidThisMonth)}${stat('培養中',cnt('nurture'))}</div>
+    <button type="button" class="btn ghost m-only val-more-filter" data-action="bankloan-toggle-filter" style="margin-bottom:10px;">${monthLabel}・${statusLabel} ▾</button>
+    <div class="bl-filter-box${APP.bankLoanFilterOpen?' open':''}"><div class="filter-row" style="flex-wrap:wrap;">
+      <div class="filter-field"><label>月份</label><select data-case-filter="bankloan-f-month">${opt('','全部月份',f.month)}${months.map(m=>opt(m, Number(m.slice(5))+' 月 ('+m.slice(0,4)+')', f.month)).join('')}${opt('__nodate__','無日期',f.month)}</select></div>
+      <div class="filter-field"><label>狀態</label><select data-case-filter="bankloan-f-status">${opt('__active__','進行中',f.status)}${opt('','全部狀態',f.status)}${BANKLOAN_STATUSES.map(x=>opt(x[0],x[0],f.status)).join('')}</select></div>
+      <div class="filter-field"><label>包工作</label><select data-case-filter="bankloan-f-pack">${opt('','全部',f.pack)}${opt('包裝','包裝',f.pack)}${opt('不包裝','不包裝',f.pack)}${opt('__none__','未定',f.pack)}</select></div>
+      ${searchBoxHtml('bankLoanSearch','姓名、電話、誰的客人、管道、方案、備註')}
+    </div></div>
+    <div class="tx-summary-bar"><div class="item">符合筆數<b>${list.length} 筆</b></div><div class="item">全部<b>${all.length} 筆</b></div></div>
+    <div class="val-cards m-only">${list.length===0?`<div class="empty">${emptyText}</div>`:cards}${list.length>mobLimit?`<button type="button" class="val-more" data-action="bankloan-more">顯示更多(還有 ${list.length-mobLimit} 筆)</button>`:''}</div>
+    <button type="button" class="val-fab" data-action="bankloan-add">＋ 新增案件</button>
+    <div class="table-wrap val-desktop">
+      ${list.length===0?`<div class="empty">${emptyText}</div>`:`
+      <table class="bl-table"><thead><tr>
+        ${thSort('日期','date','bankLoanSort')}${thSort('狀態','status','bankLoanSort')}${thSort('客戶','customerName','bankLoanSort')}${thSort('誰的客人','owner','bankLoanSort')}${thSort('包工作','packJob','bankLoanSort')}${thSort('送件管道','channel','bankLoanSort')}<th>方案</th><th style="text-align:right;">核准額度</th><th>狀態備註</th>
+      </tr></thead><tbody>${rows}</tbody></table>`}
+    </div>`;
+}
+function openBankLoanModal(existing){
+  const c = existing || {status:'評估中', date:todayStr(), owner:'', customerName:'', phone:'', packJob:'', channel:'', plan:'', approvedAmount:null, note:''};
+  const owners = Array.from(new Set((APP.data.bankLoanCases||[]).map(x=>x.owner).filter(Boolean)));
+  const unknownStatus = c.status && !BANKLOAN_STATUSES.some(x=>x[0]===c.status);
+  const stBtns = BANKLOAN_STATUSES.concat(unknownStatus?[[c.status,'#E5E7EB','#374151']]:[]).map(x=>{
+    const on = c.status===x[0];
+    return `<button type="button" data-bl-status="${escAttr(x[0])}" aria-pressed="${on}" style="height:34px;padding:0 12px;border-radius:999px;font:inherit;font-size:13px;cursor:pointer;background:${on?x[1]:'#FFFFFF'};color:${on?x[2]:'#3A4152'};border:${on?'2px solid #1F2433':'1px solid #D5DAE5'};" data-bg="${x[1]}" data-fg="${x[2]}">${escHtml(x[0])}</button>`;
+  }).join('');
+  const packBtns = [['包裝','包裝'],['不包裝','不包裝'],['','未定']].map(([v,l])=>`<button type="button" data-bl-pack="${v}" aria-pressed="${(c.packJob||'')===v}" style="height:38px;padding:0 18px;border:1px solid #D5DAE5;font:inherit;font-size:14px;cursor:pointer;background:${(c.packJob||'')===v?'#D4EDBC':'#fff'};color:${(c.packJob||'')===v?'#11734B':'#3A4152'};font-weight:${(c.packJob||'')===v?'700':'400'};">${l}</button>`).join('');
+  openModal(existing?('編輯案件・'+(c.customerName||'')):'新增銀行信貸案件', `
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">狀態</div>
+    <div id="bl-status-btns" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">${stBtns}</div>
+    <input type="hidden" name="status" value="${escAttr(c.status||'')}"/>
+    <div class="grid grid-2">
+      <label class="field"><span>日期</span><input type="date" name="date" value="${escAttr(c.date||'')}"/></label>
+      <label class="field"><span>誰的客人</span><input type="text" name="owner" list="bl-owner-list" value="${escAttr(c.owner||'')}"/><datalist id="bl-owner-list">${owners.map(x=>`<option value="${escAttr(x)}">`).join('')}</datalist></label>
+      <label class="field"><span>客戶姓名</span><input type="text" name="customerName" value="${escAttr(c.customerName||'')}" required/></label>
+      <label class="field"><span>電話</span><input type="tel" name="phone" value="${escAttr(c.phone||'')}"/></label>
+    </div>
+    <div style="font-size:12.5px;color:var(--muted);margin:10px 0 6px;">包工作</div>
+    <div id="bl-pack-btns" style="display:inline-flex;border-radius:8px;overflow:hidden;">${packBtns}</div>
+    <input type="hidden" name="packJob" value="${escAttr(c.packJob||'')}"/>
+    <div class="grid grid-2" style="margin-top:10px;">
+      <label class="field"><span>送件管道</span><input type="text" name="channel" value="${escAttr(c.channel||'')}"/></label>
+      <label class="field"><span>方案</span><input type="text" name="plan" value="${escAttr(c.plan||'')}"/></label>
+      <label class="field"><span>核准額度（萬）</span><input type="number" step="any" name="approvedAmount" value="${c.approvedAmount==null?'':escAttr(c.approvedAmount)}"/></label>
+    </div>
+    <label class="field"><span>狀態備註</span><textarea name="note" rows="4">${escHtml(c.note||'')}</textarea></label>
+    <div style="font-size:12px;color:var(--muted);background:#F7F8FB;border-radius:8px;padding:10px 12px;">${existing?escHtml(bankLoanEditedText(existing)):'新增後會記錄編輯人與時間'}</div>
+    ${existing?`<button type="button" id="bl-delete-btn" class="btn ghost" style="color:#B42318;margin-top:10px;">刪除這筆</button>`:''}`, 'bankloan-form', null);
+  const form = document.getElementById('bankloan-form');
+  form.querySelectorAll('[data-bl-status]').forEach(b=>b.addEventListener('click', ()=>{
+    form.querySelector('input[name="status"]').value = b.dataset.blStatus;
+    form.querySelectorAll('[data-bl-status]').forEach(x=>{
+      const on = x===b;
+      x.style.background = on ? x.dataset.bg : '#FFFFFF'; x.style.color = on ? x.dataset.fg : '#3A4152';
+      x.style.border = on ? '2px solid #1F2433' : '1px solid #D5DAE5'; x.setAttribute('aria-pressed', on);
+    });
+  }));
+  form.querySelectorAll('[data-bl-pack]').forEach(b=>b.addEventListener('click', ()=>{
+    form.querySelector('input[name="packJob"]').value = b.dataset.blPack;
+    form.querySelectorAll('[data-bl-pack]').forEach(x=>{
+      const on = x===b;
+      x.style.background = on ? '#D4EDBC' : '#fff'; x.style.color = on ? '#11734B' : '#3A4152'; x.style.fontWeight = on ? '700' : '400';
+      x.setAttribute('aria-pressed', on);
+    });
+  }));
+  const del = document.getElementById('bl-delete-btn');
+  if(del) del.addEventListener('click', ()=>{
+    openConfirm('確定要刪除這筆銀行信貸案件嗎？此動作無法復原。', async ()=>{
+      try{ await deleteBankLoanCase(existing.id); }catch(err){ console.error('刪除銀行信貸失敗:', err); alert('刪除失敗:' + (err && err.message ? err.message : err)); }
+      render();
+    });
+  });
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    try{
+      const fd = new FormData(form);
+      const data = {};
+      ['status','date','owner','customerName','phone','packJob','channel','plan','note'].forEach(k=>{ data[k] = String(fd.get(k)||'').trim(); });
+      const amt = String(fd.get('approvedAmount')||'').trim();
+      data.approvedAmount = amt==='' ? null : (isNaN(Number(amt)) ? null : Number(amt));
+      const id = existing ? existing.id : uid();
+      await saveBankLoanCase(stamp({...(existing||{}), id, ...data}));
+    } catch(err){
+      console.error('儲存銀行信貸時發生錯誤:', err);
+      alert('儲存失敗:' + (err && err.message ? err.message : err));
+    } finally{
+      closeModal(); render();
+    }
+  });
+}
+function openBankLoanImportModal(){
+  let parsed = null;
+  openModal('匯入銀行信貸試算表(Excel)', `
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;">請先在 Google 試算表選「檔案 → 下載 → Microsoft Excel (.xlsx)」,再選那個檔案。分頁名稱需為「8月、9月、10月…」格式。按「讀取預覽」後會先列出所有資料,<b>確認後才會寫入</b>。重複匯入同一份檔案會覆蓋同一筆,不會變成兩筆。</p>
+    <div class="grid grid-2">
+      <label class="field"><span>這份試算表的年份</span><input type="number" name="year" value="${new Date().getFullYear()}" required/></label>
+      <label class="field"><span>Excel 檔案</span><input type="file" name="file" accept=".xlsx,.xls"/></label>
+    </div>
+    <div id="bl-import-msg" style="font-size:13px;margin-top:8px;"></div>
+    <div id="bl-import-preview" style="margin-top:8px;overflow-x:auto;"></div>`, 'bankloan-import-form', null);
+  const form = document.getElementById('bankloan-import-form');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  submitBtn.textContent = '讀取預覽';
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const msg = document.getElementById('bl-import-msg');
+    try{
+      if(parsed){
+        const picked = [];
+        form.querySelectorAll('.bl-imp-row').forEach(tr=>{
+          if(!tr.querySelector('.bl-imp-check').checked) return;
+          const base = parsed[Number(tr.dataset.i)];
+          const g = (k)=>tr.querySelector(`[data-k="${k}"]`).value.trim();
+          const amt = g('approvedAmount');
+          picked.push(stamp({ id:base.id, status:g('status'), date:g('date'), owner:base.owner, customerName:g('customerName'), phone:base.phone,
+            packJob:base.packJob, channel:base.channel, plan:g('plan'), approvedAmount: (amt===''||isNaN(Number(amt))) ? null : Number(amt), note:base.note }));
+        });
+        if(picked.length===0){ msg.textContent = '沒有勾選任何資料。'; return; }
+        for(let i=0;i<picked.length;i+=400){
+          const batch = writeBatch(db);
+          picked.slice(i,i+400).forEach(r=>batch.set(doc(db,'bankLoanCases',r.id), r));
+          await batch.commit();
+        }
+        alert(`匯入完成,共 ${picked.length} 筆。`);
+        closeModal(); render();
+        return;
+      }
+      const fd = new FormData(form);
+      const year = Number(fd.get('year'));
+      const file = fd.get('file');
+      if(!file || !file.size){ msg.textContent = '請先選擇 Excel 檔案。'; return; }
+      msg.textContent = '讀取中…';
+      const wb = XLSX.read(await file.arrayBuffer(), {type:'array', cellDates:true});
+      const existing = APP.data.bankLoanCases || [];
+      const recs = [];
+      wb.SheetNames.forEach(name=>{
+        const m = name.trim().match(/^(\d{1,2})月$/);
+        if(!m) return;
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], {header:1, defval:''});
+        if(rows.length<2) return;
+        const head = rows[0].map(x=>String(x||'').trim());
+        const col = (...names)=>{ for(const n of names){ const i = head.indexOf(n); if(i>=0) return i; } return -1; };
+        const ci = { status:col('狀態'), date:col('日期'), owner:col('誰的客人'), name:col('客戶姓名'), phone:col('電話'), pack:col('包工作','工作'), channel:col('送件管道','管道'), plan:col('方案'), note:col('狀態備註','備註') };
+        const val = (r,k)=> ci[k]>=0 ? r[ci[k]] : '';
+        rows.slice(1).forEach((r, i)=>{
+          const customerName = String(val(r,'name')||'').trim();
+          if(!customerName) return;
+          const date = bankLoanParseDate(val(r,'date'), year);
+          const plan = String(val(r,'plan')||'').trim();
+          const status = String(val(r,'status')||'').trim();
+          recs.push({
+            id:`bl-${year}-${String(m[1]).padStart(2,'0')}-${i+2}`, sheet:name.trim(),
+            status, date, owner:String(val(r,'owner')||'').trim(), customerName, phone:String(val(r,'phone')||'').trim(),
+            packJob:bankLoanNormPack(val(r,'pack')), channel:String(val(r,'channel')||'').trim(), plan, note:String(val(r,'note')||'').trim(),
+            unknownStatus: !!status && !BANKLOAN_STATUSES.some(x=>x[0]===status),
+            noDate: !date || !/^\d{4}-\d{2}-\d{2}$/.test(date),
+            planHint: /額度|萬/.test(plan),
+            dup: existing.some(x=>x.id!==`bl-${year}-${String(m[1]).padStart(2,'0')}-${i+2}` && x.customerName===customerName && x.date===date)
+          });
+        });
+      });
+      if(recs.length===0){ msg.textContent = '沒有找到可匯入的資料,請確認分頁名稱(例如「8月」)與標題列。'; return; }
+      parsed = recs;
+      const inp = (k,v,w,extra)=>`<input type="text" data-k="${k}" value="${escAttr(v)}" style="width:${w}px;padding:4px;border:1px solid var(--border);border-radius:6px;${extra||''}"/>`;
+      document.getElementById('bl-import-preview').innerHTML = `
+        <table style="font-size:12.5px;width:100%;border-collapse:collapse;"><thead><tr><th></th><th>分頁</th><th>狀態</th><th>日期</th><th>客戶</th><th>誰的客人</th><th>方案</th><th>核准額度(萬)</th><th>提示</th></tr></thead><tbody>
+        ${recs.map((r,i)=>`<tr class="bl-imp-row" data-i="${i}" style="border-top:1px solid #EEF1F8;">
+          <td><input type="checkbox" class="bl-imp-check" ${r.dup?'':'checked'}/></td><td>${escHtml(r.sheet)}</td>
+          <td>${inp('status',r.status,90,r.unknownStatus?'background:#FEF3C7;':'')}</td><td>${inp('date',r.date,100,r.noDate?'background:#FEF3C7;':'')}</td>
+          <td>${inp('customerName',r.customerName,80)}</td><td>${escHtml(r.owner)}</td>
+          <td>${inp('plan',r.plan,150,r.planHint?'background:#FEF3C7;':'')}</td><td>${inp('approvedAmount','',60)}</td>
+          <td style="color:#B45309;font-size:12px;">${[r.unknownStatus?'狀態不在 14 種內':'', r.noDate?'日期空白或格式不明':'', r.planHint?'方案可能是核准額度,要的話請自己填右邊欄':'', r.dup?'可能重複(預設不勾)':''].filter(Boolean).join('；')}</td></tr>`).join('')}
+        </tbody></table>`;
+      msg.innerHTML = `共讀到 <b>${recs.length}</b> 筆。黃色欄位是需要你確認的地方,可以直接在預覽裡修改;確認無誤後按「確認匯入」才會寫入。`;
+      submitBtn.textContent = '確認匯入';
+    } catch(err){
+      console.error('匯入銀行信貸失敗:', err);
+      msg.textContent = '匯入失敗:' + (err && err.message ? err.message : err);
+    }
+  });
+}
+function buildBankLoanContext(){
+  const all = APP.data.bankLoanCases || [];
+  if(all.length===0) return '【銀行信貸】目前沒有資料';
+  const cut = (v, n)=>{ const t = String(v||'').replace(/\s+/g,' ').trim(); return t.length>n ? t.slice(0,n)+'…' : t; };
+  const months = Array.from(new Set(all.map(c=>monthKey(c.date)||'無日期'))).sort().reverse();
+  const recent = months.slice(0,2);
+  const statusCount = {};
+  all.forEach(c=>{ const s = c.status||'(空白)'; statusCount[s] = (statusCount[s]||0)+1; });
+  const lines = all.filter(c=>recent.includes(monthKey(c.date)||'無日期'))
+    .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))
+    .slice(0,150)
+    .map(c=>`[id:${c.id}] ${c.date||'無日期'}｜狀態:${c.status||'—'}｜客戶:${c.customerName||''}｜電話:${c.phone||'—'}｜誰的客人:${c.owner||'—'}｜包工作:${c.packJob||'未定'}｜管道:${c.channel||'—'}｜方案:${cut(c.plan,40)}｜核准額度:${c.approvedAmount==null?'—':c.approvedAmount+'萬'}｜備註:${cut(c.note,50)}`);
+  return `【銀行信貸】（只有核心看得到；共 ${all.length} 筆；各狀態件數：${Object.keys(statusCount).map(k=>k+' '+statusCount[k]).join('、')}）
+近兩個月明細（最多 150 筆，由新到舊；更早的月份沒有逐筆明細）：
+${lines.join('\n') || '無'}`;
+}
+function buildBankLoanRowHtml(r, idx){
+  const existing = r.id ? (APP.data.bankLoanCases||[]).find(x=>x.id===r.id) : null;
+  const missing = !!r.id && !existing;
+  const inp = (key, ph, w, type)=>`<input type="${type||'text'}" class="ai-row-field" data-key="${key}" value="${escAttr(r[key]==null?'':r[key])}" placeholder="${ph}" style="width:${w}px;padding:4px;border:1px solid var(--border);border-radius:6px;"/>`;
+  return `<div class="tx-row" style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #EEF1F8;font-size:12.5px;flex-wrap:wrap;">
+    <input type="checkbox" class="ai-row-check" ${missing?'':'checked'}/>
+    <input type="hidden" class="ai-row-field" data-key="id" value="${escAttr(r.id||'')}"/>
+    <span class="badge ${existing?'pending':'active'}" ${missing?'style="background:#FEE2E2;color:#B91C1C;"':''}>${missing?'找不到這筆':(existing?'修改':'新增')}</span>
+    ${inp('date','日期',130,'date')}${inp('customerName','客戶姓名',90)}${inp('phone','電話',100)}${inp('owner','誰的客人',70)}
+    <select class="ai-row-field" data-key="status" style="padding:4px;border:1px solid var(--border);border-radius:6px;">${BANKLOAN_STATUSES.map(x=>`<option value="${x[0]}" ${(r.status||'評估中')===x[0]?'selected':''}>${x[0]}</option>`).join('')}</select>
+    <select class="ai-row-field" data-key="packJob" style="padding:4px;border:1px solid var(--border);border-radius:6px;"><option value="" ${!r.packJob?'selected':''}>未定</option><option value="包裝" ${r.packJob==='包裝'?'selected':''}>包裝</option><option value="不包裝" ${r.packJob==='不包裝'?'selected':''}>不包裝</option></select>
+    ${inp('channel','送件管道',70)}${inp('plan','方案',110)}${inp('approvedAmount','核准額度(萬)',90,'number')}${inp('note','狀態備註',180)}
+  </div>`;
+}
+
 async function openValuationTargetsModal(){
   let targets = VALUATION_DEFAULT_TARGETS;
   try{
@@ -6424,7 +6786,8 @@ ${followupOverdueLines || '無'}
 
 【廣告投放成效】（近 ${adSpendSorted.length} 個月，由新到舊）
 ${adSpendLines || '無資料'}
-${buildValuationContext()}`;
+${buildValuationContext()}
+${buildBankLoanContext()}`;
 }
 function buildValuationContext(){
   const all = APP.data.valuationCases || [];
@@ -6549,7 +6912,7 @@ function renderChatInto(box){
         const kind = m.pendingKind || 'tx';
         const rowBuilder = kind==='personallog' ? buildPersonalLogRowHtml : kind==='progresstrack' ? buildProgressTrackRowHtml
           : kind==='attendance' ? buildAttendanceRowHtml : kind==='calendar' ? buildCalendarRowHtml
-          : kind==='vendor' ? buildVendorRowHtml : kind==='employee' ? buildEmployeeRowHtml : kind==='socialaccount' ? buildSocialAccountRowHtml : kind==='customerfollowup' ? buildCustomerFollowupRowHtml : kind==='valuation' ? buildValuationRowHtml : kind==='adspend' ? buildAdSpendRowHtml : kind==='markbonuspaid' ? buildMarkBonusPaidRowHtml : buildTxRowHtml;
+          : kind==='vendor' ? buildVendorRowHtml : kind==='employee' ? buildEmployeeRowHtml : kind==='socialaccount' ? buildSocialAccountRowHtml : kind==='customerfollowup' ? buildCustomerFollowupRowHtml : kind==='valuation' ? buildValuationRowHtml : kind==='bankloan' ? buildBankLoanRowHtml : kind==='adspend' ? buildAdSpendRowHtml : kind==='markbonuspaid' ? buildMarkBonusPaidRowHtml : buildTxRowHtml;
         inner += `<div id="chat-pending-${i}" style="margin-top:10px;background:#fff;border-radius:8px;padding:8px;" data-kind="${kind}">
           ${m.pendingTx.map((r,j)=>rowBuilder(r,j)).join('')}
           <button type="button" class="btn primary sm" style="margin-top:6px;width:100%;" data-action="chat-tx-confirm" data-msgidx="${i}">確認新增選取的紀錄</button>
@@ -6599,7 +6962,7 @@ async function sendChatMessage(question){
     let text = data.answer || data.error || '沒有取得回應，請再試一次。';
     let rows = null;
     let pendingKind = 'tx';
-    const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor'],['customerfollowup','customerfollowup'],['adspend','adspend'],['markbonuspaid','markbonuspaid'],['valuation','valuation']];
+    const TAG_MAP_CORE = [['transactions','tx'],['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['vendor','vendor'],['customerfollowup','customerfollowup'],['adspend','adspend'],['markbonuspaid','markbonuspaid'],['valuation','valuation'],['bankloan','bankloan']];
     const TAG_MAP_STAFFSALES = [['personallog','personallog'],['attendance','attendance'],['calendar','calendar'],['customerfollowup','customerfollowup']];
     const TAG_MAP_STAFFADMIN = [['progresstrack','progresstrack'],['attendance','attendance'],['calendar','calendar'],['customerfollowup','customerfollowup']];
     let tagMap = isCore() ? TAG_MAP_CORE : isStaffSales() ? TAG_MAP_STAFFSALES : isStaffAdmin() ? TAG_MAP_STAFFADMIN : [];
@@ -6613,6 +6976,11 @@ async function sendChatMessage(question){
         pendingKind = kind;
         break;
       }
+    }
+    // 銀行信貸:標籤被截斷或 JSON 讀不出來時,明確告知,不要靜默失敗
+    if(isCore() && (!rows || !Array.isArray(rows) || rows.length===0)){
+      if(/<bankloan>/i.test(text)){ text = text.replace(/<bankloan>[\s\S]*$/i,'').trim() + '\n⚠ 內容太長,銀行信貸資料沒有整理完整,請分段貼上(一次少幾位客戶)。'; }
+      else if(pendingKind==='bankloan'){ text = text + '\n⚠ 內容太長或格式不完整,請分段貼上。'; }
     }
     APP.chatMessages.push({ role:'ai', text, pendingTx: (rows && Array.isArray(rows) && rows.length>0) ? rows : null, pendingKind });
   }catch(e){
@@ -7057,6 +7425,11 @@ document.addEventListener('click', (e)=>{
     if(action==='open-ad-case-modal'){ openAdCaseModal(null); return; }
     if(action==='valuation-toggle-filter'){ APP.valuationFilterOpen = !APP.valuationFilterOpen; render(); return; }
     if(action==='valuation-more'){ APP.valuationMobileLimit = (APP.valuationMobileLimit||30) + 30; render(); return; }
+    if(action==='bankloan-add'){ openBankLoanModal(null); return; }
+    if(action==='bankloan-edit'){ const bc = (APP.data.bankLoanCases||[]).find(x=>x.id===el.dataset.id); if(bc) openBankLoanModal(bc); return; }
+    if(action==='bankloan-import'){ openBankLoanImportModal(); return; }
+    if(action==='bankloan-toggle-filter'){ APP.bankLoanFilterOpen = !APP.bankLoanFilterOpen; render(); return; }
+    if(action==='bankloan-more'){ APP.bankLoanMobileLimit = (APP.bankLoanMobileLimit||30) + 30; render(); return; }
     if(action==='valuation-clear'){ APP.valuationFilter = {}; APP.valuationSearch = ''; render(); return; }
     if(action==='valuation-quick'){
       const q = el.dataset.q;
@@ -7235,6 +7608,17 @@ document.addEventListener('click', (e)=>{
           const rec = old ? Object.assign({}, old, fields) : { id:uid(), ...fields };
           if(old) delete rec._silent; // 經過手動確認的修改視為正常編輯,方案有變動就會推播
           savePromises.push(saveValuationCase(stamp(rec)));
+        } else if(kind==='bankloan'){
+          if(!data.customerName){ skipped++; return; }
+          const oldBl = data.id ? (APP.data.bankLoanCases||[]).find(x=>x.id===data.id) : null;
+          if(data.id && !oldBl){ skipped++; return; } // id 找不到:不寫入
+          const bf = {};
+          ['status','date','owner','customerName','phone','packJob','channel','plan','note'].forEach(k=>{ bf[k] = String(data[k]==null?'':data[k]).trim(); });
+          if(!BANKLOAN_STATUSES.some(x=>x[0]===bf.status)) bf.status = oldBl ? oldBl.status : '評估中';
+          const bAmt = String(data.approvedAmount==null?'':data.approvedAmount).trim();
+          bf.approvedAmount = (bAmt===''||isNaN(Number(bAmt))) ? null : Number(bAmt);
+          const blRec = oldBl ? Object.assign({}, oldBl, bf) : { id:uid(), ...bf };
+          savePromises.push(saveBankLoanCase(stamp(blRec)));
         } else if(kind==='adspend'){
           if(!data.month){ skipped++; return; }
           const existing = APP.data.adSpend.find(a=>a.month===data.month);
@@ -7530,6 +7914,7 @@ document.addEventListener('change', (e)=>{
         return;
       }
     }
+    else if(key.startsWith('bankloan-f-')){ APP.bankLoanFilter = Object.assign({}, bankLoanFilterState(), {[key.slice(11)]: e.target.value}); }
     else if(key==='channel-month') APP.caseChannelFilter.month = e.target.value;
     else if(key==='mylog-month') APP.myLogFilter.month = e.target.value;
     else if(key==='attendance-month') APP.attendanceFilter.month = e.target.value;
