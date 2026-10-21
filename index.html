@@ -502,6 +502,45 @@
   .card-head-row h3{margin:0;font-size:15px;}
   .card-head-row .hint{font-size:12px;color:var(--muted);font-weight:400;}
 
+
+  /* ===== 手機版(≤640px)專用:只在手機生效,電腦版不受影響 ===== */
+  .m-only{display:none;}
+  @media (max-width:640px){ .m-hide-640{display:none !important;} .page-header .page-sub{display:none;} }
+  .val-fab{display:none;}
+  @media (max-width:640px){
+    html,body{overflow-x:hidden;}
+    #main{padding:14px 12px 96px;max-width:100vw;box-sizing:border-box;}
+    .m-only{display:block;}
+    .m-hide{display:none !important;}
+    .page-title{font-size:20px;}
+    .stat-value{font-size:19px;}
+    .card{padding:14px;}
+    .kpi-grid-m2{grid-template-columns:1fr 1fr !important;gap:10px;}
+    .bar-chart{gap:6px;}
+    .bar-col.m-off{display:none;}
+    .bar{width:12px;}
+    /* AI 機器人按鈕縮小,不蓋住內容 */
+    .ai-chat-fab{width:46px;height:46px;font-size:19px;right:14px;bottom:18px;}
+    /* 房屋土地估價:卡片列表 */
+    .val-desktop{display:none !important;}
+    .val-cards{display:flex;flex-direction:column;gap:10px;}
+    .val-card{background:#fff;border-radius:12px;padding:14px;border:1px solid var(--border);box-shadow:0 1px 2px rgba(20,30,60,.06);cursor:pointer;}
+    .val-card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .val-card-name{font-size:16px;font-weight:700;}
+    .val-card-cat{font-size:12px;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:1px 6px;}
+    .val-card-area{font-size:13px;color:#3A4152;margin-top:6px;}
+    .val-card-val{font-size:13.5px;margin-top:8px;}
+    .val-card-plan{font-size:13px;margin-top:6px;background:#F7F8FB;border-radius:8px;padding:8px 10px;color:#3A4152;white-space:pre-wrap;}
+    .val-card-noplan{font-size:12.5px;margin-top:6px;color:#8A4B00;background:#FFF3DC;border-radius:8px;padding:8px 10px;}
+    .val-card-foot{display:flex;font-size:12px;color:var(--muted);margin-top:8px;}
+    .val-more{height:44px;border:1px dashed #C5CCDB;background:transparent;border-radius:10px;font-size:13.5px;color:#3A4152;width:100%;cursor:pointer;}
+    .val-fab{display:flex;position:fixed;left:14px;bottom:18px;height:48px;padding:0 20px;border:0;border-radius:24px;background:var(--navy);color:#fff;font-size:15px;font-weight:700;align-items:center;box-shadow:0 6px 16px rgba(47,91,234,.35);z-index:80;cursor:pointer;}
+    .val-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px;-webkit-overflow-scrolling:touch;}
+    .val-chips .btn{flex:0 0 auto;}
+    .val-filter-box{display:none;}
+    .val-filter-box.open{display:block;}
+    .val-more-filter{width:100%;}
+  }
   /* Mobile top bar */
   #mobile-topbar{display:none;}
   .sidebar-backdrop{display:none;}
@@ -559,7 +598,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-21-01';
+const APP_BUILD = '2026-10-21-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1370,10 +1409,13 @@ function dashboardHTML(){
     return {m:i+1, mi, me};
   });
   const maxVal = Math.max(1, ...monthly.map(m=>Math.max(m.mi,m.me)));
+  // 手機只顯示近 6 個月:今年看到本月為止的 6 個月,其他年度顯示最後 6 個月
+  const lastMonthShown = isCurYear ? (now.getMonth()+1) : 12;
   const barsHtml = monthly.map(m=>{
     const hi = Math.round((m.mi/maxVal)*170);
     const he = Math.round((m.me/maxVal)*170);
-    return `<div class="bar-col"><div class="bar-pair">
+    const mOff = (m.m > lastMonthShown || m.m <= lastMonthShown-6) ? ' m-off' : '';
+    return `<div class="bar-col${mOff}"><div class="bar-pair">
       <div class="bar income-bar" style="height:${hi}px" title="收入 ${money(m.mi)}"></div>
       <div class="bar expense-bar" style="height:${he}px" title="支出 ${money(m.me)}"></div>
     </div><div class="m-label">${m.m}月</div></div>`;
@@ -1477,6 +1519,17 @@ function dashboardHTML(){
   const unpaidBonusCases = APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey && !adAllPaid(c));
   const unpaidBonusTotal = sum(unpaidBonusCases.map(c=>({amount:(Number(c.businessBonus)||0)+(Number(c.xiaojiangBonus)||0)})));
 
+  /* ---- 手機版「今天要處理」:沿用電腦版「待處理提醒」同一套判斷,不另外發明規則 ---- */
+  const todoFollowup = (APP.data.customerFollowups||[]).filter(f=>followupOverallStatus(f)==='overdue').length;
+  const todoRows = [
+    {text:'案件超過 7 天未更新狀態', count:staleCount, color:'#C2410C', action:staleCount>0?'open-stale-cases-modal':'', view:''},
+    {text:'本月獎金尚未發放', count:unpaidBonusCases.length, color:'#B45309', action:'nav', view:'dailyBonus'},
+    {text:'客戶關懷逾期', count:todoFollowup, color:'#2F5BEA', action:'nav', view:'customerFollowupOverview'}
+  ];
+  const todoHtml = `<div class="card m-only" style="margin-bottom:16px;"><div class="card-head-row"><h3>今天要處理</h3></div>
+    ${todoRows.map(t=>`<div class="cat-row"${t.action?` data-action="${t.action}"${t.view?` data-view="${t.view}"`:''}`:''} style="cursor:pointer;min-height:44px;"><span style="width:8px;height:8px;border-radius:4px;background:${t.color};flex-shrink:0;"></span><div class="name" style="width:auto;flex:1;">${t.text}</div><b style="color:${t.count>0?t.color:'var(--muted)'};">${t.count}</b><span style="color:#9AA1B2;">›</span></div>`).join('')}
+  </div>`;
+
   return `
     <div class="page-header">
       <div><h1 class="page-title">總覽</h1><p class="page-sub">公司今天的體檢報告</p></div>
@@ -1484,7 +1537,7 @@ function dashboardHTML(){
     </div>
 
     <div class="card-head-row" style="margin-top:6px;"><h3 style="font-size:15px;">本月營運脈動</h3></div>
-    <div class="grid grid-3" style="margin-bottom:20px;">
+    <div class="grid grid-3 kpi-grid-m2" style="margin-bottom:20px;">
       <div class="card"><div class="stat-label">本月撥款完成</div><div class="stat-value green">${disbursedCount} 件</div></div>
       <div class="card"><div class="stat-label">本月處理中案件</div><div class="stat-value blue">${pendingCount} 件</div></div>
       <div class="card"><div class="stat-label">今日應發獎金</div><div class="stat-value" style="color:var(--teal);">${money(todayBonusTotal)}</div></div>
@@ -1504,22 +1557,23 @@ function dashboardHTML(){
       <div style="font-size:11.5px;opacity:.75;margin-top:8px;">點擊查看完整每日獎金明細 →</div>
     </div>
 
-    <div class="grid grid-2" style="margin-bottom:16px;">
+    <div class="grid grid-2 kpi-grid-m2" style="margin-bottom:16px;">
       <div class="card"><div class="stat-label">${year} 年度總收入</div><div class="stat-value green">${money(totalIncome)}</div></div>
       <div class="card"><div class="stat-label">${year} 年度總支出</div><div class="stat-value red">${money(totalExpense)}</div></div>
     </div>
-    <div class="grid grid-3" style="margin-bottom:20px;">
+    <div class="grid grid-3 kpi-grid-m2" style="margin-bottom:20px;">
       <div class="card"><div class="stat-label">當月收入</div><div class="stat-value green">${money(monthIncome)}</div></div>
       <div class="card"><div class="stat-label">當月支出</div><div class="stat-value red">${money(monthExpense)}</div></div>
       <div class="card"><div class="stat-label">當月結餘（公司淨利模型）</div><div class="stat-value blue">${money(computeCompanyFinalNet(nowMonthKey))}</div></div>
     </div>
 
+    ${todoHtml}
     <div class="grid grid-2" style="margin-bottom:20px;">
       <div class="card">
         <div class="card-head-row"><h3>業務排行榜</h3><span class="hint">本月公司利潤貢獻</span></div>
         ${rankHtml}
       </div>
-      <div class="card">
+      <div class="card m-hide">
         <div class="card-head-row"><h3>待處理提醒</h3></div>
         <div class="cat-row"${staleCount>0?' data-action="open-stale-cases-modal" style="cursor:pointer;"':''}><div class="name" style="width:auto;flex:1;">案件超過 7 天未更新狀態${staleCount>0?' <span style="font-size:11px;color:var(--blue);">(點擊查看明細)</span>':''}</div><div class="val" style="width:auto;color:${staleCount>0?'var(--red)':'var(--muted)'};font-weight:700;">${staleCount} 件</div></div>
         <div class="cat-row"><div class="name" style="width:auto;flex:1;">本月獎金尚未發放</div><div class="val" style="width:auto;color:${unpaidBonusCases.length>0?'var(--amber)':'var(--muted)'};font-weight:700;">${unpaidBonusCases.length} 件 · ${money(unpaidBonusTotal)}</div></div>
@@ -4554,19 +4608,35 @@ function valuationHTML(){
       <td style="min-width:230px;">${cell(c,'memo')}</td>
       <td><button class="icon-btn" data-action="valuation-delete" data-id="${c.id}">刪除</button></td>
     </tr>`; }).join('');
+  const mobLimit = APP.valuationMobileLimit || 30;
+  const mobList = list.slice(0, mobLimit);
+  const cardsHtml = mobList.map(c=>`
+    <div class="val-card" data-action="valuation-edit" data-id="${c.id}">
+      <div class="val-card-top">
+        <span class="val-card-name">${escHtml(c.customerName||'')}</span>
+        ${c.category?`<span class="val-card-cat">${escHtml(c.category)}</span>`:''}
+        <span style="margin-left:auto;">${valuationStatusBadge(c.status)}</span>
+      </div>
+      ${c.area?`<div class="val-card-area">${escHtml(c.area)}</div>`:''}
+      ${c.valuation?`<div class="val-card-val"><span style="color:var(--muted);">估價</span>　<b>${escHtml(c.valuation)}</b></div>`:''}
+      ${String(c.plan||'').trim()?`<div class="val-card-plan">方案:${escHtml(c.plan)}</div>`:`<div class="val-card-noplan">尚未填方案</div>`}
+      <div class="val-card-foot"><span>經手:${escHtml(c.handler||'—')}</span><span style="margin-left:auto;">${escHtml((c.date||'').slice(5).replace('-','/'))}</span></div>
+    </div>`).join('');
+  const noPlanCount = list.filter(c=>!String(c.plan||'').trim()).length;
   return `
-    <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub">狀態、日期、經手人、客戶姓名、類別可直接在表格修改;地區、估價資訊、方案、備註點一下會跳出視窗編輯;填寫或修改「方案」會推播到 LINE;在 LINE 輸入「@客戶姓名」可查詢</p></div>
+    <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub" style="display:var(--val-sub,block)">狀態、日期、經手人、客戶姓名、類別可直接在表格修改;地區、估價資訊、方案、備註點一下會跳出視窗編輯;填寫或修改「方案」會推播到 LINE;在 LINE 輸入「@客戶姓名」可查詢</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn ghost" data-action="valuation-targets">🔔 推播對象</button>
-        <button class="btn ghost" data-action="valuation-import">📥 匯入 Excel</button>
-        <button class="btn primary" data-action="valuation-add">＋ 新增估價</button>
+        <button class="btn ghost m-hide-640" data-action="valuation-targets">🔔 推播對象</button>
+        <button class="btn ghost m-hide-640" data-action="valuation-import">📥 匯入 Excel</button>
+        <button class="btn primary m-hide-640" data-action="valuation-add">＋ 新增估價</button>
       </div>
     </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+    <div class="val-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
       ${chip('all','全部',activeCount===0)}${chip('today','今天',isQuick('today'))}${chip('week','本週',isQuick('week'))}${chip('month','本月',isQuick('month'))}
       ${chip('noplan','未填方案',f.planState==='empty')}${chip('hasplan','已填方案',f.planState==='filled')}
     </div>
-    <div class="filter-row" style="flex-wrap:wrap;">
+    <button type="button" class="btn ghost m-only val-more-filter" data-action="valuation-toggle-filter" style="margin-bottom:10px;">${APP.valuationFilterOpen?'收起篩選':'更多篩選'}${activeCount>0?`(已套用 ${activeCount})`:''}</button>
+    <div class="val-filter-box${APP.valuationFilterOpen?' open':''}" style="display:contents;"><div class="filter-row" style="flex-wrap:wrap;">
       ${sel('month','月份','month')}
       ${sel('status','狀態','status')}
       ${sel('handler','經手人','handler')}
@@ -4578,9 +4648,11 @@ function valuationHTML(){
       <div class="filter-field"><label>日期到</label><input type="date" data-case-filter="valuation-f-to" value="${escAttr(f.to)}" style="padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;"/></div>
       ${searchBoxHtml('valuationSearch','客戶、備註…任何欄位')}
       ${activeCount>0?`<div class="filter-field"><label>&nbsp;</label><button type="button" class="btn ghost sm" data-action="valuation-clear">✕ 清除全部篩選 (${activeCount})</button></div>`:''}
-    </div>
-    <div class="tx-summary-bar"><div class="item">符合筆數<b>${list.length} 筆</b></div><div class="item">全部<b>${all.length} 筆</b></div></div>
-    <div class="table-wrap">
+    </div></div>
+    <div class="tx-summary-bar"><div class="item">符合筆數<b>${list.length} 筆</b></div><div class="item">全部<b>${all.length} 筆</b></div><div class="item m-only">未填方案<b>${noPlanCount} 筆</b></div></div>
+    <div class="val-cards m-only">${list.length===0?`<div class="empty">${all.length===0?'尚無估價資料':'沒有符合篩選條件的資料'}</div>`:cardsHtml}${list.length>mobLimit?`<button type="button" class="val-more" data-action="valuation-more">顯示更多(還有 ${list.length-mobLimit} 筆)</button>`:''}</div>
+    <button type="button" class="val-fab" data-action="valuation-add">＋ 新增估價</button>
+    <div class="table-wrap val-desktop">
       ${list.length===0?`<div class="empty">${all.length===0?'尚無估價資料':'沒有符合篩選條件的資料'}</div>`:`
       <table><thead><tr>
         ${thSort('狀態','status','valuationSort')}${thSort('日期','date','valuationSort')}${thSort('經手人','handler','valuationSort')}${thSort('客戶姓名','customerName','valuationSort')}${thSort('地區','area','valuationSort')}${thSort('類別','category','valuationSort')}<th>估價資訊</th><th>方案</th><th>備註</th><th></th>
@@ -6983,6 +7055,8 @@ document.addEventListener('click', (e)=>{
       openConfirm('確定要刪除這筆進度資料嗎？', ()=>{ deleteProgressChannelCase(el.dataset.id); }); return;
     }
     if(action==='open-ad-case-modal'){ openAdCaseModal(null); return; }
+    if(action==='valuation-toggle-filter'){ APP.valuationFilterOpen = !APP.valuationFilterOpen; render(); return; }
+    if(action==='valuation-more'){ APP.valuationMobileLimit = (APP.valuationMobileLimit||30) + 30; render(); return; }
     if(action==='valuation-clear'){ APP.valuationFilter = {}; APP.valuationSearch = ''; render(); return; }
     if(action==='valuation-quick'){
       const q = el.dataset.q;
