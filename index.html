@@ -63,6 +63,7 @@
   .valuation-nav-button{background:linear-gradient(135deg,#10B981,#0EA5A4);box-shadow:0 4px 14px rgba(16,185,129,.4);margin-top:8px;}
   .valuation-nav-button:hover{box-shadow:0 6px 18px rgba(16,185,129,.55);}
   .valuation-nav-button.is-active{outline:2px solid #fff;}
+  .val-longcell:hover{border-color:#94A3B8 !important;background:#F8FAFC;}
   .chat-nav-icon{font-size:19px;}
   .chat-nav-badge{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#EF4444;color:#fff;
     font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px;min-width:18px;text-align:center;line-height:1.4;}
@@ -558,7 +559,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-15-09';
+const APP_BUILD = '2026-10-21-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -652,7 +653,7 @@ const APP = {
   myLogFilter:{month:nowMonthKey}, myLogNoContactCollapsed:false, attendanceFilter:{month:nowMonthKey},
   socialAccountFilter:{status:'all', stage:'all', bmGroup:'all'}, socialPersonalFilter:{status:'all'}, socialFanPageFilter:{status:'all'}, followupOverviewFilter:{staff:'all'},
   progressAdSort:{key:'date',dir:'desc'}, progressChannelSort:{key:'date',dir:'desc'},
-  casesAdSort:{key:'date',dir:'desc'}, valuationSort:{key:'date',dir:'desc'}, valuationSearch:'', valuationFilter:{}, casesChannelSort:{key:'date',dir:'desc'},
+  casesAdSort:{key:'date',dir:'desc'}, valuationSort:{key:'date',dir:'desc'}, valuationSearch:'', valuationFilter:{}, valuationStatusOptions:[], casesChannelSort:{key:'date',dir:'desc'},
   txSort:{key:'date',dir:'desc'}, adSpendSort:{key:'month',dir:'desc'}, myLogSort:{key:'date',dir:'desc'},
   progressAdSearch:'', progressChannelSearch:'', caseAdSearch:'', caseChannelSearch:'', myLogSearch:'',
   progressTab:'ad', progressAdFilter:{status:'all', month:nowMonthKey}, progressChannelFilter:{status:'all', month:nowMonthKey},
@@ -914,6 +915,11 @@ function subscribeAll(){
           APP.data.valuationCases = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }, err=>console.error('valuationCases 訂閱失敗', err)));
+        unsubs.push(onSnapshot(doc(db,'appdata','valuationOptions'), snap2=>{
+          const d = snap2.data();
+          APP.valuationStatusOptions = (d && Array.isArray(d.statuses)) ? d.statuses : [];
+          render();
+        }, err=>console.error('valuationOptions 訂閱失敗', err)));
         unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap2=>{
           APP.staffProfiles = {};
           snap2.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
@@ -4403,14 +4409,98 @@ const VALUATION_STATUS_COLORS = [
   ['#DBEAFE','#1D4ED8'],['#DCFCE7','#15803D'],['#FEF3C7','#B45309'],['#FCE7F3','#BE185D'],
   ['#EDE9FE','#6D28D9'],['#CCFBF1','#0F766E'],['#FFEDD5','#C2410C'],['#E0E7FF','#4338CA']
 ];
+function valuationStatusColor(status){
+  const t = String(status||'').trim();
+  if(!t) return ['#FFFFFF','#64748B'];
+  let h = 0;
+  for(let i=0;i<t.length;i++) h = (h*31 + t.charCodeAt(i)) >>> 0;
+  return VALUATION_STATUS_COLORS[h % VALUATION_STATUS_COLORS.length];
+}
 function valuationStatusBadge(status){
   const t = String(status||'').trim();
   if(!t) return '—';
-  let h = 0;
-  for(let i=0;i<t.length;i++) h = (h*31 + t.charCodeAt(i)) >>> 0;
-  const [bg, fg] = VALUATION_STATUS_COLORS[h % VALUATION_STATUS_COLORS.length];
+  const [bg, fg] = valuationStatusColor(t);
   return `<span style="display:inline-block;padding:3px 10px;border-radius:99px;background:${bg};color:${fg};font-weight:600;font-size:12.5px;white-space:nowrap;">${escHtml(t)}</span>`;
 }
+function valuationStatusList(extra){
+  const set = new Set((APP.valuationStatusOptions||[]).map(x=>String(x).trim()).filter(Boolean));
+  (APP.data.valuationCases||[]).forEach(c=>{ const t = String(c.status||'').trim(); if(t) set.add(t); });
+  if(extra) set.add(extra);
+  return Array.from(set);
+}
+// 表格內直接編輯用的欄位樣式
+const VAL_CELL_STYLE = 'width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid transparent;border-radius:6px;font-size:13px;font-family:inherit;background:transparent;';
+function valuationFlash(msg, ok){
+  try{
+    let el = document.getElementById('val-flash');
+    if(!el){ el = document.createElement('div'); el.id = 'val-flash'; el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.2);'; document.body.appendChild(el); }
+    el.style.background = ok ? '#16A34A' : '#DC2626';
+    el.textContent = msg; el.style.display = 'block';
+    clearTimeout(valuationFlash._t);
+    valuationFlash._t = setTimeout(()=>{ el.style.display = 'none'; }, ok ? 1200 : 3500);
+  }catch(_){}
+}
+async function valuationSaveField(id, field, value){
+  const c = (APP.data.valuationCases||[]).find(x=>x.id===id);
+  if(!c) return;
+  value = String(value==null?'':value).trim();
+  if(String(c[field]||'') === value) return;
+  if(field==='customerName' && !value){ alert('客戶姓名不能空白'); render(); return; }
+  if(field==='date' && !value){ alert('日期不能空白'); render(); return; }
+  const patch = { [field]: value };
+  if(field==='date') patch.month = monthKey(value);
+  try{
+    await setDoc(doc(db,'valuationCases', id), stamp(patch), {merge:true});
+    valuationFlash('✓ 已儲存', true);
+  }catch(err){
+    console.error('估價欄位儲存失敗:', err);
+    valuationFlash('✗ 儲存失敗:' + (err && err.message ? err.message : err), false);
+    render();
+  }
+}
+function openValuationStatusOptionsModal(){
+  const list = valuationStatusList();
+  openModal('編輯狀態選項', `
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每行一個狀態,會出現在表格「狀態」的下拉選單。已經有資料在用的狀態會自動保留在選單裡,就算這裡刪掉也不會改到那些資料。</p>
+    <label class="field"><span>狀態選項</span><textarea name="statuses" rows="8">${escHtml(list.join('\n'))}</textarea></label>`, 'valuation-status-form', null);
+  document.getElementById('valuation-status-form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    try{
+      const fd = new FormData(e.target);
+      const arr = Array.from(new Set(String(fd.get('statuses')||'').split('\n').map(x=>x.trim()).filter(Boolean)));
+      await setDoc(doc(db,'appdata','valuationOptions'), stamp({statuses:arr}));
+    } catch(err){
+      console.error('儲存狀態選項失敗:', err);
+      alert('儲存失敗:' + (err && err.message ? err.message : err));
+    } finally{
+      closeModal(); render();
+    }
+  });
+}
+const VAL_FIELD_LABELS = {area:'地區', valuation:'估價資訊', plan:'方案', memo:'備註'};
+function openValuationFieldModal(id, field){
+  const c = (APP.data.valuationCases||[]).find(x=>x.id===id);
+  if(!c || !VAL_FIELD_LABELS[field]) return;
+  openModal(`${VAL_FIELD_LABELS[field]} · ${c.customerName||''}`, `
+    ${field==='plan' ? `<div style="background:#FEF3C7;color:#B45309;border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:10px;">⚠ 儲存後如果方案內容有變動,會自動推播到 LINE。</div>` : ''}
+    <label class="field"><span>${VAL_FIELD_LABELS[field]}</span><textarea name="v" rows="12" style="min-height:220px;">${escHtml(c[field]||'')}</textarea></label>`, 'valuation-field-form', null);
+  const ta = document.querySelector('#valuation-field-form textarea');
+  if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  document.getElementById('valuation-field-form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const v = new FormData(e.target).get('v');
+    closeModal();
+    await valuationSaveField(id, field, v);
+  });
+}
+// 表格內直接編輯:欄位改完(離開欄位或選好選項)才儲存
+document.addEventListener('change', (e)=>{
+  const t = e.target;
+  if(!t || !t.dataset || !t.dataset.valField) return;
+  const id = t.dataset.id, field = t.dataset.valField;
+  if(field==='status' && t.value==='__edit__'){ render(); openValuationStatusOptionsModal(); return; }
+  valuationSaveField(id, field, t.value);
+});
 function valuationHTML(){
   const all = APP.data.valuationCases || [];
   const f = Object.assign(valuationFilterDefaults(), APP.valuationFilter||{});
@@ -4443,24 +4533,29 @@ function valuationHTML(){
   };
   const chip = (q,label,active)=>`<button type="button" class="btn ${active?'primary':'ghost'} sm" data-action="valuation-quick" data-q="${q}">${label}</button>`;
   const activeCount = ['month','status','handler','category','area','planState','from','to'].filter(k=>f[k]).length + (APP.valuationSearch?1:0);
-  const rows = list.map(c=>`
+  const cell = (c, field)=>`<div class="val-longcell" data-action="valuation-edit-field" data-id="${c.id}" data-field="${field}" title="點一下編輯" style="cursor:pointer;padding:6px 8px;border:1px solid transparent;border-radius:6px;min-height:34px;font-size:13px;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;${c[field]?'':'color:#94A3B8;'}">${c[field]?escHtml(c[field]):'點一下填寫'}</div>`;
+  const line = (c, field)=>`<input type="text" data-val-field="${field}" data-id="${c.id}" value="${escAttr(c[field]||'')}" style="${VAL_CELL_STYLE}"/>`;
+  const rows = list.map(c=>{
+    const [sbg, sfg] = valuationStatusColor(c.status);
+    const statusOpts = valuationStatusList(String(c.status||'').trim());
+    return `
     <tr>
-      <td>${valuationStatusBadge(c.status)}</td>
-      <td>${escHtml(c.date||'—')}</td>
-      <td>${escHtml(c.handler||'—')}</td>
-      <td>${escHtml(c.customerName||'')}</td>
-      <td>${escHtml(c.area||'—')}</td>
-      <td>${c.category?`<span class="badge ${c.category==='銀行'?'income':'expense'}">${escHtml(c.category)}</span>`:'—'}</td>
-      <td style="max-width:220px;white-space:pre-wrap;">${escHtml(c.valuation||'')}</td>
-      <td style="max-width:220px;white-space:pre-wrap;">${escHtml(c.plan||'')}</td>
-      <td style="max-width:200px;white-space:pre-wrap;">${escHtml(c.memo||'')}</td>
-      <td><div class="row-actions">
-        <button class="icon-btn" data-action="valuation-edit" data-id="${c.id}">編輯</button>
-        <button class="icon-btn" data-action="valuation-delete" data-id="${c.id}">刪除</button>
-      </div></td>
-    </tr>`).join('');
+      <td style="min-width:120px;"><select data-val-field="status" data-id="${c.id}" style="${VAL_CELL_STYLE}border-color:#E2E8F0;font-weight:600;background:${sbg};color:${sfg};">
+        <option value="" ${!c.status?'selected':''}>(空白)</option>
+        ${statusOpts.map(o=>`<option value="${escAttr(o)}" ${c.status===o?'selected':''}>${escHtml(o)}</option>`).join('')}
+        <option value="__edit__">⚙ 編輯選項…</option></select></td>
+      <td style="min-width:140px;"><input type="date" data-val-field="date" data-id="${c.id}" value="${escAttr(c.date||'')}" style="${VAL_CELL_STYLE}"/></td>
+      <td style="min-width:80px;">${line(c,'handler')}</td>
+      <td style="min-width:100px;">${line(c,'customerName')}</td>
+      <td style="min-width:200px;">${cell(c,'area')}</td>
+      <td style="min-width:90px;"><select data-val-field="category" data-id="${c.id}" style="${VAL_CELL_STYLE}border-color:#E2E8F0;"><option value="" ${!c.category?'selected':''}>—</option><option value="銀行" ${c.category==='銀行'?'selected':''}>銀行</option><option value="民間" ${c.category==='民間'?'selected':''}>民間</option></select></td>
+      <td style="min-width:160px;">${cell(c,'valuation')}</td>
+      <td style="min-width:230px;">${cell(c,'plan')}</td>
+      <td style="min-width:230px;">${cell(c,'memo')}</td>
+      <td><button class="icon-btn" data-action="valuation-delete" data-id="${c.id}">刪除</button></td>
+    </tr>`; }).join('');
   return `
-    <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub">填寫「方案」時會自動推播到 LINE;在 LINE 輸入「@客戶姓名」可查詢</p></div>
+    <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub">狀態、日期、經手人、客戶姓名、類別可直接在表格修改;地區、估價資訊、方案、備註點一下會跳出視窗編輯;填寫或修改「方案」會推播到 LINE;在 LINE 輸入「@客戶姓名」可查詢</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn ghost" data-action="valuation-targets">🔔 推播對象</button>
         <button class="btn ghost" data-action="valuation-import">📥 匯入 Excel</button>
@@ -6900,6 +6995,7 @@ document.addEventListener('click', (e)=>{
       else if(q==='hasplan') APP.valuationFilter = Object.assign({}, APP.valuationFilter||{}, {planState:'filled'});
       render(); return;
     }
+    if(action==='valuation-edit-field'){ openValuationFieldModal(el.dataset.id, el.dataset.field); return; }
     if(action==='valuation-add'){ openValuationModal(null); return; }
     if(action==='valuation-edit'){ const c = APP.data.valuationCases.find(x=>x.id===el.dataset.id); if(c) openValuationModal(c); return; }
     if(action==='valuation-delete'){
