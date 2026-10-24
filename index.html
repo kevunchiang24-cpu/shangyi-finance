@@ -609,7 +609,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-21-04';
+const APP_BUILD = '2026-10-24-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -975,6 +975,11 @@ function subscribeAll(){
           APP.data.bankLoanCases = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }, err=>console.error('bankLoanCases 訂閱失敗', err)));
+        unsubs.push(onSnapshot(doc(db,'appdata','bankLoanOptions'), snap2=>{
+          const d = snap2.data();
+          APP.bankLoanStatusOptions = (d && Array.isArray(d.statuses)) ? d.statuses : [];
+          render();
+        }, err=>console.error('bankLoanOptions 訂閱失敗', err)));
         unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap2=>{
           APP.staffProfiles = {};
           snap2.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
@@ -4779,7 +4784,34 @@ const BANKLOAN_ENDED = ['撥款完成','結案','婉拒','客拒'];
 function bankLoanStatusColor(s){
   const t = String(s||'').trim();
   const hit = BANKLOAN_STATUSES.find(x=>x[0]===t);
-  return hit ? [hit[1], hit[2]] : ['#E5E7EB','#374151'];
+  return hit ? [hit[1], hit[2]] : valuationStatusColor(t);
+}
+// 狀態選項:有自訂清單就用自訂的,沒有就用預設 14 種;資料裡正在用的狀態永遠保留
+function bankLoanStatusList(extra){
+  const custom = (APP.bankLoanStatusOptions||[]).map(x=>String(x).trim()).filter(Boolean);
+  const set = new Set(custom.length ? custom : BANKLOAN_STATUSES.map(x=>x[0]));
+  (APP.data.bankLoanCases||[]).forEach(c=>{ const t = String(c.status||'').trim(); if(t) set.add(t); });
+  if(extra) set.add(extra);
+  return Array.from(set);
+}
+function openBankLoanStatusOptionsModal(){
+  const list = bankLoanStatusList();
+  openModal('編輯銀行信貸狀態選項', `
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每行一個狀態,會出現在列表「狀態」的下拉選單、編輯視窗的狀態按鈕和篩選裡。已經有案件在用的狀態會自動保留,就算這裡刪掉也不會改到那些案件。原本的 14 種狀態保有原來的顏色,新增的狀態會自動配色。</p>
+    <label class="field"><span>狀態選項</span><textarea name="statuses" rows="12">${escHtml(list.join('\n'))}</textarea></label>`, 'bankloan-status-form', null);
+  document.getElementById('bankloan-status-form').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    try{
+      const fd = new FormData(e.target);
+      const arr = Array.from(new Set(String(fd.get('statuses')||'').split('\n').map(x=>x.trim()).filter(Boolean)));
+      await setDoc(doc(db,'appdata','bankLoanOptions'), stamp({statuses:arr}));
+    } catch(err){
+      console.error('儲存銀行信貸狀態選項失敗:', err);
+      alert('儲存失敗:' + (err && err.message ? err.message : err));
+    } finally{
+      closeModal(); render();
+    }
+  });
 }
 function bankLoanBadge(s){
   const t = String(s||'').trim();
@@ -4844,6 +4876,7 @@ async function bankLoanSaveField(id, field, value){
 document.addEventListener('change', (e)=>{
   const t = e.target;
   if(!t || !t.dataset || !t.dataset.blField) return;
+  if(t.dataset.blField==='status' && t.value==='__edit__'){ render(); openBankLoanStatusOptionsModal(); return; }
   bankLoanSaveField(t.dataset.id, t.dataset.blField, t.value);
 });
 function bankLoanHTML(){
@@ -4862,10 +4895,11 @@ function bankLoanHTML(){
   const statusLabel = f.status==='__active__' ? '進行中' : (f.status ? f.status : '全部狀態');
   const monthLabel = f.month ? (f.month==='__nodate__' ? '無日期' : (Number(f.month.slice(5))+' 月')) : '全部月份';
   const stat = (label, n)=>`<div class="bl-stat"><div class="bl-stat-l">${label}</div><div class="bl-stat-n">${n}</div></div>`;
-  const statusSel = (c)=>{ const [bg,fg] = bankLoanStatusColor(c.status); const known = BANKLOAN_STATUSES.some(x=>x[0]===c.status);
+  const statusSel = (c)=>{ const [bg,fg] = bankLoanStatusColor(c.status);
     return `<select data-bl-field="status" data-id="${c.id}" style="${VAL_CELL_STYLE}border-color:#E2E8F0;font-weight:600;background:${bg};color:${fg};">
-      ${(!c.status||!known)?`<option value="${escAttr(c.status||'')}" selected>${escHtml(c.status||'(空白)')}</option>`:''}
-      ${BANKLOAN_STATUSES.map(x=>`<option value="${x[0]}" ${c.status===x[0]?'selected':''}>${x[0]}</option>`).join('')}</select>`; };
+      ${!c.status?`<option value="" selected>(空白)</option>`:''}
+      ${bankLoanStatusList(c.status).map(o=>`<option value="${escAttr(o)}" ${c.status===o?'selected':''}>${escHtml(o)}</option>`).join('')}
+      <option value="__edit__">⚙ 編輯選項…</option></select>`; };
   const packSel = (c)=>`<select data-bl-field="packJob" data-id="${c.id}" style="${VAL_CELL_STYLE}border-color:#E2E8F0;">
       <option value="" ${!c.packJob?'selected':''}>未定</option><option value="包裝" ${c.packJob==='包裝'?'selected':''}>包裝</option><option value="不包裝" ${c.packJob==='不包裝'?'selected':''}>不包裝</option></select>`;
   const ed = (c, inner, extra)=>`<td data-action="bankloan-edit" data-id="${c.id}" style="cursor:pointer;${extra||''}">${inner}</td>`;
@@ -4900,7 +4934,7 @@ function bankLoanHTML(){
     <button type="button" class="btn ghost m-only val-more-filter" data-action="bankloan-toggle-filter" style="margin-bottom:10px;">${monthLabel}・${statusLabel} ▾</button>
     <div class="bl-filter-box${APP.bankLoanFilterOpen?' open':''}"><div class="filter-row" style="flex-wrap:wrap;">
       <div class="filter-field"><label>月份</label><select data-case-filter="bankloan-f-month">${opt('','全部月份',f.month)}${months.map(m=>opt(m, Number(m.slice(5))+' 月 ('+m.slice(0,4)+')', f.month)).join('')}${opt('__nodate__','無日期',f.month)}</select></div>
-      <div class="filter-field"><label>狀態</label><select data-case-filter="bankloan-f-status">${opt('__active__','進行中',f.status)}${opt('','全部狀態',f.status)}${BANKLOAN_STATUSES.map(x=>opt(x[0],x[0],f.status)).join('')}</select></div>
+      <div class="filter-field"><label>狀態</label><select data-case-filter="bankloan-f-status">${opt('__active__','進行中',f.status)}${opt('','全部狀態',f.status)}${bankLoanStatusList().map(o=>opt(escAttr(o),escHtml(o),f.status)).join('')}</select></div>
       <div class="filter-field"><label>包工作</label><select data-case-filter="bankloan-f-pack">${opt('','全部',f.pack)}${opt('包裝','包裝',f.pack)}${opt('不包裝','不包裝',f.pack)}${opt('__none__','未定',f.pack)}</select></div>
       ${searchBoxHtml('bankLoanSearch','姓名、電話、誰的客人、管道、方案、備註')}
     </div></div>
@@ -4917,16 +4951,13 @@ function bankLoanHTML(){
 function openBankLoanModal(existing){
   const c = existing || {status:'評估中', date:todayStr(), owner:'', customerName:'', phone:'', packJob:'', channel:'', plan:'', approvedAmount:null, note:''};
   const owners = Array.from(new Set((APP.data.bankLoanCases||[]).map(x=>x.owner).filter(Boolean)));
-  const unknownStatus = c.status && !BANKLOAN_STATUSES.some(x=>x[0]===c.status);
-  const stBtns = BANKLOAN_STATUSES.concat(unknownStatus?[[c.status,'#E5E7EB','#374151']]:[]).map(x=>{
-    const on = c.status===x[0];
-    return `<button type="button" data-bl-status="${escAttr(x[0])}" aria-pressed="${on}" style="height:34px;padding:0 12px;border-radius:999px;font:inherit;font-size:13px;cursor:pointer;background:${on?x[1]:'#FFFFFF'};color:${on?x[2]:'#3A4152'};border:${on?'2px solid #1F2433':'1px solid #D5DAE5'};" data-bg="${x[1]}" data-fg="${x[2]}">${escHtml(x[0])}</button>`;
-  }).join('');
   const packBtns = [['包裝','包裝'],['不包裝','不包裝'],['','未定']].map(([v,l])=>`<button type="button" data-bl-pack="${v}" aria-pressed="${(c.packJob||'')===v}" style="height:38px;padding:0 18px;border:1px solid #D5DAE5;font:inherit;font-size:14px;cursor:pointer;background:${(c.packJob||'')===v?'#D4EDBC':'#fff'};color:${(c.packJob||'')===v?'#11734B':'#3A4152'};font-weight:${(c.packJob||'')===v?'700':'400'};">${l}</button>`).join('');
   openModal(existing?('編輯案件・'+(c.customerName||'')):'新增銀行信貸案件', `
-    <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">狀態</div>
-    <div id="bl-status-btns" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">${stBtns}</div>
-    <input type="hidden" name="status" value="${escAttr(c.status||'')}"/>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;"><span style="flex:1;">狀態</span></div>
+    <select name="status" id="bl-status-select" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:600;margin-bottom:14px;background:${bankLoanStatusColor(c.status)[0]};color:${bankLoanStatusColor(c.status)[1]};">
+      ${!c.status?'<option value="" selected>(空白)</option>':''}
+      ${bankLoanStatusList(c.status).map(o=>`<option value="${escAttr(o)}" ${c.status===o?'selected':''}>${escHtml(o)}</option>`).join('')}
+      <option value="__edit__">⚙ 編輯選項…</option></select>
     <div class="grid grid-2">
       <label class="field"><span>日期</span><input type="date" name="date" value="${escAttr(c.date||'')}"/></label>
       <label class="field"><span>誰的客人</span><input type="text" name="owner" list="bl-owner-list" value="${escAttr(c.owner||'')}"/><datalist id="bl-owner-list">${owners.map(x=>`<option value="${escAttr(x)}">`).join('')}</datalist></label>
@@ -4945,14 +4976,11 @@ function openBankLoanModal(existing){
     <div style="font-size:12px;color:var(--muted);background:#F7F8FB;border-radius:8px;padding:10px 12px;">${existing?escHtml(bankLoanEditedText(existing)):'新增後會記錄編輯人與時間'}</div>
     ${existing?`<button type="button" id="bl-delete-btn" class="btn ghost" style="color:#B42318;margin-top:10px;">刪除這筆</button>`:''}`, 'bankloan-form', null);
   const form = document.getElementById('bankloan-form');
-  form.querySelectorAll('[data-bl-status]').forEach(b=>b.addEventListener('click', ()=>{
-    form.querySelector('input[name="status"]').value = b.dataset.blStatus;
-    form.querySelectorAll('[data-bl-status]').forEach(x=>{
-      const on = x===b;
-      x.style.background = on ? x.dataset.bg : '#FFFFFF'; x.style.color = on ? x.dataset.fg : '#3A4152';
-      x.style.border = on ? '2px solid #1F2433' : '1px solid #D5DAE5'; x.setAttribute('aria-pressed', on);
-    });
-  }));
+  const stSel = document.getElementById('bl-status-select');
+  stSel.addEventListener('change', ()=>{
+    if(stSel.value==='__edit__'){ closeModal(); openBankLoanStatusOptionsModal(); return; }
+    const [cb, cf] = bankLoanStatusColor(stSel.value); stSel.style.background = cb; stSel.style.color = cf;
+  });
   form.querySelectorAll('[data-bl-pack]').forEach(b=>b.addEventListener('click', ()=>{
     form.querySelector('input[name="packJob"]').value = b.dataset.blPack;
     form.querySelectorAll('[data-bl-pack]').forEach(x=>{
@@ -5050,7 +5078,7 @@ function openBankLoanImportModal(){
             id:`bl-${year}-${String(m[1]).padStart(2,'0')}-${i+2}`, sheet:name.trim(),
             status, date, owner:String(val(r,'owner')||'').trim(), customerName, phone:String(val(r,'phone')||'').trim(),
             packJob:bankLoanNormPack(val(r,'pack')), channel:String(val(r,'channel')||'').trim(), plan, note:String(val(r,'note')||'').trim(),
-            unknownStatus: !!status && !BANKLOAN_STATUSES.some(x=>x[0]===status),
+            unknownStatus: !!status && !bankLoanStatusList().includes(status),
             noDate: !date || !/^\d{4}-\d{2}-\d{2}$/.test(date),
             planHint: /額度|萬/.test(plan),
             dup: existing.some(x=>x.id!==`bl-${year}-${String(m[1]).padStart(2,'0')}-${i+2}` && x.customerName===customerName && x.date===date)
@@ -5067,7 +5095,7 @@ function openBankLoanImportModal(){
           <td>${inp('status',r.status,90,r.unknownStatus?'background:#FEF3C7;':'')}</td><td>${inp('date',r.date,100,r.noDate?'background:#FEF3C7;':'')}</td>
           <td>${inp('customerName',r.customerName,80)}</td><td>${escHtml(r.owner)}</td>
           <td>${inp('plan',r.plan,150,r.planHint?'background:#FEF3C7;':'')}</td><td>${inp('approvedAmount','',60)}</td>
-          <td style="color:#B45309;font-size:12px;">${[r.unknownStatus?'狀態不在 14 種內':'', r.noDate?'日期空白或格式不明':'', r.planHint?'方案可能是核准額度,要的話請自己填右邊欄':'', r.dup?'可能重複(預設不勾)':''].filter(Boolean).join('；')}</td></tr>`).join('')}
+          <td style="color:#B45309;font-size:12px;">${[r.unknownStatus?'狀態不在目前的選項內(匯入後會自動出現在選單)':'', r.noDate?'日期空白或格式不明':'', r.planHint?'方案可能是核准額度,要的話請自己填右邊欄':'', r.dup?'可能重複(預設不勾)':''].filter(Boolean).join('；')}</td></tr>`).join('')}
         </tbody></table>`;
       msg.innerHTML = `共讀到 <b>${recs.length}</b> 筆。黃色欄位是需要你確認的地方,可以直接在預覽裡修改;確認無誤後按「確認匯入」才會寫入。`;
       submitBtn.textContent = '確認匯入';
@@ -5102,7 +5130,7 @@ function buildBankLoanRowHtml(r, idx){
     <input type="hidden" class="ai-row-field" data-key="id" value="${escAttr(r.id||'')}"/>
     <span class="badge ${existing?'pending':'active'}" ${missing?'style="background:#FEE2E2;color:#B91C1C;"':''}>${missing?'找不到這筆':(existing?'修改':'新增')}</span>
     ${inp('date','日期',130,'date')}${inp('customerName','客戶姓名',90)}${inp('phone','電話',100)}${inp('owner','誰的客人',70)}
-    <select class="ai-row-field" data-key="status" style="padding:4px;border:1px solid var(--border);border-radius:6px;">${BANKLOAN_STATUSES.map(x=>`<option value="${x[0]}" ${(r.status||'評估中')===x[0]?'selected':''}>${x[0]}</option>`).join('')}</select>
+    <select class="ai-row-field" data-key="status" style="padding:4px;border:1px solid var(--border);border-radius:6px;">${bankLoanStatusList(r.status).map(o=>`<option value="${escAttr(o)}" ${(r.status||'評估中')===o?'selected':''}>${escHtml(o)}</option>`).join('')}</select>
     <select class="ai-row-field" data-key="packJob" style="padding:4px;border:1px solid var(--border);border-radius:6px;"><option value="" ${!r.packJob?'selected':''}>未定</option><option value="包裝" ${r.packJob==='包裝'?'selected':''}>包裝</option><option value="不包裝" ${r.packJob==='不包裝'?'selected':''}>不包裝</option></select>
     ${inp('channel','送件管道',70)}${inp('plan','方案',110)}${inp('approvedAmount','核准額度(萬)',90,'number')}${inp('note','狀態備註',180)}
   </div>`;
@@ -7614,7 +7642,7 @@ document.addEventListener('click', (e)=>{
           if(data.id && !oldBl){ skipped++; return; } // id 找不到:不寫入
           const bf = {};
           ['status','date','owner','customerName','phone','packJob','channel','plan','note'].forEach(k=>{ bf[k] = String(data[k]==null?'':data[k]).trim(); });
-          if(!BANKLOAN_STATUSES.some(x=>x[0]===bf.status)) bf.status = oldBl ? oldBl.status : '評估中';
+          if(!bf.status) bf.status = oldBl ? oldBl.status : '評估中';
           const bAmt = String(data.approvedAmount==null?'':data.approvedAmount).trim();
           bf.approvedAmount = (bAmt===''||isNaN(Number(bAmt))) ? null : Number(bAmt);
           const blRec = oldBl ? Object.assign({}, oldBl, bf) : { id:uid(), ...bf };
