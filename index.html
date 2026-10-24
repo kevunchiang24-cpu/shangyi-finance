@@ -541,6 +541,25 @@
     .val-filter-box.open{display:block;}
     .val-more-filter{width:100%;}
   }
+  /* 銀行信貸:狀態下拉面板 */
+  .sd{position:relative;}
+  .sd-btn{width:100%;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font:inherit;cursor:pointer;transition:border-color .15s,box-shadow .15s;}
+  .sd-btn:hover,.sd.open .sd-btn{border-color:#2F5BEA;box-shadow:0 0 0 3px rgba(47,91,234,.12);}
+  .bl-pill{display:inline-block;padding:3px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;}
+  .sd-chev{margin-left:auto;color:#8A93A8;transition:transform .15s;}
+  .sd.open .sd-chev{transform:rotate(180deg);}
+  .sd-panel{display:none;position:fixed;background:#fff;border:1px solid #E1E5EE;border-radius:12px;box-shadow:0 14px 34px rgba(20,30,60,.2);padding:6px;z-index:10000;overflow:auto;}
+  .sd.open .sd-panel{display:block;animation:sdpop .12s ease-out;}
+  @keyframes sdpop{from{opacity:0;transform:translateY(-4px);}}
+  .sd-grp{font-size:11px;color:#8A93A8;padding:8px 10px 4px;letter-spacing:.04em;}
+  .sd-opt{display:flex;align-items:center;gap:10px;min-height:42px;padding:0 10px;border-radius:8px;cursor:pointer;}
+  .sd-opt:hover{background:#F3F6FF;}
+  .sd-opt.on{background:#EEF3FF;}
+  .sd-ck{margin-left:auto;color:#2F5BEA;font-weight:700;visibility:hidden;}
+  .sd-opt.on .sd-ck{visibility:visible;}
+  .sd-edit{border-top:1px solid #EEF1F8;margin-top:6px;padding-top:6px;color:#3A4152;}
+  .sd-cell .sd-btn{min-height:34px;padding:0 6px;border-color:transparent;background:transparent;}
+  .sd-cell .sd-btn:hover{border-color:#D5DAE5;}
   /* 銀行信貸／房屋土地估價 共用版面 */
   .bl-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
   .bl-stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
@@ -609,7 +628,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-24-02';
+const APP_BUILD = '2026-10-24-04';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -978,6 +997,7 @@ function subscribeAll(){
         unsubs.push(onSnapshot(doc(db,'appdata','bankLoanOptions'), snap2=>{
           const d = snap2.data();
           APP.bankLoanStatusOptions = (d && Array.isArray(d.statuses)) ? d.statuses : [];
+          APP.bankLoanStatusColors = (d && d.colors && typeof d.colors==='object') ? d.colors : {};
           render();
         }, err=>console.error('bankLoanOptions 訂閱失敗', err)));
         unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap2=>{
@@ -4784,7 +4804,14 @@ const BANKLOAN_ENDED = ['撥款完成','結案','婉拒','客拒'];
 function bankLoanStatusColor(s){
   const t = String(s||'').trim();
   const hit = BANKLOAN_STATUSES.find(x=>x[0]===t);
+  const custom = (APP.bankLoanStatusColors||{})[t];
+  if(custom && /^#[0-9a-fA-F]{6}$/.test(custom)) return [custom, bankLoanContrast(custom)];
   return hit ? [hit[1], hit[2]] : valuationStatusColor(t);
+}
+// 依底色亮度自動選黑字或白字,確保看得清楚
+function bankLoanContrast(hex){
+  const n = parseInt(hex.slice(1), 16), r = n>>16, g = (n>>8)&255, b = n&255;
+  return ((r*299 + g*587 + b*114)/1000) > 150 ? '#1F2433' : '#FFFFFF';
 }
 // 狀態選項:有自訂清單就用自訂的,沒有就用預設 14 種;資料裡正在用的狀態永遠保留
 function bankLoanStatusList(extra){
@@ -4796,15 +4823,56 @@ function bankLoanStatusList(extra){
 }
 function openBankLoanStatusOptionsModal(){
   const list = bankLoanStatusList();
+  const swatches = ['#FFE5A0','#FFC8AA','#D4EDBC','#BBD3FF','#E9D5FF','#FBCFE8','#11734B','#215A6C','#B10202','#3D3D3D'];
+  const rowHtml = (name, isNew)=>{
+    let c = String(bankLoanStatusColor(name)[0] || '').toLowerCase();
+    if(!/^#[0-9a-f]{6}$/.test(c)) c = '#bbd3ff';
+    return `<div class="blo-row" data-old="${escAttr(isNew?'':name)}" data-orig="${c}" data-new="${isNew?1:0}" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #EEF1F8;">
+      <span class="blo-pill bl-pill" style="min-width:70px;text-align:center;background:${c};color:${bankLoanContrast(c)};">${escHtml(name||'新狀態')}</span>
+      <input type="text" class="blo-name" value="${escAttr(name)}" style="flex:1;min-width:0;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font:inherit;"/>
+      <input type="color" class="blo-color" value="${c}" style="width:42px;height:38px;border:1px solid var(--border);border-radius:8px;padding:2px;background:#fff;cursor:pointer;"/>
+      <button type="button" class="icon-btn blo-up" title="上移">↑</button><button type="button" class="icon-btn blo-down" title="下移">↓</button><button type="button" class="icon-btn blo-del" title="刪除">✕</button>
+    </div>`;
+  };
   openModal('編輯銀行信貸狀態選項', `
-    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每行一個狀態,會出現在列表「狀態」的下拉選單、編輯視窗的狀態按鈕和篩選裡。已經有案件在用的狀態會自動保留,就算這裡刪掉也不會改到那些案件。原本的 14 種狀態保有原來的顏色,新增的狀態會自動配色。</p>
-    <label class="field"><span>狀態選項</span><textarea name="statuses" rows="12">${escHtml(list.join('\n'))}</textarea></label>`, 'bankloan-status-form', null);
-  document.getElementById('bankloan-status-form').addEventListener('submit', async (e)=>{
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每一列是一個狀態:左邊改名稱,中間按色塊選顏色(文字會自動配成看得清楚的黑或白),右邊可上下移動或刪除。已經有案件在用的狀態,就算刪掉也會留在選單裡,不會改到案件;改名後舊名稱也會繼續出現在選單。</p>
+    <div id="blo-swatches" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0;"><span style="font-size:12px;color:var(--muted);">常用色(先點某一列,再點色點):</span>${swatches.map(c=>`<b data-c="${c}" style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2px solid #fff;box-shadow:0 0 0 1px #D5DAE5;"></b>`).join('')}</div>
+    <div id="blo-rows">${list.map(n=>rowHtml(n,false)).join('')}</div>
+    <button type="button" id="blo-add" class="btn ghost" style="width:100%;margin-top:10px;border-style:dashed;">＋ 新增狀態</button>`, 'bankloan-status-form', null);
+  const form = document.getElementById('bankloan-status-form');
+  const rowsEl = document.getElementById('blo-rows');
+  let activeRow = null;
+  const syncRow = (row)=>{ const c = row.querySelector('.blo-color').value; const p = row.querySelector('.blo-pill'); p.style.background = c; p.style.color = bankLoanContrast(c); p.textContent = row.querySelector('.blo-name').value.trim() || '新狀態'; };
+  form.addEventListener('focusin', (e)=>{ const r = e.target.closest ? e.target.closest('.blo-row') : null; if(r) activeRow = r; });
+  form.addEventListener('input', (e)=>{ const r = e.target.closest ? e.target.closest('.blo-row') : null; if(r) syncRow(r); });
+  form.addEventListener('click', (e)=>{
+    const sw = e.target.closest('[data-c]');
+    if(sw){ if(activeRow){ activeRow.querySelector('.blo-color').value = sw.dataset.c; syncRow(activeRow); } return; }
+    const row = e.target.closest('.blo-row');
+    if(!row) return;
+    activeRow = row;
+    if(e.target.closest('.blo-del')){ row.remove(); activeRow = null; }
+    else if(e.target.closest('.blo-up') && row.previousElementSibling){ rowsEl.insertBefore(row, row.previousElementSibling); }
+    else if(e.target.closest('.blo-down') && row.nextElementSibling){ rowsEl.insertBefore(row.nextElementSibling, row); }
+  });
+  document.getElementById('blo-add').addEventListener('click', ()=>{
+    rowsEl.insertAdjacentHTML('beforeend', rowHtml('', true));
+    const r = rowsEl.lastElementChild; activeRow = r; r.querySelector('.blo-name').focus();
+  });
+  form.addEventListener('submit', async (e)=>{
     e.preventDefault();
     try{
-      const fd = new FormData(e.target);
-      const arr = Array.from(new Set(String(fd.get('statuses')||'').split('\n').map(x=>x.trim()).filter(Boolean)));
-      await setDoc(doc(db,'appdata','bankLoanOptions'), stamp({statuses:arr}));
+      const names = [], colors = {};
+      const oldColors = APP.bankLoanStatusColors || {};
+      form.querySelectorAll('.blo-row').forEach(row=>{
+        const n = row.querySelector('.blo-name').value.trim();
+        if(!n || names.includes(n)) return;
+        names.push(n);
+        const picked = row.querySelector('.blo-color').value.toLowerCase();
+        if(row.dataset.new==='1' || picked !== row.dataset.orig) colors[n] = picked;
+        else if(oldColors[row.dataset.old]) colors[n] = oldColors[row.dataset.old];
+      });
+      await setDoc(doc(db,'appdata','bankLoanOptions'), stamp({statuses:names, colors}));
     } catch(err){
       console.error('儲存銀行信貸狀態選項失敗:', err);
       alert('儲存失敗:' + (err && err.message ? err.message : err));
@@ -4879,6 +4947,68 @@ document.addEventListener('change', (e)=>{
   if(t.dataset.blField==='status' && t.value==='__edit__'){ render(); openBankLoanStatusOptionsModal(); return; }
   bankLoanSaveField(t.dataset.id, t.dataset.blField, t.value);
 });
+
+/* ---- 狀態下拉面板(銀行信貸用):彩色標籤、分組、勾選、最下面「編輯選項」 ---- */
+const BL_GROUP_NAME = {eval:'評估／等確定', sent:'送件中', sign:'辦理', paid:'辦理', nurture:'辦理', end:'已結束'};
+function bankLoanStatusGroups(extra){
+  const order = ['評估／等確定','送件中','辦理','已結束','其他'];
+  const map = {}; order.forEach(g=>map[g]=[]);
+  bankLoanStatusList(extra).forEach(n=>{
+    const d = BANKLOAN_STATUSES.find(x=>x[0]===n);
+    map[d ? BL_GROUP_NAME[d[3]] : '其他'].push(n);
+  });
+  return order.filter(g=>map[g].length).map(g=>[g, map[g]]);
+}
+function bankLoanPill(name){
+  const t = String(name||'').trim();
+  if(!t) return `<span class="bl-pill" style="background:#EEF1F8;color:#64748B;">(空白)</span>`;
+  const [bg, fg] = bankLoanStatusColor(t);
+  return `<span class="bl-pill" style="background:${bg};color:${fg};">${escHtml(t)}</span>`;
+}
+function bankLoanStatusDropdown(cur, opts){
+  opts = opts || {};
+  const groups = bankLoanStatusGroups(cur);
+  return `<div class="sd${opts.cell?' sd-cell':''}"${opts.id?` data-id="${escAttr(opts.id)}"`:''}>
+    ${opts.name?`<input type="hidden" name="${opts.name}" value="${escAttr(cur||'')}"/>`:''}
+    <button type="button" class="sd-btn">${bankLoanPill(cur)}<span class="sd-chev">▾</span></button>
+    <div class="sd-panel">${groups.map(([g, names])=>`<div class="sd-grp">${g}</div>${names.map(n=>`<div class="sd-opt${n===cur?' on':''}" data-v="${escAttr(n)}">${bankLoanPill(n)}<span class="sd-ck">✓</span></div>`).join('')}`).join('')}
+      <div class="sd-edit"><div class="sd-opt" data-v="__edit__">⚙ 編輯選項…</div></div></div>
+  </div>`;
+}
+function bankLoanCloseDropdowns(){ document.querySelectorAll('.sd.open').forEach(x=>x.classList.remove('open')); }
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest ? e.target.closest('.sd-btn') : null;
+  const opt = e.target.closest ? e.target.closest('.sd-opt') : null;
+  if(btn){
+    const sd = btn.closest('.sd'); const was = sd.classList.contains('open');
+    bankLoanCloseDropdowns();
+    if(!was){
+      sd.classList.add('open');
+      const panel = sd.querySelector('.sd-panel'), r = btn.getBoundingClientRect();
+      const w = Math.min(Math.max(r.width, 230), window.innerWidth-16);
+      panel.style.width = w+'px';
+      panel.style.left = Math.max(8, Math.min(r.left, window.innerWidth-w-8))+'px';
+      const below = window.innerHeight - r.bottom - 14, above = r.top - 14;
+      if(below >= 260 || below >= above){ panel.style.top = (r.bottom+6)+'px'; panel.style.bottom = 'auto'; panel.style.maxHeight = Math.max(160, Math.min(380, below))+'px'; }
+      else { panel.style.bottom = (window.innerHeight - r.top + 6)+'px'; panel.style.top = 'auto'; panel.style.maxHeight = Math.max(160, Math.min(380, above))+'px'; }
+    }
+    return;
+  }
+  if(opt && opt.closest('.sd')){
+    const sd = opt.closest('.sd'); const v = opt.dataset.v;
+    bankLoanCloseDropdowns();
+    if(v==='__edit__'){ if(!sd.dataset.id) closeModal(); openBankLoanStatusOptionsModal(); return; }
+    if(sd.dataset.id){ bankLoanSaveField(sd.dataset.id, 'status', v); return; }
+    const hid = sd.querySelector('input[type="hidden"]'); if(hid) hid.value = v;
+    sd.querySelector('.sd-btn').innerHTML = bankLoanPill(v) + '<span class="sd-chev">▾</span>';
+    sd.querySelectorAll('.sd-opt').forEach(o=>o.classList.toggle('on', o.dataset.v===v));
+    return;
+  }
+  bankLoanCloseDropdowns();
+});
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') bankLoanCloseDropdowns(); });
+window.addEventListener('resize', bankLoanCloseDropdowns);
+document.addEventListener('scroll', bankLoanCloseDropdowns, true);
 function bankLoanHTML(){
   if(!APP.bankLoanSort) APP.bankLoanSort = {key:'date', dir:'desc'};
   const all = APP.data.bankLoanCases || [];
@@ -4895,11 +5025,7 @@ function bankLoanHTML(){
   const statusLabel = f.status==='__active__' ? '進行中' : (f.status ? f.status : '全部狀態');
   const monthLabel = f.month ? (f.month==='__nodate__' ? '無日期' : (Number(f.month.slice(5))+' 月')) : '全部月份';
   const stat = (label, n)=>`<div class="bl-stat"><div class="bl-stat-l">${label}</div><div class="bl-stat-n">${n}</div></div>`;
-  const statusSel = (c)=>{ const [bg,fg] = bankLoanStatusColor(c.status);
-    return `<select data-bl-field="status" data-id="${c.id}" style="${VAL_CELL_STYLE}border-color:#E2E8F0;font-weight:600;background:${bg};color:${fg};">
-      ${!c.status?`<option value="" selected>(空白)</option>`:''}
-      ${bankLoanStatusList(c.status).map(o=>`<option value="${escAttr(o)}" ${c.status===o?'selected':''}>${escHtml(o)}</option>`).join('')}
-      <option value="__edit__">⚙ 編輯選項…</option></select>`; };
+  const statusSel = (c)=>bankLoanStatusDropdown(c.status||'', {id:c.id, cell:true});
   const packSel = (c)=>`<select data-bl-field="packJob" data-id="${c.id}" style="${VAL_CELL_STYLE}border-color:#E2E8F0;">
       <option value="" ${!c.packJob?'selected':''}>未定</option><option value="包裝" ${c.packJob==='包裝'?'selected':''}>包裝</option><option value="不包裝" ${c.packJob==='不包裝'?'selected':''}>不包裝</option></select>`;
   const ed = (c, inner, extra)=>`<td data-action="bankloan-edit" data-id="${c.id}" style="cursor:pointer;${extra||''}">${inner}</td>`;
@@ -4954,10 +5080,7 @@ function openBankLoanModal(existing){
   const packBtns = [['包裝','包裝'],['不包裝','不包裝'],['','未定']].map(([v,l])=>`<button type="button" data-bl-pack="${v}" aria-pressed="${(c.packJob||'')===v}" style="height:38px;padding:0 18px;border:1px solid #D5DAE5;font:inherit;font-size:14px;cursor:pointer;background:${(c.packJob||'')===v?'#D4EDBC':'#fff'};color:${(c.packJob||'')===v?'#11734B':'#3A4152'};font-weight:${(c.packJob||'')===v?'700':'400'};">${l}</button>`).join('');
   openModal(existing?('編輯案件・'+(c.customerName||'')):'新增銀行信貸案件', `
     <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;"><span style="flex:1;">狀態</span></div>
-    <select name="status" id="bl-status-select" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:600;margin-bottom:14px;background:${bankLoanStatusColor(c.status)[0]};color:${bankLoanStatusColor(c.status)[1]};">
-      ${!c.status?'<option value="" selected>(空白)</option>':''}
-      ${bankLoanStatusList(c.status).map(o=>`<option value="${escAttr(o)}" ${c.status===o?'selected':''}>${escHtml(o)}</option>`).join('')}
-      <option value="__edit__">⚙ 編輯選項…</option></select>
+    <div style="margin-bottom:14px;">${bankLoanStatusDropdown(c.status||'', {name:'status'})}</div>
     <div class="grid grid-2">
       <label class="field"><span>日期</span><input type="date" name="date" value="${escAttr(c.date||'')}"/></label>
       <label class="field"><span>誰的客人</span><input type="text" name="owner" list="bl-owner-list" value="${escAttr(c.owner||'')}"/><datalist id="bl-owner-list">${owners.map(x=>`<option value="${escAttr(x)}">`).join('')}</datalist></label>
@@ -4976,11 +5099,6 @@ function openBankLoanModal(existing){
     <div style="font-size:12px;color:var(--muted);background:#F7F8FB;border-radius:8px;padding:10px 12px;">${existing?escHtml(bankLoanEditedText(existing)):'新增後會記錄編輯人與時間'}</div>
     ${existing?`<button type="button" id="bl-delete-btn" class="btn ghost" style="color:#B42318;margin-top:10px;">刪除這筆</button>`:''}`, 'bankloan-form', null);
   const form = document.getElementById('bankloan-form');
-  const stSel = document.getElementById('bl-status-select');
-  stSel.addEventListener('change', ()=>{
-    if(stSel.value==='__edit__'){ closeModal(); openBankLoanStatusOptionsModal(); return; }
-    const [cb, cf] = bankLoanStatusColor(stSel.value); stSel.style.background = cb; stSel.style.color = cf;
-  });
   form.querySelectorAll('[data-bl-pack]').forEach(b=>b.addEventListener('click', ()=>{
     form.querySelector('input[name="packJob"]').value = b.dataset.blPack;
     form.querySelectorAll('[data-bl-pack]').forEach(x=>{
