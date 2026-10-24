@@ -548,7 +548,7 @@
   .bl-pill{display:inline-block;padding:3px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;}
   .sd-chev{margin-left:auto;color:#8A93A8;transition:transform .15s;}
   .sd.open .sd-chev{transform:rotate(180deg);}
-  .sd-panel{display:none;position:fixed;background:#fff;border:1px solid #E1E5EE;border-radius:12px;box-shadow:0 14px 34px rgba(20,30,60,.2);padding:6px;z-index:10000;overflow:auto;}
+  .sd-panel{display:none;position:fixed;background:#fff;border:1px solid #E1E5EE;border-radius:12px;box-shadow:0 14px 34px rgba(20,30,60,.2);padding:6px;z-index:10000;overflow:auto;overscroll-behavior:contain;}
   .sd.open .sd-panel{display:block;animation:sdpop .12s ease-out;}
   @keyframes sdpop{from{opacity:0;transform:translateY(-4px);}}
   .sd-grp{font-size:11px;color:#8A93A8;padding:8px 10px 4px;letter-spacing:.04em;}
@@ -628,7 +628,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-24-04';
+const APP_BUILD = '2026-10-24-06';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -4975,23 +4975,37 @@ function bankLoanStatusDropdown(cur, opts){
       <div class="sd-edit"><div class="sd-opt" data-v="__edit__">⚙ 編輯選項…</div></div></div>
   </div>`;
 }
-function bankLoanCloseDropdowns(){ document.querySelectorAll('.sd.open').forEach(x=>x.classList.remove('open')); }
+function bankLoanCloseDropdowns(){ APP._sdOpen = null; document.querySelectorAll('.sd.open').forEach(x=>x.classList.remove('open')); }
+// 打開面板:用 fixed 定位,自動判斷往下或往上展開,避免被表格或視窗邊緣切掉
+function bankLoanOpenDropdown(sd){
+  const btn = sd.querySelector('.sd-btn'), panel = sd.querySelector('.sd-panel');
+  sd.classList.add('open');
+  const r = btn.getBoundingClientRect();
+  const w = Math.min(Math.max(r.width, 230), window.innerWidth-16);
+  panel.style.width = w+'px';
+  panel.style.left = Math.max(8, Math.min(r.left, window.innerWidth-w-8))+'px';
+  const below = window.innerHeight - r.bottom - 14, above = r.top - 14;
+  if(below >= 260 || below >= above){ panel.style.top = (r.bottom+6)+'px'; panel.style.bottom = 'auto'; panel.style.maxHeight = Math.max(160, Math.min(380, below))+'px'; }
+  else { panel.style.bottom = (window.innerHeight - r.top + 6)+'px'; panel.style.top = 'auto'; panel.style.maxHeight = Math.max(160, Math.min(380, above))+'px'; }
+  APP._sdOpen = sd.dataset.id || null;
+}
+// 列表因為資料更新(別人改資料、即時同步)重畫後,把原本打開的面板接回來,避免操作到一半面板突然消失
+function bankLoanReopenDropdown(){
+  const id = APP._sdOpen;
+  if(!id) return;
+  const sd = Array.from(document.querySelectorAll('.sd[data-id]')).find(x=>x.dataset.id===id);
+  if(!sd){ APP._sdOpen = null; return; }
+  bankLoanOpenDropdown(sd);
+  const panel = sd.querySelector('.sd-panel'); if(panel && APP._sdScroll) panel.scrollTop = APP._sdScroll;
+}
 document.addEventListener('click', (e)=>{
   const btn = e.target.closest ? e.target.closest('.sd-btn') : null;
   const opt = e.target.closest ? e.target.closest('.sd-opt') : null;
   if(btn){
     const sd = btn.closest('.sd'); const was = sd.classList.contains('open');
     bankLoanCloseDropdowns();
-    if(!was){
-      sd.classList.add('open');
-      const panel = sd.querySelector('.sd-panel'), r = btn.getBoundingClientRect();
-      const w = Math.min(Math.max(r.width, 230), window.innerWidth-16);
-      panel.style.width = w+'px';
-      panel.style.left = Math.max(8, Math.min(r.left, window.innerWidth-w-8))+'px';
-      const below = window.innerHeight - r.bottom - 14, above = r.top - 14;
-      if(below >= 260 || below >= above){ panel.style.top = (r.bottom+6)+'px'; panel.style.bottom = 'auto'; panel.style.maxHeight = Math.max(160, Math.min(380, below))+'px'; }
-      else { panel.style.bottom = (window.innerHeight - r.top + 6)+'px'; panel.style.top = 'auto'; panel.style.maxHeight = Math.max(160, Math.min(380, above))+'px'; }
-    }
+    APP._sdScroll = 0;
+    if(!was) bankLoanOpenDropdown(sd);
     return;
   }
   if(opt && opt.closest('.sd')){
@@ -5007,9 +5021,11 @@ document.addEventListener('click', (e)=>{
   bankLoanCloseDropdowns();
 });
 document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') bankLoanCloseDropdowns(); });
-window.addEventListener('resize', bankLoanCloseDropdowns);
-document.addEventListener('scroll', bankLoanCloseDropdowns, true);
+let _sdLastW = window.innerWidth;
+window.addEventListener('resize', ()=>{ if(window.innerWidth !== _sdLastW){ _sdLastW = window.innerWidth; bankLoanCloseDropdowns(); } }); // 手機網址列伸縮只會改高度,不收起
+document.addEventListener('scroll', (e)=>{ const t = e.target; if(t && t.closest && t.closest('.sd-panel')){ APP._sdScroll = t.scrollTop; return; } if(document.querySelector('.sd.open')) bankLoanCloseDropdowns(); }, true);
 function bankLoanHTML(){
+  if(APP._sdOpen) setTimeout(bankLoanReopenDropdown, 0);
   if(!APP.bankLoanSort) APP.bankLoanSort = {key:'date', dir:'desc'};
   const all = APP.data.bankLoanCases || [];
   const f = bankLoanFilterState();
