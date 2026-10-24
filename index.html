@@ -628,7 +628,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-24-06';
+const APP_BUILD = '2026-10-24-07';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -4835,7 +4835,7 @@ function openBankLoanStatusOptionsModal(){
     </div>`;
   };
   openModal('編輯銀行信貸狀態選項', `
-    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每一列是一個狀態:左邊改名稱,中間按色塊選顏色(文字會自動配成看得清楚的黑或白),右邊可上下移動或刪除。已經有案件在用的狀態,就算刪掉也會留在選單裡,不會改到案件;改名後舊名稱也會繼續出現在選單。</p>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每一列是一個狀態:左邊改名稱,中間按色塊選顏色(文字會自動配成看得清楚的黑或白),右邊可上下移動或刪除。已經有案件在用的狀態,就算刪掉也會留在選單裡,不會改到案件;改名時,正在使用舊名稱的案件會在你按儲存後一起改成新名稱(儲存前會先告訴你有幾筆)。</p>
     <div id="blo-swatches" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0;"><span style="font-size:12px;color:var(--muted);">常用色(先點某一列,再點色點):</span>${swatches.map(c=>`<b data-c="${c}" style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2px solid #fff;box-shadow:0 0 0 1px #D5DAE5;"></b>`).join('')}</div>
     <div id="blo-rows">${list.map(n=>rowHtml(n,false)).join('')}</div>
     <button type="button" id="blo-add" class="btn ghost" style="width:100%;margin-top:10px;border-style:dashed;">＋ 新增狀態</button>`, 'bankloan-status-form', null);
@@ -4861,7 +4861,28 @@ function openBankLoanStatusOptionsModal(){
   });
   form.addEventListener('submit', async (e)=>{
     e.preventDefault();
+    // 找出「改名」的狀態(舊名稱 → 新名稱),已經有案件在用的,會一起改成新名稱
+    const renames = [];
+    const keptNames = new Set();
+    form.querySelectorAll('.blo-row').forEach(row=>{ const n = row.querySelector('.blo-name').value.trim(); if(n) keptNames.add(n); });
+    form.querySelectorAll('.blo-row').forEach(row=>{
+      const n = row.querySelector('.blo-name').value.trim(), old = row.dataset.old;
+      if(n && old && n!==old && !keptNames.has(old) && !renames.some(r=>r.from===old)) renames.push({from:old, to:n});
+    });
+    const renameJobs = renames.map(r=>({...r, cases:(APP.data.bankLoanCases||[]).filter(c=>c.status===r.from)})).filter(r=>r.cases.length>0);
+    if(renameJobs.length>0){
+      const msg = renameJobs.map(r=>`「${r.from}」→「${r.to}」:${r.cases.length} 筆案件`).join('\n');
+      if(!confirm('這些狀態改名後,正在使用舊名稱的案件會一起改成新名稱:\n\n' + msg + '\n\n確定要儲存嗎?')) return;
+    }
     try{
+      for(const job of renameJobs){
+        for(let i=0;i<job.cases.length;i+=400){
+          const batch = writeBatch(db);
+          job.cases.slice(i,i+400).forEach(c=>batch.set(doc(db,'bankLoanCases',c.id), stamp({status:job.to}), {merge:true}));
+          await batch.commit();
+        }
+        if(APP.bankLoanFilter && APP.bankLoanFilter.status===job.from) APP.bankLoanFilter = Object.assign({}, APP.bankLoanFilter, {status:job.to});
+      }
       const names = [], colors = {};
       const oldColors = APP.bankLoanStatusColors || {};
       form.querySelectorAll('.blo-row').forEach(row=>{
@@ -4869,7 +4890,7 @@ function openBankLoanStatusOptionsModal(){
         if(!n || names.includes(n)) return;
         names.push(n);
         const picked = row.querySelector('.blo-color').value.toLowerCase();
-        if(row.dataset.new==='1' || picked !== row.dataset.orig) colors[n] = picked;
+        if(row.dataset.new==='1' || picked !== row.dataset.orig || (row.dataset.old && row.dataset.old !== n)) colors[n] = picked; // 改名的狀態把原本的顏色帶到新名稱
         else if(oldColors[row.dataset.old]) colors[n] = oldColors[row.dataset.old];
       });
       await setDoc(doc(db,'appdata','bankLoanOptions'), stamp({statuses:names, colors}));
