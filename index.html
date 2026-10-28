@@ -845,6 +845,7 @@
   .pl-mfab.search.on{background:var(--pl-soft);}
   .pl-mfab.add{background:var(--pl-brand);color:#fff;animation:plGlow 2.6s ease-in-out infinite;}
   .pl-msearch{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-top:1px solid var(--pl-line);box-shadow:0 -8px 22px rgba(20,30,60,.16);padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center;}
+  .pl-msearch.kb{padding-bottom:10px;}
   .pl-msearch .pl-sbox{max-width:none;}
   .pl-msearch .pl-bigsearch{height:50px;font-size:16px;animation:none;}
   .pl-msearch .pl-btn{height:50px;flex:none;}
@@ -911,7 +912,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-10';
+const APP_BUILD = '2026-10-28-11';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2855,7 +2856,7 @@ function render(){
   else if(APP.view==='users' && isAdmin()) main.innerHTML = usersHTML();
   else { APP.view = isCore() ? 'dashboard' : 'personalDashboard'; main.innerHTML = isCore() ? dashboardHTML() : personalDashboardPageHTML(); }
   // 三個改版頁：畫好馬上把備註框長到該有的高度（在瀏覽器畫出來之前），畫面才不會先縮一下再彈回來
-  if(APP.view==='personalLog') plAfterRender(); else if(APP.view==='progress') pgAfterRender(); else if(APP.view==='bankLoan') bkAfterRender(); else if(APP.view==='valuation') vaAfterRender();
+  if(APP.view==='personalLog') plAfterRender(); else if(APP.view==='progress') pgAfterRender(); else if(APP.view==='bankLoan') bkAfterRender(); else if(APP.view==='valuation') vaAfterRender(); lxPlaceMSearch();
 }
 
 /* ================= BUSINESS TOOLS (業務工具, for staffAdmin/staffSales) ================= */
@@ -5180,6 +5181,17 @@ function lxScrollToResults(el){
 }
 document.addEventListener('input', (e)=>{ if(!e.isComposing) lxScrollToResults(e.target); });
 document.addEventListener('compositionend', (e)=>lxScrollToResults(e.target));
+// 手機鍵盤打開時，底部搜尋框貼在鍵盤正上方（iPhone 的鍵盤會直接蓋住固定在畫面底部的東西）
+function lxPlaceMSearch(){
+  const bar = document.querySelector('.pl-msearch'); if(!bar) return;
+  const vv = window.visualViewport;
+  // 畫面底部被蓋掉的高度＝網頁高度 −（看得到的區域往下捲了多少＋看得到的高度）
+  const hidden = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+  bar.style.transform = hidden > 0 ? `translateY(-${hidden}px)` : '';
+  bar.classList.toggle('kb', hidden > 0);
+}
+if(window.visualViewport){ window.visualViewport.addEventListener('resize', lxPlaceMSearch); window.visualViewport.addEventListener('scroll', lxPlaceMSearch); }
+document.addEventListener('focusin', (e)=>{ if(e.target.closest && e.target.closest('.pl-msearch')){ lxPlaceMSearch(); setTimeout(lxPlaceMSearch, 300); setTimeout(lxPlaceMSearch, 700); } });
 /* ================= 進度追蹤（2026-10 改版）=================
    跟舊版用同一份資料（progressAdCases、progressChannelCases），欄位名稱不變。
    - 列表上直接改、編輯視窗都只更新改到的欄位（updateDoc），不整筆覆蓋；業務只會寫 staffNote、wizardHatNote（符合資料庫規則）
