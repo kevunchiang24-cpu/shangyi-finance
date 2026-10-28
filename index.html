@@ -776,7 +776,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-01';
+const APP_BUILD = '2026-10-28-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1539,7 +1539,7 @@ function shellHTML(){
       <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
       <div class="nav-item${hasRoomOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupPersonal"><span class="nav-icon">📞</span>客戶關懷追蹤${hasRoomOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>
       <div class="nav-group-label" style="color:#E9D5FF;">個人空間</div>
-      <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>個人業務進度紀錄</div>
+      <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>我的客人紀錄</div>
       <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
       <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">📅</span>行事曆</div>
       <div class="nav-item" data-action="exit-staff-room" style="background:rgba(255,255,255,.12);"><span class="nav-icon">←</span>返回業務總覽</div>
@@ -1553,7 +1553,7 @@ function shellHTML(){
       ? `<div class="nav-item${hasAnyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupOverview"><span class="nav-icon">📞</span>客戶關懷追蹤${hasAnyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>`
       : `<div class="nav-item${hasMyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupPersonal"><span class="nav-icon">📞</span>客戶關懷追蹤${hasMyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>`}
     <div class="nav-group-label">個人空間</div>
-    <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>個人業務進度紀錄</div>
+    <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>我的客人紀錄</div>
     <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
     <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">📅</span>行事曆</div>
     <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
@@ -2151,8 +2151,8 @@ function optionColorSettingsView(){
   const groups = [
     { key:'plan', label:'進度追蹤 — 方案', options:APP.data.caseSettings.planOptions },
     { key:'status', label:'進度追蹤 — 狀態', options:STATUS_OPTIONS },
-    { key:'dealProduct', label:'個人業務進度紀錄 — 洽談產品', options:DEAL_PRODUCT_OPTIONS },
-    { key:'contactStatus', label:'個人業務進度紀錄 — 聯絡狀態', options:CONTACT_STATUS_OPTIONS },
+    { key:'dealProduct', label:'我的客人紀錄 — 方案', options:DEAL_PRODUCT_OPTIONS },
+    { key:'contactStatus', label:'我的客人紀錄 — 聯絡狀態', options:CONTACT_STATUS_OPTIONS },
   ];
   const groupsHtml = groups.map(g=>`
     <div class="card" style="margin-bottom:16px;">
@@ -2172,7 +2172,7 @@ function optionColorSettingsView(){
       </div>
     </div>`).join('');
   return `
-    <div class="page-header"><div><h1 class="page-title">下拉選單顏色設定</h1><p class="page-sub">進度追蹤跟個人業務進度紀錄的選項顏色，可以自己指定；跟收支明細、財報的分類顏色是分開的兩套邏輯，不會互相影響</p></div></div>
+    <div class="page-header"><div><h1 class="page-title">下拉選單顏色設定</h1><p class="page-sub">進度追蹤跟我的客人紀錄的選項顏色，可以自己指定；跟收支明細、財報的分類顏色是分開的兩套邏輯，不會互相影響</p></div></div>
     ${groupsHtml}
   `;
 }
@@ -2734,7 +2734,7 @@ function roomTitleSuffix(){ return (isCore() && APP.viewingStaff) ? '　·　'+e
 
 function personalLogPageHTML(){
   return `
-    <div class="page-header"><div><h1 class="page-title">個人業務進度紀錄${roomTitleSuffix()}</h1><p class="page-sub">私人開發日誌，不會影響送件進度表或任何報表</p></div>
+    <div class="page-header"><div><h1 class="page-title">我的客人紀錄${roomTitleSuffix()}</h1><p class="page-sub">私人開發日誌，不會影響送件進度表或任何報表</p></div>
       <button class="btn primary m-hide-640" data-pl-add>＋ 新增記錄</button></div>
     ${roomBanner()}
     ${plPageHTML()}
@@ -3382,7 +3382,7 @@ function myProgressView(){
 
   return `
     <div class="page-header" style="margin-bottom:14px;">
-      <div><p class="hint" style="color:var(--muted);font-size:12.5px;">這裡只顯示屬於你的正式送件案件（唯讀），狀態與備註由行政統一維護。想記錄自己的開發過程，請用「個人業務進度紀錄」。</p></div>
+      <div><p class="hint" style="color:var(--muted);font-size:12.5px;">這裡只顯示屬於你的正式送件案件（唯讀），狀態與備註由行政統一維護。想記錄自己的開發過程，請用「我的客人紀錄」。</p></div>
       <div style="display:flex;gap:8px;">
         <button class="btn ghost" data-action="open-progress-ad-modal">＋ 新增廣告客</button>
         <button class="btn primary" data-action="open-progress-channel-modal">＋ 新增直客／通路</button>
@@ -7627,7 +7627,7 @@ ${casesAdLines || '無'}
 【本月獲利報表明細 — 通路線】（每筆案件的完整金額，由新到舊）
 ${casesChannelLines || '無'}
 
-【本月全公司個人業務進度紀錄摘要】（業務／行政自己記錄的客戶開發日誌，由新到舊；不含完整客戶詳細資料原文，只有摘要欄位）
+【本月全公司「我的客人紀錄」摘要（舊稱個人業務進度紀錄）】（業務／行政自己記錄的客戶開發日誌，由新到舊；不含完整客戶詳細資料原文，只有摘要欄位）
 ${personalLogLines || '無'}
 
 【霍格華茲信箱】（客戶特殊處理事務，透過${cs.xiaojiangName||'小江'}處理）
