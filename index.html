@@ -854,7 +854,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-06';
+const APP_BUILD = '2026-10-28-07';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2796,6 +2796,8 @@ function render(){
   else if(APP.view==='personalDashboard' && roomOk) main.innerHTML = personalDashboardPageHTML();
   else if(APP.view==='users' && isAdmin()) main.innerHTML = usersHTML();
   else { APP.view = isCore() ? 'dashboard' : 'personalDashboard'; main.innerHTML = isCore() ? dashboardHTML() : personalDashboardPageHTML(); }
+  // 三個改版頁：畫好馬上把備註框長到該有的高度（在瀏覽器畫出來之前），畫面才不會先縮一下再彈回來
+  if(APP.view==='personalLog') plAfterRender(); else if(APP.view==='progress') pgAfterRender(); else if(APP.view==='bankLoan') bkAfterRender();
 }
 
 /* ================= BUSINESS TOOLS (業務工具, for staffAdmin/staffSales) ================= */
