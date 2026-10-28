@@ -854,7 +854,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-05';
+const APP_BUILD = '2026-10-28-06';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2762,6 +2762,8 @@ function render(){
   if(APP.view==='personalLog' && plShouldDefer()) return; // 正在個人業務進度紀錄打字時先不重畫，離開欄位再補畫
   if(APP.view==='progress' && pgShouldDefer()) return; // 正在進度追蹤打字時也一樣
   if(APP.view==='bankLoan' && bkShouldDefer()) return; // 銀行信貸也一樣
+  // 這三頁重畫時備註框會先縮回一行再長高，先撐住高度，頁面才不會被往上拉（在下面的列會跳動、選單被當成捲動而關掉）；畫完長高後就放開
+  main.style.minHeight = ['personalLog','progress','bankLoan'].includes(APP.view) ? main.offsetHeight + 'px' : '';
   const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal','customerFollowupOverview'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
@@ -4839,6 +4841,7 @@ function plPageHTML(){
 // 畫好之後：備註框依內容長高；選項面板下面放不下就往上開
 function plAfterRender(){
   document.querySelectorAll('.pl-root textarea.pl-t').forEach(plGrow);
+  const mainEl = document.getElementById('main'); if(mainEl) mainEl.style.minHeight = '';
   const S = plS(), p = document.getElementById('pl-pop');
   if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
     S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
@@ -4921,7 +4924,7 @@ function plOpenPop(opener){
   const S = plS(), fk = opener.dataset.plFk, W = 340;
   S.pickYear = '';
   const b = opener.getBoundingClientRect();
-  S.pop = { id: opener.dataset.plPk, f: opener.dataset.plF, fk, top: b.top,
+  S.pop = { id: opener.dataset.plPk, f: opener.dataset.plF, fk, top: b.top, at: Date.now(),
     x: Math.max(8, Math.min(b.left, window.innerWidth - W - 8)), y: b.bottom + 6 };
   if(S.pop.id==='__modal') plCaptureForm();
   plRender();
@@ -5039,7 +5042,7 @@ document.addEventListener('focusout', (e)=>{
 });
 // 電腦版：捲動時收起選項面板，免得面板跟按鈕對不上
 document.addEventListener('scroll', (e)=>{
-  const S = APP.pl; if(!S || !S.pop || plIsMobile()) return;
+  const S = APP.pl; if(!S || !S.pop || plIsMobile() || Date.now() - (S.pop.at||0) < 400) return;
   if(e.target && e.target.closest && e.target.closest('#pl-pop')) return;
   S.pop = null; plRender();
 }, true);
@@ -5383,6 +5386,7 @@ function pgPageHTML(){
 }
 function pgAfterRender(){
   document.querySelectorAll('.pg-root textarea.pg-t').forEach(plGrow);
+  const mainEl = document.getElementById('main'); if(mainEl) mainEl.style.minHeight = '';
   const S = pgS(), p = document.getElementById('pg-pop');
   if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
     S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
@@ -5466,7 +5470,7 @@ function pgOpenPop(opener){
   S.pickYear = '';
   const b = opener.getBoundingClientRect();
   if(opener.dataset.pgPk==='__modal') pgCaptureForm();
-  S.pop = { id: opener.dataset.pgPk, f: opener.dataset.pgF, fk, top: b.top,
+  S.pop = { id: opener.dataset.pgPk, f: opener.dataset.pgF, fk, top: b.top, at: Date.now(),
     x: Math.max(8, Math.min(b.left, window.innerWidth - W - 8)), y: b.bottom + 6 };
   pgRender();
 }
@@ -5581,7 +5585,7 @@ document.addEventListener('focusout', (e)=>{
 });
 // 電腦版：捲動時收起選項面板，免得面板跟按鈕對不上
 document.addEventListener('scroll', (e)=>{
-  const S = APP.pg; if(!S || !S.pop || plIsMobile() || APP.view!=='progress') return;
+  const S = APP.pg; if(!S || !S.pop || plIsMobile() || APP.view!=='progress' || Date.now() - (S.pop.at||0) < 400) return;
   if(e.target && e.target.closest && e.target.closest('#pg-pop')) return;
   S.pop = null; pgRender();
 }, true);
@@ -5907,6 +5911,7 @@ function bkPageHTML(){
 }
 function bkAfterRender(){
   document.querySelectorAll('.bk-root textarea.bk-t').forEach(plGrow);
+  const mainEl = document.getElementById('main'); if(mainEl) mainEl.style.minHeight = '';
   const S = bkS(), p = document.getElementById('bk-pop');
   if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
     S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
@@ -5984,7 +5989,7 @@ function bkOpenPop(opener){
   S.pickYear = '';
   const b = opener.getBoundingClientRect();
   if(opener.dataset.bkPk==='__modal') bkCaptureForm();
-  S.pop = { id: opener.dataset.bkPk, f: opener.dataset.bkF, fk, top: b.top,
+  S.pop = { id: opener.dataset.bkPk, f: opener.dataset.bkF, fk, top: b.top, at: Date.now(),
     x: Math.max(8, Math.min(b.left, window.innerWidth - W - 8)), y: b.bottom + 6 };
   bkRender();
 }
@@ -6103,7 +6108,7 @@ document.addEventListener('focusout', (e)=>{
   setTimeout(()=>{ const S = bkS(); if(S.pending && APP.view==='bankLoan' && !bkShouldDefer()){ S.pending = false; render(); } }, 0);
 });
 document.addEventListener('scroll', (e)=>{
-  const S = APP.bk; if(!S || !S.pop || plIsMobile() || APP.view!=='bankLoan') return;
+  const S = APP.bk; if(!S || !S.pop || plIsMobile() || APP.view!=='bankLoan' || Date.now() - (S.pop.at||0) < 400) return;
   if(e.target && e.target.closest && e.target.closest('#bk-pop')) return;
   S.pop = null; bkRender();
 }, true);
