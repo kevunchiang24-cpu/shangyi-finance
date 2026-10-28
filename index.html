@@ -792,6 +792,29 @@
   .bk-root .pl-card .foot .pl-acts{gap:2px;flex:none;}
   .bk-root .pg-ln .pl-t{flex:1;min-width:70px;}
   @media (max-width:640px){ .bk-root{gap:12px;} }
+  /* ---- 房屋土地估價（2026-10 改版）：沿用 pl-／pg-／bk- 樣式，這裡只放估價多出來的部分（va- 開頭） ---- */
+  .va-root{--pl-brand:#2F5BEA;--pl-soft:#EAF0FF;--pl-ink:#1F2433;--pl-muted:#596277;--pl-line:#E2E6EF;--pl-danger:#C62C2C;display:flex;flex-direction:column;gap:14px;color:var(--pl-ink);}
+  .va-root button{font-family:inherit;}
+  .va-root .pl-search{min-width:180px;}
+  .va-cat{display:inline-block;font-size:11.5px;border-radius:6px;padding:2px 8px;font-weight:700;margin-top:3px;cursor:pointer;border:0;min-height:22px;}
+  .va-cat.empty{background:transparent;border:1px dashed #C3C9D6;color:var(--pl-muted);font-weight:500;}
+  .pl-inl.va-stempty{border-color:#DCE0E8;color:#A0A7B6;font-weight:400;}
+  .va-planbox{display:block;width:100%;text-align:left;border:1px solid var(--pl-line);border-radius:8px;background:#F8F9FC;padding:6px 9px;font-size:13px;cursor:pointer;color:var(--pl-ink);white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;}
+  .va-planbox:hover{border-color:#9FB4F5;background:#F2F6FF;}
+  .va-planbox.empty{background:#FFF7E6;border:1px dashed #E0A040;color:#8A5300;font-weight:700;}
+  .va-pushwarn{font-size:13px;background:#FEF3C7;color:#8A5300;border-radius:8px;padding:9px 11px;line-height:1.6;}
+  .va-pushwarn b{color:#6B3F00;}
+  .va-warnlbl{color:#B45309;font-size:12px;}
+  .va-root .pl-card .top .pl-inl{flex:none;max-width:60%;}
+  .va-root .pl-card .foot .pl-link,.va-root .pl-card .foot .pl-del{min-height:36px;padding:6px 8px;}
+  .va-root .pl-card .foot .pl-acts{gap:2px;flex:none;}
+  .va-root .pl-card .pl-t{min-height:32px;}
+  .va-root .pg-ln .pl-t{flex:1;min-width:70px;}
+  .va-root .pl-card .va-cat{margin-top:0;min-height:30px;padding:4px 10px;}
+  @media (max-width:640px){ .va-root{gap:12px;} }
+  .va-subrow{display:flex;gap:6px;align-items:center;margin-top:3px;min-width:0;}
+  .va-subrow .va-cat{margin-top:0;flex:none;}
+  .va-subrow .pl-t{flex:1;min-width:0;margin-left:0;}
   @media (max-width:640px){
     .bl-stats{grid-template-columns:1fr 1fr;}
     .bl-filter-box{display:none;}
@@ -854,7 +877,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-07';
+const APP_BUILD = '2026-10-28-08';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2762,8 +2785,9 @@ function render(){
   if(APP.view==='personalLog' && plShouldDefer()) return; // 正在個人業務進度紀錄打字時先不重畫，離開欄位再補畫
   if(APP.view==='progress' && pgShouldDefer()) return; // 正在進度追蹤打字時也一樣
   if(APP.view==='bankLoan' && bkShouldDefer()) return; // 銀行信貸也一樣
+  if(APP.view==='valuation' && vaShouldDefer()) return; // 房屋土地估價也一樣
   // 這三頁重畫時備註框會先縮回一行再長高，先撐住高度，頁面才不會被往上拉（在下面的列會跳動、選單被當成捲動而關掉）；畫完長高後就放開
-  main.style.minHeight = ['personalLog','progress','bankLoan'].includes(APP.view) ? main.offsetHeight + 'px' : '';
+  main.style.minHeight = ['personalLog','progress','bankLoan','valuation'].includes(APP.view) ? main.offsetHeight + 'px' : '';
   const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal','customerFollowupOverview'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
@@ -2777,7 +2801,7 @@ function render(){
   else if(APP.view==='hr' && isCore()) main.innerHTML = hrHTML();
   else if(APP.view==='vendors' && isCore()) main.innerHTML = vendorsHTML();
   else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
-  else if(APP.view==='valuation' && isCore()) main.innerHTML = valuationHTML();
+  else if(APP.view==='valuation' && isCore()) main.innerHTML = valuationPageHTML();
   else if(APP.view==='bankLoan' && isCore()) main.innerHTML = bankLoanPageHTML();
   else if(APP.view==='dailyBonus' && isCore()) main.innerHTML = dailyBonusPageHTML();
   else if(APP.view==='staffOverview' && (isCore() || isStaffAny())) main.innerHTML = staffOverviewHTML();
@@ -2797,7 +2821,7 @@ function render(){
   else if(APP.view==='users' && isAdmin()) main.innerHTML = usersHTML();
   else { APP.view = isCore() ? 'dashboard' : 'personalDashboard'; main.innerHTML = isCore() ? dashboardHTML() : personalDashboardPageHTML(); }
   // 三個改版頁：畫好馬上把備註框長到該有的高度（在瀏覽器畫出來之前），畫面才不會先縮一下再彈回來
-  if(APP.view==='personalLog') plAfterRender(); else if(APP.view==='progress') pgAfterRender(); else if(APP.view==='bankLoan') bkAfterRender();
+  if(APP.view==='personalLog') plAfterRender(); else if(APP.view==='progress') pgAfterRender(); else if(APP.view==='bankLoan') bkAfterRender(); else if(APP.view==='valuation') vaAfterRender();
 }
 
 /* ================= BUSINESS TOOLS (業務工具, for staffAdmin/staffSales) ================= */
@@ -6132,6 +6156,526 @@ function bankLoanPageHTML(){
       </div>
     </div>
     ${bkPageHTML()}`;
+}
+/* ================= 房屋土地估價（2026-10 改版）=================
+   跟舊版用同一份資料（valuationCases），欄位名稱不變：date、month（跟著日期）、status、handler、customerName、area、category、valuation、plan、memo。
+   - 方案只要內容有變，後端就會推播到 LINE（onValuationCaseWritten）→ 方案不在列表上直接打字，點開專用框按「儲存並推播」才存
+   - 其他欄位列表上直接改、編輯視窗都只更新改到的欄位（updateDoc）；改日期時 month 一起改（LINE「@姓名」查詢會用）
+   - 樣式、選項面板、月份分段跟「我的客人紀錄」等共用（pl-／pg- 開頭）；事件只處理 .va-root 裡的東西 */
+const VA_CATS = [['銀行','#E6F1FA','#1E5A85'],['民間','#FDF0E1','#8A4B0F']];
+const VA_LABEL = { customerName:'客戶姓名', handler:'經手人', status:'狀態', category:'類別', area:'地區', valuation:'估價資訊', plan:'方案', memo:'備註' };
+const VA_SORTS = [['date','日期'],['customerName','客戶'],['handler','經手人'],['status','狀態'],['area','地區'],['valuation','估價資訊'],['plan','方案'],['memo','備註']];
+// 各欄寬度（%）：#、日期、客戶（＋類別）、經手人、狀態、地區、估價資訊、方案、備註、編輯/刪除
+const VA_COLW = [3, 6, 10, 8, 10, 12, 10, 15, 17, 9];
+const VA_COLW_C = [3, 7, 14, 11, 13, 10, 16, 17, 9]; // 中等寬度（約 1280 螢幕）：沒有經手人欄，經手人放在客戶欄的類別旁邊
+const VA_KEYS = ['date','status','handler','customerName','area','category','valuation','plan','memo'];
+// 統計卡：本月新增估價；評估中、已開盤、處理中不分月份（狀態是就算）
+const VA_STATS = {
+  month: { t:'本月新增估價', f:c=>(c.date||'').startsWith(plThisM()) },
+  eval:  { t:'評估中', note:'不分月份', f:c=>c.status==='評估中' },
+  open:  { t:'已開盤', note:'不分月份', f:c=>c.status==='已開盤' },
+  doing: { t:'處理中', note:'不分月份', f:c=>c.status==='處理中' },
+};
+
+function vaS(){
+  if(!APP.va) APP.va = { quick:'all', status:'', handler:'', cat:'', plan:'', stat:'', search:'', limit:20, filterOpen:false,
+    pop:null, pickYear:'', sort:{key:'date', dir:'desc'}, delRow:null, modal:null, planEdit:null, pending:false, _force:false };
+  return APP.va;
+}
+const vaAll = () => APP.data.valuationCases || [];
+const vaHasPlan = c => !!String(c.plan||'').trim();
+function vaOptColor(f, v){
+  if(!v) return null;
+  if(f==='status') return valuationStatusColor(v); // 跟舊版同一套顏色
+  const c = VA_CATS.find(x=>x[0]===v); return c ? [c[1], c[2]] : PL_NEUTRAL;
+}
+const vaOptList = f => f==='status' ? valuationStatusList() : VA_CATS.map(c=>c[0]);
+
+function vaInQuick(c){
+  const S = vaS(), d = c.date||'';
+  if(S.quick==='today') return d===todayStr();
+  if(S.quick==='week'){ const t = new Date(); t.setDate(t.getDate()-((t.getDay()+6)%7)); return d>=formatDateLocal(t); }
+  if(S.quick==='month') return d.startsWith(plThisM());
+  if(S.quick.startsWith('m:') || S.quick.startsWith('y:')) return d.startsWith(S.quick.slice(2));
+  return true;
+}
+function vaFiltered(){
+  const S = vaS(), q = S.search.trim().toLowerCase();
+  return vaAll().filter(c=> (S.stat ? VA_STATS[S.stat].f(c) : vaInQuick(c))
+    && (!S.status || (S.status==='__none__' ? !c.status : c.status===S.status))
+    && (!S.handler || c.handler===S.handler)
+    && (!S.cat || (S.cat==='__none__' ? !c.category : c.category===S.cat))
+    && (!S.plan || (S.plan==='empty')===!vaHasPlan(c))
+    && (!q || ['customerName','handler','area','valuation','plan','memo','status','category'].some(k=>String(c[k]||'').toLowerCase().includes(q))));
+}
+function vaSorted(arr){
+  const { key, dir } = vaS().sort, sign = dir==='asc' ? 1 : -1, ord = valuationStatusList();
+  const cmp = (a, b)=>{
+    const x = a[key]||'', y = b[key]||'';
+    if(key==='date') return x.localeCompare(y);
+    if(key==='status'){ const ix = ord.indexOf(x), iy = ord.indexOf(y); return (ix<0?999:ix) - (iy<0?999:iy); }
+    return plZh.compare(x, y);
+  };
+  const mSign = key==='date' ? sign : -1;
+  return arr.slice().sort((a, b)=>{
+    const mc = plMKey(a.date).localeCompare(plMKey(b.date)); if(mc) return mSign*mc;
+    const x = a[key]||'', y = b[key]||''; if(!x !== !y) return x ? -1 : 1;
+    return sign*cmp(a, b) || (b.date||'').localeCompare(a.date||'');
+  });
+}
+const vaDirLabel = (k, d)=> k==='date' ? (d==='desc'?'新→舊':'舊→新') : k==='status' ? (d==='asc'?'照選單順序':'選單順序反過來') : (d==='asc'?'筆畫少→多':'筆畫多→少');
+function vaQuickLabel(){
+  const S = vaS(), q = S.quick;
+  if(S.stat) return VA_STATS[S.stat].t;
+  if(q.startsWith('m:')) return plMLabel(q.slice(2));
+  if(q.startsWith('y:')) return q.slice(2)+' 全年';
+  return { today:'今天', week:'本週', month:plMLabel(plThisM()), all:'全部日期' }[q];
+}
+const vaNone = v => v==='__none__' ? '未填' : v;
+function vaSummary(){
+  const S = vaS();
+  return [vaQuickLabel(), S.plan && (S.plan==='empty'?'未填方案':'已填方案'), S.handler, S.cat && vaNone(S.cat), S.status && '狀態 '+vaNone(S.status)].filter(Boolean).join('・');
+}
+function vaLayout(){
+  if(plIsMobile()) return 'cards';
+  const main = document.getElementById('main');
+  let w = window.innerWidth;
+  if(main){ const cs = getComputedStyle(main); w = main.clientWidth - (parseFloat(cs.paddingLeft)||0) - (parseFloat(cs.paddingRight)||0); }
+  return w < 900 ? 'cards' : w < 1100 ? 'compact' : 'table';
+}
+
+// ---- 畫面片段 ----
+function vaPickBtn(c, f, target){
+  const v = c[f]||'', col = vaOptColor(f, v);
+  if(f==='category') return `<button type="button" class="va-cat${v?'':' empty'}" data-va-pk="${escAttr(target||c.id)}" data-va-f="category" aria-haspopup="true" aria-label="${escAttr((c.customerName||'')+' 的類別：'+(v||'未填'))}" style="${col?`background:${col[0]};color:${col[1]};`:''}">${escHtml(v||'類別 ▾')}</button>`;
+  return `<button type="button" class="pl-inl${v?'':' empty va-stempty'}" data-va-pk="${escAttr(target||c.id)}" data-va-f="status" aria-haspopup="true" aria-label="${escAttr((c.customerName||'')+' 的狀態：'+(v||'未填'))}" style="${col?`background-color:${col[0]};color:${col[1]};`:''}">${escHtml(v||'選狀態')}</button>`;
+}
+function vaTxt(c, f, ph, cls, area, list){
+  const aria = escAttr((c.customerName||'')+' 的'+VA_LABEL[f]);
+  if(area) return `<textarea class="pl-t va-t ${cls||''}" rows="1" data-va-id="${escAttr(c.id)}" data-va-t="${f}" placeholder="${ph}" aria-label="${aria}">${plTa(c[f])}</textarea>`;
+  return `<input type="text" class="pl-t va-t ${cls||''}" ${list?`list="${list}"`:''} data-va-id="${escAttr(c.id)}" data-va-t="${f}" value="${escAttr(c[f]||'')}" placeholder="${ph}" aria-label="${aria}"/>`;
+}
+// 方案：點開專用框，按「儲存並推播」才存（打一半離開不會推播半成品）
+const vaPlanBox = c => `<button type="button" class="va-planbox${vaHasPlan(c)?'':' empty'}" data-va-plan="${escAttr(c.id)}" aria-label="${escAttr((c.customerName||'')+' 的方案')}">${vaHasPlan(c) ? escHtml(c.plan) : '＋ 填方案'}</button>`;
+function vaDelCtl(c){
+  if(vaS().delRow===c.id) return `<div class="pl-confirm">確定刪除「${escHtml(c.customerName||'')}」？<button type="button" class="pl-btn danger" data-va-delyes="${escAttr(c.id)}">刪除</button><button type="button" class="pl-btn sec" data-va-delno>不要刪</button></div>`;
+  return `<button type="button" class="pl-del" data-va-del="${escAttr(c.id)}">刪除</button>`;
+}
+const vaActs = c => `<div class="pl-acts"><button type="button" class="pl-link" data-va-open="${escAttr(c.id)}">編輯</button>${vaDelCtl(c)}</div>`;
+const vaFBtn = (k, label, cls) => `<button type="button" class="pl-fpk${cls?' '+cls:''}" data-va-fk="${k}" aria-haspopup="true">${escHtml(label)}</button>`;
+const vaSortBtn = () => { const S = vaS(); return vaFBtn('sort', `⇅ ${VA_SORTS.find(s=>s[0]===S.sort.key)[1]}・${vaDirLabel(S.sort.key, S.sort.dir)}`, 'pl-sortsel'); };
+
+function vaStatsHTML(){
+  const S = vaS(), L = vaAll();
+  return `<div class="pl-stats">${Object.keys(VA_STATS).map(k=>{ const s = VA_STATS[k];
+    return `<button type="button" class="pl-stat" data-va-stat="${k}" aria-pressed="${S.stat===k}"><div class="k">${s.t}</div><div class="v">${L.filter(s.f).length}${s.note?`<small class="pg-vnote">${s.note}</small>`:''}</div></button>`; }).join('')}</div>`;
+}
+function vaFilterHTML(m){
+  const S = vaS();
+  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-va-quick="${k}" aria-pressed="${!S.stat && S.quick===k}">${t}</button>`).join('');
+  const sels = vaFBtn('month', `月份：${S.quick.startsWith('m:')||S.quick.startsWith('y:') ? vaQuickLabel() : S.quick==='month' ? '本月' : '全部月份'}`)
+    + vaFBtn('plan', `方案：${S.plan ? (S.plan==='empty'?'未填':'已填') : '全部'}`)
+    + vaFBtn('handler', `經手人：${S.handler||'全部'}`)
+    + vaFBtn('cat', `類別：${S.cat ? vaNone(S.cat) : '全部'}`)
+    + vaFBtn('status', `狀態：${S.status ? vaNone(S.status) : '全部'}`);
+  const search = `<input type="search" class="pl-search" id="va-search" placeholder="搜尋姓名、地區、方案、備註" value="${escAttr(S.search)}"/>`;
+  if(!m) return `<div class="pl-filters">${chips}${sels}${search}</div>`;
+  return `<div class="pl-filters">${chips}<button type="button" class="pl-chip pl-fbtn" data-va-ftoggle aria-expanded="${S.filterOpen}">${escHtml(vaSummary())} ▾</button>${vaSortBtn()}</div>
+    ${S.filterOpen ? `<div class="pl-panel">${sels}${search}<button type="button" class="pl-btn sec" data-va-ftoggle>完成</button></div>` : ''}`;
+}
+function vaRowsHTML(all, layout){
+  const S = vaS(), rows = all.slice(0, S.limit);
+  const more = all.length > S.limit ? `<button type="button" class="pl-btn sec pl-more" data-va-more>顯示更多（還有 ${all.length-S.limit} 件）</button>` : '';
+  if(layout==='cards') return `<div class="pl-cards${plIsMobile()?'':' pg-cards2'}">${plWithMonths(all, rows, (c, i)=>`
+    <div class="pl-card">
+      <div class="top"><span class="no">${i+1}</span>${vaTxt(c,'customerName','客戶姓名','cname')}${vaPickBtn(c,'status')}</div>
+      <div class="pg-ln">${vaPickBtn(c,'category')}<span>經手</span>${vaTxt(c,'handler','經手人','sub',false,'va-handler-list')}</div>
+      <div class="bk-lbl">地區</div>${vaTxt(c,'area','地區','nbox',true)}
+      <div class="bk-lbl">估價資訊</div>${vaTxt(c,'valuation','估價資訊','nbox',true)}
+      <div class="bk-lbl">方案</div>${vaPlanBox(c)}
+      ${vaTxt(c,'memo','備註','nbox',true)}
+      ${S.delRow===c.id ? vaDelCtl(c) : `<div class="foot"><span>${plMD(c.date)}</span>${vaActs(c)}</div>`}
+    </div>`, (k, n)=>`<div class="pl-mhead pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div>`, (y, n)=>`<div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div>`)}</div>${more}`;
+  const th = (k, t)=>{ const on = S.sort.key===k; return `<th><button type="button" class="pl-thbtn${on?' on':''}" data-va-sort="${k}" aria-label="依${t}排序">${t}<span>${on?(S.sort.dir==='asc'?'▲':'▼'):'↕'}</span></button></th>`; };
+  const compact = layout==='compact', span = compact ? 9 : 10, cols = compact ? VA_SORTS.filter(x=>x[0]!=='handler') : VA_SORTS;
+  return `<div class="pl-tablewrap"><table class="pl-table pg-table bk-table va-table">
+    <colgroup>${(compact ? VA_COLW_C : VA_COLW).map(w=>`<col style="width:${w}%">`).join('')}</colgroup>
+    <thead><tr><th class="no">#</th>${cols.map(([k,t])=>th(k,t)).join('')}<th></th></tr></thead>
+    <tbody>${plWithMonths(all, rows, (c, i)=>`<tr>
+      <td class="no">${i+1}</td>
+      <td class="date">${plMD(c.date)}</td>
+      <td>${vaTxt(c,'customerName','客戶姓名','cname')}<div class="va-subrow">${vaPickBtn(c,'category')}${compact ? vaTxt(c,'handler','經手人','sub',false,'va-handler-list') : ''}</div></td>
+      ${compact ? '' : `<td>${vaTxt(c,'handler','經手人','',false,'va-handler-list')}</td>`}
+      <td>${vaPickBtn(c,'status')}</td>
+      <td>${vaTxt(c,'area','地區','',true)}</td>
+      <td>${vaTxt(c,'valuation','估價資訊','',true)}</td>
+      <td>${vaPlanBox(c)}</td>
+      <td>${vaTxt(c,'memo','點擊輸入備註','',true)}</td>
+      <td>${S.delRow===c.id ? vaDelCtl(c) : vaActs(c)}</td>
+    </tr>`, (k, n)=>`<tr class="pl-mrow"><td colspan="${span}"><div class="pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div></td></tr>`,
+      (y, n)=>`<tr class="pl-yrow"><td colspan="${span}"><div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div></td></tr>`)}</tbody></table></div>${more}`;
+}
+function vaListHTML(all, layout){
+  const S = vaS(), L = vaAll();
+  const count = `<div class="pl-count">符合 <b>${all.length}</b> 件・全部 <b>${L.length}</b> 件</div>`;
+  if(all.length) return count + vaRowsHTML(all, layout);
+  const msg = !L.length ? '尚無估價資料，按「＋ 新增估價」開始登記。'
+    : S.quick==='month' && !S.stat && !L.some(c=>(c.date||'').startsWith(plThisM())) ? `${plMLabel(plThisM())}還沒有估價。要看上個月，點「月份」選。`
+    : '沒有符合的估價，換個篩選條件看看。';
+  return count + `<div class="pl-empty">${msg}</div>`;
+}
+function vaFilterPicker(k){
+  const S = vaS();
+  const btn = (val, label, on, c, long)=>{ c = c || PL_NEUTRAL; long = long===undefined ? label.length>6 : long;
+    return `<button type="button" class="pl-pill${long?' long':''}" data-va-fpick="${k}" data-va-val="${escAttr(val)}" aria-pressed="${on}" style="background:${c[0]};color:${c[1]};">${on?'✓ ':''}${escHtml(label)}</button>`; };
+  const sec = (t, html)=>`<div class="pl-pickgrp">${t}</div><div class="pl-picks">${html}</div>`;
+  if(k==='status') return `<div class="pl-picks">${btn('', '全部', !S.status)}${valuationStatusList().map(s=>btn(s, s, S.status===s, vaOptColor('status', s))).join('')}${btn('__none__', '未填狀態', S.status==='__none__')}</div>`;
+  if(k==='cat') return `<div class="pl-picks">${btn('', '全部', !S.cat)}${VA_CATS.map(c=>btn(c[0], c[0], S.cat===c[0], [c[1], c[2]])).join('')}${btn('__none__', '未填', S.cat==='__none__')}</div>`;
+  if(k==='plan') return `<div class="pl-picks">${btn('', '全部', !S.plan)}${btn('empty', '未填方案', S.plan==='empty')}${btn('filled', '已填方案', S.plan==='filled')}</div>`;
+  if(k==='handler'){
+    // 經手人照件數多到少排，後面附件數
+    const cnt = {}; vaAll().forEach(c=>{ if(c.handler) cnt[c.handler] = (cnt[c.handler]||0)+1; });
+    const names = Object.keys(cnt).sort((a, b)=>cnt[b]-cnt[a] || plZh.compare(a, b));
+    return `<div class="pl-picks">${btn('', '全部', !S.handler)}${names.map(n=>btn(n, `${n}（${cnt[n]}）`, S.handler===n)).join('')}</div>`;
+  }
+  if(k==='month'){
+    const L = vaAll();
+    const cur = S.stat ? '' : S.quick==='month' ? plThisM() : S.quick.startsWith('m:') ? S.quick.slice(2) : '';
+    const years = Array.from(new Set(L.map(c=>(c.date||'').slice(0,4)).filter(Boolean).concat([plThisY()]))).sort().reverse();
+    const py = S.pickYear || (cur || (S.quick.startsWith('y:') ? S.quick.slice(2) : plThisY())).slice(0,4);
+    const n = p => L.filter(c=>(c.date||'').startsWith(p)).length;
+    const months = Array.from({length:12}, (_, i)=>`${py}-${String(i+1).padStart(2,'0')}`);
+    const mBtn = mk=>{
+      const cnt = n(mk), on = cur===mk, now = mk===plThisM(), off = !cnt && !now;
+      return `<button type="button" class="pl-pill mcell${now?' now':''}" data-va-fpick="month" data-va-val="m:${mk}" aria-pressed="${on}" ${off?'disabled':''}>${on?'✓ ':''}${Number(mk.slice(5))} 月<small>${now?`本月・${cnt}`:`${cnt} 件`}</small></button>`;
+    };
+    return `<div class="pl-picks">${btn('all','全部月份', S.quick==='all' && !S.stat)}</div>`
+      + `<div class="pl-pickgrp">年份</div><div class="pl-picks yrs">${years.map(y=>`<button type="button" class="pl-pill ycell" data-va-fpick="month" data-va-val="py:${y}" aria-pressed="${y===py}">${y}</button>`).join('')}</div>`
+      + `<div class="pl-pickgrp">${py} 年${py===plThisY()?'（今年）':''}</div>`
+      + `<div class="pl-picks">${btn('y:'+py, `${py} 全年（${n(py)} 件）`, !S.stat && S.quick==='y:'+py, PL_NEUTRAL, false).replace('class="pl-pill', 'class="pl-pill wide')}</div>`
+      + `<div class="pl-picks mgrid">${months.map(mBtn).join('')}</div>`;
+  }
+  return sec('依哪一欄排序', VA_SORTS.map(([v,t])=>btn('k:'+v, t, S.sort.key===v)).join(''))
+    + sec('順序', (S.sort.key==='date' ? ['desc','asc'] : ['asc','desc']).map(d=>btn('d:'+d, vaDirLabel(S.sort.key, d), S.sort.dir===d)).join(''));
+}
+function vaPicker(f, cur, target){
+  return `<div class="pl-picks">${vaOptList(f).map(o=>{ const c = vaOptColor(f, o);
+    return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-va-pick="${escAttr(o)}" data-va-pt="${escAttr(target)}" data-va-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`
+    + (cur ? `<button type="button" class="pl-pickclear" data-va-pick="" data-va-pt="${escAttr(target)}" data-va-f="${f}">清除，改回未填</button>` : '')
+    + (f==='status' && target!=='__modal' ? '<button type="button" class="pl-pickclear" data-va-opts>⚙ 新增／編輯狀態選項</button>' : '');
+}
+function vaPopHTML(){
+  const S = vaS(); if(!S.pop) return '';
+  const { id, f, fk } = S.pop;
+  let title, body;
+  if(fk){ title = { month:'選月份', plan:'篩選方案', handler:'篩選經手人', cat:'篩選類別', status:'篩選狀態', sort:'排序' }[fk]; body = vaFilterPicker(fk); }
+  else {
+    const c = id==='__modal' ? (S.modal && S.modal.rec) : vaAll().find(x=>x.id===id);
+    if(!c){ S.pop = null; return ''; }
+    title = `${escHtml(c.customerName||'新估價')}・${VA_LABEL[f]}`; body = vaPicker(f, c[f]||'', id);
+  }
+  if(plIsMobile()) return `<div class="pl-overlay sheet" data-va-popbg><div class="pl-dialog"><div class="pl-dlg-h"><h2>${title}</h2><button type="button" class="pl-x" data-va-popclose aria-label="關閉">×</button></div><div class="pl-dlg-b">${body}</div></div></div>`;
+  return `<div class="pl-pop" id="va-pop" style="left:${S.pop.x}px;top:${S.pop.y}px;"><div class="pl-pophead">${title}</div>${body}</div>`;
+}
+const vaPushWarn = what => `<div class="va-pushwarn">按「<b>${what}</b>」後，如果方案內容有改，會把<b>客戶、地區、估價、方案、備註、狀態</b>推播到 LINE。只改錯字也會再推播一次；方案清空不推播。</div>`;
+function vaPlanDlgHTML(){
+  const P = vaS().planEdit; if(!P) return '';
+  const c = vaAll().find(x=>x.id===P.id); if(!c){ vaS().planEdit = null; return ''; }
+  return `<div class="pl-overlay" data-va-planbg><form class="pl-dialog" id="va-plan-form" data-va-key="${P.key}" novalidate>
+    <div class="pl-dlg-h"><h2>方案・${escHtml(c.customerName||'')}</h2><button type="button" class="pl-x" data-va-planclose aria-label="關閉">×</button></div>
+    <div class="pl-dlg-b">${vaPushWarn('儲存並推播')}
+      <div class="pg-flowhint">${escHtml(c.area||'—')}<br>估價：${escHtml(c.valuation||'—')}</div>
+      <label class="pl-field"><span>方案</span><textarea id="va-plan-ta" rows="5">${plTa(P.draft!=null ? P.draft : c.plan)}</textarea></label></div>
+    <div class="pl-dlg-f"><button type="button" class="pl-btn sec" data-va-planclose>取消</button><button type="submit" class="pl-btn">儲存並推播</button></div>
+  </form></div>`;
+}
+function vaModalHTML(){
+  const M = vaS().modal; if(!M) return '';
+  const r = M.rec;
+  const del = M.edit ? (M.confirmDel
+    ? `<div class="pl-dconfirm">確定刪除「${escHtml(r.customerName||'')}」？<button type="button" class="pl-btn danger" data-va-mdelyes>刪除</button><button type="button" class="pl-btn sec" data-va-mdelno>不要刪</button></div>`
+    : `<button type="button" class="pl-btn sec" data-va-mdel style="margin-right:auto;color:var(--pl-danger);">刪除這筆</button>`) : '';
+  return `<div class="pl-overlay" data-va-modalbg><form class="pl-dialog" id="va-form" data-va-key="${M.key}" novalidate>
+    <div class="pl-dlg-h"><h2>${M.edit?'編輯估價':'新增估價'}</h2><button type="button" class="pl-x" data-va-mclose aria-label="關閉">×</button></div>
+    <div class="pl-dlg-b">
+      <div class="pl-row2">
+        <label class="pl-field"><span>客戶姓名 <em>*</em></span><input id="va-fName" value="${escAttr(r.customerName||'')}" autocomplete="off"/>${M.err?`<span class="pl-err">${escHtml(M.err)}</span>`:''}</label>
+        <label class="pl-field"><span>日期 <em>*</em></span><input id="va-fDate" type="date" value="${escAttr(r.date||'')}"/></label>
+      </div>
+      <div class="pl-row2">
+        <label class="pl-field"><span>經手人</span><input id="va-fHandler" list="va-handler-list" value="${escAttr(r.handler||'')}"/></label>
+        <div class="pl-field"><span>類別</span><div class="bk-seg" role="group" aria-label="類別">${[['銀行','銀行'],['民間','民間'],['','未填']].map(([v,t])=>`<button type="button" data-va-mcat="${v}" aria-pressed="${(r.category||'')===v}">${t}</button>`).join('')}</div></div>
+      </div>
+      <div class="pl-row2"><div class="pl-field"><span>狀態</span>${vaPickBtn(r,'status','__modal')}</div><span></span></div>
+      <label class="pl-field"><span>地區</span><input id="va-fArea" value="${escAttr(r.area||'')}" placeholder="例：台中市北屯區 透天"/></label>
+      <label class="pl-field"><span>估價資訊</span><textarea id="va-fVal" rows="2">${plTa(r.valuation)}</textarea></label>
+      <label class="pl-field"><span>方案 <span class="va-warnlbl">（有改的話，儲存後會推播到 LINE）</span></span><textarea id="va-fPlan" rows="3">${plTa(r.plan)}</textarea></label>
+      <label class="pl-field"><span>備註</span><textarea id="va-fMemo" rows="2">${plTa(r.memo)}</textarea></label>
+      ${M.edit && M.editor ? `<div class="pg-flowhint">最後編輯：${escHtml(M.editor)}</div>` : ''}
+    </div>
+    <div class="pl-dlg-f">${del}
+      ${M.edit ? '' : '<button type="button" class="pl-btn sec" data-va-savenext>儲存並新增下一筆</button>'}
+      <button type="submit" class="pl-btn">儲存</button></div>
+  </form></div>`;
+}
+function vaCaptureForm(){
+  const S = vaS(), v = id=>{ const el = document.getElementById(id); return el ? el.value : undefined; };
+  const M = S.modal, form = document.getElementById('va-form');
+  if(M && form && form.dataset.vaKey===M.key){
+    const r = M.rec, set = (k, val)=>{ if(val!==undefined) r[k] = val; };
+    set('customerName', v('va-fName')); set('date', v('va-fDate')); set('handler', v('va-fHandler')); set('area', v('va-fArea'));
+    set('valuation', v('va-fVal')); set('plan', v('va-fPlan')); set('memo', v('va-fMemo'));
+  }
+  const P = S.planEdit, pf = document.getElementById('va-plan-form');
+  if(P && pf && pf.dataset.vaKey===P.key){ const d = v('va-plan-ta'); if(d!==undefined) P.draft = d; }
+}
+function vaEditor(c){
+  if(!c || !c._by) return '';
+  const u = (APP.users||[]).find(x=>x.email===c._by);
+  const short = c._by.replace(/@.*/, '');
+  const name = c._by==='import' ? 'Excel 匯入' : u ? (u.staffName || displayNameFor(u.id, short)) : short;
+  const d = c._at ? new Date(c._at) : null;
+  const t = d && !isNaN(d) ? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : '';
+  return name + (t ? ' · '+t : '');
+}
+function vaPageHTML(){
+  const S = vaS();
+  vaCaptureForm();
+  const layout = vaLayout(), all = vaSorted(vaFiltered());
+  const handlers = Array.from(new Set(vaAll().map(c=>c.handler).filter(Boolean))).sort(plZh.compare);
+  setTimeout(vaAfterRender, 0);
+  S._layout = layout;
+  return `<div class="va-root">
+    ${vaStatsHTML()}${vaFilterHTML(plIsMobile())}${vaListHTML(all, layout)}
+    <datalist id="va-handler-list">${handlers.map(s=>`<option value="${escAttr(s)}">`).join('')}</datalist>
+    <button type="button" class="pl-fab" data-va-add>＋ 新增估價</button>
+    ${vaModalHTML()}${vaPlanDlgHTML()}${vaPopHTML()}
+  </div>`;
+}
+function vaAfterRender(){
+  document.querySelectorAll('.va-root textarea.va-t').forEach(plGrow);
+  const mainEl = document.getElementById('main'); if(mainEl) mainEl.style.minHeight = '';
+  const S = vaS(), p = document.getElementById('va-pop');
+  if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
+    S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
+  }
+}
+function vaRender(){ const S = vaS(); S._force = true; try{ render(); } finally{ S._force = false; } }
+const vaTyping = () => { const a = document.activeElement; return !!(a && a.closest && a.closest('.va-root') && /^(INPUT|TEXTAREA)$/.test(a.tagName)); };
+function vaShouldDefer(){
+  const S = vaS(); if(S._force) return false;
+  if(!vaTyping()) return false;
+  S.pending = true;
+  if(!S._deferTimer) S._deferTimer = setInterval(()=>{
+    if(vaTyping()) return;
+    clearInterval(S._deferTimer); S._deferTimer = null;
+    if(S.pending && APP.view==='valuation'){ S.pending = false; render(); }
+  }, 400);
+  return true;
+}
+const vaFail = err => { console.error('房屋土地估價儲存失敗', err); alert('儲存失敗，請檢查網路後再試一次：\n' + (err && err.message ? err.message : err)); };
+// 只更新指定欄位；改日期時 month 一起改
+function vaUpdate(id, patch){
+  const c = vaAll().find(x=>x.id===id);
+  if('date' in patch) patch.month = monthKey(patch.date);
+  const full = stamp(patch);
+  if(c) Object.assign(c, full);
+  return updateDoc(doc(db,'valuationCases', id), full).catch(vaFail);
+}
+// 方案有變而且不是空白，後端才會推播
+const vaPushNote = (before, after) => { const a = String(after||'').trim(), b = String(before||'').trim(); return a===b ? '' : a ? '，已推播到 LINE' : '（方案清空，不會推播）'; };
+function vaOpenNew(base){
+  vaS().modal = { key:uid(), edit:false, err:'', rec:{ date:todayStr(), status:'', handler:'', customerName:'', area:'', category:'', valuation:'', plan:'', memo:'', ...(base||{}) } };
+  vaRender(); setTimeout(()=>{ const el = document.getElementById('va-fName'); if(el) el.focus(); }, 0);
+}
+function vaSaveModal(next){
+  const S = vaS(), M = S.modal; if(!M) return;
+  vaCaptureForm();
+  const r = M.rec;
+  if(!(r.customerName||'').trim()){ M.err = '請填客戶姓名'; vaRender(); const el = document.getElementById('va-fName'); if(el) el.focus(); return; }
+  if(!r.date){ M.err = '請選日期'; vaRender(); return; }
+  M.err = '';
+  const multi = k => k==='valuation' || k==='plan' || k==='memo';
+  if(M.edit){
+    const c = vaAll().find(x=>x.id===r.id);
+    if(!c){ S.modal = null; vaRender(); plToast('這筆估價已經被刪除了'); return; }
+    // 只寫有改的欄位；只差前後空白不算改
+    const patch = {};
+    VA_KEYS.forEach(k=>{
+      const a = String(r[k]||''), o = String(M.orig[k]||'');
+      if(a===o || (!multi(k) && a.trim()===o.trim())) return;
+      patch[k] = multi(k) ? a : a.trim();
+    });
+    const n = Object.keys(patch).length, note = 'plan' in patch ? vaPushNote(c.plan, patch.plan) : '';
+    if(n) vaUpdate(c.id, patch);
+    S.modal = null; vaRender();
+    plToast(n ? `已儲存「${r.customerName.trim()}」${note}` : '沒有變更');
+    return;
+  }
+  const rec = stamp({ id:uid(), ...VA_KEYS.reduce((o, k)=>(o[k] = multi(k) ? String(r[k]||'') : String(r[k]||'').trim(), o), {}) });
+  rec.month = monthKey(rec.date);
+  saveValuationCase(rec).catch(vaFail);
+  const note = vaPushNote('', rec.plan);
+  if(next){ vaOpenNew({ date:rec.date, handler:rec.handler, category:rec.category }); plToast(`已新增「${rec.customerName}」${note}，接著填下一筆`); }
+  else { S.modal = null; vaRender(); plToast(`已新增「${rec.customerName}」${note}`); }
+}
+function vaSavePlan(){
+  const S = vaS(), P = S.planEdit; if(!P) return;
+  vaCaptureForm();
+  const c = vaAll().find(x=>x.id===P.id); S.planEdit = null;
+  if(!c){ vaRender(); plToast('這筆估價已經被刪除了'); return; }
+  const v = P.draft!=null ? P.draft : (c.plan||'');
+  if(v===(c.plan||'')){ vaRender(); plToast('方案沒有變更，不會推播'); return; }
+  const note = vaPushNote(c.plan, v);
+  vaUpdate(c.id, { plan: v });
+  vaRender(); plToast(`已儲存「${c.customerName||''}」的方案${note}`);
+}
+function vaDelete(c){
+  deleteValuationCase(c.id).catch(vaFail);
+  plToast(`已刪除「${c.customerName||''}」（刪除不會推播）`);
+}
+function vaOpenPop(opener){
+  const S = vaS(), fk = opener.dataset.vaFk, W = 340;
+  S.pickYear = '';
+  const b = opener.getBoundingClientRect();
+  if(opener.dataset.vaPk==='__modal') vaCaptureForm();
+  S.pop = { id: opener.dataset.vaPk, f: opener.dataset.vaF, fk, top: b.top, at: Date.now(),
+    x: Math.max(8, Math.min(b.left, window.innerWidth - W - 8)), y: b.bottom + 6 };
+  vaRender();
+}
+
+document.addEventListener('click', (e)=>{
+  const t = e.target;
+  if(!t.closest || !(t.closest('.va-root') || t.closest('[data-va-add]') || t.closest('[data-va-opts]'))) return;
+  const S = vaS();
+  if(t.closest('[data-va-opts]')){ S.pop = null; vaRender(); openValuationStatusOptionsModal(); return; }
+  const pl = t.closest('[data-va-plan]');
+  if(pl){ S.pop = null; S.planEdit = { key:uid(), id:pl.dataset.vaPlan, draft:null }; vaRender();
+    setTimeout(()=>{ const ta = document.getElementById('va-plan-ta'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } }, 0); return; }
+  if(t.closest('[data-va-planclose]') || t.matches('[data-va-planbg]')){ S.planEdit = null; return vaRender(); }
+  const mc = t.closest('[data-va-mcat]'); if(mc && S.modal){ vaCaptureForm(); S.modal.rec.category = mc.dataset.vaMcat; return vaRender(); }
+  const pk = t.closest('[data-va-pick]');
+  if(pk){
+    const pt = pk.dataset.vaPt, f = pk.dataset.vaF, v = pk.dataset.vaPick; S.pop = null;
+    if(pt==='__modal'){ vaCaptureForm(); if(S.modal) S.modal.rec[f] = v; return vaRender(); }
+    const c = vaAll().find(x=>x.id===pt); if(!c || (c[f]||'')===v) return vaRender();
+    vaUpdate(c.id, { [f]: v });
+    vaRender(); plToast(`${c.customerName}：${VA_LABEL[f]}改為「${v||'未填'}」`); return;
+  }
+  const fp = t.closest('[data-va-fpick]');
+  if(fp){
+    const k = fp.dataset.vaFpick, v = fp.dataset.vaVal, keep = S.pop;
+    if(k==='month' && v.startsWith('py:')){ S.pickYear = v.slice(3); return vaRender(); }
+    S.limit = 20; S.pop = null;
+    if(k==='status') S.status = v;
+    if(k==='handler') S.handler = v;
+    if(k==='cat') S.cat = v;
+    if(k==='plan') S.plan = v;
+    if(k==='month'){ S.stat = ''; S.quick = v==='m:'+plThisM() ? 'month' : v; }
+    if(k==='sort'){
+      const [a, b] = v.split(':');
+      if(a==='k'){ S.sort = { key:b, dir: S.sort.key===b ? S.sort.dir : b==='date' ? 'desc' : 'asc' }; S.pop = keep; }
+      else S.sort.dir = b;
+    }
+    return vaRender();
+  }
+  const opener = t.closest('[data-va-pk], [data-va-fk]');
+  if(S.pop && !t.closest('#va-pop') && !t.closest('.pl-overlay.sheet .pl-dialog')){
+    const same = opener && (opener.dataset.vaFk ? opener.dataset.vaFk===S.pop.fk : opener.dataset.vaPk===S.pop.id && opener.dataset.vaF===S.pop.f);
+    S.pop = null; vaRender(); if(!opener || same) return;
+  }
+  if(t.closest('[data-va-popclose]')){ S.pop = null; return vaRender(); }
+  if(opener){ const again = opener.dataset.vaFk ? document.querySelector(`.va-root [data-va-fk="${opener.dataset.vaFk}"]`) : document.querySelector(`.va-root [data-va-pk="${CSS.escape(opener.dataset.vaPk)}"][data-va-f="${opener.dataset.vaF}"]`); return vaOpenPop(again || opener); }
+  if(t.closest('[data-va-add]')) return vaOpenNew();
+  const so = t.closest('[data-va-sort]');
+  if(so){ const k = so.dataset.vaSort; S.sort = S.sort.key===k ? { key:k, dir: S.sort.dir==='asc'?'desc':'asc' } : { key:k, dir: k==='date'?'desc':'asc' }; return vaRender(); }
+  const dl = t.closest('[data-va-del]'); if(dl){ S.delRow = dl.dataset.vaDel; return vaRender(); }
+  if(t.closest('[data-va-delno]')){ S.delRow = null; return vaRender(); }
+  const dy = t.closest('[data-va-delyes]');
+  if(dy){ const c = vaAll().find(x=>x.id===dy.dataset.vaDelyes); S.delRow = null; if(c) vaDelete(c); return vaRender(); }
+  const op = t.closest('[data-va-open]');
+  if(op && !S.modal){
+    const c = vaAll().find(x=>x.id===op.dataset.vaOpen); if(!c) return;
+    const rec = VA_KEYS.reduce((o, k)=>(o[k] = c[k]||'', o), { id:c.id });
+    S.modal = { key:uid(), edit:true, err:'', rec, orig:{ ...rec }, editor:vaEditor(c) }; return vaRender();
+  }
+  const sb = t.closest('[data-va-stat]');
+  if(sb){ S.stat = S.stat===sb.dataset.vaStat ? '' : sb.dataset.vaStat; S.status = ''; S.limit = 20; return vaRender(); }
+  const q = t.closest('[data-va-quick]'); if(q){ S.quick = q.dataset.vaQuick; S.stat = ''; S.limit = 20; return vaRender(); }
+  if(t.closest('[data-va-ftoggle]')){ S.filterOpen = !S.filterOpen; return vaRender(); }
+  if(t.closest('[data-va-more]')){ S.limit += 20; return vaRender(); }
+  if(t.closest('[data-va-mclose]') || t.matches('[data-va-modalbg]')){ S.modal = null; return vaRender(); }
+  if(t.matches('[data-va-popbg]')){ S.pop = null; return vaRender(); }
+  if(t.closest('[data-va-savenext]')) return vaSaveModal(true);
+  if(t.closest('[data-va-mdel]')){ vaCaptureForm(); S.modal.confirmDel = true; return vaRender(); }
+  if(t.closest('[data-va-mdelno]')){ S.modal.confirmDel = false; return vaRender(); }
+  if(t.closest('[data-va-mdelyes]')){ const M = S.modal; S.modal = null; const c = vaAll().find(x=>x.id===M.rec.id); if(c) vaDelete(c); vaRender(); return; }
+});
+document.addEventListener('submit', (e)=>{
+  if(e.target.id==='va-form'){ e.preventDefault(); vaSaveModal(false); }
+  else if(e.target.id==='va-plan-form'){ e.preventDefault(); vaSavePlan(); }
+});
+// 列表上直接打字：離開欄位（或按 Enter）自動儲存，只更新那一欄（這些欄位不會推播）
+document.addEventListener('change', (e)=>{
+  const el = e.target;
+  if(!el.matches || !el.matches('.va-root .va-t')) return;
+  const id = el.dataset.vaId, f = el.dataset.vaT;
+  const c = vaAll().find(x=>x.id===id); if(!c) return;
+  const v = el.tagName==='TEXTAREA' ? el.value : el.value.trim();
+  if(f==='customerName' && !v){ el.value = c.customerName||''; plToast('客戶姓名不能空白'); return; }
+  if((c[f]||'')===v) return;
+  vaUpdate(id, { [f]: v });
+  plToast(`已儲存：${VA_LABEL[f]}`);
+});
+document.addEventListener('input', (e)=>{
+  const el = e.target;
+  if(el.matches && el.matches('.va-root textarea.va-t')) return plGrow(el);
+  if(el.id!=='va-search' || e.isComposing) return;
+  vaSearchApply(el);
+});
+document.addEventListener('compositionend', (e)=>{ if(e.target.id==='va-search') vaSearchApply(e.target); });
+function vaSearchApply(el){
+  const S = vaS(), pos = el.selectionStart;
+  S.search = el.value; S.limit = 20;
+  vaRender();
+  const n = document.getElementById('va-search'); if(n){ n.focus(); try{ n.setSelectionRange(pos, pos); }catch(_){} }
+}
+document.addEventListener('keydown', (e)=>{
+  if(!e.target.closest || !document.querySelector('.va-root')) return;
+  if(e.key==='Enter' && e.target.matches('.va-root .va-t') && !e.shiftKey && !e.isComposing){ e.preventDefault(); e.target.blur(); return; }
+  if(e.key==='Escape'){
+    const S = vaS();
+    if(S.pop){ S.pop = null; vaRender(); } else if(S.planEdit){ S.planEdit = null; vaRender(); } else if(S.modal){ S.modal = null; vaRender(); }
+  }
+});
+document.addEventListener('focusout', (e)=>{
+  if(!e.target.closest || !e.target.closest('.va-root')) return;
+  setTimeout(()=>{ const S = vaS(); if(S.pending && APP.view==='valuation' && !vaShouldDefer()){ S.pending = false; render(); } }, 0);
+});
+document.addEventListener('scroll', (e)=>{
+  const S = APP.va; if(!S || !S.pop || plIsMobile() || APP.view!=='valuation' || Date.now() - (S.pop.at||0) < 400) return;
+  if(e.target && e.target.closest && e.target.closest('#va-pop')) return;
+  S.pop = null; vaRender();
+}, true);
+let vaResizeTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(vaResizeTimer);
+  vaResizeTimer = setTimeout(()=>{
+    if(APP.view!=='valuation' || !APP.va || vaLayout()===APP.va._layout) return;
+    APP.va.pop = null; render();
+  }, 150);
+});
+function valuationPageHTML(){
+  return `
+    <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub">估價紀錄與方案追蹤・只有核心成員可以查看與編輯・方案填好按「儲存並推播」才會發到 LINE，其他欄位直接點就能改</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn ghost m-hide-640" data-va-opts>⚙ 狀態選項</button>
+        <button class="btn ghost m-hide-640" data-action="valuation-targets">🔔 推播對象</button>
+        <button class="btn ghost m-hide-640" data-action="valuation-import">📥 匯入 Excel</button>
+        <button class="btn primary m-hide-640" data-va-add>＋ 新增估價</button>
+      </div>
+    </div>
+    ${vaPageHTML()}`;
 }
 /* ---- 逾期未更新案件（超過7天沒更新狀態），總覽的數字跟明細彈窗共用同一套判斷邏輯 ---- */
 function isStaleCase(c){
