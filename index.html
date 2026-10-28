@@ -821,6 +821,34 @@
   .va-subrow{display:flex;gap:6px;align-items:center;margin-top:3px;min-width:0;}
   .va-subrow .va-cat{margin-top:0;flex:none;}
   .va-subrow .pl-t{flex:1;min-width:0;margin-left:0;}
+  /* ---- 四個改版頁共用：搜尋＋新增（電腦版篩選器與表格中間、手機左下角）、日期直接改、呼吸光暈 ---- */
+  @keyframes plGlow{0%,100%{box-shadow:0 0 0 0 rgba(47,91,234,0),0 3px 10px rgba(47,91,234,.22);}50%{box-shadow:0 0 0 6px rgba(47,91,234,.16),0 6px 22px rgba(47,91,234,.45);}}
+  @keyframes plGlowSoft{0%,100%{box-shadow:0 0 0 0 rgba(47,91,234,0),0 2px 8px rgba(47,91,234,.08);}50%{box-shadow:0 0 0 5px rgba(47,91,234,.12),0 4px 16px rgba(47,91,234,.2);}}
+  .pl-toolbar{display:flex;gap:10px;align-items:center;}
+  .pl-sbox{position:relative;flex:1;max-width:560px;min-width:0;}
+  .pl-sicon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:17px;opacity:.6;pointer-events:none;}
+  .pl-bigsearch{width:100%;box-sizing:border-box;height:48px;border:2px solid #9FB4F5;border-radius:12px;background:#fff;padding:0 42px 0 44px;font-family:inherit;font-size:15.5px;color:var(--pl-ink);animation:plGlowSoft 2.6s ease-in-out infinite;}
+  .pl-bigsearch:focus{outline:none;border-color:var(--pl-brand);animation:none;box-shadow:0 0 0 4px var(--pl-soft);}
+  .pl-bigsearch::-webkit-search-cancel-button{display:none;}
+  .pl-sclear{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:#EEF1F7;color:var(--pl-muted);width:30px;height:30px;border-radius:99px;font-size:16px;cursor:pointer;}
+  .pl-addbtn{height:48px;padding:0 22px;font-size:15px;white-space:nowrap;border-radius:12px;animation:plGlow 2.6s ease-in-out infinite;}
+  .pl-searchnote{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;background:#EAF0FF;color:#1D3FA8;border-radius:10px;padding:8px 12px;font-size:13px;}
+  .pl-searchnote b{color:#12286B;}
+  .pl-searchnote button{border:0;background:transparent;color:var(--pl-brand);font-weight:700;cursor:pointer;padding:2px 0;font-size:13px;font-family:inherit;}
+  .pl-datebtn{border:1px solid transparent;background:transparent;border-radius:7px;padding:3px 6px;margin-left:-6px;font:inherit;color:inherit;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .pl-datebtn:hover{border-color:#9FB4F5;background:#F2F6FF;}
+  .pl-dateinp{width:100%;max-width:150px;box-sizing:border-box;border:1px solid var(--pl-brand);border-radius:7px;padding:3px 4px;font:inherit;font-size:12.5px;background:#fff;}
+  .pl-card .foot .pl-datebtn{min-height:34px;}
+  .pl-mfabs{position:fixed;left:14px;bottom:18px;z-index:50;display:flex;gap:8px;max-width:calc(100vw - 100px);}
+  .pl-mfab{height:50px;border:0;border-radius:25px;padding:0 18px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;}
+  .pl-mfab.search{background:#fff;color:var(--pl-brand);border:2px solid var(--pl-brand);animation:plGlowSoft 2.6s ease-in-out infinite;}
+  .pl-mfab.search.on{background:var(--pl-soft);}
+  .pl-mfab.add{background:var(--pl-brand);color:#fff;animation:plGlow 2.6s ease-in-out infinite;}
+  .pl-msearch{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-top:1px solid var(--pl-line);box-shadow:0 -8px 22px rgba(20,30,60,.16);padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center;}
+  .pl-msearch .pl-sbox{max-width:none;}
+  .pl-msearch .pl-bigsearch{height:50px;font-size:16px;animation:none;}
+  .pl-msearch .pl-btn{height:50px;flex:none;}
+  @media (prefers-reduced-motion:reduce){ .pl-addbtn,.pl-bigsearch,.pl-mfab{animation:none;} }
   @media (max-width:640px){
     .bl-stats{grid-template-columns:1fr 1fr;}
     .bl-filter-box{display:none;}
@@ -883,7 +911,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-09';
+const APP_BUILD = '2026-10-28-10';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2849,8 +2877,7 @@ function roomTitleSuffix(){ return (isCore() && APP.viewingStaff) ? '　·　'+e
 
 function personalLogPageHTML(){
   return `
-    <div class="page-header"><div><h1 class="page-title">我的客人紀錄${roomTitleSuffix()}</h1><p class="page-sub">私人開發日誌，不會影響送件進度表或任何報表</p></div>
-      <button class="btn primary m-hide-640" data-pl-add>＋ 新增記錄</button></div>
+    <div class="page-header"><div><h1 class="page-title">我的客人紀錄${roomTitleSuffix()}</h1><p class="page-sub">私人開發日誌，不會影響送件進度表或任何報表</p></div></div>
     ${roomBanner()}
     ${plPageHTML()}
   `;
@@ -4628,11 +4655,11 @@ function plInStat(c){
 }
 function plFiltered(){
   const S = plS(), q = S.search.trim().toLowerCase();
-  return plMine().filter(c=> plInQuick(c)
-    && (S.group==='all' || (S.group==='ended')===plIsEnded(c.contactStatus))
+  return plMine().filter(c=> (q || plInQuick(c))
+    && (q || S.group==='all' || (S.group==='ended')===plIsEnded(c.contactStatus))
     && (!S.status || c.contactStatus===S.status)
     && (!S.product || c.dealProduct===S.product)
-    && plInStat(c)
+    && (q || plInStat(c))
     && (!q || ['customer','phone','caseRemark','latestNote','dealProduct','contactStatus','caseStatus','source','transferTo','lineId','wizardHatNote']
       .some(k=>String(c[k]||'').toLowerCase().includes(q))));
 }
@@ -4660,6 +4687,7 @@ function plQuickLabel(){
   return { today:'今天', week:'本週', month:plMLabel(plThisM()), all:'全部日期' }[q];
 }
 function plSummary(){
+  if(lxSearching(plS())) return '搜尋中・全部日期';
   const S = plS();
   const g = S.status || { active:'進行中', ended:'已結束', all: S.stat ? '' : '全部狀態' }[S.group];
   return `${plQuickLabel()}${g?'・'+g:''}${S.product?'・'+S.product:''}${S.stat?'・'+PL_STAT_NAME[S.stat]:''}`;
@@ -4688,7 +4716,7 @@ const plSortBtn = () => { const S = plS(); return plFBtn('sort', `⇅ ${PL_SORTS
 
 function plStatsHTML(){
   const S = plS(), mon = plMine().filter(c=>(c.date||'').startsWith(plThisM()));
-  const plain = S.group==='all' && !S.status && !S.product && S.quick==='month';
+  const plain = S.group==='all' && !S.status && !S.product && S.quick==='month' && !lxSearching(S);
   const it = (k, v, act, on)=>`<button type="button" class="pl-stat" data-pl-stat="${act}" aria-pressed="${on}"><div class="k">${k}</div><div class="v">${v}</div></button>`;
   return `<div class="pl-stats">
     ${it('本月新增', mon.length, '', plain && !S.stat)}
@@ -4699,15 +4727,14 @@ function plStatsHTML(){
 }
 function plFilterHTML(m, nocN){
   const S = plS();
-  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-pl-quick="${k}" aria-pressed="${S.quick===k}">${t}</button>`).join('');
+  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-pl-quick="${k}" aria-pressed="${!lxSearching(S) && S.quick===k}">${t}</button>`).join('');
   const monSel = plFBtn('month', `月份：${S.quick.startsWith('m:')||S.quick.startsWith('y:') ? plQuickLabel() : S.quick==='month' ? '本月' : '全部月份'}`);
   const grpSel = plFBtn('group', `聯絡狀態：${S.status || {active:'進行中', ended:'已結束', all:'全部'}[S.group]}`);
   const prodSel = plFBtn('prod', `方案：${S.product||'全部'}`);
-  const search = `<input type="search" class="pl-search" id="pl-search" placeholder="搜尋姓名、電話、備註" value="${escAttr(S.search)}"/>`;
   const nocBtn = `<button type="button" class="pl-chip pl-noc" data-pl-noc aria-pressed="${!!APP.myLogNoContactCollapsed}">📵 ${APP.myLogNoContactCollapsed?'顯示':'隱藏'}無聯絡方式的客人（${nocN}）</button>`;
-  if(!m) return `<div class="pl-filters">${chips}${monSel}${grpSel}${prodSel}${search}${nocBtn}</div>`;
+  if(!m) return `<div class="pl-filters">${chips}${monSel}${grpSel}${prodSel}${nocBtn}</div>`;
   return `<div class="pl-filters">${chips}<button type="button" class="pl-chip pl-fbtn" data-pl-ftoggle aria-expanded="${S.filterOpen}">${escHtml(plSummary())} ▾</button>${plSortBtn()}${nocBtn}</div>
-    ${S.filterOpen ? `<div class="pl-panel">${monSel}${grpSel}${prodSel}${search}<button type="button" class="pl-btn sec" data-pl-ftoggle>完成</button></div>` : ''}`;
+    ${S.filterOpen ? `<div class="pl-panel">${monSel}${grpSel}${prodSel}<button type="button" class="pl-btn sec" data-pl-ftoggle>完成</button></div>` : ''}`;
 }
 // 每個月份前面一條分隔（顯示筆數）；列表跨年時月份上面再加年份分隔
 function plWithMonths(all, rows, row, head, yhead){
@@ -4730,7 +4757,7 @@ function plRowsHTML(all, m, limit, moreKey){
       <div class="line2"><span class="ph">${plTxt(c,'phone','電話','sub')}${extra?`<span class="srcx">${escHtml(extra)}</span>`:''}</span>${plPickBtn(c,'dealProduct')}</div>
       ${plDetailBox(c)}
       ${plTxt(c,'caseRemark','案件狀況備註','nbox')}
-      ${S.delRow===c.id ? plDelCtl(c) : `<div class="foot"><span>${plMD(c.date)}${c.wizardHatNote?'・'+whIcon(13)+' '+escHtml(c.wizardHatNote):''}</span><span class="pl-acts">${plPickBtn(c,'caseStatus')}<button type="button" class="pl-link" data-pl-open="${escAttr(c.id)}">編輯</button>${plDelCtl(c)}</span></div>`}
+      ${S.delRow===c.id ? plDelCtl(c) : `<div class="foot"><span>${lxDateCtl('pl', c, true)}${c.wizardHatNote?'・'+whIcon(13)+' '+escHtml(c.wizardHatNote):''}</span><span class="pl-acts">${plPickBtn(c,'caseStatus')}<button type="button" class="pl-link" data-pl-open="${escAttr(c.id)}">編輯</button>${plDelCtl(c)}</span></div>`}
     </div>`;
   }, (k, n)=>`<div class="pl-mhead pl-mlabel">${k}<span class="pl-sub">${n} 筆</span></div>`, (y, n)=>`<div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 筆</span></div>`)}</div>${more}`;
   const th = (k, t)=>{ const on = S.sort.key===k; return `<th><button type="button" class="pl-thbtn${on?' on':''}" data-pl-sort="${k}" aria-label="依${t}排序">${t}<span>${on?(S.sort.dir==='asc'?'▲':'▼'):'↕'}</span></button></th>`; };
@@ -4739,7 +4766,7 @@ function plRowsHTML(all, m, limit, moreKey){
     <thead><tr><th class="no">#</th>${PL_SORTS.map(([k,t])=>th(k,t)).join('')}<th></th></tr></thead>
     <tbody>${plWithMonths(all, rows, (c, i)=>`<tr>
       <td class="no">${i+1}</td>
-      <td class="date">${plMD(c.date)}</td>
+      <td class="date">${lxDateCtl('pl', c, true)}</td>
       <td>${plTxt(c,'customer','客戶姓名','cname')}${plTxt(c,'phone','電話','sub')}${c.source && c.source!=='公司' ? `<div class="pl-sub">${escHtml(c.source)}</div>` : ''}${c.lineId?`<div class="pl-sub">LINE ${escHtml(c.lineId)}</div>`:''}</td>
       <td>${plPickBtn(c,'dealProduct')}</td>
       <td>${plPickBtn(c,'contactStatus')}</td>
@@ -4753,7 +4780,7 @@ function plRowsHTML(all, m, limit, moreKey){
 function plListHTML(m, all){
   const S = plS();
   const normal = all.filter(plHasContact), noc = all.filter(c=>!plHasContact(c));
-  const count = `<div class="pl-count">符合 <b>${normal.length}</b> 筆${noc.length?`，另有 <b>${noc.length}</b> 筆無聯絡方式`:''}・全部 <b>${plMine().length}</b> 筆</div>`;
+  const count = lxSearching(S) ? lxSearchNote('pl', all.length, '筆') : `<div class="pl-count">符合 <b>${normal.length}</b> 筆${noc.length?`，另有 <b>${noc.length}</b> 筆無聯絡方式`:''}・全部 <b>${plMine().length}</b> 筆</div>`;
   const nocPart = APP.myLogNoContactCollapsed ? '' : `<div class="pl-nochead"><h3>📵 無聯絡方式的客人</h3><span class="pl-sub">共 ${noc.length} 筆</span></div>`
     + (noc.length ? plRowsHTML(noc, m, S.limitNoc, 'noc') : `<div class="pl-empty">沒有這類紀錄</div>`);
   const emptyMsg = plMine().length===0 ? '尚無記錄，按「＋新增記錄」開始登記。'
@@ -4865,8 +4892,7 @@ function plPageHTML(){
   const all = plSorted(plFiltered());
   setTimeout(plAfterRender, 0);
   return `<div class="pl-root">
-    ${plStatsHTML()}${plFilterHTML(m, all.filter(c=>!plHasContact(c)).length)}${plListHTML(m, all)}
-    <button type="button" class="pl-fab" data-pl-add>＋ 新增記錄</button>
+    ${plStatsHTML()}${plFilterHTML(m, all.filter(c=>!plHasContact(c)).length)}${lxToolbarHTML('pl', '新增記錄', true)}${plListHTML(m, all)}
     ${plModalHTML()}${plPopHTML()}
   </div>`;
 }
@@ -5083,6 +5109,77 @@ window.addEventListener('resize', ()=>{
   const m = plIsMobile(); if(m===plLastMobile) return; plLastMobile = m;
   if(APP.view==='personalLog' && APP.pl){ APP.pl.pop = null; render(); }
 });
+/* ================= 四個改版頁共用（2026-10 業務回饋）=================
+   我的客人紀錄（pl）、進度追蹤（pg）、銀行信貸（bk）、房屋土地估價（va）：
+   - 搜尋＋新增：電腦版放在篩選器和表格中間；手機版是左下角兩顆按鈕，點搜尋從畫面底部滑出搜尋框
+   - 搜尋框有字就找全部日期（不受本月、統計卡、進行中／已結束限制）
+   - 日期點一下直接選，選好就存
+   - 新增按鈕、搜尋區有呼吸光暈 */
+const LX = {
+  pl: { S:()=>plS(), render:()=>plRender(), find:id=>plMine().find(x=>x.id===id), saveDate:(c, v)=>plUpdate(c.id, { date:v }) },
+  pg: { S:()=>pgS(), render:()=>pgRender(), find:id=>pgList().find(x=>x.id===id), saveDate:(c, v)=>pgUpdate(pgKind(), c.id, { date:v }) },
+  bk: { S:()=>bkS(), render:()=>bkRender(), find:id=>bkAll().find(x=>x.id===id), saveDate:(c, v)=>bkUpdate(c.id, { date:v }) },
+  va: { S:()=>vaS(), render:()=>vaRender(), find:id=>vaAll().find(x=>x.id===id), saveDate:(c, v)=>vaUpdate(c.id, { date:v }) },
+};
+const lxSearching = S => !!String(S.search||'').trim();
+// 電腦版：搜尋框＋新增按鈕一列；手機版：左下角搜尋／新增按鈕，或打開時底部的搜尋框（都用同一個 id，原本的搜尋處理照樣能用）
+function lxToolbarHTML(px, addLabel, canAdd){
+  const S = LX[px].S(), q = S.search||'';
+  const box = `<div class="pl-sbox"><span class="pl-sicon" aria-hidden="true">🔍</span><input type="search" class="pl-bigsearch" id="${px}-search" placeholder="搜尋客戶姓名、電話…" value="${escAttr(q)}" autocomplete="off" aria-label="搜尋客戶"/>${q ? `<button type="button" class="pl-sclear" data-lx-sclear="${px}" aria-label="清除搜尋">×</button>` : ''}</div>`;
+  if(!plIsMobile()) return `<div class="pl-toolbar">${box}${canAdd ? `<button type="button" class="pl-btn pl-addbtn" data-${px}-add>＋ ${addLabel}</button>` : ''}</div>`;
+  if(S.mSearch) return `<div class="pl-msearch">${box}<button type="button" class="pl-btn" data-lx-msdone="${px}">完成</button></div>`;
+  return `<div class="pl-mfabs"><button type="button" class="pl-mfab search${lxSearching(S) ? ' on' : ''}" data-lx-msopen="${px}">🔍 ${lxSearching(S) ? escHtml(q.trim()) : '搜尋'}</button>${canAdd ? `<button type="button" class="pl-mfab add" data-${px}-add>＋ 新增</button>` : ''}</div>`;
+}
+function lxSearchNote(px, n, unit){
+  const S = LX[px].S();
+  return `<div class="pl-searchnote">🔍 搜尋「<b>${escHtml(S.search.trim())}</b>」：全部日期找到 <b>${n}</b> ${unit}<button type="button" data-lx-sclear="${px}">清除搜尋</button></div>`;
+}
+function lxDateCtl(px, c, editable){
+  if(!editable) return plMD(c.date);
+  const S = LX[px].S();
+  if(S.dateEdit===c.id) return `<input type="date" class="pl-dateinp" data-lx-date="${px}" data-lx-id="${escAttr(c.id)}" value="${escAttr(c.date||'')}" aria-label="${escAttr((c.customerName||c.customer||'')+' 的日期')}"/>`;
+  return `<button type="button" class="pl-datebtn" data-lx-dateopen="${px}" data-lx-id="${escAttr(c.id)}" title="點一下改日期">${plMD(c.date)}</button>`;
+}
+const lxFocusSearch = px => { const n = document.getElementById(px + '-search'); if(n){ n.focus(); try{ n.setSelectionRange(n.value.length, n.value.length); }catch(_){} } };
+document.addEventListener('click', (e)=>{
+  const t = e.target; if(!t.closest) return;
+  const sc = t.closest('[data-lx-sclear]');
+  if(sc){ const px = sc.dataset.lxSclear, S = LX[px].S(); S.search = ''; S.limit = 20; LX[px].render(); lxFocusSearch(px); return; }
+  const mo = t.closest('[data-lx-msopen]');
+  if(mo){ const px = mo.dataset.lxMsopen, S = LX[px].S(); S.mSearch = true; S.pop = null; LX[px].render(); lxFocusSearch(px); return; }
+  const md = t.closest('[data-lx-msdone]');
+  if(md){ const px = md.dataset.lxMsdone; LX[px].S().mSearch = false; LX[px].render(); return; }
+  const dop = t.closest('[data-lx-dateopen]');
+  if(dop){ const px = dop.dataset.lxDateopen, S = LX[px].S(); S.dateEdit = dop.dataset.lxId; S.pop = null; LX[px].render();
+    setTimeout(()=>{ const i = document.querySelector('.pl-dateinp'); if(i){ i.focus(); try{ i.showPicker(); }catch(_){} } }, 0); return; }
+});
+// 日期選好就存；換到別的月份提示一下（列表照月份分段，會移到那個月）
+document.addEventListener('change', (e)=>{
+  const el = e.target; if(!el.matches || !el.matches('.pl-dateinp')) return;
+  const px = el.dataset.lxDate, S = LX[px].S(), c = LX[px].find(el.dataset.lxId), v = el.value;
+  S.dateEdit = null;
+  if(!c || !v || v===(c.date||'')){ LX[px].render(); return; }
+  const moved = (c.date||'').slice(0,7)!==v.slice(0,7);
+  LX[px].saveDate(c, v);
+  LX[px].render();
+  plToast(`${c.customerName||c.customer||''}：日期改為 ${plMD(v)}${moved ? `，已移到 ${Number(v.slice(5,7))} 月` : ''}`);
+});
+document.addEventListener('focusout', (e)=>{
+  const el = e.target; if(!el.matches || !el.matches('.pl-dateinp')) return;
+  const px = el.dataset.lxDate;
+  setTimeout(()=>{ const S = LX[px].S(); if(S.dateEdit && !document.querySelector('.pl-dateinp:focus')){ S.dateEdit = null; LX[px].render(); } }, 250);
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key!=='Escape') return;
+  for(const px of Object.keys(LX)){ const S = APP[px]; if(S && (S.dateEdit || S.mSearch)){ S.dateEdit = null; S.mSearch = false; LX[px].render(); } }
+});
+// 手機邊打字：把結果捲回最上面（看得到「找到幾件」和第一筆）
+function lxScrollToResults(el){
+  if(!plIsMobile() || !/^(pl|pg|bk|va)-search$/.test(el.id||'')) return;
+  setTimeout(()=>{ const n = document.querySelector('.pl-searchnote, .pl-count'); if(n) window.scrollTo(0, Math.max(0, n.getBoundingClientRect().top + window.scrollY - 64)); }, 0);
+}
+document.addEventListener('input', (e)=>{ if(!e.isComposing) lxScrollToResults(e.target); });
+document.addEventListener('compositionend', (e)=>lxScrollToResults(e.target));
 /* ================= 進度追蹤（2026-10 改版）=================
    跟舊版用同一份資料（progressAdCases、progressChannelCases），欄位名稱不變。
    - 列表上直接改、編輯視窗都只更新改到的欄位（updateDoc），不整筆覆蓋；業務只會寫 staffNote、wizardHatNote（符合資料庫規則）
@@ -5161,7 +5258,7 @@ function pgInQuick(c){
 }
 function pgFiltered(){
   const S = pgS(), q = S.search.trim().toLowerCase();
-  return pgList().filter(c=> (S.stat ? PG_STATS[S.stat].f(c) : pgInQuick(c))
+  return pgList().filter(c=> (q ? true : S.stat ? PG_STATS[S.stat].f(c) : pgInQuick(c))
     && (S.group==='all' || (S.group==='open')===pgIsOpen(c.status))
     && (!S.status || c.status===S.status)
     && (!S.plan || c.plan===S.plan)
@@ -5194,6 +5291,7 @@ function pgQuickLabel(){
   return { today:'今天', week:'本週', month:plMLabel(plThisM()), all:'全部日期' }[q];
 }
 function pgSummary(){
+  if(lxSearching(pgS())) return '搜尋中・全部日期';
   const S = pgS();
   return `${pgQuickLabel()}・${S.status || { all:'全部狀態', open:'未結案', closed:'已結案' }[S.group]}${S.plan?'・'+S.plan:''}${S.staff?'・'+S.staff:''}`;
 }
@@ -5247,19 +5345,18 @@ function pgTabsHTML(){
 function pgStatsHTML(){
   const S = pgS(), L = pgList();
   return `<div class="pl-stats pg-stats">${Object.keys(PG_STATS).map(k=>{ const s = PG_STATS[k], v = L.filter(s.f).length;
-    return `<button type="button" class="pl-stat${k==='docs' && v ? ' pg-warn' : ''}" data-pg-stat="${k}" aria-pressed="${S.stat===k}"><div class="k">${s.t}</div><div class="v">${v}${s.note?`<small class="pg-vnote">${s.note}</small>`:''}</div></button>`; }).join('')}</div>`;
+    return `<button type="button" class="pl-stat${k==='docs' && v ? ' pg-warn' : ''}" data-pg-stat="${k}" aria-pressed="${!lxSearching(S) && S.stat===k}"><div class="k">${s.t}</div><div class="v">${v}${s.note?`<small class="pg-vnote">${s.note}</small>`:''}</div></button>`; }).join('')}</div>`;
 }
 function pgFilterHTML(m){
   const S = pgS();
-  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-pg-quick="${k}" aria-pressed="${!S.stat && S.quick===k}">${t}</button>`).join('');
+  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-pg-quick="${k}" aria-pressed="${!lxSearching(S) && !S.stat && S.quick===k}">${t}</button>`).join('');
   const monSel = pgFBtn('month', `月份：${S.quick.startsWith('m:')||S.quick.startsWith('y:') ? pgQuickLabel() : S.quick==='month' ? '本月' : '全部月份'}`);
   const stSel = pgFBtn('group', `狀態：${S.status || {all:'全部', open:'未結案', closed:'已結案'}[S.group]}`);
   const plSel = pgFBtn('plan', `方案：${S.plan||'全部'}`);
   const sfSel = pgAdmin() ? pgFBtn('staff', `${pgKind()==='ad'?'業務':'業務／通路'}：${S.staff||'全部'}`) : '';
-  const search = `<input type="search" class="pl-search" id="pg-search" placeholder="搜尋姓名、電話、備註" value="${escAttr(S.search)}"/>`;
-  if(!m) return `<div class="pl-filters">${chips}${monSel}${stSel}${plSel}${sfSel}${search}</div>`;
+  if(!m) return `<div class="pl-filters">${chips}${monSel}${stSel}${plSel}${sfSel}</div>`;
   return `<div class="pl-filters">${chips}<button type="button" class="pl-chip pl-fbtn" data-pg-ftoggle aria-expanded="${S.filterOpen}">${escHtml(pgSummary())} ▾</button>${pgSortBtn()}</div>
-    ${S.filterOpen ? `<div class="pl-panel">${monSel}${stSel}${plSel}${sfSel}${search}<button type="button" class="pl-btn sec" data-pg-ftoggle>完成</button></div>` : ''}`;
+    ${S.filterOpen ? `<div class="pl-panel">${monSel}${stSel}${plSel}${sfSel}<button type="button" class="pl-btn sec" data-pg-ftoggle>完成</button></div>` : ''}`;
 }
 function pgRowsHTML(all, layout){
   const S = pgS(), rows = all.slice(0, S.limit), ch = pgKind()==='channel';
@@ -5272,7 +5369,7 @@ function pgRowsHTML(all, layout){
       ${pgTxt(c,'note','備註','nbox',true)}
       ${pgAdmin() ? (c.staffNote ? `<div class="pg-snote"><b>業務備註</b>${escHtml(c.staffNote)}</div>` : '') : `<div class="pg-snote"><b>業務備註</b></div>${pgTxt(c,'staffNote','跟行政說明客人狀況','nbox',true)}`}
       ${pgHat(c)}
-      ${S.delRow===c.id ? pgDelCtl(c) : `<div class="foot"><span>${plMD(c.date)}・${escHtml(pgEditor(c)||'—')}</span>${pgActs(c)}</div>`}
+      ${S.delRow===c.id ? pgDelCtl(c) : `<div class="foot"><span>${lxDateCtl('pg', c, pgAdmin())}・${escHtml(pgEditor(c)||'—')}</span>${pgActs(c)}</div>`}
     </div>`, (k, n)=>`<div class="pl-mhead pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div>`, (y, n)=>`<div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div>`)}</div>${more}`;
   const compact = layout==='compact';
   const cols = compact ? PG_SORTS.filter(s=>s[0]!=='_at') : PG_SORTS, span = cols.length + 2;
@@ -5282,7 +5379,7 @@ function pgRowsHTML(all, layout){
     <thead><tr><th class="no">#</th>${cols.map(([k,t])=>th(k, k==='staff' && !ch ? '業務' : t)).join('')}<th></th></tr></thead>
     <tbody>${plWithMonths(all, rows, (c, i)=>`<tr>
       <td class="no">${i+1}</td>
-      <td class="date">${plMD(c.date)}</td>
+      <td class="date">${lxDateCtl('pg', c, pgAdmin())}</td>
       <td>${pgTxt(c,'customer','客戶姓名','cname')}${pgTxt(c,'phone','電話','sub')}${compact?`<div class="pg-edited">${escHtml(pgEditor(c))}</div>`:''}</td>
       <td>${pgPickBtn(c,'plan')}</td>
       <td>${pgStaffCell(c)}</td>
@@ -5296,7 +5393,7 @@ function pgRowsHTML(all, layout){
 }
 function pgListHTML(all, layout){
   const S = pgS(), L = pgList();
-  const count = `<div class="pl-count">符合 <b>${all.length}</b> 件・${pgKind()==='ad'?'廣告客':'直客／通路'}全部 <b>${L.length}</b> 件</div>`;
+  const count = lxSearching(S) ? lxSearchNote('pg', all.length, '件') : `<div class="pl-count">符合 <b>${all.length}</b> 件・${pgKind()==='ad'?'廣告客':'直客／通路'}全部 <b>${L.length}</b> 件</div>`;
   if(all.length) return count + pgRowsHTML(all, layout);
   const msg = !L.length ? (isStaffSales() ? '目前沒有你的案件。' : '尚無案件資料。')
     : S.quick==='month' && !S.stat && !L.some(c=>(c.date||'').startsWith(plThisM())) ? `${plMLabel(plThisM())}還沒有案件。要看上個月，點「月份」選。`
@@ -5408,11 +5505,10 @@ function pgPageHTML(){
   const layout = pgLayout(), all = pgSorted(pgFiltered());
   const partners = Array.from(new Set(pgStaffOpts().concat(pgAll('channel').map(c=>c.staff).filter(Boolean))));
   setTimeout(pgAfterRender, 0);
-  S._layout = layout;
+  S._layout = layout + (plIsMobile() ? '-m' : '');
   return `<div class="pg-root">
-    ${pgTabsHTML()}${pgStatsHTML()}${pgFilterHTML(plIsMobile())}${pgListHTML(all, layout)}
+    ${pgTabsHTML()}${pgStatsHTML()}${pgFilterHTML(plIsMobile())}${lxToolbarHTML('pg', '新增案件', pgAdmin())}${pgListHTML(all, layout)}
     <datalist id="pg-staff-list">${partners.map(s=>`<option value="${escAttr(s)}">`).join('')}</datalist>
-    ${pgAdmin() ? '<button type="button" class="pl-fab" data-pg-add>＋ 新增案件</button>' : ''}
     ${pgModalHTML()}${pgPopHTML()}
   </div>`;
 }
@@ -5626,7 +5722,7 @@ let pgResizeTimer = null;
 window.addEventListener('resize', ()=>{
   clearTimeout(pgResizeTimer);
   pgResizeTimer = setTimeout(()=>{
-    if(APP.view!=='progress' || !APP.pg || pgLayout()===APP.pg._layout) return;
+    if(APP.view!=='progress' || !APP.pg || pgLayout() + (plIsMobile() ? '-m' : '')===APP.pg._layout) return;
     APP.pg.pop = null; render();
   }, 150);
 });
@@ -5696,8 +5792,8 @@ function bkInQuick(c){
 }
 function bkFiltered(){
   const S = bkS(), q = S.search.trim().toLowerCase();
-  return bkAll().filter(c=> (S.stat ? BK_STATS[S.stat].f(c) : bkInQuick(c))
-    && (S.stat || S.group==='all' || (S.group==='ended')===bkIsEnded(c.status))
+  return bkAll().filter(c=> (q ? true : S.stat ? BK_STATS[S.stat].f(c) : bkInQuick(c))
+    && (q || S.stat || S.group==='all' || (S.group==='ended')===bkIsEnded(c.status))
     && (!S.status || c.status===S.status)
     && (!S.pack || (S.pack==='__none__' ? !c.packJob : c.packJob===S.pack))
     && (!S.owner || c.owner===S.owner)
@@ -5733,6 +5829,7 @@ function bkQuickLabel(){
 }
 const bkPackLabel = v => v==='__none__' ? '未定' : v;
 function bkSummary(){
+  if(lxSearching(bkS())) return '搜尋中・全部日期';
   const S = bkS();
   return `${bkQuickLabel()}${S.stat ? '' : '・'+(S.status || { active:'進行中', ended:'已結束', all:'全部狀態' }[S.group])}${S.pack?'・'+bkPackLabel(S.pack):''}${S.owner?'・'+S.owner:''}${S.channel?'・'+S.channel:''}`;
 }
@@ -5776,20 +5873,19 @@ const bkSortBtn = () => { const S = bkS(); return bkFBtn('sort', `⇅ ${BK_SORTS
 function bkStatsHTML(){
   const S = bkS(), L = bkAll();
   return `<div class="pl-stats pg-stats">${Object.keys(BK_STATS).map(k=>{ const s = BK_STATS[k];
-    return `<button type="button" class="pl-stat" data-bk-stat="${k}" aria-pressed="${S.stat===k}"><div class="k">${s.t}</div><div class="v">${L.filter(s.f).length}${s.note?`<small class="pg-vnote">${s.note}</small>`:''}</div></button>`; }).join('')}</div>`;
+    return `<button type="button" class="pl-stat" data-bk-stat="${k}" aria-pressed="${!lxSearching(S) && S.stat===k}"><div class="k">${s.t}</div><div class="v">${L.filter(s.f).length}${s.note?`<small class="pg-vnote">${s.note}</small>`:''}</div></button>`; }).join('')}</div>`;
 }
 function bkFilterHTML(m){
   const S = bkS();
-  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-bk-quick="${k}" aria-pressed="${!S.stat && S.quick===k}">${t}</button>`).join('');
+  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-bk-quick="${k}" aria-pressed="${!lxSearching(S) && !S.stat && S.quick===k}">${t}</button>`).join('');
   const sels = bkFBtn('month', `月份：${S.quick.startsWith('m:')||S.quick.startsWith('y:') ? bkQuickLabel() : S.quick==='month' ? '本月' : '全部月份'}`)
     + bkFBtn('group', `狀態：${S.status || {active:'進行中', ended:'已結束', all:'全部'}[S.group]}`)
     + bkFBtn('pack', `包工作：${S.pack ? bkPackLabel(S.pack) : '全部'}`)
     + bkFBtn('owner', `誰的客人：${S.owner||'全部'}`)
     + bkFBtn('channel', `管道：${S.channel||'全部'}`);
-  const search = `<input type="search" class="pl-search" id="bk-search" placeholder="搜尋姓名、電話、備註" value="${escAttr(S.search)}"/>`;
-  if(!m) return `<div class="pl-filters">${chips}${sels}${search}</div>`;
+  if(!m) return `<div class="pl-filters">${chips}${sels}</div>`;
   return `<div class="pl-filters">${chips}<button type="button" class="pl-chip pl-fbtn" data-bk-ftoggle aria-expanded="${S.filterOpen}">${escHtml(bkSummary())} ▾</button>${bkSortBtn()}</div>
-    ${S.filterOpen ? `<div class="pl-panel">${sels}${search}<button type="button" class="pl-btn sec" data-bk-ftoggle>完成</button></div>` : ''}`;
+    ${S.filterOpen ? `<div class="pl-panel">${sels}<button type="button" class="pl-btn sec" data-bk-ftoggle>完成</button></div>` : ''}`;
 }
 function bkRowsHTML(all, layout){
   const S = bkS(), rows = all.slice(0, S.limit);
@@ -5801,7 +5897,7 @@ function bkRowsHTML(all, layout){
       <div class="pg-ln"><span>誰的客人</span>${bkTxt(c,'owner','誰的客人','sub',false,'bk-owner-list')}<span>管道</span>${bkPickBtn(c,'channel')}</div>
       ${c.plan ? `<div class="bk-lbl">方案</div>${bkTxt(c,'plan','方案','nbox',true)}` : ''}
       ${bkTxt(c,'note','狀態備註','nbox',true)}
-      ${S.delRow===c.id ? bkDelCtl(c) : `<div class="foot"><span>${plMD(c.date)}${bkAmt(c.approvedAmount) ? `・核准 <b class="bk-amtb">${escHtml(bkAmt(c.approvedAmount))} 萬</b>` : ''}</span>${bkActs(c)}</div>`}
+      ${S.delRow===c.id ? bkDelCtl(c) : `<div class="foot"><span>${lxDateCtl('bk', c, true)}${bkAmt(c.approvedAmount) ? `・核准 <b class="bk-amtb">${escHtml(bkAmt(c.approvedAmount))} 萬</b>` : ''}</span>${bkActs(c)}</div>`}
     </div>`, (k, n)=>`<div class="pl-mhead pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div>`, (y, n)=>`<div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div>`)}</div>${more}`;
   const th = (k, t)=>{ const on = S.sort.key===k; return `<th${k==='approvedAmount'?' class="bk-amt"':''}><button type="button" class="pl-thbtn${on?' on':''}" data-bk-sort="${k}" aria-label="依${t}排序">${t}<span>${on?(S.sort.dir==='asc'?'▲':'▼'):'↕'}</span></button></th>`; };
   const compact = layout==='compact', span = compact ? 10 : 11;
@@ -5811,7 +5907,7 @@ function bkRowsHTML(all, layout){
     <thead><tr><th class="no">#</th>${cols.map(([k,t])=>th(k, { channel:'管道', approvedAmount:'額度(萬)' }[k] || t)).join('')}<th></th></tr></thead>
     <tbody>${plWithMonths(all, rows, (c, i)=>`<tr>
       <td class="no">${i+1}</td>
-      <td class="date">${plMD(c.date)}</td>
+      <td class="date">${lxDateCtl('bk', c, true)}</td>
       <td>${bkTxt(c,'customerName','客戶姓名','cname')}${bkTxt(c,'phone','電話','sub')}</td>
       <td>${bkPickBtn(c,'status')}</td>
       <td>${bkTxt(c,'owner','誰的客人','',false,'bk-owner-list')}</td>
@@ -5826,7 +5922,7 @@ function bkRowsHTML(all, layout){
 }
 function bkListHTML(all, layout){
   const S = bkS(), L = bkAll();
-  const count = `<div class="pl-count">符合 <b>${all.length}</b> 件・全部 <b>${L.length}</b> 件</div>`;
+  const count = lxSearching(S) ? lxSearchNote('bk', all.length, '件') : `<div class="pl-count">符合 <b>${all.length}</b> 件・全部 <b>${L.length}</b> 件</div>`;
   if(all.length) return count + bkRowsHTML(all, layout);
   const msg = !L.length ? '尚無銀行信貸案件，按「＋ 新增案件」開始登記。'
     : S.quick==='month' && !S.stat && !L.some(c=>(c.date||'').startsWith(plThisM())) ? `${plMLabel(plThisM())}還沒有案件。要看上個月，點「月份」選。`
@@ -5933,11 +6029,10 @@ function bkPageHTML(){
   const layout = bkLayout(), all = bkSorted(bkFiltered());
   const owners = Array.from(new Set(bkAll().map(c=>c.owner).filter(Boolean))).sort(plZh.compare);
   setTimeout(bkAfterRender, 0);
-  S._layout = layout;
+  S._layout = layout + (plIsMobile() ? '-m' : '');
   return `<div class="bk-root">
-    ${bkStatsHTML()}${bkFilterHTML(plIsMobile())}${bkListHTML(all, layout)}
+    ${bkStatsHTML()}${bkFilterHTML(plIsMobile())}${lxToolbarHTML('bk', '新增案件', true)}${bkListHTML(all, layout)}
     <datalist id="bk-owner-list">${owners.map(s=>`<option value="${escAttr(s)}">`).join('')}</datalist>
-    <button type="button" class="pl-fab" data-bk-add>＋ 新增案件</button>
     ${bkModalHTML()}${bkPopHTML()}
   </div>`;
 }
@@ -6148,7 +6243,7 @@ let bkResizeTimer = null;
 window.addEventListener('resize', ()=>{
   clearTimeout(bkResizeTimer);
   bkResizeTimer = setTimeout(()=>{
-    if(APP.view!=='bankLoan' || !APP.bk || bkLayout()===APP.bk._layout) return;
+    if(APP.view!=='bankLoan' || !APP.bk || bkLayout() + (plIsMobile() ? '-m' : '')===APP.bk._layout) return;
     APP.bk.pop = null; render();
   }, 150);
 });
@@ -6158,7 +6253,6 @@ function bankLoanPageHTML(){
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn ghost m-hide-640" data-bk-opts>⚙ 新增／編輯狀態</button>
         <button class="btn ghost m-hide-640" data-action="bankloan-import">📥 匯入試算表</button>
-        <button class="btn primary m-hide-640" data-bk-add>＋ 新增案件</button>
       </div>
     </div>
     ${bkPageHTML()}`;
@@ -6207,7 +6301,7 @@ function vaInQuick(c){
 }
 function vaFiltered(){
   const S = vaS(), q = S.search.trim().toLowerCase();
-  return vaAll().filter(c=> (S.stat ? VA_STATS[S.stat].f(c) : vaInQuick(c))
+  return vaAll().filter(c=> (q ? true : S.stat ? VA_STATS[S.stat].f(c) : vaInQuick(c))
     && (!S.status || (S.status==='__none__' ? !c.status : c.status===S.status))
     && (!S.handler || c.handler===S.handler)
     && (!S.cat || (S.cat==='__none__' ? !c.category : c.category===S.cat))
@@ -6239,6 +6333,7 @@ function vaQuickLabel(){
 }
 const vaNone = v => v==='__none__' ? '未填' : v;
 function vaSummary(){
+  if(lxSearching(vaS())) return '搜尋中・全部日期';
   const S = vaS();
   return [vaQuickLabel(), S.plan && (S.plan==='empty'?'未填方案':'已填方案'), S.handler, S.cat && vaNone(S.cat), S.status && '狀態 '+vaNone(S.status)].filter(Boolean).join('・');
 }
@@ -6274,20 +6369,19 @@ const vaSortBtn = () => { const S = vaS(); return vaFBtn('sort', `⇅ ${VA_SORTS
 function vaStatsHTML(){
   const S = vaS(), L = vaAll();
   return `<div class="pl-stats">${Object.keys(VA_STATS).map(k=>{ const s = VA_STATS[k];
-    return `<button type="button" class="pl-stat" data-va-stat="${k}" aria-pressed="${S.stat===k}"><div class="k">${s.t}</div><div class="v">${L.filter(s.f).length}${s.note?`<small class="pg-vnote">${s.note}</small>`:''}</div></button>`; }).join('')}</div>`;
+    return `<button type="button" class="pl-stat" data-va-stat="${k}" aria-pressed="${!lxSearching(S) && S.stat===k}"><div class="k">${s.t}</div><div class="v">${L.filter(s.f).length}${s.note?`<small class="pg-vnote">${s.note}</small>`:''}</div></button>`; }).join('')}</div>`;
 }
 function vaFilterHTML(m){
   const S = vaS();
-  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-va-quick="${k}" aria-pressed="${!S.stat && S.quick===k}">${t}</button>`).join('');
+  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-va-quick="${k}" aria-pressed="${!lxSearching(S) && !S.stat && S.quick===k}">${t}</button>`).join('');
   const sels = vaFBtn('month', `月份：${S.quick.startsWith('m:')||S.quick.startsWith('y:') ? vaQuickLabel() : S.quick==='month' ? '本月' : '全部月份'}`)
     + vaFBtn('plan', `方案：${S.plan ? (S.plan==='empty'?'未填':'已填') : '全部'}`)
     + vaFBtn('handler', `經手人：${S.handler||'全部'}`)
     + vaFBtn('cat', `類別：${S.cat ? vaNone(S.cat) : '全部'}`)
     + vaFBtn('status', `狀態：${S.status ? vaNone(S.status) : '全部'}`);
-  const search = `<input type="search" class="pl-search" id="va-search" placeholder="搜尋姓名、地區、方案、備註" value="${escAttr(S.search)}"/>`;
-  if(!m) return `<div class="pl-filters">${chips}${sels}${search}</div>`;
+  if(!m) return `<div class="pl-filters">${chips}${sels}</div>`;
   return `<div class="pl-filters">${chips}<button type="button" class="pl-chip pl-fbtn" data-va-ftoggle aria-expanded="${S.filterOpen}">${escHtml(vaSummary())} ▾</button>${vaSortBtn()}</div>
-    ${S.filterOpen ? `<div class="pl-panel">${sels}${search}<button type="button" class="pl-btn sec" data-va-ftoggle>完成</button></div>` : ''}`;
+    ${S.filterOpen ? `<div class="pl-panel">${sels}<button type="button" class="pl-btn sec" data-va-ftoggle>完成</button></div>` : ''}`;
 }
 function vaRowsHTML(all, layout){
   const S = vaS(), rows = all.slice(0, S.limit);
@@ -6300,7 +6394,7 @@ function vaRowsHTML(all, layout){
       <div class="bk-lbl">估價資訊</div>${vaMemoBox(c,'valuation')}
       <div class="bk-lbl">方案</div>${vaPlanBox(c)}
       <div class="bk-lbl">備註</div>${vaMemoBox(c)}
-      ${S.delRow===c.id ? vaDelCtl(c) : `<div class="foot"><span>${plMD(c.date)}</span>${vaActs(c)}</div>`}
+      ${S.delRow===c.id ? vaDelCtl(c) : `<div class="foot"><span>${lxDateCtl('va', c, true)}</span>${vaActs(c)}</div>`}
     </div>`, (k, n)=>`<div class="pl-mhead pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div>`, (y, n)=>`<div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div>`)}</div>${more}`;
   const th = (k, t)=>{ const on = S.sort.key===k; return `<th><button type="button" class="pl-thbtn${on?' on':''}" data-va-sort="${k}" aria-label="依${t}排序">${t}<span>${on?(S.sort.dir==='asc'?'▲':'▼'):'↕'}</span></button></th>`; };
   const compact = layout==='compact', span = compact ? 9 : 10, cols = compact ? VA_SORTS.filter(x=>x[0]!=='handler') : VA_SORTS;
@@ -6309,7 +6403,7 @@ function vaRowsHTML(all, layout){
     <thead><tr><th class="no">#</th>${cols.map(([k,t])=>th(k,t)).join('')}<th></th></tr></thead>
     <tbody>${plWithMonths(all, rows, (c, i)=>`<tr>
       <td class="no">${i+1}</td>
-      <td class="date">${plMD(c.date)}</td>
+      <td class="date">${lxDateCtl('va', c, true)}</td>
       <td>${vaTxt(c,'customerName','客戶姓名','cname')}<div class="va-subrow">${vaPickBtn(c,'category')}${compact ? vaTxt(c,'handler','經手人','sub',false,'va-handler-list') : ''}</div></td>
       ${compact ? '' : `<td>${vaTxt(c,'handler','經手人','',false,'va-handler-list')}</td>`}
       <td>${vaPickBtn(c,'status')}</td>
@@ -6323,7 +6417,7 @@ function vaRowsHTML(all, layout){
 }
 function vaListHTML(all, layout){
   const S = vaS(), L = vaAll();
-  const count = `<div class="pl-count">符合 <b>${all.length}</b> 件・全部 <b>${L.length}</b> 件</div>`;
+  const count = lxSearching(S) ? lxSearchNote('va', all.length, '件') : `<div class="pl-count">符合 <b>${all.length}</b> 件・全部 <b>${L.length}</b> 件</div>`;
   if(all.length) return count + vaRowsHTML(all, layout);
   const msg = !L.length ? '尚無估價資料，按「＋ 新增估價」開始登記。'
     : S.quick==='month' && !S.stat && !L.some(c=>(c.date||'').startsWith(plThisM())) ? `${plMLabel(plThisM())}還沒有估價。要看上個月，點「月份」選。`
@@ -6473,11 +6567,10 @@ function vaPageHTML(){
   const layout = vaLayout(), all = vaSorted(vaFiltered());
   const handlers = Array.from(new Set(vaAll().map(c=>c.handler).filter(Boolean))).sort(plZh.compare);
   setTimeout(vaAfterRender, 0);
-  S._layout = layout;
+  S._layout = layout + (plIsMobile() ? '-m' : '');
   return `<div class="va-root">
-    ${vaStatsHTML()}${vaFilterHTML(plIsMobile())}${vaListHTML(all, layout)}
+    ${vaStatsHTML()}${vaFilterHTML(plIsMobile())}${lxToolbarHTML('va', '新增估價', true)}${vaListHTML(all, layout)}
     <datalist id="va-handler-list">${handlers.map(s=>`<option value="${escAttr(s)}">`).join('')}</datalist>
-    <button type="button" class="pl-fab" data-va-add>＋ 新增估價</button>
     ${vaModalHTML()}${vaPlanDlgHTML()}${vaMemoDlgHTML()}${vaPopHTML()}
   </div>`;
 }
@@ -6695,7 +6788,7 @@ let vaResizeTimer = null;
 window.addEventListener('resize', ()=>{
   clearTimeout(vaResizeTimer);
   vaResizeTimer = setTimeout(()=>{
-    if(APP.view!=='valuation' || !APP.va || vaLayout()===APP.va._layout) return;
+    if(APP.view!=='valuation' || !APP.va || vaLayout() + (plIsMobile() ? '-m' : '')===APP.va._layout) return;
     APP.va.pop = null; render();
   }, 150);
 });
@@ -6706,7 +6799,6 @@ function valuationPageHTML(){
         <button class="btn ghost m-hide-640" data-va-opts>⚙ 狀態選項</button>
         <button class="btn ghost m-hide-640" data-action="valuation-targets">🔔 推播對象</button>
         <button class="btn ghost m-hide-640" data-action="valuation-import">📥 匯入 Excel</button>
-        <button class="btn primary m-hide-640" data-va-add>＋ 新增估價</button>
       </div>
     </div>
     ${vaPageHTML()}`;
@@ -6882,7 +6974,7 @@ function progressHTML(){
   const admin = canEditProgressRow();
   return `
     <div class="page-header"><div><h1 class="page-title">進度追蹤</h1><p class="page-sub">${admin ? '廣告客與直客／通路案件的送件進度，與獲利報表各自獨立' : '這裡只顯示你的案件。狀態與備註由行政維護；「業務備註」和 🧙 金額可以自己填。'}</p></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn ghost" data-action="open-export-modal" data-mode="progress">📤 匯出年度資料</button>${admin ? '<button class="btn primary m-hide-640" data-pg-add>＋ 新增案件</button>' : ''}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn ghost" data-action="open-export-modal" data-mode="progress">📤 匯出年度資料</button></div>
     </div>
     ${pgPageHTML()}
   `;
