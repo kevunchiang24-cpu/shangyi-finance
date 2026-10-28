@@ -566,6 +566,153 @@
   .bl-stat-l{font-size:12px;color:var(--muted);}
   .bl-stat-n{font-size:22px;font-weight:700;margin-top:2px;}
   .bl-table th{background:#F7F8FB;color:var(--muted);font-weight:500;}
+  /* ---- 個人業務進度紀錄（2026-10 改版）：統計卡、月份分段、選項面板、手機卡片；樣式都用 pl- 開頭，不影響其他頁面 ---- */
+  .pl-root{--pl-brand:#2F5BEA;--pl-soft:#EAF0FF;--pl-ink:#1F2433;--pl-muted:#596277;--pl-line:#E2E6EF;--pl-danger:#C62C2C;display:flex;flex-direction:column;gap:14px;color:var(--pl-ink);}
+  .pl-root button{font-family:inherit;}
+  .pl-head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .pl-head .pl-grow{flex:1;min-width:0;}
+  .pl-btn{border:0;border-radius:10px;padding:9px 16px;font-weight:700;background:var(--pl-brand);color:#fff;cursor:pointer;font-size:14px;}
+  .pl-btn.sec{background:#fff;color:var(--pl-ink);border:1px solid var(--pl-line);font-weight:500;}
+  .pl-btn.danger{background:var(--pl-danger);}
+  .pl-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .pl-stat{background:#fff;border:1px solid var(--pl-line);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;}
+  .pl-stat[aria-pressed="true"]{border-color:var(--pl-brand);box-shadow:0 0 0 2px var(--pl-soft);}
+  .pl-stat .k{font-size:12px;color:var(--pl-muted);}
+  .pl-stat .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--pl-ink);}
+  .pl-filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+  .pl-chip{border:1px solid var(--pl-line);background:#fff;border-radius:99px;padding:6px 13px;font-size:13px;cursor:pointer;color:var(--pl-ink);}
+  .pl-chip[aria-pressed="true"]{background:var(--pl-brand);border-color:var(--pl-brand);color:#fff;font-weight:700;}
+  .pl-fpk{height:36px;border:1px solid var(--pl-line);border-radius:9px;background:#fff;cursor:pointer;text-align:left;padding:0 28px 0 12px;font-size:13px;color:var(--pl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23596277' stroke-width='1.6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;}
+  .pl-fpk:hover{border-color:#9FB4F5;}
+  .pl-search{height:36px;border:1px solid var(--pl-line);border-radius:9px;background:#fff;padding:0 12px;min-width:0;flex:1;max-width:260px;font-size:13px;font-family:inherit;}
+  .pl-panel{background:#fff;border:1px solid var(--pl-line);border-radius:12px;padding:12px;display:grid;gap:10px;}
+  .pl-panel .pl-fpk{width:100%;max-width:none;height:42px;font-size:14px;}
+  .pl-panel .pl-search{max-width:none;width:100%;height:42px;font-size:14px;}
+  .pl-count{font-size:13px;color:var(--pl-muted);}
+  .pl-count b{color:var(--pl-ink);font-variant-numeric:tabular-nums;}
+  /* 電腦表格 */
+  .pl-tablewrap{background:#fff;border:1px solid var(--pl-line);border-radius:12px;overflow:hidden;}
+  .pl-table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  .pl-table th{font-size:12px;color:var(--pl-muted);font-weight:500;text-align:left;padding:10px 12px;border-bottom:1px solid var(--pl-line);background:#F8F9FC;}
+  .pl-table td{padding:11px 12px;border-bottom:1px solid var(--pl-line);vertical-align:top;overflow-wrap:anywhere;font-size:13px;}
+  .pl-table tbody tr:hover{background:#F7F9FF;}
+  .pl-table th.no,.pl-table td.no{padding-left:10px;padding-right:2px;color:var(--pl-muted);font-size:12px;font-variant-numeric:tabular-nums;}
+  .pl-table td.date{font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .pl-thbtn{border:0;background:transparent;padding:0;font:inherit;color:inherit;cursor:pointer;display:inline-flex;gap:3px;align-items:center;white-space:nowrap;max-width:100%;}
+  .pl-thbtn span{font-size:10px;opacity:.45;}
+  .pl-thbtn:hover{color:var(--pl-ink);}
+  .pl-thbtn.on{color:var(--pl-brand);font-weight:700;}
+  .pl-thbtn.on span{opacity:1;}
+  .pl-sub{font-size:12px;color:var(--pl-muted);font-variant-numeric:tabular-nums;}
+  .pl-table tr.pl-mrow td{background:#EEF2FB;padding:7px 12px;}
+  .pl-table tr.pl-yrow td{background:#DCE4F6;padding:6px 12px;}
+  .pl-table tbody tr.pl-mrow:hover,.pl-table tbody tr.pl-yrow:hover{background:none;}
+  .pl-mlabel{display:flex;align-items:baseline;gap:8px;font-weight:700;font-size:13.5px;color:var(--pl-ink);}
+  .pl-mlabel .pl-sub,.pl-yhead .pl-sub{font-weight:500;}
+  .pl-yhead{display:flex;align-items:baseline;gap:10px;font-size:16px;font-weight:800;color:var(--pl-ink);padding:14px 2px 2px;}
+  .pl-table .pl-yhead{padding:2px 0;}
+  .pl-mhead{position:sticky;top:0;z-index:2;background:var(--cream,#F3F5FB);padding:8px 2px 2px;margin-top:4px;}
+  /* 列表上直接改：選項按鈕（方案、聯絡狀態、案件狀態） */
+  .pl-inl{appearance:none;-webkit-appearance:none;border:1px solid transparent;border-radius:99px;padding:4px 24px 4px 11px;min-height:30px;font-size:12.5px;font-weight:700;cursor:pointer;max-width:100%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;color:var(--pl-ink);background-color:#EEF1F7;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23596277' stroke-width='1.6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;}
+  .pl-inl.pr{border-radius:8px;font-weight:500;}
+  .pl-inl.cs{border-radius:8px;font-weight:500;}
+  .pl-inl.empty{background-color:transparent;border:1px dashed #A9B1C4;color:var(--pl-muted);font-weight:500;}
+  .pl-table td .pl-inl{width:100%;}
+  /* 名字、電話、案件狀況備註：平常像文字，點了就能改，離開欄位自動儲存 */
+  .pl-t{width:100%;border:1px solid transparent;border-radius:7px;padding:3px 6px;margin-left:-6px;background:transparent;font-size:13px;color:var(--pl-ink);font-family:inherit;box-sizing:border-box;}
+  .pl-t:hover{border-color:var(--pl-line);}
+  .pl-t:focus{border-color:#9FB4F5;background:#F8F9FC;outline:none;box-shadow:0 0 0 3px var(--pl-soft);}
+  .pl-t.cname{font-weight:700;font-size:14px;}
+  .pl-t.sub{font-size:12px;color:var(--pl-muted);font-variant-numeric:tabular-nums;}
+  textarea.pl-t{resize:none;overflow:hidden;line-height:1.45;display:block;min-height:26px;white-space:pre-wrap;}
+  .pl-dbox{display:block;width:100%;text-align:left;border:1px solid var(--pl-line);border-radius:8px;background:#F8F9FC;padding:6px 9px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:var(--pl-ink);}
+  .pl-dbox:hover{border-color:#9FB4F5;}
+  .pl-link{border:0;background:transparent;color:var(--pl-brand);font-weight:700;padding:4px 0;cursor:pointer;font-size:13px;}
+  .pl-del{border:0;background:transparent;color:var(--pl-danger);font-weight:700;padding:4px 0;cursor:pointer;font-size:13px;}
+  .pl-acts{display:flex;gap:10px;align-items:center;white-space:nowrap;}
+  .pl-confirm{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:#7A1414;}
+  .pl-confirm .pl-btn{padding:4px 10px;min-height:28px;font-size:12px;}
+  .pl-nochead{display:flex;align-items:baseline;gap:10px;margin-top:10px;}
+  .pl-nochead h3{margin:0;font-size:15px;}
+  .pl-empty{background:#fff;border:1px dashed var(--pl-line);border-radius:12px;padding:28px;text-align:center;color:var(--pl-muted);}
+  .pl-more{justify-self:center;align-self:center;margin-top:4px;}
+  /* 手機卡片 */
+  .pl-cards{display:grid;gap:10px;grid-template-columns:minmax(0,1fr);}
+  .pl-card{background:#fff;border:1px solid var(--pl-line);border-radius:14px;padding:12px 14px;display:grid;gap:6px;min-width:0;}
+  .pl-card > *{min-width:0;}
+  .pl-card .top{display:flex;align-items:center;gap:8px;justify-content:space-between;}
+  .pl-card .no{flex:none;min-width:22px;height:22px;border-radius:99px;background:#EEF1F7;color:var(--pl-muted);font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;font-variant-numeric:tabular-nums;}
+  .pl-card .pl-t.cname{font-size:16px;width:auto;flex:1;min-width:0;}
+  .pl-card .line2{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;font-size:13px;color:var(--pl-muted);}
+  .pl-card .ph{display:flex;align-items:center;gap:4px;min-width:0;}
+  .pl-card .ph .pl-t.sub{flex:1;min-width:0;}
+  .pl-card .srcx{flex:none;font-size:12px;white-space:nowrap;max-width:45%;overflow:hidden;text-overflow:ellipsis;}
+  .pl-card .pl-t.nbox{margin-left:0;background:#F4F6FA;padding:7px 10px;font-size:13px;border-radius:8px;}
+  .pl-card .foot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--pl-muted);}
+  .pl-card .foot .pl-acts{flex:none;}
+  .pl-card .pl-inl{min-height:34px;}
+  .pl-card .pl-confirm{background:#FDECEC;border-radius:10px;padding:8px 10px;font-size:13px;}
+  .pl-card .pl-confirm .pl-btn{min-height:38px;padding:6px 16px;font-size:13.5px;}
+  /* 選項面板：所有選項一次攤開 */
+  .pl-pop{position:fixed;z-index:10000;background:#fff;border:1px solid var(--pl-line);border-radius:12px;box-shadow:0 14px 34px rgba(20,30,60,.2);padding:12px;width:340px;display:grid;gap:8px;max-height:calc(100vh - 16px);overflow:auto;box-sizing:border-box;}
+  .pl-pophead{font-size:13px;font-weight:700;padding-bottom:6px;border-bottom:1px solid var(--pl-line);}
+  .pl-pickgrp{font-size:12px;font-weight:700;color:var(--pl-muted);margin:4px 0 0;}
+  .pl-picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+  .pl-pill{display:inline-flex;align-items:center;justify-content:center;gap:4px;border:2px solid transparent;border-radius:9px;padding:6px;min-height:36px;font-size:13px;font-weight:700;white-space:normal;text-align:center;line-height:1.25;cursor:pointer;background:#EEF1F7;color:#2B3245;}
+  .pl-pill:hover{filter:brightness(.95);}
+  .pl-pill.long{grid-column:span 2;}
+  .pl-pill.wide{grid-column:1/-1;}
+  .pl-pill[aria-pressed="true"]{border-color:var(--pl-ink);box-shadow:0 0 0 1px var(--pl-ink);}
+  .pl-picks.yrs,.pl-picks.mgrid{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .pl-pill.ycell[aria-pressed="true"]{background:var(--pl-brand);color:#fff;border-color:var(--pl-brand);box-shadow:none;}
+  .pl-pill.mcell{flex-direction:column;gap:0;min-height:46px;}
+  .pl-pill.mcell small{font-size:11px;font-weight:500;opacity:.75;white-space:nowrap;}
+  .pl-pill.mcell.now{background:#E4ECFF;color:#2447C9;}
+  .pl-pill.mcell:disabled{opacity:.38;cursor:default;filter:none;}
+  .pl-pickclear{border:1px dashed #A9B1C4;background:transparent;border-radius:9px;padding:8px;color:var(--pl-muted);font-size:13px;cursor:pointer;}
+  /* 疊層：新增／編輯視窗、手機選項面板 */
+  .pl-overlay{position:fixed;inset:0;z-index:120;background:rgba(18,26,48,.38);display:flex;align-items:center;justify-content:center;padding:16px;}
+  .pl-overlay.sheet{z-index:10000;align-items:flex-end;padding:0;}
+  .pl-dialog{background:#fff;border-radius:16px;width:min(560px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;}
+  .pl-overlay.sheet .pl-dialog{width:100%;border-radius:18px 18px 0 0;max-height:88vh;}
+  .pl-dlg-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--pl-line);}
+  .pl-dlg-h h2{margin:0;font-size:17px;}
+  .pl-x{border:0;background:transparent;font-size:20px;color:var(--pl-muted);width:36px;height:36px;border-radius:8px;cursor:pointer;}
+  .pl-dlg-b{padding:14px 18px;overflow:auto;display:grid;gap:12px;}
+  .pl-dlg-f{padding:12px 18px;border-top:1px solid var(--pl-line);display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .pl-field{display:grid;gap:5px;}
+  .pl-field > span{font-size:13px;color:var(--pl-muted);}
+  .pl-field > span em{color:var(--pl-danger);font-style:normal;}
+  .pl-field input,.pl-field textarea{border:1px solid var(--pl-line);border-radius:9px;padding:9px 11px;background:#fff;width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;color:var(--pl-ink);}
+  .pl-field textarea{min-height:76px;resize:vertical;}
+  .pl-field .pl-inl{width:100%;min-height:40px;border-radius:9px;font-size:14px;padding-left:12px;}
+  .pl-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .pl-err{color:var(--pl-danger);font-size:12px;}
+  .pl-toggle-more{border:0;background:transparent;color:var(--pl-brand);font-weight:700;padding:4px 0;text-align:left;cursor:pointer;font-size:13.5px;}
+  .pl-dconfirm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#FDECEC;border-radius:10px;padding:8px 10px;color:#7A1414;font-size:13px;margin-right:auto;}
+  .pl-toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#12233F;color:#F4F6FB;padding:9px 16px;border-radius:10px;font-size:13px;z-index:10001;max-width:calc(100vw - 32px);box-sizing:border-box;text-align:center;pointer-events:none;}
+  .pl-fab{display:none;}
+  @media (max-width:640px){
+    .pl-root{gap:12px;}
+    .pl-stats{grid-template-columns:repeat(2,1fr);gap:10px;}
+    .pl-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+    .pl-filters .pl-chip{text-align:center;padding:7px 4px;}
+    .pl-filters .pl-fbtn,.pl-filters .pl-sortsel{grid-column:span 2;margin:0;max-width:none;width:100%;height:36px;font-size:13px;}
+    .pl-filters .pl-fbtn{text-align:left;padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:99px;}
+    .pl-filters .pl-noc{grid-column:1/-1;text-align:left;padding:7px 12px;}
+    .pl-mhead{top:50px;}
+    .pl-pill{min-height:46px;font-size:14.5px;}
+    .pl-pill.mcell{min-height:54px;}
+    .pl-pickclear{padding:12px;font-size:14px;}
+    .pl-row2{grid-template-columns:1fr;}
+    .pl-overlay{align-items:flex-end;padding:0;}
+    .pl-dialog{border-radius:18px 18px 0 0;max-height:92vh;width:100%;}
+    .pl-dlg-f .pl-btn{flex:1;}
+    .pl-fab{display:flex;position:fixed;left:14px;bottom:18px;height:48px;padding:0 20px;border:0;border-radius:24px;background:var(--navy);color:#fff;font-size:15px;font-weight:700;align-items:center;box-shadow:0 6px 16px rgba(20,30,70,.25);z-index:50;cursor:pointer;}
+  }
+  @media (max-width:900px) and (min-width:641px){ .pl-mhead{top:50px;} }
   @media (max-width:640px){
     .bl-stats{grid-template-columns:1fr 1fr;}
     .bl-filter-box{display:none;}
@@ -628,7 +775,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-24-07';
+const APP_BUILD = '2026-10-28-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2531,6 +2678,7 @@ function render(){
   updateNotifBell();
   const main = document.getElementById('main');
   if(!main) return;
+  if(APP.view==='personalLog' && plShouldDefer()) return; // 正在個人業務進度紀錄打字時先不重畫，離開欄位再補畫
   const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal','customerFollowupOverview'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
@@ -2584,9 +2732,10 @@ function roomTitleSuffix(){ return (isCore() && APP.viewingStaff) ? '　·　'+e
 
 function personalLogPageHTML(){
   return `
-    <div class="page-header"><div><h1 class="page-title">個人業務進度紀錄${roomTitleSuffix()}</h1><p class="page-sub">私人開發日誌，不會影響送件進度表或任何報表</p></div></div>
+    <div class="page-header"><div><h1 class="page-title">個人業務進度紀錄${roomTitleSuffix()}</h1><p class="page-sub">私人開發日誌，不會影響送件進度表或任何報表</p></div>
+      <button class="btn primary m-hide-640" data-pl-add>＋ 新增記錄</button></div>
     ${roomBanner()}
-    ${myProgressLogView()}
+    ${plPageHTML()}
   `;
 }
 function attendancePageHTML(){
@@ -4274,7 +4423,7 @@ function staffOverviewHTML(){
 const STATUS_OPTIONS = ['教照會','等照會','複查','補資料','保人','對保','卡件','等撥款','撥款完成','婉拒','客拒'];
 const STATUS_DONE = ['撥款完成'];
 const STATUS_CLOSED = ['婉拒','客拒'];
-const CONTACT_STATUS_OPTIONS = ['無需求','封鎖我','客不要','不回應','失聯','放棄','中途退','轉單','未聯絡','已聯絡','未接','持續聯絡中'];
+const CONTACT_STATUS_OPTIONS = ['無需求','封鎖我','客不要','不回應','失聯','放棄','中途退','轉單','未聯絡','已聯絡','未接','持續聯絡中','已加LINE未回覆'];
 const DEAL_PRODUCT_OPTIONS = ['瑪吉','和潤','亞太','JET','無方案','房土','信貸','維力','廿一','公司代書','外面代書','當鋪'];
 const LOG_CASE_STATUS_OPTIONS = ['收資','審核','補資','核准','婉拒','取消'];
 const LEAVE_TYPE_OPTIONS = ['事假','病假','特休','中途離開','外出(時數)','晚到','其他'];
@@ -4295,6 +4444,527 @@ function hasValidPhone(phone){
   if(digits.length >= 6) return true;
   return /[A-Za-z0-9._-]{4,}/.test(String(phone));
 }
+/* ================= 個人業務進度紀錄（2026-10 改版）=================
+   跟舊版用同一份資料（personalProgress），欄位名稱不變：customer、phone、source、dealProduct、contactStatus、transferTo、
+   latestNote（客戶詳細資料）、caseStatus、caseRemark（案件狀況備註）、wizardHatNote（🧙 金額）；新增 lineId（LINE ID，選填）。
+   - 列表上直接改：只更新改到的那一欄（updateDoc），不整筆覆蓋，其他欄位（例如舊資料的 declineReason）都保留
+   - 編輯視窗：只寫入有改的欄位
+   - 正在列表上打字時，其他人更新資料不會重畫畫面把字洗掉（等離開欄位再更新）
+   - 一打開顯示「當月」（依今天日期，跨月自動換）；資料跨年時依年份分段，月份選單先選年再選月 */
+const PL_STATUS_ACTIVE = [['已加LINE未回覆','#DCF5E4','#11633A'],['已聯絡','#DCE7FF','#1D46B8'],['持續聯絡中','#E8E1FF','#4A2DB0'],['未聯絡','#FFF1C7','#6B4A00'],['未接','#FFE3D3','#86350F']];
+const PL_STATUS_ENDED = [['不回應','#EDEFF3','#454C5C'],['失聯','#EDEFF3','#454C5C'],['放棄','#EDEFF3','#454C5C'],['無需求','#EDEFF3','#454C5C'],['客不要','#EDEFF3','#454C5C'],['封鎖我','#EDEFF3','#454C5C'],['中途退','#EDEFF3','#454C5C'],['轉單','#E6F1FA','#1E5A85']];
+const PL_STATUS_ALL = [...PL_STATUS_ACTIVE, ...PL_STATUS_ENDED];
+const PL_DOING = ['收資','審核','補資'];
+const PL_SOURCES = ['公司','自己開發','自來','通路','廣告'];
+const PL_NEUTRAL = ['#EEF1F7','#2B3245'];
+const PL_LABEL = { customer:'客戶姓名', phone:'電話', caseRemark:'案件狀況備註', dealProduct:'方案', contactStatus:'聯絡狀態', caseStatus:'案件狀態' };
+const PL_SORTS = [['date','日期'],['customer','客戶'],['dealProduct','方案'],['contactStatus','聯絡狀態'],['latestNote','客戶詳細資料'],['caseRemark','案件狀況備註'],['caseStatus','案件狀態']];
+// 各欄寬度（%）：#、日期、客戶、方案、聯絡狀態、客戶詳細資料、案件狀況備註、案件狀態、編輯/刪除
+const PL_COLW = [3.5, 6, 14.5, 10, 14, 14, 18.5, 10.5, 9];
+const plZh = new Intl.Collator('zh-Hant-TW');
+
+function plS(){
+  if(!APP.pl) APP.pl = { quick:'month', group:'active', status:'', product:'', stat:'', search:'', limit:20, limitNoc:20, filterOpen:false,
+    pop:null, pickYear:'', sort:{key:'date', dir:'desc'}, delRow:null, modal:null, pending:false, _force:false };
+  return APP.pl;
+}
+const plIsMobile = () => window.innerWidth <= 640;
+const plIsEnded = s => PL_STATUS_ENDED.some(x=>x[0]===s);
+const plThisM = () => todayStr().slice(0,7);
+const plThisY = () => todayStr().slice(0,4);
+const plMKey = d => (d||'').slice(0,7);
+const plMLabel = k => !k ? '無日期' : (k.slice(0,4)===plThisY() ? '' : k.slice(0,4)+' 年 ') + Number(k.slice(5)) + ' 月';
+const plMD = d => d ? d.slice(5).replace('-','/') : '—';
+// 跟舊版 hasValidPhone 相同：6 碼以上數字，或 4 字元以上的帳號（LINE ID）
+const plHasContact = c => hasValidPhone(c.phone);
+const plMine = () => (APP.data.personalProgress||[]).filter(c=>c.staffUid===effectiveUid());
+const plOrder = { dealProduct: DEAL_PRODUCT_OPTIONS, contactStatus: PL_STATUS_ALL.map(s=>s[0]), caseStatus: ['', ...LOG_CASE_STATUS_OPTIONS] };
+function plOptColor(f, v){
+  if(!v) return null;
+  if(f==='dealProduct'){ const c = colorForOption(v, 'dealProduct'); return [c.bg, c.text]; } // 沿用「選單顏色設定」
+  if(f==='contactStatus'){ const s = PL_STATUS_ALL.find(x=>x[0]===v); return s ? [s[1], s[2]] : PL_NEUTRAL; }
+  if(f==='caseStatus') return v==='核准' ? ['#E3F5EA','#17663A'] : /婉拒|取消/.test(v) ? ['#ECEDF1','#5E6475'] : ['#EEF1F7','#3B4252'];
+  return null;
+}
+function plOptGroups(f){
+  if(f==='dealProduct') return [['', DEAL_PRODUCT_OPTIONS]];
+  if(f==='contactStatus') return [['進行中', PL_STATUS_ACTIVE.map(s=>s[0])], ['已結束', PL_STATUS_ENDED.map(s=>s[0])]];
+  return [['', LOG_CASE_STATUS_OPTIONS]];
+}
+const plEmptyText = f => f==='dealProduct' ? '選方案' : f==='contactStatus' ? '選聯絡狀態' : '未填';
+
+function plInQuick(c){
+  const S = plS(), d = c.date||'';
+  if(S.quick==='today') return d===todayStr();
+  if(S.quick==='week'){ const t = new Date(); t.setDate(t.getDate()-((t.getDay()+6)%7)); return d>=formatDateLocal(t); }
+  if(S.quick==='month') return d.startsWith(plThisM());
+  if(S.quick.startsWith('m:') || S.quick.startsWith('y:')) return d.startsWith(S.quick.slice(2));
+  return true;
+}
+const PL_STAT_NAME = { sent:'已送件', doing:'處理中', 核准:'核准' };
+function plInStat(c){
+  const s = plS().stat;
+  if(!s) return true;
+  if(s==='sent') return !!c.dealProduct;
+  if(s==='doing') return PL_DOING.includes(c.caseStatus);
+  return c.caseStatus===s;
+}
+function plFiltered(){
+  const S = plS(), q = S.search.trim().toLowerCase();
+  return plMine().filter(c=> plInQuick(c)
+    && (S.group==='all' || (S.group==='ended')===plIsEnded(c.contactStatus))
+    && (!S.status || c.contactStatus===S.status)
+    && (!S.product || c.dealProduct===S.product)
+    && plInStat(c)
+    && (!q || ['customer','phone','caseRemark','latestNote','dealProduct','contactStatus','caseStatus','source','transferTo','lineId','wizardHatNote']
+      .some(k=>String(c[k]||'').toLowerCase().includes(q))));
+}
+// 排序：先依月份分段（日期舊→新時月份也舊→新），月份內照選的欄位排；空白的一律排最後
+function plSorted(arr){
+  const { key, dir } = plS().sort, sign = dir==='asc' ? 1 : -1;
+  const cmp = (a, b)=>{
+    const x = a[key]||'', y = b[key]||'';
+    if(key==='date') return x.localeCompare(y);
+    if(plOrder[key]){ const ix = plOrder[key].indexOf(x), iy = plOrder[key].indexOf(y); return (ix<0?999:ix) - (iy<0?999:iy); }
+    return plZh.compare(x, y);
+  };
+  const mSign = key==='date' ? sign : -1;
+  return arr.slice().sort((a, b)=>{
+    const mc = plMKey(a.date).localeCompare(plMKey(b.date)); if(mc) return mSign*mc;
+    const x = a[key]||'', y = b[key]||''; if(!x !== !y) return x ? -1 : 1;
+    return sign*cmp(a, b) || (b.date||'').localeCompare(a.date||'');
+  });
+}
+const plDirLabel = (k, d)=> k==='date' ? (d==='desc'?'新→舊':'舊→新') : plOrder[k] ? (d==='asc'?'照選單順序':'選單順序反過來') : (d==='asc'?'筆畫少→多':'筆畫多→少');
+function plQuickLabel(){
+  const q = plS().quick;
+  if(q.startsWith('m:')) return plMLabel(q.slice(2));
+  if(q.startsWith('y:')) return q.slice(2)+' 全年';
+  return { today:'今天', week:'本週', month:plMLabel(plThisM()), all:'全部日期' }[q];
+}
+function plSummary(){
+  const S = plS();
+  const g = S.status || { active:'進行中', ended:'已結束', all: S.stat ? '' : '全部狀態' }[S.group];
+  return `${plQuickLabel()}${g?'・'+g:''}${S.product?'・'+S.product:''}${S.stat?'・'+PL_STAT_NAME[S.stat]:''}`;
+}
+
+// ---- 畫面片段 ----
+function plPickBtn(c, f, target){
+  const v = c[f]||'', col = plOptColor(f, v);
+  const cls = (f==='dealProduct'?' pr':f==='caseStatus'?' cs':'') + (v?'':' empty');
+  return `<button type="button" class="pl-inl${cls}" data-pl-pk="${escAttr(target||c.id)}" data-pl-f="${f}" aria-haspopup="true" aria-label="${escAttr((c.customer||'')+' 的'+PL_LABEL[f]+'：'+(v||'未填'))}" style="${col?`background-color:${col[0]};color:${col[1]};`:''}">${escHtml(v||plEmptyText(f))}</button>`;
+}
+// textarea 會吃掉開頭第一個換行，先多放一個，原本開頭有換行的備註才不會被改掉
+const plTa = v => '\n' + escHtml(v||'');
+function plTxt(c, f, ph, cls){
+  const aria = escAttr((c.customer||'')+' 的'+ph);
+  if(f==='caseRemark') return `<textarea class="pl-t ${cls||''}" rows="1" data-pl-id="${escAttr(c.id)}" data-pl-t="${f}" placeholder="${ph}" aria-label="${aria}">${plTa(c[f])}</textarea>`;
+  return `<input type="text" class="pl-t ${cls||''}" data-pl-id="${escAttr(c.id)}" data-pl-t="${f}" value="${escAttr(c[f]||'')}" placeholder="${ph}" aria-label="${aria}"/>`;
+}
+const plDetailBox = c => `<button type="button" class="pl-dbox" data-pl-detail="${escAttr(c.id)}">${c.latestNote ? `📄 ${escHtml(c.latestNote.replace(/\s+/g,' ').slice(0,26))}${c.latestNote.length>26?'…':''}` : '<span class="pl-sub">＋ 點擊填寫</span>'}</button>`;
+function plDelCtl(c){
+  if(plS().delRow===c.id) return `<div class="pl-confirm">確定刪除「${escHtml(c.customer||'')}」？<button type="button" class="pl-btn danger" data-pl-delyes="${escAttr(c.id)}">刪除</button><button type="button" class="pl-btn sec" data-pl-delno>不要刪</button></div>`;
+  return `<button type="button" class="pl-del" data-pl-del="${escAttr(c.id)}">刪除</button>`;
+}
+const plFBtn = (k, label, cls) => `<button type="button" class="pl-fpk${cls?' '+cls:''}" data-pl-fk="${k}" aria-haspopup="true">${escHtml(label)}</button>`;
+const plSortBtn = () => { const S = plS(); return plFBtn('sort', `⇅ ${PL_SORTS.find(s=>s[0]===S.sort.key)[1]}・${plDirLabel(S.sort.key, S.sort.dir)}`, 'pl-sortsel'); };
+
+function plStatsHTML(){
+  const S = plS(), mon = plMine().filter(c=>(c.date||'').startsWith(plThisM()));
+  const plain = S.group==='all' && !S.status && !S.product && S.quick==='month';
+  const it = (k, v, act, on)=>`<button type="button" class="pl-stat" data-pl-stat="${act}" aria-pressed="${on}"><div class="k">${k}</div><div class="v">${v}</div></button>`;
+  return `<div class="pl-stats">
+    ${it('本月新增', mon.length, '', plain && !S.stat)}
+    ${it('已送件', mon.filter(c=>c.dealProduct).length, 'sent', plain && S.stat==='sent')}
+    ${it('處理中', mon.filter(c=>PL_DOING.includes(c.caseStatus)).length, 'doing', plain && S.stat==='doing')}
+    ${it('核准', mon.filter(c=>c.caseStatus==='核准').length, '核准', plain && S.stat==='核准')}
+  </div>`;
+}
+function plFilterHTML(m, nocN){
+  const S = plS();
+  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-pl-quick="${k}" aria-pressed="${S.quick===k}">${t}</button>`).join('');
+  const monSel = plFBtn('month', `月份：${S.quick.startsWith('m:')||S.quick.startsWith('y:') ? plQuickLabel() : S.quick==='month' ? '本月' : '全部月份'}`);
+  const grpSel = plFBtn('group', `聯絡狀態：${S.status || {active:'進行中', ended:'已結束', all:'全部'}[S.group]}`);
+  const prodSel = plFBtn('prod', `方案：${S.product||'全部'}`);
+  const search = `<input type="search" class="pl-search" id="pl-search" placeholder="搜尋姓名、電話、備註" value="${escAttr(S.search)}"/>`;
+  const nocBtn = `<button type="button" class="pl-chip pl-noc" data-pl-noc aria-pressed="${!!APP.myLogNoContactCollapsed}">📵 ${APP.myLogNoContactCollapsed?'顯示':'隱藏'}無聯絡方式的客人（${nocN}）</button>`;
+  if(!m) return `<div class="pl-filters">${chips}${monSel}${grpSel}${prodSel}${search}${nocBtn}</div>`;
+  return `<div class="pl-filters">${chips}<button type="button" class="pl-chip pl-fbtn" data-pl-ftoggle aria-expanded="${S.filterOpen}">${escHtml(plSummary())} ▾</button>${plSortBtn()}${nocBtn}</div>
+    ${S.filterOpen ? `<div class="pl-panel">${monSel}${grpSel}${prodSel}${search}<button type="button" class="pl-btn sec" data-pl-ftoggle>完成</button></div>` : ''}`;
+}
+// 每個月份前面一條分隔（顯示筆數）；列表跨年時月份上面再加年份分隔
+function plWithMonths(all, rows, row, head, yhead){
+  const multiYear = new Set(all.map(c=>(c.date||'').slice(0,4))).size > 1;
+  const mCount = k => all.filter(c=>plMKey(c.date)===k).length;
+  return rows.map((c, i)=>{
+    const y = (c.date||'').slice(0,4), k = plMKey(c.date), prev = rows[i-1];
+    return (multiYear && (!prev || (prev.date||'').slice(0,4)!==y) ? yhead(y ? y+' 年' : '無日期', all.filter(x=>(x.date||'').slice(0,4)===y).length) : '')
+      + (!prev || plMKey(prev.date)!==k ? head(multiYear && k ? Number(k.slice(5))+' 月' : plMLabel(k), mCount(k)) : '') + row(c, i);
+  }).join('');
+}
+function plRowsHTML(all, m, limit, moreKey){
+  const rows = all.slice(0, limit);
+  const more = all.length > limit ? `<button type="button" class="pl-btn sec pl-more" data-pl-more="${moreKey}">顯示更多（還有 ${all.length-limit} 筆）</button>` : '';
+  const S = plS();
+  if(m) return `<div class="pl-cards">${plWithMonths(all, rows, (c, i)=>{
+    const extra = [c.source && c.source!=='公司' ? c.source : '', c.lineId ? 'LINE '+c.lineId : ''].filter(Boolean).join(' ');
+    return `<div class="pl-card">
+      <div class="top"><span class="no">${i+1}</span>${plTxt(c,'customer','客戶姓名','cname')}${plPickBtn(c,'contactStatus')}</div>
+      <div class="line2"><span class="ph">${plTxt(c,'phone','電話','sub')}${extra?`<span class="srcx">${escHtml(extra)}</span>`:''}</span>${plPickBtn(c,'dealProduct')}</div>
+      ${plDetailBox(c)}
+      ${plTxt(c,'caseRemark','案件狀況備註','nbox')}
+      ${S.delRow===c.id ? plDelCtl(c) : `<div class="foot"><span>${plMD(c.date)}${c.wizardHatNote?'・'+whIcon(13)+' '+escHtml(c.wizardHatNote):''}</span><span class="pl-acts">${plPickBtn(c,'caseStatus')}<button type="button" class="pl-link" data-pl-open="${escAttr(c.id)}">編輯</button>${plDelCtl(c)}</span></div>`}
+    </div>`;
+  }, (k, n)=>`<div class="pl-mhead pl-mlabel">${k}<span class="pl-sub">${n} 筆</span></div>`, (y, n)=>`<div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 筆</span></div>`)}</div>${more}`;
+  const th = (k, t)=>{ const on = S.sort.key===k; return `<th><button type="button" class="pl-thbtn${on?' on':''}" data-pl-sort="${k}" aria-label="依${t}排序">${t}<span>${on?(S.sort.dir==='asc'?'▲':'▼'):'↕'}</span></button></th>`; };
+  return `<div class="pl-tablewrap"><table class="pl-table">
+    <colgroup>${PL_COLW.map(w=>`<col style="width:${w}%">`).join('')}</colgroup>
+    <thead><tr><th class="no">#</th>${PL_SORTS.map(([k,t])=>th(k,t)).join('')}<th></th></tr></thead>
+    <tbody>${plWithMonths(all, rows, (c, i)=>`<tr>
+      <td class="no">${i+1}</td>
+      <td class="date">${plMD(c.date)}</td>
+      <td>${plTxt(c,'customer','客戶姓名','cname')}${plTxt(c,'phone','電話','sub')}${c.source && c.source!=='公司' ? `<div class="pl-sub">${escHtml(c.source)}</div>` : ''}${c.lineId?`<div class="pl-sub">LINE ${escHtml(c.lineId)}</div>`:''}</td>
+      <td>${plPickBtn(c,'dealProduct')}</td>
+      <td>${plPickBtn(c,'contactStatus')}</td>
+      <td>${plDetailBox(c)}</td>
+      <td>${plTxt(c,'caseRemark','客人狀況／問題')}</td>
+      <td>${plPickBtn(c,'caseStatus')}</td>
+      <td>${S.delRow===c.id ? plDelCtl(c) : `<div class="pl-acts"><button type="button" class="pl-link" data-pl-open="${escAttr(c.id)}">編輯</button>${plDelCtl(c)}</div>`}</td>
+    </tr>`, (k, n)=>`<tr class="pl-mrow"><td colspan="9"><div class="pl-mlabel">${k}<span class="pl-sub">${n} 筆</span></div></td></tr>`,
+      (y, n)=>`<tr class="pl-yrow"><td colspan="9"><div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 筆</span></div></td></tr>`)}</tbody></table></div>${more}`;
+}
+function plListHTML(m, all){
+  const S = plS();
+  const normal = all.filter(plHasContact), noc = all.filter(c=>!plHasContact(c));
+  const count = `<div class="pl-count">符合 <b>${normal.length}</b> 筆${noc.length?`，另有 <b>${noc.length}</b> 筆無聯絡方式`:''}・全部 <b>${plMine().length}</b> 筆</div>`;
+  const nocPart = APP.myLogNoContactCollapsed ? '' : `<div class="pl-nochead"><h3>📵 無聯絡方式的客人</h3><span class="pl-sub">共 ${noc.length} 筆</span></div>`
+    + (noc.length ? plRowsHTML(noc, m, S.limitNoc, 'noc') : `<div class="pl-empty">沒有這類紀錄</div>`);
+  const emptyMsg = plMine().length===0 ? '尚無記錄，按「＋新增記錄」開始登記。'
+    : S.quick==='month' && !plMine().some(c=>(c.date||'').startsWith(plThisM())) ? `${plMLabel(plThisM())}還沒有紀錄，按「＋新增記錄」開始登記。要看上個月，點「月份」選。`
+    : '沒有符合的紀錄。可以換個篩選條件，或按「＋新增記錄」。';
+  if(!normal.length) return count + `<div class="pl-empty">${emptyMsg}</div>` + nocPart;
+  return count + plRowsHTML(normal, m, S.limit, 'main') + nocPart;
+}
+function plFilterPicker(k){
+  const S = plS();
+  const btn = (val, label, on, c, long)=>{ c = c || PL_NEUTRAL; long = long===undefined ? label.length>6 : long;
+    return `<button type="button" class="pl-pill${long?' long':''}" data-pl-fpick="${k}" data-pl-val="${escAttr(val)}" aria-pressed="${on}" style="background:${c[0]};color:${c[1]};">${on?'✓ ':''}${escHtml(label)}</button>`; };
+  const sec = (t, html)=>`<div class="pl-pickgrp">${t}</div><div class="pl-picks">${html}</div>`;
+  if(k==='group') return sec('範圍', [['active','進行中'],['ended','已結束'],['all','全部狀態']].map(([v,t])=>btn('g:'+v, t, !S.status && S.group===v)).join(''))
+    + sec('只看一種狀態・進行中', PL_STATUS_ACTIVE.map(s=>btn('s:'+s[0], s[0], S.status===s[0], [s[1],s[2]])).join(''))
+    + sec('只看一種狀態・已結束', PL_STATUS_ENDED.map(s=>btn('s:'+s[0], s[0], S.status===s[0], [s[1],s[2]])).join(''));
+  if(k==='month'){
+    // 先選年、再選月：年份一排（新到舊），下面固定 12 格月份，年份再多面板大小都不變
+    const mine = plMine();
+    const cur = S.quick==='month' ? plThisM() : S.quick.startsWith('m:') ? S.quick.slice(2) : '';
+    const years = Array.from(new Set(mine.map(c=>(c.date||'').slice(0,4)).filter(Boolean).concat([plThisY()]))).sort().reverse();
+    const py = S.pickYear || (cur || (S.quick.startsWith('y:') ? S.quick.slice(2) : plThisY())).slice(0,4);
+    const n = p => mine.filter(c=>(c.date||'').startsWith(p)).length;
+    const months = Array.from({length:12}, (_, i)=>`${py}-${String(i+1).padStart(2,'0')}`);
+    const mBtn = mk=>{
+      const cnt = n(mk), on = cur===mk, now = mk===plThisM(), off = !cnt && !now;
+      return `<button type="button" class="pl-pill mcell${now?' now':''}" data-pl-fpick="month" data-pl-val="m:${mk}" aria-pressed="${on}" ${off?'disabled':''}>${on?'✓ ':''}${Number(mk.slice(5))} 月<small>${now?`本月・${cnt}`:`${cnt} 筆`}</small></button>`;
+    };
+    return `<div class="pl-picks">${btn('all','全部月份', S.quick==='all')}</div>`
+      + `<div class="pl-pickgrp">年份</div><div class="pl-picks yrs">${years.map(y=>`<button type="button" class="pl-pill ycell" data-pl-fpick="month" data-pl-val="py:${y}" aria-pressed="${y===py}">${y}</button>`).join('')}</div>`
+      + `<div class="pl-pickgrp">${py} 年${py===plThisY()?'（今年）':''}</div>`
+      + `<div class="pl-picks">${btn('y:'+py, `${py} 全年（${n(py)} 筆）`, S.quick==='y:'+py, PL_NEUTRAL, false).replace('class="pl-pill', 'class="pl-pill wide')}</div>`
+      + `<div class="pl-picks mgrid">${months.map(mBtn).join('')}</div>`;
+  }
+  if(k==='prod') return `<div class="pl-picks">${btn('', '全部方案', !S.product)}${DEAL_PRODUCT_OPTIONS.map(p=>btn(p, p, S.product===p, plOptColor('dealProduct', p))).join('')}</div>`;
+  return sec('依哪一欄排序', PL_SORTS.map(([v,t])=>btn('k:'+v, t, S.sort.key===v)).join(''))
+    + sec('順序', (S.sort.key==='date' ? ['desc','asc'] : ['asc','desc']).map(d=>btn('d:'+d, plDirLabel(S.sort.key, d), S.sort.dir===d)).join(''));
+}
+function plPicker(f, cur, target){
+  const grp = (g, arr)=>`${g?`<div class="pl-pickgrp">${g}</div>`:''}<div class="pl-picks">${arr.map(o=>{ const c = plOptColor(f, o);
+    return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-pl-pick="${escAttr(o)}" data-pl-pt="${escAttr(target)}" data-pl-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
+  return plOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
+    + (cur ? `<button type="button" class="pl-pickclear" data-pl-pick="" data-pl-pt="${escAttr(target)}" data-pl-f="${f}">清除，改回未填</button>` : '');
+}
+function plPopHTML(){
+  const S = plS(); if(!S.pop) return '';
+  const { id, f, fk } = S.pop;
+  let title, body;
+  if(fk){ title = { month:'選月份', group:'篩選聯絡狀態', prod:'篩選方案', sort:'排序' }[fk]; body = plFilterPicker(fk); }
+  else {
+    const c = id==='__modal' ? (S.modal && S.modal.rec) : plMine().find(x=>x.id===id);
+    if(!c){ S.pop = null; return ''; }
+    title = `${escHtml(c.customer||'新紀錄')}・${PL_LABEL[f]}`; body = plPicker(f, c[f]||'', id);
+  }
+  if(plIsMobile()) return `<div class="pl-overlay sheet" data-pl-popbg><div class="pl-dialog"><div class="pl-dlg-h"><h2>${title}</h2><button type="button" class="pl-x" data-pl-popclose aria-label="關閉">×</button></div><div class="pl-dlg-b">${body}</div></div></div>`;
+  return `<div class="pl-pop" id="pl-pop" style="left:${S.pop.x}px;top:${S.pop.y}px;"><div class="pl-pophead">${title}</div>${body}</div>`;
+}
+function plModalHTML(){
+  const M = plS().modal; if(!M) return '';
+  const r = M.rec;
+  const more = M.more ? `
+      <div class="pl-row2">
+        <label class="pl-field"><span>來源</span><input id="pl-fSource" list="pl-source-list" value="${escAttr(r.source||'')}" placeholder="例：公司、自己開發"/><datalist id="pl-source-list">${PL_SOURCES.map(s=>`<option value="${s}">`).join('')}</datalist></label>
+        <label class="pl-field"><span>LINE ID（選填）</span><input id="pl-fLine" value="${escAttr(r.lineId||'')}" placeholder="例：abc1234"/></label>
+      </div>
+      <div class="pl-row2">
+        <div class="pl-field"><span>案件狀態</span>${plPickBtn(r,'caseStatus','__modal')}</div>
+        <label class="pl-field"><span>轉給誰</span><input id="pl-fTransfer" value="${escAttr(r.transferTo||'')}"/></label>
+      </div>
+      <label class="pl-field"><span>${whIcon(16)} 金額（自己記錄用）</span><input id="pl-fHat" value="${escAttr(r.wizardHatNote||'')}"/></label>
+      <label class="pl-field"><span>客戶詳細資料</span><textarea id="pl-fDetail" rows="6" style="font-family:monospace;white-space:pre-wrap;" placeholder="可貼上完整的評估表、聯絡紀錄等大段資訊">${plTa(r.latestNote)}</textarea></label>` : '';
+  const del = M.edit ? (M.confirmDel
+    ? `<div class="pl-dconfirm">確定刪除「${escHtml(r.customer||'')}」？<button type="button" class="pl-btn danger" data-pl-mdelyes>刪除</button><button type="button" class="pl-btn sec" data-pl-mdelno>不要刪</button></div>`
+    : `<button type="button" class="pl-btn sec" data-pl-mdel style="margin-right:auto;color:var(--pl-danger);">刪除這筆</button>`) : '';
+  return `<div class="pl-overlay" data-pl-modalbg><form class="pl-dialog" id="pl-form" data-pl-key="${M.key}" novalidate>
+    <div class="pl-dlg-h"><h2>${M.edit?'編輯紀錄':'新增紀錄'}</h2><button type="button" class="pl-x" data-pl-mclose aria-label="關閉">×</button></div>
+    <div class="pl-dlg-b">
+      <div class="pl-row2">
+        <label class="pl-field"><span>日期 <em>*</em></span><input id="pl-fDate" type="date" value="${escAttr(r.date||'')}"/></label>
+        <label class="pl-field"><span>客戶姓名 <em>*</em></span><input id="pl-fName" value="${escAttr(r.customer||'')}" autocomplete="off"/>${M.err?`<span class="pl-err">${escHtml(M.err)}</span>`:''}</label>
+      </div>
+      <label class="pl-field"><span>電話</span><input id="pl-fPhone" inputmode="tel" value="${escAttr(r.phone||'')}" placeholder="0912-345-678"/></label>
+      <div class="pl-row2">
+        <div class="pl-field"><span>方案</span>${plPickBtn(r,'dealProduct','__modal')}</div>
+        <div class="pl-field"><span>聯絡狀態</span>${plPickBtn(r,'contactStatus','__modal')}</div>
+      </div>
+      <label class="pl-field"><span>案件狀況備註</span><textarea id="pl-fNote" rows="2" placeholder="客人現在的狀況、有提出什麼問題">${plTa(r.caseRemark)}</textarea></label>
+      <button type="button" class="pl-toggle-more" data-pl-mmore>${M.more ? '收起其他欄位 ▴' : '其他欄位：來源、LINE、案件狀態、轉給誰、金額、詳細資料 ▾'}</button>
+      ${more}
+    </div>
+    <div class="pl-dlg-f">${del}
+      ${M.edit ? '' : '<button type="button" class="pl-btn sec" data-pl-savenext>儲存並新增下一筆</button>'}
+      <button type="submit" class="pl-btn">儲存</button></div>
+  </form></div>`;
+}
+// 視窗開著時，畫面重畫前先把已經打的字收進來，不會因為重畫而消失
+function plCaptureForm(){
+  const M = plS().modal, form = document.getElementById('pl-form');
+  if(!M || !form || form.dataset.plKey!==M.key) return; // 只收同一個視窗的字（剛按「儲存並新增下一筆」時不能把上一筆帶過來）
+  const v = id=>{ const el = document.getElementById(id); return el ? el.value : undefined; };
+  const r = M.rec, set = (k, val)=>{ if(val!==undefined) r[k] = val; };
+  set('date', v('pl-fDate')); set('customer', v('pl-fName')); set('phone', v('pl-fPhone')); set('caseRemark', v('pl-fNote'));
+  set('source', v('pl-fSource')); set('lineId', v('pl-fLine')); set('transferTo', v('pl-fTransfer')); set('wizardHatNote', v('pl-fHat')); set('latestNote', v('pl-fDetail'));
+}
+function plPageHTML(){
+  const S = plS();
+  plCaptureForm();
+  const m = plIsMobile();
+  const all = plSorted(plFiltered());
+  setTimeout(plAfterRender, 0);
+  return `<div class="pl-root">
+    ${plStatsHTML()}${plFilterHTML(m, all.filter(c=>!plHasContact(c)).length)}${plListHTML(m, all)}
+    <button type="button" class="pl-fab" data-pl-add>＋ 新增記錄</button>
+    ${plModalHTML()}${plPopHTML()}
+  </div>`;
+}
+// 畫好之後：備註框依內容長高；選項面板下面放不下就往上開
+function plAfterRender(){
+  document.querySelectorAll('.pl-root textarea.pl-t').forEach(plGrow);
+  const S = plS(), p = document.getElementById('pl-pop');
+  if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
+    S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
+  }
+}
+function plGrow(ta){ ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 2) + 'px'; }
+// 自己的操作要立刻重畫（不受「正在打字先不重畫」限制）
+function plRender(){ const S = plS(); S._force = true; try{ render(); } finally{ S._force = false; } }
+// 別人更新資料時：如果正在列表或視窗裡打字，先不要重畫，等離開欄位再補畫
+const plTyping = () => { const a = document.activeElement; return !!(a && a.closest && a.closest('.pl-root') && /^(INPUT|TEXTAREA)$/.test(a.tagName)); };
+function plShouldDefer(){
+  const S = plS(); if(S._force) return false;
+  if(!plTyping()) return false;
+  S.pending = true;
+  // 保險：每 0.4 秒看一次，離開欄位就補畫（不只靠 focusout 事件）
+  if(!S._deferTimer) S._deferTimer = setInterval(()=>{
+    if(plTyping()) return;
+    clearInterval(S._deferTimer); S._deferTimer = null;
+    if(S.pending && APP.view==='personalLog'){ S.pending = false; render(); }
+  }, 400);
+  return true;
+}
+let plToastTimer = null;
+function plToast(msg){
+  document.querySelectorAll('.pl-toast').forEach(x=>x.remove());
+  const el = document.createElement('div'); el.className = 'pl-toast'; el.textContent = msg; document.body.appendChild(el);
+  clearTimeout(plToastTimer); plToastTimer = setTimeout(()=>el.remove(), 2400);
+}
+const plFail = err => { console.error('個人業務進度紀錄儲存失敗', err); alert('儲存失敗，請檢查網路後再試一次：\n' + (err && err.message ? err.message : err)); };
+// 只更新指定欄位，其他欄位不動
+function plUpdate(id, patch){
+  const c = (APP.data.personalProgress||[]).find(x=>x.id===id);
+  const full = stamp(patch);
+  if(c) Object.assign(c, full);
+  return updateDoc(doc(db,'personalProgress', id), full).catch(plFail);
+}
+function plOpenNew(base){
+  plS().modal = { key:uid(), edit:false, more:false, err:'', rec:{ date:todayStr(), customer:'', phone:'', source:'公司', lineId:'', dealProduct:'', contactStatus:'', transferTo:'', caseStatus:'', latestNote:'', caseRemark:'', wizardHatNote:'', ...(base||{}) } };
+  plRender(); setTimeout(()=>{ const el = document.getElementById('pl-fName'); if(el) el.focus(); }, 0);
+}
+const PL_FORM_KEYS = ['date','customer','phone','source','lineId','dealProduct','contactStatus','transferTo','caseStatus','latestNote','caseRemark','wizardHatNote'];
+function plSaveModal(next){
+  const S = plS(), M = S.modal; if(!M) return;
+  plCaptureForm();
+  const r = M.rec;
+  r.customer = (r.customer||'').trim(); r.phone = (r.phone||'').trim();
+  if(!r.customer){ M.err = '請填客戶姓名'; plRender(); const el = document.getElementById('pl-fName'); if(el) el.focus(); return; }
+  if(!r.date){ M.err = '請選日期'; plRender(); return; }
+  M.err = '';
+  if(M.edit){
+    const orig = M.orig, patch = {};
+    // 只寫有改的欄位；姓名、電話只差前後空白不算改（舊資料有些尾巴帶空白，不要因為按儲存就被改掉）
+    PL_FORM_KEYS.forEach(k=>{
+      const a = r[k]||'', o = orig[k]||'';
+      if(a===o || ((k==='customer' || k==='phone') && a.trim()===o.trim())) return;
+      patch[k] = a;
+    });
+    if(Object.keys(patch).length) plUpdate(r.id, patch);
+    S.modal = null; plRender();
+    plToast(Object.keys(patch).length ? `已儲存「${r.customer}」` : '沒有變更');
+    return;
+  }
+  const rec = stamp({ id:uid(), staffUid:effectiveUid(), staffName:effectiveStaffName(), ...PL_FORM_KEYS.reduce((o,k)=>(o[k] = r[k]||'', o), {}) });
+  if(!rec.source.trim()) rec.source = '公司';
+  savePersonalProgress(rec).catch(plFail);
+  if(next){ plOpenNew({ date:rec.date, source:rec.source }); plToast(`已新增「${rec.customer}」，接著填下一筆`); }
+  else { S.modal = null; plRender(); plToast(`已新增「${rec.customer}」`); }
+}
+// 客戶詳細資料：跟舊版一樣點 📄 打開大文字框；存檔只更新這一欄
+function plOpenDetail(id){
+  const c = plMine().find(x=>x.id===id); if(!c) return;
+  openModal(`客戶詳細資料 — ${c.customer||''}`, `
+    <label class="field"><span>客戶詳細資料</span><textarea name="latestNote" rows="18" style="min-height:360px;font-family:monospace;white-space:pre-wrap;" placeholder="可貼上完整的評估表、聯絡紀錄等大段資訊" autofocus>${plTa(c.latestNote)}</textarea></label>
+  `, 'customer-detail-form', (data)=>{
+    const v = data.latestNote || '';
+    if(v !== (c.latestNote||'')){ plUpdate(id, { latestNote: v }); plToast(`已儲存「${c.customer}」的客戶詳細資料`); }
+  });
+}
+function plOpenPop(opener){
+  const S = plS(), fk = opener.dataset.plFk, W = 340;
+  S.pickYear = '';
+  const b = opener.getBoundingClientRect();
+  S.pop = { id: opener.dataset.plPk, f: opener.dataset.plF, fk, top: b.top,
+    x: Math.max(8, Math.min(b.left, window.innerWidth - W - 8)), y: b.bottom + 6 };
+  if(S.pop.id==='__modal') plCaptureForm();
+  plRender();
+}
+
+document.addEventListener('click', (e)=>{
+  const t = e.target;
+  if(!t.closest || !(t.closest('.pl-root') || t.closest('[data-pl-add]'))) return;
+  const S = plS();
+  // 選項面板：方案、聯絡狀態、案件狀態
+  const pk = t.closest('[data-pl-pick]');
+  if(pk){
+    const pt = pk.dataset.plPt, f = pk.dataset.plF, v = pk.dataset.plPick; S.pop = null;
+    if(pt==='__modal'){ plCaptureForm(); if(S.modal) S.modal.rec[f] = v; return plRender(); }
+    const c = plMine().find(x=>x.id===pt); if(!c) return plRender();
+    if((c[f]||'')===v) return plRender();
+    plUpdate(c.id, { [f]: v });
+    let msg = `${c.customer}：${PL_LABEL[f]}改為「${v||'未填'}」`;
+    if(f==='contactStatus' && !S.status && S.group!=='all' && (S.group==='ended')!==plIsEnded(v)) msg += `，已移到「${plIsEnded(v)?'已結束':'進行中'}」`;
+    plRender(); plToast(msg); return;
+  }
+  const fp = t.closest('[data-pl-fpick]');
+  if(fp){
+    const k = fp.dataset.plFpick, v = fp.dataset.plVal, keep = S.pop;
+    if(k==='month' && v.startsWith('py:')){ S.pickYear = v.slice(3); return plRender(); }
+    S.limit = 20; S.limitNoc = 20; S.pop = null;
+    if(k==='group'){ const [a, b] = v.split(':'); if(a==='g'){ S.group = b; S.status = ''; } else { S.group = 'all'; S.status = b; } }
+    if(k==='prod') S.product = v;
+    if(k==='month') S.quick = v==='m:'+plThisM() ? 'month' : v;
+    if(k==='group' || k==='prod') S.stat = '';
+    if(k==='sort'){
+      const [a, b] = v.split(':');
+      // 選了欄位先留著面板，方便接著選順序
+      if(a==='k'){ S.sort = { key:b, dir: S.sort.key===b ? S.sort.dir : (b==='date'?'desc':'asc') }; S.pop = keep; }
+      else S.sort.dir = b;
+    }
+    return plRender();
+  }
+  const opener = t.closest('[data-pl-pk], [data-pl-fk]');
+  if(S.pop && !t.closest('#pl-pop') && !t.closest('.pl-overlay.sheet .pl-dialog')){
+    const same = opener && (opener.dataset.plFk ? opener.dataset.plFk===S.pop.fk : opener.dataset.plPk===S.pop.id && opener.dataset.plF===S.pop.f);
+    S.pop = null; plRender(); if(!opener || same) return;
+  }
+  if(t.closest('[data-pl-popclose]')){ S.pop = null; return plRender(); }
+  if(opener){ const again = opener.dataset.plFk ? document.querySelector(`.pl-root [data-pl-fk="${opener.dataset.plFk}"]`) : document.querySelector(`.pl-root [data-pl-pk="${CSS.escape(opener.dataset.plPk)}"][data-pl-f="${opener.dataset.plF}"]`); return plOpenPop(again || opener); }
+  if(t.closest('[data-pl-add]')) return plOpenNew();
+  const so = t.closest('[data-pl-sort]');
+  if(so){ const k = so.dataset.plSort; S.sort = S.sort.key===k ? { key:k, dir: S.sort.dir==='asc'?'desc':'asc' } : { key:k, dir: k==='date'?'desc':'asc' }; return plRender(); }
+  const dl = t.closest('[data-pl-del]'); if(dl){ S.delRow = dl.dataset.plDel; return plRender(); }
+  if(t.closest('[data-pl-delno]')){ S.delRow = null; return plRender(); }
+  const dy = t.closest('[data-pl-delyes]');
+  if(dy){ const c = plMine().find(x=>x.id===dy.dataset.plDelyes); S.delRow = null;
+    if(c){ deletePersonalProgress(c.id).catch(plFail); plToast(`已刪除「${c.customer}」`); } return plRender(); }
+  const db_ = t.closest('[data-pl-detail]'); if(db_){ plOpenDetail(db_.dataset.plDetail); return; }
+  const op = t.closest('[data-pl-open]');
+  if(op && !S.modal){ const c = plMine().find(x=>x.id===op.dataset.plOpen); if(!c) return;
+    const rec = PL_FORM_KEYS.reduce((o,k)=>(o[k] = c[k]||'', o), { id:c.id });
+    S.modal = { key:uid(), edit:true, more:false, err:'', rec, orig:{ ...rec } }; return plRender(); }
+  const sb = t.closest('[data-pl-stat]');
+  if(sb){ S.quick = 'month'; S.group = 'all'; S.status = ''; S.product = ''; S.stat = sb.dataset.plStat; S.limit = 20; S.limitNoc = 20; return plRender(); }
+  const q = t.closest('[data-pl-quick]'); if(q){ S.quick = q.dataset.plQuick; S.limit = 20; S.limitNoc = 20; return plRender(); }
+  if(t.closest('[data-pl-ftoggle]')){ S.filterOpen = !S.filterOpen; return plRender(); }
+  const mo = t.closest('[data-pl-more]'); if(mo){ if(mo.dataset.plMore==='noc') S.limitNoc += 20; else S.limit += 20; return plRender(); }
+  if(t.closest('[data-pl-noc]')){ APP.myLogNoContactCollapsed = !APP.myLogNoContactCollapsed; return plRender(); }
+  if(t.closest('[data-pl-mclose]') || t.matches('[data-pl-modalbg]')){ S.modal = null; return plRender(); }
+  if(t.matches('[data-pl-popbg]')){ S.pop = null; return plRender(); }
+  if(t.closest('[data-pl-mmore]')){ plCaptureForm(); S.modal.more = !S.modal.more; return plRender(); }
+  if(t.closest('[data-pl-savenext]')) return plSaveModal(true);
+  if(t.closest('[data-pl-mdel]')){ plCaptureForm(); S.modal.confirmDel = true; return plRender(); }
+  if(t.closest('[data-pl-mdelno]')){ S.modal.confirmDel = false; return plRender(); }
+  if(t.closest('[data-pl-mdelyes]')){ const r = S.modal.rec; S.modal = null; deletePersonalProgress(r.id).catch(plFail); plRender(); plToast(`已刪除「${r.customer}」`); return; }
+});
+document.addEventListener('submit', (e)=>{
+  if(e.target.id!=='pl-form') return;
+  e.preventDefault(); plSaveModal(false);
+});
+// 列表上直接打字：離開欄位（或按 Enter）自動儲存，只更新那一欄
+document.addEventListener('change', (e)=>{
+  const el = e.target;
+  if(!el.matches || !el.matches('.pl-root .pl-t')) return;
+  const id = el.dataset.plId, f = el.dataset.plT;
+  const c = plMine().find(x=>x.id===id); if(!c) return;
+  const v = f==='caseRemark' ? el.value : el.value.trim();
+  if(f==='customer' && !v){ el.value = c.customer||''; plToast('客戶姓名不能空白'); return; }
+  if((c[f]||'')===v) return;
+  plUpdate(id, { [f]: v });
+  plToast(`已儲存：${PL_LABEL[f]}`);
+});
+document.addEventListener('input', (e)=>{
+  const el = e.target;
+  if(el.matches && el.matches('.pl-root textarea.pl-t')) return plGrow(el);
+  if(el.id!=='pl-search' || e.isComposing) return;
+  plSearchApply(el);
+});
+document.addEventListener('compositionend', (e)=>{ if(e.target.id==='pl-search') plSearchApply(e.target); });
+function plSearchApply(el){
+  const S = plS(), pos = el.selectionStart;
+  S.search = el.value; S.limit = 20; S.limitNoc = 20;
+  plRender();
+  const n = document.getElementById('pl-search'); if(n){ n.focus(); try{ n.setSelectionRange(pos, pos); }catch(_){} }
+}
+document.addEventListener('keydown', (e)=>{
+  if(!e.target.closest || !document.querySelector('.pl-root')) return;
+  // 列表上的欄位按 Enter 就存（備註要換行用 Shift+Enter）
+  if(e.key==='Enter' && e.target.matches('.pl-root .pl-t') && !e.shiftKey && !e.isComposing){ e.preventDefault(); e.target.blur(); return; }
+  if(e.key==='Escape'){
+    const S = plS();
+    if(S.pop){ S.pop = null; plRender(); } else if(S.modal){ S.modal = null; plRender(); }
+  }
+});
+// 離開正在打字的欄位後，補上剛才延後的畫面更新
+document.addEventListener('focusout', (e)=>{
+  if(!e.target.closest || !e.target.closest('.pl-root')) return;
+  setTimeout(()=>{ const S = plS(); if(S.pending && APP.view==='personalLog' && !plShouldDefer()){ S.pending = false; render(); } }, 0);
+});
+// 電腦版：捲動時收起選項面板，免得面板跟按鈕對不上
+document.addEventListener('scroll', (e)=>{
+  const S = APP.pl; if(!S || !S.pop || plIsMobile()) return;
+  if(e.target && e.target.closest && e.target.closest('#pl-pop')) return;
+  S.pop = null; plRender();
+}, true);
+let plLastMobile = window.innerWidth <= 640;
+window.addEventListener('resize', ()=>{
+  const m = plIsMobile(); if(m===plLastMobile) return; plLastMobile = m;
+  if(APP.view==='personalLog' && APP.pl){ APP.pl.pop = null; render(); }
+});
 /* ---- 逾期未更新案件（超過7天沒更新狀態），總覽的數字跟明細彈窗共用同一套判斷邏輯 ---- */
 function isStaleCase(c){
   if(STATUS_DONE.includes(c.status) || STATUS_CLOSED.includes(c.status)) return false;
