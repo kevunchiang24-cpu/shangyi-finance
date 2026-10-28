@@ -850,6 +850,58 @@
   .pl-msearch .pl-bigsearch{height:50px;font-size:16px;animation:none;}
   .pl-msearch .pl-btn{height:50px;flex:none;}
   @media (prefers-reduced-motion:reduce){ .pl-addbtn,.pl-bigsearch,.pl-mfab{animation:none;} }
+  /* ---- 分頁 AI「🤖 AI 幫我填」：工具列按鈕、貼上框、手機新增選擇、AI 填的欄位標色（貼上框在 body 最外層，自帶顏色變數） ---- */
+  @keyframes paGlow{0%,100%{box-shadow:0 0 0 0 rgba(106,75,216,0),0 3px 10px rgba(106,75,216,.2);}50%{box-shadow:0 0 0 6px rgba(106,75,216,.15),0 6px 22px rgba(106,75,216,.4);}}
+  .pl-aibtn{height:48px;padding:0 20px;font-size:15px;white-space:nowrap;border-radius:12px;background:#6A4BD8;animation:paGlow 2.6s ease-in-out infinite;}
+  .pl-aibtn:hover{background:#5A3CC6;}
+  .pa-hbtn{margin-left:auto;margin-right:10px;border:1px solid #E2E6EF;background:#fff;color:#1F2433;border-radius:9px;padding:6px 10px;font-size:12.5px;font-family:inherit;cursor:pointer;white-space:nowrap;}
+  .pa-hbtn.ai{color:#5A3CC6;border-color:#C9B9FA;background:#F7F4FF;font-weight:700;}
+  .pa-ban{border-radius:10px;padding:9px 12px;font-size:13px;line-height:1.6;display:grid;gap:4px;}
+  .pa-ban.ai{background:#F1ECFF;color:#3D2496;border:1px solid #C9B9FA;}
+  .pa-ban.warn{background:#FFF4D6;color:#7A4E00;border:1px solid #F0C552;}
+  .pa-ban.push{background:#E9FBEF;color:#0A5A2C;border:1px solid #8EDDAA;}
+  .pa-steps{display:flex;gap:6px;flex-wrap:wrap;}
+  .pa-steps span{background:#fff;border:1px solid #C9B9FA;border-radius:99px;padding:1px 9px;font-size:12px;}
+  .pa-steps span.cur{background:#6A4BD8;color:#fff;border-color:#6A4BD8;font-weight:700;}
+  .pa-steps span.done{background:#DCF5E4;color:#11633A;border-color:#9AD9B2;}
+  .pl-field.pa-ai input,.pl-field.pa-ai textarea,.pl-field.pa-ai .pl-inl{background-color:#F1ECFF !important;border-color:#C9B9FA !important;}
+  .pl-field.pa-ai .pl-inl{box-shadow:0 0 0 2px #C9B9FA;}
+  .pl-field.pa-ai .bk-seg{box-shadow:0 0 0 2px #C9B9FA;border-radius:10px;}
+  .pl-field.pa-miss input{background:#FFF4D6 !important;border-color:#F0C552 !important;}
+  .pa-badge{font-size:10.5px;font-weight:800;border-radius:5px;padding:1px 5px;letter-spacing:.04em;font-style:normal;}
+  .pa-badge.pa-ai{background:#6A4BD8;color:#fff;}
+  .pa-badge.pa-miss{background:#F0C552;color:#4A3500;}
+  body.pa-lock{overflow:hidden;}
+  .pa-ov{--pa-ink:#1F2433;--pa-muted:#596277;--pa-line:#E2E6EF;--pa-ai:#6A4BD8;position:fixed;inset:0;z-index:10002;background:rgba(18,26,48,.42);display:flex;align-items:flex-start;justify-content:center;padding:48px 16px 16px;overflow:auto;color:var(--pa-ink);}
+  .pa-ov[hidden]{display:none;}
+  .pa-box{background:#fff;border-radius:16px;width:min(580px,100%);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(18,26,48,.3);box-sizing:border-box;}
+  .pa-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--pa-line);}
+  .pa-h h2{margin:0;font-size:17px;flex:1;}
+  .pa-x{border:0;background:#EEF1F7;width:32px;height:32px;border-radius:99px;font-size:18px;cursor:pointer;color:var(--pa-muted);flex:none;}
+  .pa-b{padding:14px 18px;display:grid;gap:10px;overflow:auto;}
+  .pa-hint{margin:0;color:var(--pa-muted);font-size:13px;line-height:1.65;}
+  .pa-ta{width:100%;min-height:180px;box-sizing:border-box;border:2px solid #C9B9FA;border-radius:12px;padding:12px;font-family:inherit;font-size:15px;line-height:1.6;resize:vertical;color:var(--pa-ink);}
+  .pa-ta:focus{outline:none;border-color:var(--pa-ai);box-shadow:0 0 0 4px #F1ECFF;}
+  .pa-meta{font-size:12.5px;color:var(--pa-muted);min-height:18px;}
+  .pa-meta.err{color:#B42318;font-weight:600;}
+  .pa-f{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--pa-line);}
+  .pa-btn{border:0;border-radius:10px;padding:10px 18px;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer;}
+  .pa-btn.sec{background:#fff;border:1px solid var(--pa-line);color:var(--pa-ink);font-weight:500;}
+  .pa-btn.ai{background:var(--pa-ai);color:#fff;}
+  .pa-btn:disabled{opacity:.55;cursor:default;}
+  .pa-choose{gap:10px;padding-bottom:calc(16px + env(safe-area-inset-bottom));}
+  .pa-c{display:grid;gap:3px;text-align:left;border-radius:14px;padding:14px 16px;cursor:pointer;font-size:16px;font-weight:700;font-family:inherit;background:#fff;border:1px solid var(--pa-line);color:var(--pa-ink);}
+  .pa-c small{font-size:12.5px;font-weight:400;opacity:.85;}
+  .pa-c.ai{background:var(--pa-ai);border-color:var(--pa-ai);color:#fff;}
+  @media (max-width:640px){
+    .pa-ov{align-items:flex-end;padding:0;}
+    .pa-box{width:100%;border-radius:18px 18px 0 0;max-height:92vh;}
+    .pa-f{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+    .pa-f .pa-btn{flex:1;}
+    .pa-ta{min-height:150px;font-size:16px;}
+    .pa-hbtn{padding:5px 8px;font-size:12px;}
+  }
+  @media (prefers-reduced-motion:reduce){ .pl-aibtn{animation:none;} }
   @media (max-width:640px){
     .bl-stats{grid-template-columns:1fr 1fr;}
     .bl-filter-box{display:none;}
@@ -912,7 +964,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-13';
+const APP_BUILD = '2026-10-29-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -4857,8 +4909,8 @@ function plModalHTML(){
     ? `<div class="pl-dconfirm">確定刪除「${escHtml(r.customer||'')}」？<button type="button" class="pl-btn danger" data-pl-mdelyes>刪除</button><button type="button" class="pl-btn sec" data-pl-mdelno>不要刪</button></div>`
     : `<button type="button" class="pl-btn sec" data-pl-mdel style="margin-right:auto;color:var(--pl-danger);">刪除這筆</button>`) : '';
   return `<div class="pl-overlay" data-pl-modalbg><form class="pl-dialog" id="pl-form" data-pl-key="${M.key}" novalidate>
-    <div class="pl-dlg-h"><h2>${M.edit?'編輯紀錄':'新增紀錄'}</h2><button type="button" class="pl-x" data-pl-mclose aria-label="關閉">×</button></div>
-    <div class="pl-dlg-b">
+    <div class="pl-dlg-h"><h2>${M.edit?'編輯紀錄':'新增紀錄'}</h2>${paHeadBtn('pl', M)}<button type="button" class="pl-x" data-pl-mclose aria-label="關閉">×</button></div>
+    <div class="pl-dlg-b">${paBanner('pl', M)}
       <div class="pl-row2">
         <label class="pl-field"><span>日期 <em>*</em></span><input id="pl-fDate" type="date" value="${escAttr(r.date||'')}"/></label>
         <label class="pl-field"><span>客戶姓名 <em>*</em></span><input id="pl-fName" value="${escAttr(r.customer||'')}" autocomplete="off"/>${M.err?`<span class="pl-err">${escHtml(M.err)}</span>`:''}</label>
@@ -4873,8 +4925,8 @@ function plModalHTML(){
       ${more}
     </div>
     <div class="pl-dlg-f">${del}
-      ${M.edit ? '' : '<button type="button" class="pl-btn sec" data-pl-savenext>儲存並新增下一筆</button>'}
-      <button type="submit" class="pl-btn">儲存</button></div>
+      ${M.edit ? '' : paMulti(M) ? paSkipBtn('pl') : M.pa ? '' : '<button type="button" class="pl-btn sec" data-pl-savenext>儲存並新增下一筆</button>'}
+      <button type="submit" class="pl-btn">${paSaveLabel(M)}</button></div>
   </form></div>`;
 }
 // 視窗開著時，畫面重畫前先把已經打的字收進來，不會因為重畫而消失
@@ -4901,6 +4953,7 @@ function plPageHTML(){
 function plAfterRender(){
   document.querySelectorAll('.pl-root textarea.pl-t').forEach(plGrow);
   const mainEl = document.getElementById('main'); if(mainEl) mainEl.style.minHeight = '';
+  paMark('pl');
   const S = plS(), p = document.getElementById('pl-pop');
   if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
     S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
@@ -4967,7 +5020,7 @@ function plSaveModal(next){
   if(!rec.source.trim()) rec.source = '公司';
   savePersonalProgress(rec).catch(plFail);
   if(next){ plOpenNew({ date:rec.date, source:rec.source }); plToast(`已新增「${rec.customer}」，接著填下一筆`); }
-  else { S.modal = null; plRender(); plToast(`已新增「${rec.customer}」`); }
+  else { S.modal = null; plRender(); plToast(`已新增「${rec.customer}」`); if(M.pa) paNext('pl', true); }
 }
 // 客戶詳細資料：跟舊版一樣點 📄 打開大文字框；存檔只更新這一欄
 function plOpenDetail(id){
@@ -5127,9 +5180,9 @@ const lxSearching = S => !!String(S.search||'').trim();
 function lxToolbarHTML(px, addLabel, canAdd){
   const S = LX[px].S(), q = S.search||'';
   const box = `<div class="pl-sbox"><span class="pl-sicon" aria-hidden="true">🔍</span><input type="search" class="pl-bigsearch" id="${px}-search" placeholder="搜尋客戶姓名、電話…" value="${escAttr(q)}" autocomplete="off" aria-label="搜尋客戶"/>${q ? `<button type="button" class="pl-sclear" data-lx-sclear="${px}" aria-label="清除搜尋">×</button>` : ''}</div>`;
-  if(!plIsMobile()) return `<div class="pl-toolbar">${box}${canAdd ? `<button type="button" class="pl-btn pl-addbtn" data-${px}-add>＋ ${addLabel}</button>` : ''}</div>`;
+  if(!plIsMobile()) return `<div class="pl-toolbar">${box}${canAdd ? `<button type="button" class="pl-btn pl-aibtn" data-pa-open="${px}">🤖 AI 幫我填</button><button type="button" class="pl-btn pl-addbtn" data-${px}-add>＋ ${addLabel}</button>` : ''}</div>`;
   // 手機搜尋框在 lxSyncMSearch 裡建在畫面最外層（打字時不會被重畫）；開著時左下角按鈕先藏起來
-  return `<div class="pl-mfabs"${S.mSearch ? ' style="display:none"' : ''}><button type="button" class="pl-mfab search${lxSearching(S) ? ' on' : ''}" data-lx-msopen="${px}">🔍 ${lxSearching(S) ? escHtml(q.trim()) : '搜尋'}</button>${canAdd ? `<button type="button" class="pl-mfab add" data-${px}-add>＋ 新增</button>` : ''}</div>`;
+  return `<div class="pl-mfabs"${S.mSearch ? ' style="display:none"' : ''}><button type="button" class="pl-mfab search${lxSearching(S) ? ' on' : ''}" data-lx-msopen="${px}">🔍 ${lxSearching(S) ? escHtml(q.trim()) : '搜尋'}</button>${canAdd ? `<button type="button" class="pl-mfab add" data-pa-choose="${px}">＋ 新增</button>` : ''}</div>`;
 }
 function lxSearchNote(px, n, unit){
   const S = LX[px].S();
@@ -5223,6 +5276,240 @@ document.addEventListener('pointerdown', (e)=>{
   lxCloseMSearch();
 }, true);
 document.addEventListener('focusin', (e)=>{ if(e.target.closest && e.target.closest('.pl-msearch')){ lxPlaceMSearch(); setTimeout(lxPlaceMSearch, 300); setTimeout(lxPlaceMSearch, 700); } });
+/* ================= 分頁 AI「🤖 AI 幫我填」（2026-10-28）=================
+   我的客人紀錄（pl）、進度追蹤（pg）、房屋土地估價（va）、銀行信貸（bk）：
+   - 貼資料或打一句話 → 送到 Worker（mode:'fill'，只送這頁的欄位、選項和原文）→ 結果填進這頁平常的新增視窗
+   - 紫色底＝AI 填的、黃色底＝AI 沒找到（姓名）；按「儲存」才會存，存檔走原本的程式（對保／撥款連動、LINE 推播都照舊）
+   - 一次好幾位：一位一位確認（儲存，下一位／這位不要）
+   - 電腦版：工具列「搜尋｜🤖 AI 幫我填｜＋新增」；手機版：點「＋ 新增」再選 AI 填或自己填
+   - 貼上框、選擇框建在 body 最外層，不會被整頁重畫（iPhone 鍵盤不會收起） */
+const paFlat = groups => groups.reduce((a, g)=>a.concat(g[1]), []);
+const PA = {
+  pl: { title:'客人紀錄', nameKey:'customer', S:()=>plS(), open:b=>plOpenNew(b), render:()=>plRender(), can:()=>true,
+    fields:()=>({ date:'日期', customer:'客戶姓名', phone:'電話', lineId:'LINE ID', source:'來源', dealProduct:'方案', contactStatus:'聯絡狀態', caseStatus:'案件狀態', transferTo:'轉給誰', caseRemark:'案件狀況備註', latestNote:'客戶詳細資料' }),
+    opts:()=>({ source:PL_SOURCES, dealProduct:DEAL_PRODUCT_OPTIONS, contactStatus:PL_STATUS_ALL.map(s=>s[0]), caseStatus:LOG_CASE_STATUS_OPTIONS }),
+    free:['source'], more:['source','lineId','caseStatus','transferTo','latestNote'],
+    sel:{ date:'#pl-fDate', customer:'#pl-fName', phone:'#pl-fPhone', caseRemark:'#pl-fNote', source:'#pl-fSource', lineId:'#pl-fLine', transferTo:'#pl-fTransfer', latestNote:'#pl-fDetail' } },
+  pg: { title:'進度追蹤', nameKey:'customer', S:()=>pgS(), open:b=>pgOpenNew(b), render:()=>pgRender(), can:()=>pgAdmin(), kind:()=>pgKind(),
+    fields:k=>({ date:'日期', customer:'客戶姓名', phone:'電話', plan:'方案', staff:k==='channel' ? '業務／通路' : '負責業務', status:'狀態', ...(k==='channel' ? { source:'來源', referrer:'通路備註' } : {}), note:'備註' }),
+    opts:k=>({ plan:pgPlans(), status:STATUS_OPTIONS, ...(k==='channel' ? { source:['直客','通路'] } : { staff:pgStaffOpts() }) }),
+    hints:k=>(k==='channel' ? { staff:pgStaffOpts() } : {}),
+    sel:{ date:'#pg-fDate', customer:'#pg-fName', phone:'#pg-fPhone', note:'#pg-fNote', referrer:'#pg-fRef', staff:'#pg-fStaff' } },
+  va: { title:'估價', nameKey:'customerName', S:()=>vaS(), open:b=>vaOpenNew(b), render:()=>vaRender(), can:()=>true,
+    fields:()=>({ date:'日期', customerName:'客戶姓名', handler:'經手人', category:'類別', area:'地區', status:'狀態', valuation:'估價資訊', plan:'方案', memo:'備註' }),
+    opts:()=>({ category:VA_CATS.map(c=>c[0]), status:valuationStatusList() }),
+    hints:()=>({ handler:Array.from(new Set(vaAll().map(c=>c.handler).filter(Boolean))).slice(0, 60) }),
+    sel:{ date:'#va-fDate', customerName:'#va-fName', handler:'#va-fHandler', area:'#va-fArea', valuation:'#va-fVal', plan:'#va-fPlan', memo:'#va-fMemo', category:'[data-va-mcat]' } },
+  bk: { title:'銀行信貸', nameKey:'customerName', S:()=>bkS(), open:b=>bkOpenNew(b), render:()=>bkRender(), can:()=>true,
+    fields:()=>({ date:'日期', customerName:'客戶姓名', phone:'電話', owner:'誰的客人', status:'狀態', channel:'送件管道', packJob:'包工作', approvedAmount:'核准額度（萬）', plan:'方案', note:'狀態備註' }),
+    opts:()=>({ status:paFlat(bkOptGroups('status')), channel:BK_CHANNELS, packJob:BK_PACK.map(p=>p[0]) }),
+    sel:{ date:'#bk-fDate', customerName:'#bk-fName', phone:'#bk-fPhone', owner:'#bk-fOwner', approvedAmount:'#bk-fAmt', plan:'#bk-fPlan', note:'#bk-fNote', packJob:'[data-bk-mpack]' } },
+};
+let PA_RUN = null; // 這次 AI 整理出來的客人：{ px, kind, src, queue, idx, names, done }
+const paKind = px => PA[px].kind ? PA[px].kind() : '';
+const paWhere = px => px==='pg' ? `（${paKind(px)==='channel' ? '直客／通路' : '廣告客'}）` : '';
+const paLong = t => t.length > 60 || t.split('\n').length > 3;
+
+// 送出前先算這次大約送多少字（給使用者看，正式送出的內容在 Worker 再加上固定規則）
+function paPayload(px, text){
+  const P = PA[px], k = paKind(px);
+  return { mode:'fill', page:px, kind:k, text, today:todayStr(), fields:P.fields(k), options:P.opts(k), hints:P.hints ? P.hints(k) : {} };
+}
+// AI 回來的每一筆：只留這頁有的欄位；選單欄位不在選項裡就不填（記下來提醒使用者）
+function paClean(px, item, single, src){
+  const P = PA[px], k = paKind(px), F = P.fields(k), O = P.opts(k), free = P.free || [];
+  const rec = {}, keys = [], dropped = [];
+  Object.keys(F).forEach(f=>{
+    let v = item[f]; if(v==null) return;
+    v = String(v).trim(); if(!v || v==='null') return;
+    if(f==='date'){ if(!/^\d{4}-\d{2}-\d{2}$/.test(v)) return; }
+    else if(f==='approvedAmount'){ v = v.replace(/[,\s萬]/g, ''); if(isNaN(Number(v))) { dropped.push(`${F[f]}「${item[f]}」`); return; } }
+    else if(O[f] && !O[f].includes(v) && !free.includes(f)){
+      const hit = O[f].find(o=>o.toLowerCase()===v.toLowerCase());
+      if(!hit){ dropped.push(`${F[f]}「${v}」`); return; }
+      v = hit;
+    }
+    rec[f] = v.slice(0, f==='latestNote' ? 20000 : 2000);
+    if(!(f==='date' && v===todayStr())) keys.push(f);
+  });
+  // 客人紀錄：只有一位、又是長篇資料時，完整原文放進「客戶詳細資料」（不讓 AI 抄一遍，省字數也不會抄錯）
+  if(px==='pl' && single && paLong(src) && !rec.latestNote){ rec.latestNote = src; keys.push('latestNote'); }
+  return { rec, keys, dropped };
+}
+function paParse(raw){
+  let t = String(raw||'').trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  const a = t.indexOf('['), b = t.lastIndexOf(']');
+  if(a < 0 || b < a) return null;
+  try{ const arr = JSON.parse(t.slice(a, b + 1)); return Array.isArray(arr) ? arr.filter(x=>x && typeof x==='object') : null; }catch(_){ return null; }
+}
+
+// ---- 貼上框（建在 body 最外層，只建一次）----
+function paOpenDlg(px, text){
+  paCloseChoose();
+  const P = PA[px]; if(!P || !P.can()) return;
+  let o = document.getElementById('pa-dlg');
+  if(!o){ o = document.createElement('div'); o.id = 'pa-dlg'; o.className = 'pa-ov'; document.body.appendChild(o); }
+  o.dataset.px = px;
+  o.innerHTML = `<div class="pa-box" role="dialog" aria-modal="true" aria-label="AI 幫我填">
+    <div class="pa-h"><h2>🤖 AI 幫我填・${escHtml(P.title)}${escHtml(paWhere(px))}</h2><button type="button" class="pa-x" data-pa-close aria-label="關閉">×</button></div>
+    <div class="pa-b">
+      <p class="pa-hint">把資料貼進來（評估表、LINE 對話都可以），或直接打一句話。AI 整理好會填進「新增」視窗，你檢查後再按儲存。</p>
+      <textarea id="pa-text" class="pa-ta" placeholder="${escAttr(PA_PH[px])}"></textarea>
+      <div class="pa-meta" id="pa-meta"></div>
+    </div>
+    <div class="pa-f"><button type="button" class="pa-btn sec" data-pa-close>取消</button><button type="button" class="pa-btn ai" id="pa-run" data-pa-run disabled>整理並填入 →</button></div>
+  </div>`;
+  const ta = document.getElementById('pa-text'); ta.value = text || '';
+  paMeta(); o.hidden = false; document.body.classList.add('pa-lock');
+  setTimeout(()=>{ ta.focus(); try{ ta.setSelectionRange(ta.value.length, ta.value.length); }catch(_){} paPlace(); }, 0);
+}
+const PA_PH = {
+  pl:'例：幫我記一筆，王先生 0912-345-678，在談和潤，客人還在考慮',
+  pg:'例：王先生 0987-654-321，JET 方案，指派給秉，等照會',
+  va:'例：台中市北屯區透天，劉先生，經手人 Ben，銀行，估 1,350 萬',
+  bk:'例：黃先生 0912-604-338，小江的客人，月薪 4.5 萬有薪轉，想貸 80 萬，走 chen',
+};
+function paMeta(msg, err){
+  const o = document.getElementById('pa-dlg'), ta = document.getElementById('pa-text'), m = document.getElementById('pa-meta'), run = document.getElementById('pa-run');
+  if(!o || !ta || !m) return;
+  const t = ta.value.trim();
+  if(run && !run.dataset.busy) run.disabled = !t;
+  if(msg){ m.className = 'pa-meta' + (err ? ' err' : ''); m.textContent = msg; return; }
+  m.className = 'pa-meta';
+  m.textContent = t ? `只會把這段文字和這頁的欄位選項送給 AI（這次約 ${(JSON.stringify(paPayload(o.dataset.px, t)).length + 700).toLocaleString()} 字）` : '';
+}
+function paCloseDlg(){
+  const o = document.getElementById('pa-dlg'); if(o){ o.hidden = true; o.innerHTML = ''; }
+  document.body.classList.remove('pa-lock');
+}
+// iPhone 鍵盤打開時，把框往上推到鍵盤上面（跟手機搜尋框同一套算法）
+function paPlace(){
+  const vv = window.visualViewport;
+  const hidden = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+  document.querySelectorAll('.pa-ov:not([hidden]) .pa-box').forEach(b=>{
+    b.style.marginBottom = hidden > 0 ? hidden + 'px' : '';
+    b.style.maxHeight = vv && plIsMobile() ? Math.max(240, Math.round(vv.height - 12)) + 'px' : '';
+  });
+}
+if(window.visualViewport){ window.visualViewport.addEventListener('resize', paPlace); window.visualViewport.addEventListener('scroll', paPlace); }
+
+async function paRun(){
+  const o = document.getElementById('pa-dlg'), ta = document.getElementById('pa-text'), run = document.getElementById('pa-run');
+  if(!o || !ta) return;
+  const px = o.dataset.px, text = ta.value.trim(); if(!text) return;
+  run.dataset.busy = '1'; run.disabled = true; run.textContent = 'AI 整理中…'; paMeta('AI 整理中，大約 5～15 秒…');
+  let list = null, fail = '';
+  try{
+    const resp = await fetch(AI_WORKER_URL, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(paPayload(px, text)) });
+    const data = await resp.json();
+    if(data.error) fail = String(data.error);
+    else list = paParse(data.raw);
+  }catch(e){ fail = '連線失敗，請確認網路後再試一次。'; }
+  const still = document.getElementById('pa-dlg');
+  if(!still || still.hidden || still.dataset.px!==px) return; // 等的時候已經關掉了
+  delete run.dataset.busy; run.textContent = '整理並填入 →'; run.disabled = false;
+  if(fail){ paMeta(fail.length > 120 ? 'AI 暫時沒有回應，請稍後再試一次。' : fail, true); return; }
+  if(!list || !list.length){ paMeta('AI 沒有整理出客人資料，請多寫一點（例如姓名、電話、方案）再試一次。', true); return; }
+  const single = list.length===1;
+  const queue = list.slice(0, 20).map(x=>paClean(px, x, single, text));
+  const nk = PA[px].nameKey;
+  PA_RUN = { px, kind:paKind(px), src:text, queue, idx:0, names:queue.map(q=>q.rec[nk]||''), done:[] };
+  paCloseDlg();
+  paOpenItem();
+}
+// 打開第 idx 位：用這頁平常的新增視窗，帶入 AI 填好的內容
+function paOpenItem(){
+  const R = PA_RUN; if(!R) return;
+  const P = PA[R.px], it = R.queue[R.idx];
+  P.open({ ...it.rec });
+  const M = P.S().modal; if(!M) return;
+  M.pa = { keys:it.keys, dropped:it.dropped };
+  if(R.px==='pl' && (P.more||[]).some(f=>it.rec[f])) M.more = true;
+  P.render();
+  if(!it.rec[P.nameKey]) setTimeout(()=>{ const el = document.querySelector(P.sel[P.nameKey]); if(el) el.focus(); }, 0);
+}
+// 存好一位之後（各頁存檔程式呼叫）：還有下一位就接著開
+function paNext(px, saved){
+  const R = PA_RUN; if(!R || R.px!==px) return;
+  if(saved) R.done[R.idx] = true;
+  if(R.idx < R.queue.length - 1){ R.idx++; paOpenItem(); return; }
+  const n = R.done.filter(Boolean).length, total = R.queue.length;
+  PA_RUN = null;
+  if(total > 1) setTimeout(()=>plToast(`${total} 位都看完了，新增了 ${n} 位`), saved ? 2500 : 0);
+}
+function paSkip(px){
+  const P = PA[px], S = P.S(); S.modal = null;
+  const R = PA_RUN, last = !R || R.idx >= R.queue.length - 1;
+  if(last){ P.render(); paNext(px, false); return; }
+  paNext(px, false);
+}
+
+// ---- 視窗裡的提示 ----
+function paHeadBtn(px, M){
+  if(!PA[px].can() || M.edit) return '';
+  if(M.pa) return `<button type="button" class="pa-hbtn" data-pa-back="${px}">← 改貼上的文字</button>`;
+  return `<button type="button" class="pa-hbtn ai" data-pa-open="${px}">🤖 貼上讓 AI 填</button>`;
+}
+function paBanner(px, M){
+  if(!M.pa) return '';
+  const R = PA_RUN, r = M.rec;
+  const steps = R && R.queue.length > 1 ? `<div class="pa-steps">${R.queue.map((q, i)=>`<span class="${R.done[i] ? 'done' : i===R.idx ? 'cur' : ''}">${R.done[i] ? '✓ ' : ''}${escHtml(R.names[i] || '第 ' + (i + 1) + ' 位')}</span>`).join('')}</div>` : '';
+  let warn = '';
+  if(px==='pg' && r.status==='撥款完成') warn = '狀態是「撥款完成」：按儲存會記下撥款日期，並自動建立客戶關懷追蹤。';
+  else if(px==='pg' && r.status==='對保') warn = '狀態是「對保」：按儲存會記下對保日期。';
+  else if(px==='bk' && r.status==='撥款完成') warn = '狀態是「撥款完成」：按儲存會記下撥款日期。';
+  const push = px==='va' && String(r.plan||'').trim() ? '這筆有填「方案」：按儲存後會推播到 LINE。沒有要推播就先把方案清空。' : '';
+  const drop = M.pa.dropped && M.pa.dropped.length ? `<div class="pa-ban warn">AI 寫的 ${M.pa.dropped.map(escHtml).join('、')} 不在選項裡，沒有填，請自己選。</div>` : '';
+  return `<div class="pa-ban ai"><div>✨ AI 填好 <b>${M.pa.keys.length}</b> 格（紫色底），請檢查後按「儲存」。${r.latestNote && M.pa.keys.includes('latestNote') ? '原文已放進「客戶詳細資料」。' : ''}</div>${steps}</div>`
+    + drop + (warn ? `<div class="pa-ban warn">${warn}</div>` : '') + (push ? `<div class="pa-ban push">${push}</div>` : '');
+}
+const paMulti = M => !!(M.pa && PA_RUN && PA_RUN.queue.length > 1);
+const paSkipBtn = px => `<button type="button" class="pl-btn sec" data-pa-skip="${px}">這位不要，下一位</button>`;
+const paSaveLabel = M => paMulti(M) && PA_RUN.idx < PA_RUN.queue.length - 1 ? '儲存，下一位 →' : '儲存';
+// 畫好之後：AI 填的欄位標紫色、沒找到的姓名標黃色（各頁 afterRender 呼叫）
+function paMark(px){
+  const P = PA[px], M = P.S().modal, form = document.getElementById(px + '-form');
+  if(!M || !M.pa || !form) return;
+  const find = f => (P.sel[f] && form.querySelector(P.sel[f])) || form.querySelector(`[data-${px}-pk="__modal"][data-${px}-f="${f}"]`);
+  const tag = (el, cls, txt) => { const fd = el && el.closest('.pl-field'); if(!fd || fd.classList.contains(cls)) return; fd.classList.add(cls); const sp = fd.querySelector(':scope > span'); if(sp) sp.insertAdjacentHTML('beforeend', ` <b class="pa-badge ${cls}">${txt}</b>`); };
+  M.pa.keys.forEach(f=>tag(find(f), 'pa-ai', 'AI'));
+  if(!String(M.rec[P.nameKey]||'').trim()) tag(find(P.nameKey), 'pa-miss', 'AI 沒找到，請補');
+}
+
+// ---- 手機：點「＋ 新增」先選 AI 填還是自己填 ----
+function paOpenChoose(px){
+  const P = PA[px];
+  let o = document.getElementById('pa-choose');
+  if(!o){ o = document.createElement('div'); o.id = 'pa-choose'; o.className = 'pa-ov'; document.body.appendChild(o); }
+  o.innerHTML = `<div class="pa-box" role="dialog" aria-modal="true" aria-label="新增方式">
+    <div class="pa-h"><h2>新增${escHtml(paWhere(px))}</h2><button type="button" class="pa-x" data-pa-cclose aria-label="關閉">×</button></div>
+    <div class="pa-b pa-choose">
+      <button type="button" class="pa-c ai" data-pa-open="${px}">🤖 貼上讓 AI 幫我填<small>貼評估表、LINE 對話，或打一句話</small></button>
+      <button type="button" class="pa-c" data-pa-manual="${px}">✍️ 自己填<small>打開空白的新增表單</small></button>
+    </div></div>`;
+  o.hidden = false; document.body.classList.add('pa-lock');
+}
+function paCloseChoose(){ const o = document.getElementById('pa-choose'); if(o){ o.hidden = true; o.innerHTML = ''; } document.body.classList.remove('pa-lock'); }
+
+document.addEventListener('click', (e)=>{
+  const t = e.target; if(!t.closest) return;
+  const op = t.closest('[data-pa-open]'); if(op){ e.preventDefault(); const px = op.dataset.paOpen, M = PA[px].S().modal; if(M && !M.edit){ PA[px].S().modal = null; PA[px].render(); } PA_RUN = null; paOpenDlg(px, ''); return; }
+  const ch = t.closest('[data-pa-choose]'); if(ch){ paOpenChoose(ch.dataset.paChoose); return; }
+  const mn = t.closest('[data-pa-manual]'); if(mn){ paCloseChoose(); PA_RUN = null; PA[mn.dataset.paManual].open(); return; }
+  if(t.closest('[data-pa-cclose]') || (t.id==='pa-choose')){ paCloseChoose(); return; }
+  if(t.closest('[data-pa-close]') || t.id==='pa-dlg'){ const run = document.getElementById('pa-run'); if(run && run.dataset.busy && t.id==='pa-dlg') return; paCloseDlg(); return; }
+  if(t.closest('[data-pa-run]')){ paRun(); return; }
+  const bk = t.closest('[data-pa-back]'); if(bk){ const px = bk.dataset.paBack, src = PA_RUN ? PA_RUN.src : ''; PA[px].S().modal = null; PA[px].render(); PA_RUN = null; paOpenDlg(px, src); return; }
+  const sk = t.closest('[data-pa-skip]'); if(sk){ paSkip(sk.dataset.paSkip); return; }
+});
+document.addEventListener('input', (e)=>{ if(e.target && e.target.id==='pa-text') paMeta(); });
+document.addEventListener('keydown', (e)=>{
+  if(e.key!=='Escape') return;
+  const run = document.getElementById('pa-run');
+  if(document.querySelector('#pa-choose:not([hidden])')) paCloseChoose();
+  else if(document.querySelector('#pa-dlg:not([hidden])') && !(run && run.dataset.busy)) paCloseDlg();
+});
+document.addEventListener('focusin', (e)=>{ if(e.target && e.target.id==='pa-text') setTimeout(paPlace, 300); });
 /* ================= 進度追蹤（2026-10 改版）=================
    跟舊版用同一份資料（progressAdCases、progressChannelCases），欄位名稱不變。
    - 列表上直接改、編輯視窗都只更新改到的欄位（updateDoc），不整筆覆蓋；業務只會寫 staffNote、wizardHatNote（符合資料庫規則）
@@ -5505,8 +5792,8 @@ function pgModalHTML(){
     ? `<div class="pl-dconfirm">確定刪除「${escHtml(r.customer||'')}」？<button type="button" class="pl-btn danger" data-pg-mdelyes>刪除</button><button type="button" class="pl-btn sec" data-pg-mdelno>不要刪</button></div>`
     : `<button type="button" class="pl-btn sec" data-pg-mdel style="margin-right:auto;color:var(--pl-danger);">刪除這筆</button>`) : '';
   return `<div class="pl-overlay" data-pg-modalbg><form class="pl-dialog" id="pg-form" data-pg-key="${M.key}" novalidate>
-    <div class="pl-dlg-h"><h2>${M.edit?'編輯案件':'新增案件'}（${ch?'直客／通路':'廣告客'}）</h2><button type="button" class="pl-x" data-pg-mclose aria-label="關閉">×</button></div>
-    <div class="pl-dlg-b">
+    <div class="pl-dlg-h"><h2>${M.edit?'編輯案件':'新增案件'}（${ch?'直客／通路':'廣告客'}）</h2>${paHeadBtn('pg', M)}<button type="button" class="pl-x" data-pg-mclose aria-label="關閉">×</button></div>
+    <div class="pl-dlg-b">${paBanner('pg', M)}
       <div class="pl-row2">
         <label class="pl-field"><span>日期 <em>*</em></span><input id="pg-fDate" type="date" value="${escAttr(r.date||'')}"/></label>
         <label class="pl-field"><span>客戶姓名 <em>*</em></span><input id="pg-fName" value="${escAttr(r.customer||'')}" autocomplete="off"/>${M.err?`<span class="pl-err">${escHtml(M.err)}</span>`:''}</label>
@@ -5528,8 +5815,8 @@ function pgModalHTML(){
       ${M.edit && M.editor ? `<div class="pg-flowhint">最後編輯：${escHtml(M.editor)}</div>` : ''}
     </div>
     <div class="pl-dlg-f">${del}
-      ${M.edit ? '' : '<button type="button" class="pl-btn sec" data-pg-savenext>儲存並新增下一筆</button>'}
-      <button type="submit" class="pl-btn">儲存</button></div>
+      ${M.edit ? '' : paMulti(M) ? paSkipBtn('pg') : M.pa ? '' : '<button type="button" class="pl-btn sec" data-pg-savenext>儲存並新增下一筆</button>'}
+      <button type="submit" class="pl-btn">${paSaveLabel(M)}</button></div>
   </form></div>`;
 }
 // 視窗開著時，畫面重畫前先把已經打的字收進來（只收同一個視窗的，剛按「儲存並新增下一筆」時不會把上一筆帶過來）
@@ -5558,6 +5845,7 @@ function pgPageHTML(){
 function pgAfterRender(){
   document.querySelectorAll('.pg-root textarea.pg-t').forEach(plGrow);
   const mainEl = document.getElementById('main'); if(mainEl) mainEl.style.minHeight = '';
+  paMark('pg');
   const S = pgS(), p = document.getElementById('pg-pop');
   if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
     S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
@@ -5630,7 +5918,7 @@ function pgSaveModal(next){
   (kind==='channel' ? saveProgressChannelCase : saveProgressAdCase)(rec).catch(pgFail);
   if(rec.status==='撥款完成' && ensureFollowupOnDisbursed(rec, kind)) extra += '並建立客戶關懷追蹤';
   if(next){ pgOpenNew({ date:rec.date, plan:rec.plan, staff:rec.staff, ...(kind==='channel' ? { source:rec.source } : {}) }); plToast(`已新增「${rec.customer}」${extra}，接著填下一筆`); }
-  else { S.modal = null; pgRender(); plToast(`已新增「${rec.customer}」${extra}`); }
+  else { S.modal = null; pgRender(); plToast(`已新增「${rec.customer}」${extra}`); if(M.pa) paNext('pg', true); }
 }
 function pgDelete(kind, c){
   (kind==='channel' ? deleteProgressChannelCase : deleteProgressAdCase)(c.id).catch(pgFail);
@@ -6031,8 +6319,8 @@ function bkModalHTML(){
     ? `<div class="pl-dconfirm">確定刪除「${escHtml(r.customerName||'')}」？<button type="button" class="pl-btn danger" data-bk-mdelyes>刪除</button><button type="button" class="pl-btn sec" data-bk-mdelno>不要刪</button></div>`
     : `<button type="button" class="pl-btn sec" data-bk-mdel style="margin-right:auto;color:var(--pl-danger);">刪除這筆</button>`) : '';
   return `<div class="pl-overlay" data-bk-modalbg><form class="pl-dialog" id="bk-form" data-bk-key="${M.key}" novalidate>
-    <div class="pl-dlg-h"><h2>${M.edit?'編輯案件':'新增銀行信貸案件'}</h2><button type="button" class="pl-x" data-bk-mclose aria-label="關閉">×</button></div>
-    <div class="pl-dlg-b">
+    <div class="pl-dlg-h"><h2>${M.edit?'編輯案件':'新增銀行信貸案件'}</h2>${paHeadBtn('bk', M)}<button type="button" class="pl-x" data-bk-mclose aria-label="關閉">×</button></div>
+    <div class="pl-dlg-b">${paBanner('bk', M)}
       <div class="pl-row2">
         <label class="pl-field"><span>客戶姓名 <em>*</em></span><input id="bk-fName" value="${escAttr(r.customerName||'')}" autocomplete="off"/>${M.err?`<span class="pl-err">${escHtml(M.err)}</span>`:''}</label>
         <div class="pl-field"><span>狀態</span>${bkPickBtn(r,'status','__modal')}</div>
@@ -6054,8 +6342,8 @@ function bkModalHTML(){
       ${M.edit && M.editor ? `<div class="pg-flowhint">最後編輯：${escHtml(M.editor)}</div>` : ''}
     </div>
     <div class="pl-dlg-f">${del}
-      ${M.edit ? '' : '<button type="button" class="pl-btn sec" data-bk-savenext>儲存並新增下一筆</button>'}
-      <button type="submit" class="pl-btn">儲存</button></div>
+      ${M.edit ? '' : paMulti(M) ? paSkipBtn('bk') : M.pa ? '' : '<button type="button" class="pl-btn sec" data-bk-savenext>儲存並新增下一筆</button>'}
+      <button type="submit" class="pl-btn">${paSaveLabel(M)}</button></div>
   </form></div>`;
 }
 function bkCaptureForm(){
@@ -6082,6 +6370,7 @@ function bkPageHTML(){
 function bkAfterRender(){
   document.querySelectorAll('.bk-root textarea.bk-t').forEach(plGrow);
   const mainEl = document.getElementById('main'); if(mainEl) mainEl.style.minHeight = '';
+  paMark('bk');
   const S = bkS(), p = document.getElementById('bk-pop');
   if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
     S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
@@ -6148,7 +6437,7 @@ function bkSaveModal(next){
   if(rec.status==='撥款完成'){ rec.disbursedDate = todayStr(); extra = '，已記下撥款日期'; }
   saveBankLoanCase(rec).catch(bkFail);
   if(next){ bkOpenNew({ date:rec.date, owner:rec.owner, channel:rec.channel, packJob:rec.packJob }); plToast(`已新增「${rec.customerName}」${extra}，接著填下一筆`); }
-  else { S.modal = null; bkRender(); plToast(`已新增「${rec.customerName}」${extra}`); }
+  else { S.modal = null; bkRender(); plToast(`已新增「${rec.customerName}」${extra}`); if(M.pa) paNext('bk', true); }
 }
 function bkDelete(c){
   deleteBankLoanCase(c.id).catch(bkFail);
@@ -6560,8 +6849,8 @@ function vaModalHTML(){
     ? `<div class="pl-dconfirm">確定刪除「${escHtml(r.customerName||'')}」？<button type="button" class="pl-btn danger" data-va-mdelyes>刪除</button><button type="button" class="pl-btn sec" data-va-mdelno>不要刪</button></div>`
     : `<button type="button" class="pl-btn sec" data-va-mdel style="margin-right:auto;color:var(--pl-danger);">刪除這筆</button>`) : '';
   return `<div class="pl-overlay" data-va-modalbg><form class="pl-dialog" id="va-form" data-va-key="${M.key}" novalidate>
-    <div class="pl-dlg-h"><h2>${M.edit?'編輯估價':'新增估價'}</h2><button type="button" class="pl-x" data-va-mclose aria-label="關閉">×</button></div>
-    <div class="pl-dlg-b">
+    <div class="pl-dlg-h"><h2>${M.edit?'編輯估價':'新增估價'}</h2>${paHeadBtn('va', M)}<button type="button" class="pl-x" data-va-mclose aria-label="關閉">×</button></div>
+    <div class="pl-dlg-b">${paBanner('va', M)}
       <div class="pl-row2">
         <label class="pl-field"><span>客戶姓名 <em>*</em></span><input id="va-fName" value="${escAttr(r.customerName||'')}" autocomplete="off"/>${M.err?`<span class="pl-err">${escHtml(M.err)}</span>`:''}</label>
         <label class="pl-field"><span>日期 <em>*</em></span><input id="va-fDate" type="date" value="${escAttr(r.date||'')}"/></label>
@@ -6578,8 +6867,8 @@ function vaModalHTML(){
       ${M.edit && M.editor ? `<div class="pg-flowhint">最後編輯：${escHtml(M.editor)}</div>` : ''}
     </div>
     <div class="pl-dlg-f">${del}
-      ${M.edit ? '' : '<button type="button" class="pl-btn sec" data-va-savenext>儲存並新增下一筆</button>'}
-      <button type="submit" class="pl-btn">儲存</button></div>
+      ${M.edit ? '' : paMulti(M) ? paSkipBtn('va') : M.pa ? '' : '<button type="button" class="pl-btn sec" data-va-savenext>儲存並新增下一筆</button>'}
+      <button type="submit" class="pl-btn">${paSaveLabel(M)}</button></div>
   </form></div>`;
 }
 function vaCaptureForm(){
@@ -6620,6 +6909,7 @@ function vaPageHTML(){
 function vaAfterRender(){
   document.querySelectorAll('.va-root textarea.va-t').forEach(plGrow);
   const mainEl = document.getElementById('main'); if(mainEl) mainEl.style.minHeight = '';
+  paMark('va');
   const S = vaS(), p = document.getElementById('va-pop');
   if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
     S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
@@ -6682,7 +6972,7 @@ function vaSaveModal(next){
   saveValuationCase(rec).catch(vaFail);
   const note = vaPushNote('', rec.plan);
   if(next){ vaOpenNew({ date:rec.date, handler:rec.handler, category:rec.category }); plToast(`已新增「${rec.customerName}」${note}，接著填下一筆`); }
-  else { S.modal = null; vaRender(); plToast(`已新增「${rec.customerName}」${note}`); }
+  else { S.modal = null; vaRender(); plToast(`已新增「${rec.customerName}」${note}`); if(M.pa) paNext('va', true); }
 }
 function vaSavePlan(){
   const S = vaS(), P = S.planEdit; if(!P) return;
