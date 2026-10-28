@@ -801,10 +801,16 @@
   .pl-inl.va-stempty{border-color:#DCE0E8;color:#A0A7B6;font-weight:400;}
   .va-planbox{display:block;width:100%;text-align:left;border:1px solid var(--pl-line);border-radius:8px;background:#F8F9FC;padding:6px 9px;font-size:13px;cursor:pointer;color:var(--pl-ink);white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;}
   .va-planbox:hover{border-color:#9FB4F5;background:#F2F6FF;}
+  .va-planbox:not(.empty){display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;} /* 方案很長時列表最多 4 行，點開看全文 */
   .va-planbox.empty{background:#FFF7E6;border:1px dashed #E0A040;color:#8A5300;font-weight:700;}
   .va-pushwarn{font-size:13px;background:#FEF3C7;color:#8A5300;border-radius:8px;padding:9px 11px;line-height:1.6;}
   .va-pushwarn b{color:#6B3F00;}
   .va-warnlbl{color:#B45309;font-size:12px;}
+  .va-memobox{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;width:100%;text-align:left;border:1px solid transparent;border-radius:8px;background:transparent;padding:4px 6px;margin-left:-6px;font-size:13px;line-height:1.45;color:var(--pl-ink);white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer;}
+  .va-memobox:hover{border-color:#9FB4F5;background:#F2F6FF;}
+  .va-memobox.empty{color:var(--pl-muted);}
+  .va-root .pl-card .va-memobox{margin-left:0;background:#F4F6FA;padding:7px 10px;-webkit-line-clamp:4;}
+  .va-memo-ta{min-height:300px;font-family:inherit;line-height:1.6;}
   .va-root .pl-card .top .pl-inl{flex:none;max-width:60%;}
   .va-root .pl-card .foot .pl-link,.va-root .pl-card .foot .pl-del{min-height:36px;padding:6px 8px;}
   .va-root .pl-card .foot .pl-acts{gap:2px;flex:none;}
@@ -877,7 +883,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-08';
+const APP_BUILD = '2026-10-28-09';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -6179,7 +6185,7 @@ const VA_STATS = {
 
 function vaS(){
   if(!APP.va) APP.va = { quick:'all', status:'', handler:'', cat:'', plan:'', stat:'', search:'', limit:20, filterOpen:false,
-    pop:null, pickYear:'', sort:{key:'date', dir:'desc'}, delRow:null, modal:null, planEdit:null, pending:false, _force:false };
+    pop:null, pickYear:'', sort:{key:'date', dir:'desc'}, delRow:null, modal:null, planEdit:null, memoEdit:null, pending:false, _force:false };
   return APP.va;
 }
 const vaAll = () => APP.data.valuationCases || [];
@@ -6290,10 +6296,10 @@ function vaRowsHTML(all, layout){
     <div class="pl-card">
       <div class="top"><span class="no">${i+1}</span>${vaTxt(c,'customerName','客戶姓名','cname')}${vaPickBtn(c,'status')}</div>
       <div class="pg-ln">${vaPickBtn(c,'category')}<span>經手</span>${vaTxt(c,'handler','經手人','sub',false,'va-handler-list')}</div>
-      <div class="bk-lbl">地區</div>${vaTxt(c,'area','地區','nbox',true)}
-      <div class="bk-lbl">估價資訊</div>${vaTxt(c,'valuation','估價資訊','nbox',true)}
+      <div class="bk-lbl">地區</div>${vaMemoBox(c,'area')}
+      <div class="bk-lbl">估價資訊</div>${vaMemoBox(c,'valuation')}
       <div class="bk-lbl">方案</div>${vaPlanBox(c)}
-      ${vaTxt(c,'memo','備註','nbox',true)}
+      <div class="bk-lbl">備註</div>${vaMemoBox(c)}
       ${S.delRow===c.id ? vaDelCtl(c) : `<div class="foot"><span>${plMD(c.date)}</span>${vaActs(c)}</div>`}
     </div>`, (k, n)=>`<div class="pl-mhead pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div>`, (y, n)=>`<div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div>`)}</div>${more}`;
   const th = (k, t)=>{ const on = S.sort.key===k; return `<th><button type="button" class="pl-thbtn${on?' on':''}" data-va-sort="${k}" aria-label="依${t}排序">${t}<span>${on?(S.sort.dir==='asc'?'▲':'▼'):'↕'}</span></button></th>`; };
@@ -6307,10 +6313,10 @@ function vaRowsHTML(all, layout){
       <td>${vaTxt(c,'customerName','客戶姓名','cname')}<div class="va-subrow">${vaPickBtn(c,'category')}${compact ? vaTxt(c,'handler','經手人','sub',false,'va-handler-list') : ''}</div></td>
       ${compact ? '' : `<td>${vaTxt(c,'handler','經手人','',false,'va-handler-list')}</td>`}
       <td>${vaPickBtn(c,'status')}</td>
-      <td>${vaTxt(c,'area','地區','',true)}</td>
-      <td>${vaTxt(c,'valuation','估價資訊','',true)}</td>
+      <td>${vaMemoBox(c,'area')}</td>
+      <td>${vaMemoBox(c,'valuation')}</td>
       <td>${vaPlanBox(c)}</td>
-      <td>${vaTxt(c,'memo','點擊輸入備註','',true)}</td>
+      <td>${vaMemoBox(c)}</td>
       <td>${S.delRow===c.id ? vaDelCtl(c) : vaActs(c)}</td>
     </tr>`, (k, n)=>`<tr class="pl-mrow"><td colspan="${span}"><div class="pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div></td></tr>`,
       (y, n)=>`<tr class="pl-yrow"><td colspan="${span}"><div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div></td></tr>`)}</tbody></table></div>${more}`;
@@ -6378,6 +6384,27 @@ function vaPopHTML(){
   return `<div class="pl-pop" id="va-pop" style="left:${S.pop.x}px;top:${S.pop.y}px;"><div class="pl-pophead">${title}</div>${body}</div>`;
 }
 const vaPushWarn = what => `<div class="va-pushwarn">按「<b>${what}</b>」後，如果方案內容有改，會把<b>客戶、地區、估價、方案、備註、狀態</b>推播到 LINE。只改錯字也會再推播一次；方案清空不推播。</div>`;
+// 地區、估價資訊、備註：列表最多顯示 3 行，點了彈出大視窗看全文、修改（這三欄都不會推播）
+const vaMemoBox = (c, f) => { f = f || 'memo'; return `<button type="button" class="va-memobox${c[f]?'':' empty'}" data-va-memo="${escAttr(c.id)}" data-va-mf="${f}" aria-label="${escAttr((c.customerName||'')+' 的'+VA_LABEL[f])}">${c[f] ? escHtml(c[f]) : '＋ '+VA_LABEL[f]}</button>`; };
+function vaMemoDlgHTML(){
+  const P = vaS().memoEdit; if(!P) return '';
+  const c = vaAll().find(x=>x.id===P.id); if(!c){ vaS().memoEdit = null; return ''; }
+  return `<div class="pl-overlay" data-va-memobg><form class="pl-dialog" id="va-memo-form" data-va-key="${P.key}" novalidate>
+    <div class="pl-dlg-h"><h2>${VA_LABEL[P.f]}・${escHtml(c.customerName||'')}</h2><button type="button" class="pl-x" data-va-memoclose aria-label="關閉">×</button></div>
+    <div class="pl-dlg-b"><label class="pl-field"><span>${VA_LABEL[P.f]}（修改不會推播）</span><textarea id="va-memo-ta" class="va-memo-ta" rows="12">${plTa(P.draft!=null ? P.draft : c[P.f])}</textarea></label></div>
+    <div class="pl-dlg-f"><button type="button" class="pl-btn sec" data-va-memoclose>取消</button><button type="submit" class="pl-btn">儲存</button></div>
+  </form></div>`;
+}
+function vaSaveMemo(){
+  const S = vaS(), P = S.memoEdit; if(!P) return;
+  vaCaptureForm();
+  const c = vaAll().find(x=>x.id===P.id); S.memoEdit = null;
+  if(!c){ vaRender(); plToast('這筆估價已經被刪除了'); return; }
+  const f = P.f, v = P.draft!=null ? P.draft : (c[f]||'');
+  if(v===(c[f]||'')){ vaRender(); plToast(`${VA_LABEL[f]}沒有變更`); return; }
+  vaUpdate(c.id, { [f]: v });
+  vaRender(); plToast(`已儲存「${c.customerName||''}」的${VA_LABEL[f]}`);
+}
 function vaPlanDlgHTML(){
   const P = vaS().planEdit; if(!P) return '';
   const c = vaAll().find(x=>x.id===P.id); if(!c){ vaS().planEdit = null; return ''; }
@@ -6428,6 +6455,8 @@ function vaCaptureForm(){
   }
   const P = S.planEdit, pf = document.getElementById('va-plan-form');
   if(P && pf && pf.dataset.vaKey===P.key){ const d = v('va-plan-ta'); if(d!==undefined) P.draft = d; }
+  const Q = S.memoEdit, qf = document.getElementById('va-memo-form');
+  if(Q && qf && qf.dataset.vaKey===Q.key){ const d = v('va-memo-ta'); if(d!==undefined) Q.draft = d; }
 }
 function vaEditor(c){
   if(!c || !c._by) return '';
@@ -6449,7 +6478,7 @@ function vaPageHTML(){
     ${vaStatsHTML()}${vaFilterHTML(plIsMobile())}${vaListHTML(all, layout)}
     <datalist id="va-handler-list">${handlers.map(s=>`<option value="${escAttr(s)}">`).join('')}</datalist>
     <button type="button" class="pl-fab" data-va-add>＋ 新增估價</button>
-    ${vaModalHTML()}${vaPlanDlgHTML()}${vaPopHTML()}
+    ${vaModalHTML()}${vaPlanDlgHTML()}${vaMemoDlgHTML()}${vaPopHTML()}
   </div>`;
 }
 function vaAfterRender(){
@@ -6553,6 +6582,10 @@ document.addEventListener('click', (e)=>{
   if(pl){ S.pop = null; S.planEdit = { key:uid(), id:pl.dataset.vaPlan, draft:null }; vaRender();
     setTimeout(()=>{ const ta = document.getElementById('va-plan-ta'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } }, 0); return; }
   if(t.closest('[data-va-planclose]') || t.matches('[data-va-planbg]')){ S.planEdit = null; return vaRender(); }
+  const mm = t.closest('[data-va-memo]');
+  if(mm){ S.pop = null; S.memoEdit = { key:uid(), id:mm.dataset.vaMemo, f:mm.dataset.vaMf||'memo', draft:null }; vaRender();
+    setTimeout(()=>{ const ta = document.getElementById('va-memo-ta'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); } }, 0); return; }
+  if(t.closest('[data-va-memoclose]') || t.matches('[data-va-memobg]')){ S.memoEdit = null; return vaRender(); }
   const mc = t.closest('[data-va-mcat]'); if(mc && S.modal){ vaCaptureForm(); S.modal.rec.category = mc.dataset.vaMcat; return vaRender(); }
   const pk = t.closest('[data-va-pick]');
   if(pk){
@@ -6614,6 +6647,7 @@ document.addEventListener('click', (e)=>{
 document.addEventListener('submit', (e)=>{
   if(e.target.id==='va-form'){ e.preventDefault(); vaSaveModal(false); }
   else if(e.target.id==='va-plan-form'){ e.preventDefault(); vaSavePlan(); }
+  else if(e.target.id==='va-memo-form'){ e.preventDefault(); vaSaveMemo(); }
 });
 // 列表上直接打字：離開欄位（或按 Enter）自動儲存，只更新那一欄（這些欄位不會推播）
 document.addEventListener('change', (e)=>{
@@ -6645,7 +6679,7 @@ document.addEventListener('keydown', (e)=>{
   if(e.key==='Enter' && e.target.matches('.va-root .va-t') && !e.shiftKey && !e.isComposing){ e.preventDefault(); e.target.blur(); return; }
   if(e.key==='Escape'){
     const S = vaS();
-    if(S.pop){ S.pop = null; vaRender(); } else if(S.planEdit){ S.planEdit = null; vaRender(); } else if(S.modal){ S.modal = null; vaRender(); }
+    if(S.pop){ S.pop = null; vaRender(); } else if(S.planEdit){ S.planEdit = null; vaRender(); } else if(S.memoEdit){ S.memoEdit = null; vaRender(); } else if(S.modal){ S.modal = null; vaRender(); }
   }
 });
 document.addEventListener('focusout', (e)=>{
