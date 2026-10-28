@@ -844,7 +844,7 @@
   .pl-mfab.search{background:#fff;color:var(--pl-brand);border:2px solid var(--pl-brand);animation:plGlowSoft 2.6s ease-in-out infinite;}
   .pl-mfab.search.on{background:var(--pl-soft);}
   .pl-mfab.add{background:var(--pl-brand);color:#fff;animation:plGlow 2.6s ease-in-out infinite;}
-  .pl-msearch{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-top:1px solid var(--pl-line);box-shadow:0 -8px 22px rgba(20,30,60,.16);padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center;}
+  .pl-msearch{--pl-brand:#2F5BEA;--pl-soft:#EAF0FF;--pl-ink:#1F2433;--pl-muted:#596277;--pl-line:#E2E6EF;position:fixed;left:0;right:0;bottom:0;z-index:60;background:#fff;border-top:1px solid var(--pl-line);box-shadow:0 -8px 22px rgba(20,30,60,.16);padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center;}
   .pl-msearch.kb{padding-bottom:10px;}
   .pl-msearch .pl-sbox{max-width:none;}
   .pl-msearch .pl-bigsearch{height:50px;font-size:16px;animation:none;}
@@ -912,7 +912,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-11';
+const APP_BUILD = '2026-10-28-12';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2856,7 +2856,7 @@ function render(){
   else if(APP.view==='users' && isAdmin()) main.innerHTML = usersHTML();
   else { APP.view = isCore() ? 'dashboard' : 'personalDashboard'; main.innerHTML = isCore() ? dashboardHTML() : personalDashboardPageHTML(); }
   // 三個改版頁：畫好馬上把備註框長到該有的高度（在瀏覽器畫出來之前），畫面才不會先縮一下再彈回來
-  if(APP.view==='personalLog') plAfterRender(); else if(APP.view==='progress') pgAfterRender(); else if(APP.view==='bankLoan') bkAfterRender(); else if(APP.view==='valuation') vaAfterRender(); lxPlaceMSearch();
+  if(APP.view==='personalLog') plAfterRender(); else if(APP.view==='progress') pgAfterRender(); else if(APP.view==='bankLoan') bkAfterRender(); else if(APP.view==='valuation') vaAfterRender(); lxSyncMSearch();
 }
 
 /* ================= BUSINESS TOOLS (業務工具, for staffAdmin/staffSales) ================= */
@@ -5128,7 +5128,7 @@ function lxToolbarHTML(px, addLabel, canAdd){
   const S = LX[px].S(), q = S.search||'';
   const box = `<div class="pl-sbox"><span class="pl-sicon" aria-hidden="true">🔍</span><input type="search" class="pl-bigsearch" id="${px}-search" placeholder="搜尋客戶姓名、電話…" value="${escAttr(q)}" autocomplete="off" aria-label="搜尋客戶"/>${q ? `<button type="button" class="pl-sclear" data-lx-sclear="${px}" aria-label="清除搜尋">×</button>` : ''}</div>`;
   if(!plIsMobile()) return `<div class="pl-toolbar">${box}${canAdd ? `<button type="button" class="pl-btn pl-addbtn" data-${px}-add>＋ ${addLabel}</button>` : ''}</div>`;
-  if(S.mSearch) return `<div class="pl-msearch">${box}<button type="button" class="pl-btn" data-lx-msdone="${px}">完成</button></div>`;
+  if(S.mSearch) return ''; // 手機搜尋框在 lxSyncMSearch 裡建在畫面最外層，打字時不會被重畫
   return `<div class="pl-mfabs"><button type="button" class="pl-mfab search${lxSearching(S) ? ' on' : ''}" data-lx-msopen="${px}">🔍 ${lxSearching(S) ? escHtml(q.trim()) : '搜尋'}</button>${canAdd ? `<button type="button" class="pl-mfab add" data-${px}-add>＋ 新增</button>` : ''}</div>`;
 }
 function lxSearchNote(px, n, unit){
@@ -5145,7 +5145,7 @@ const lxFocusSearch = px => { const n = document.getElementById(px + '-search');
 document.addEventListener('click', (e)=>{
   const t = e.target; if(!t.closest) return;
   const sc = t.closest('[data-lx-sclear]');
-  if(sc){ const px = sc.dataset.lxSclear, S = LX[px].S(); S.search = ''; S.limit = 20; LX[px].render(); lxFocusSearch(px); return; }
+  if(sc){ const px = sc.dataset.lxSclear, S = LX[px].S(); S.search = ''; S.limit = 20; document.querySelectorAll('#' + px + '-search').forEach(i=>{ i.value = ''; }); LX[px].render(); lxFocusSearch(px); return; }
   const mo = t.closest('[data-lx-msopen]');
   if(mo){ const px = mo.dataset.lxMsopen, S = LX[px].S(); S.mSearch = true; S.pop = null; LX[px].render(); lxFocusSearch(px); return; }
   const md = t.closest('[data-lx-msdone]');
@@ -5191,6 +5191,24 @@ function lxPlaceMSearch(){
   bar.classList.toggle('kb', hidden > 0);
 }
 if(window.visualViewport){ window.visualViewport.addEventListener('resize', lxPlaceMSearch); window.visualViewport.addEventListener('scroll', lxPlaceMSearch); }
+// 手機搜尋框放在畫面最外層、只建一次：打字時只重畫列表、不重做這個框（iPhone 重做輸入框會讓鍵盤收起又打開，框就被蓋住）
+const LX_VIEW = { personalLog:'pl', progress:'pg', bankLoan:'bk', valuation:'va' };
+function lxSyncMSearch(){
+  const px = LX_VIEW[APP.view], S = px ? APP[px] : null;
+  let bar = document.getElementById('lx-msearch');
+  if(!S || !S.mSearch || !plIsMobile()){ if(bar) bar.remove(); return; }
+  if(bar && bar.dataset.px!==px){ bar.remove(); bar = null; }
+  if(!bar){
+    bar = document.createElement('div'); bar.id = 'lx-msearch'; bar.className = 'pl-msearch'; bar.dataset.px = px;
+    bar.innerHTML = `<div class="pl-sbox"><span class="pl-sicon" aria-hidden="true">🔍</span><input type="search" class="pl-bigsearch" id="${px}-search" placeholder="搜尋客戶姓名、電話…" autocomplete="off" aria-label="搜尋客戶"/><button type="button" class="pl-sclear" data-lx-sclear="${px}" aria-label="清除搜尋">×</button></div><button type="button" class="pl-btn" data-lx-msdone="${px}">完成</button>`;
+    document.body.appendChild(bar);
+  }
+  const inp = bar.querySelector('input');
+  if(document.activeElement!==inp && inp.value!==(S.search||'')) inp.value = S.search||'';
+  bar.querySelector('.pl-sclear').style.display = inp.value ? '' : 'none';
+  lxPlaceMSearch();
+}
+document.addEventListener('input', (e)=>{ const b = e.target.closest && e.target.closest('#lx-msearch'); if(b) b.querySelector('.pl-sclear').style.display = e.target.value ? '' : 'none'; });
 document.addEventListener('focusin', (e)=>{ if(e.target.closest && e.target.closest('.pl-msearch')){ lxPlaceMSearch(); setTimeout(lxPlaceMSearch, 300); setTimeout(lxPlaceMSearch, 700); } });
 /* ================= 進度追蹤（2026-10 改版）=================
    跟舊版用同一份資料（progressAdCases、progressChannelCases），欄位名稱不變。
