@@ -714,6 +714,54 @@
     .pl-fab{display:flex;position:fixed;left:14px;bottom:18px;height:48px;padding:0 20px;border:0;border-radius:24px;background:var(--navy);color:#fff;font-size:15px;font-weight:700;align-items:center;box-shadow:0 6px 16px rgba(20,30,70,.25);z-index:50;cursor:pointer;}
   }
   @media (max-width:900px) and (min-width:641px){ .pl-mhead{top:50px;} }
+  /* ---- 進度追蹤（2026-10 改版）：沿用「我的客人紀錄」的 pl- 樣式，這裡只放進度追蹤多出來的部分（pg- 開頭） ---- */
+  .pg-root{--pl-brand:#2F5BEA;--pl-soft:#EAF0FF;--pl-ink:#1F2433;--pl-muted:#596277;--pl-line:#E2E6EF;--pl-danger:#C62C2C;display:flex;flex-direction:column;gap:14px;color:var(--pl-ink);}
+  .pg-root button{font-family:inherit;}
+  .pg-seg{display:inline-flex;align-self:flex-start;background:#fff;border:1px solid var(--pl-line);border-radius:10px;padding:3px;}
+  .pg-seg button{border:0;background:transparent;padding:8px 18px;border-radius:8px;font-weight:500;font-size:14px;color:var(--pl-ink);cursor:pointer;}
+  .pg-seg button[aria-pressed="true"]{background:var(--pl-brand);color:#fff;font-weight:700;}
+  .pg-seg .n{font-size:12px;opacity:.75;margin-left:6px;font-weight:500;}
+  .pg-stats{grid-template-columns:repeat(5,1fr);}
+  .pl-stat.pg-warn .v{color:#B45309;}
+  .pg-vnote{font-size:11px;font-weight:500;color:var(--pl-muted);margin-left:6px;}
+  .pg-badge{display:inline-block;max-width:100%;border-radius:99px;padding:4px 11px;font-size:12.5px;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#EEF1F7;color:var(--pl-ink);}
+  .pg-badge.sq{border-radius:8px;font-weight:500;}
+  .pl-inl.pg-sf{border-radius:8px;font-weight:500;}
+  .pg-ro{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;}
+  .pg-ro.cname{font-weight:700;font-size:14px;}
+  .pg-ro.sub{font-size:12px;color:var(--pl-muted);}
+  .pg-edited{font-size:11.5px;color:var(--pl-muted);white-space:pre-line;}
+  .pg-src{display:inline-block;font-size:11.5px;border-radius:6px;padding:1px 7px;font-weight:700;}
+  .pg-src.dir{background:#E6F1FA;color:#1E5A85;}
+  .pg-src.ch{background:#FDF0E1;color:#8A4B0F;}
+  .pg-staffcell{display:grid;gap:3px;}
+  .pg-hat{display:flex;align-items:center;gap:4px;margin-top:3px;font-size:12px;color:var(--pl-muted);}
+  .pg-hat .pl-t{width:90px;margin-left:0;}
+  .pg-flowhint{font-size:12px;background:#F4F6FA;border-radius:8px;padding:8px 10px;color:var(--pl-muted);line-height:1.6;}
+  .pg-flowhint b{color:var(--pl-ink);}
+  .pg-table .pl-inl{padding:4px 20px 4px 9px;background-position:right 7px center;}
+  .pg-compact .pl-table td,.pg-compact .pl-table th{padding:10px 8px;}
+  .pg-compact .pg-edited{margin-top:2px;}
+  .pg-cards2{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .pg-cards2 .pl-mhead,.pg-cards2 .pl-yhead{grid-column:1/-1;}
+  .pg-root .pl-card .top .pl-inl{flex:none;max-width:60%;}
+  .pg-root .pl-card .top .pg-ro{flex:1;min-width:0;font-size:16px;}
+  .pg-root .pl-card .line2 .pl-inl{white-space:nowrap;}
+  .pg-ln{display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-width:0;font-size:12.5px;color:var(--pl-muted);}
+  .pg-ln .pl-inl{min-height:30px;max-width:60%;}
+  .pg-ln .pl-t{flex:1;min-width:0;margin-left:0;}
+  .pg-ref{overflow-wrap:anywhere;}
+  .pg-snote{font-size:12px;color:var(--pl-muted);overflow-wrap:anywhere;}
+  .pg-snote b{font-weight:500;color:#5A4A00;background:#FFF6D6;border-radius:5px;padding:0 5px;margin-right:4px;}
+  .pg-root .pl-card .foot .pl-link,.pg-root .pl-card .foot .pl-del{min-height:36px;padding:6px 8px;}
+  .pg-root .pl-card .foot .pl-acts{gap:2px;flex:none;}
+  @media (max-width:640px){
+    .pg-root{gap:12px;}
+    .pg-seg{align-self:stretch;display:flex;}
+    .pg-seg button{flex:1;padding:9px 6px;}
+    .pg-stats{grid-template-columns:repeat(2,1fr);}
+    .pg-stats .pl-stat:last-child{grid-column:1/-1;}
+  }
   @media (max-width:640px){
     .bl-stats{grid-template-columns:1fr 1fr;}
     .bl-filter-box{display:none;}
@@ -776,7 +824,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-02';
+const APP_BUILD = '2026-10-28-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2681,6 +2729,7 @@ function render(){
   const main = document.getElementById('main');
   if(!main) return;
   if(APP.view==='personalLog' && plShouldDefer()) return; // 正在個人業務進度紀錄打字時先不重畫，離開欄位再補畫
+  if(APP.view==='progress' && pgShouldDefer()) return; // 正在進度追蹤打字時也一樣
   const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal','customerFollowupOverview'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
@@ -4967,6 +5016,552 @@ window.addEventListener('resize', ()=>{
   const m = plIsMobile(); if(m===plLastMobile) return; plLastMobile = m;
   if(APP.view==='personalLog' && APP.pl){ APP.pl.pop = null; render(); }
 });
+/* ================= 進度追蹤（2026-10 改版）=================
+   跟舊版用同一份資料（progressAdCases、progressChannelCases），欄位名稱不變。
+   - 列表上直接改、編輯視窗都只更新改到的欄位（updateDoc），不整筆覆蓋；業務只會寫 staffNote、wizardHatNote（符合資料庫規則）
+   - 狀態連動跟舊版一樣：改成「對保」記 guarantorStatusDate（後端中午的對保提醒用）；改成「撥款完成」記 disbursedDate，並建立客戶關懷追蹤
+     （舊版用編輯視窗改成對保不會記日期，這版新增、編輯、列表上改都會記）
+   - 樣式、選項面板、月份分段跟「我的客人紀錄」共用（pl- 開頭的樣式與小工具）；點擊等事件只處理 .pg-root 裡的東西 */
+const PG_ST_GROUPS = [['審核中',['教照會','等照會','複查','補資料','保人','卡件']],['撥款前',['對保','等撥款']],['結案',['撥款完成','婉拒','客拒']]];
+const PG_ST_ALL = PG_ST_GROUPS.reduce((a, g)=>a.concat(g[1]), []);
+const PG_REVIEW = PG_ST_GROUPS[0][1], PG_PRE = PG_ST_GROUPS[1][1], PG_CLOSED = PG_ST_GROUPS[2][1];
+const PG_SRC_COLOR = { 直客:['#E6F1FA','#1E5A85'], 通路:['#FDF0E1','#8A4B0F'] };
+const PG_STAFF_COLOR = ['#F1F3F7','#2B3245'];
+const PG_LABEL = { customer:'客戶姓名', phone:'電話', plan:'方案', staff:'業務', status:'狀態', source:'來源', referrer:'通路備註', note:'備註', staffNote:'業務備註', wizardHatNote:'🧙 金額' };
+const PG_SORTS = [['date','日期'],['customer','客戶'],['plan','方案'],['staff','業務／通路'],['status','狀態'],['note','備註'],['staffNote','業務備註'],['_at','最後編輯']];
+// 各欄寬度（%）：#、日期、客戶、方案、業務、狀態、備註、業務備註、最後編輯、編輯/刪除；中等寬度沒有「最後編輯」欄（改放客戶欄下面）
+const PG_COLW = [3, 6, 12, 9, 11, 10, 18, 14, 8, 9];
+const PG_COLW_C = [3, 7, 14, 10, 12, 12, 19, 14, 9];
+const PG_KEYS_AD = ['date','customer','phone','plan','staff','status','note','staffNote','wizardHatNote'];
+const PG_KEYS_CH = PG_KEYS_AD.concat(['source','referrer']);
+// 統計卡：本月送件、審核中（本月；不含補資料，也不含視同無法承作的保人、卡件）、本月撥款（照撥款日期，跟總覽一樣）；補資料、對保／等撥款不分月份，狀態是就算
+const PG_REVIEW_STAT = PG_REVIEW.filter(s=>!['補資料','保人','卡件'].includes(s));
+const PG_STATS = {
+  month:  { t:'本月送件', f:c=>(c.date||'').startsWith(plThisM()) },
+  review: { t:'審核中', f:c=>(c.date||'').startsWith(plThisM()) && PG_REVIEW_STAT.includes(c.status) },
+  docs:   { t:'補資料', note:'不分月份', f:c=>c.status==='補資料' },
+  pre:    { t:'對保／等撥款', note:'不分月份', f:c=>PG_PRE.includes(c.status) },
+  paid:   { t:'本月撥款', f:c=>c.status==='撥款完成' && (c.disbursedDate||c.date||'').startsWith(plThisM()) },
+};
+
+function pgS(){
+  if(!APP.pg) APP.pg = { quick:'month', group:'all', status:'', plan:'', staff:'', stat:'', search:'', limit:20, filterOpen:false,
+    pop:null, pickYear:'', sort:{key:'date', dir:'desc'}, delRow:null, modal:null, pending:false, _force:false };
+  return APP.pg;
+}
+const pgKind = () => APP.progressTab==='channel' ? 'channel' : 'ad';
+const pgCol = k => k==='channel' ? 'progressChannelCases' : 'progressAdCases';
+const pgAll = k => (k==='channel' ? APP.data.progressChannel : APP.data.progressAd) || [];
+// 業務只看得到自己的案件（跟舊版、資料庫規則一樣）
+const pgList = k => { const L = pgAll(k||pgKind()); return isStaffSales() ? L.filter(c=>c.staff===myStaffName()) : L; };
+const pgAdmin = () => canEditProgressRow();
+const pgCanEdit = f => pgAdmin() || (isStaffSales() && (f==='staffNote' || f==='wizardHatNote'));
+const pgIsOpen = s => !PG_CLOSED.includes(s);
+const pgPlans = () => (APP.data.caseSettings && APP.data.caseSettings.planOptions) || [];
+const pgStaffOpts = () => (APP.data.caseSettings && APP.data.caseSettings.staffOptions) || [];
+const pgFLabel = f => f==='staff' && pgKind()==='channel' ? '業務／通路' : PG_LABEL[f];
+const pgOrder = () => ({ plan: pgPlans(), status: PG_ST_ALL });
+// 最後編輯：顯示業務姓名（沒有就用顯示名稱，找不到帳號就顯示 email @ 前面那段）＋時間
+function pgEditor(c){
+  if(!c || !c._by) return '';
+  const u = (APP.users||[]).find(x=>x.email===c._by);
+  const short = c._by.replace(/@.*/, '');
+  const name = u ? (u.staffName || displayNameFor(u.id, short)) : short;
+  const d = c._at ? new Date(c._at) : null;
+  const t = d && !isNaN(d) ? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : '';
+  return name + (t ? ' · '+t : '');
+}
+function pgOptColor(f, v){
+  if(!v) return null;
+  if(f==='plan' || f==='status'){ const c = colorForOption(v, f); return [c.bg, c.text]; } // 沿用「選單顏色設定」
+  if(f==='source') return PG_SRC_COLOR[v] || PG_STAFF_COLOR;
+  return PG_STAFF_COLOR;
+}
+function pgOptGroups(f){
+  if(f==='status') return PG_ST_GROUPS;
+  if(f==='plan') return [['', pgPlans()]];
+  if(f==='source') return [['', ['直客','通路']]];
+  return [['', pgStaffOpts()]];
+}
+
+function pgInQuick(c){
+  const S = pgS(), d = c.date||'';
+  if(S.quick==='today') return d===todayStr();
+  if(S.quick==='week'){ const t = new Date(); t.setDate(t.getDate()-((t.getDay()+6)%7)); return d>=formatDateLocal(t); }
+  if(S.quick==='month') return d.startsWith(plThisM());
+  if(S.quick.startsWith('m:') || S.quick.startsWith('y:')) return d.startsWith(S.quick.slice(2));
+  return true;
+}
+function pgFiltered(){
+  const S = pgS(), q = S.search.trim().toLowerCase();
+  return pgList().filter(c=> (S.stat ? PG_STATS[S.stat].f(c) : pgInQuick(c))
+    && (S.group==='all' || (S.group==='open')===pgIsOpen(c.status))
+    && (!S.status || c.status===S.status)
+    && (!S.plan || c.plan===S.plan)
+    && (!S.staff || c.staff===S.staff)
+    && (!q || ['customer','phone','note','staffNote','plan','staff','referrer','status','source','wizardHatNote']
+      .some(k=>String(c[k]||'').toLowerCase().includes(q))));
+}
+// 排序：先依月份分段（日期舊→新時月份也舊→新），月份內照選的欄位排；空白的一律排最後
+function pgSorted(arr){
+  const { key, dir } = pgS().sort, sign = dir==='asc' ? 1 : -1, ord = pgOrder();
+  const cmp = (a, b)=>{
+    const x = a[key]||'', y = b[key]||'';
+    if(key==='date' || key==='_at') return x.localeCompare(y);
+    if(ord[key]){ const ix = ord[key].indexOf(x), iy = ord[key].indexOf(y); return (ix<0?999:ix) - (iy<0?999:iy); }
+    return plZh.compare(x, y);
+  };
+  const mSign = key==='date' ? sign : -1;
+  return arr.slice().sort((a, b)=>{
+    const mc = plMKey(a.date).localeCompare(plMKey(b.date)); if(mc) return mSign*mc;
+    const x = a[key]||'', y = b[key]||''; if(!x !== !y) return x ? -1 : 1;
+    return sign*cmp(a, b) || (b.date||'').localeCompare(a.date||'');
+  });
+}
+const pgDirLabel = (k, d)=> (k==='date' || k==='_at') ? (d==='desc'?'新→舊':'舊→新') : pgOrder()[k] ? (d==='asc'?'照選單順序':'選單順序反過來') : (d==='asc'?'筆畫少→多':'筆畫多→少');
+function pgQuickLabel(){
+  const S = pgS(), q = S.quick;
+  if(S.stat) return PG_STATS[S.stat].t;
+  if(q.startsWith('m:')) return plMLabel(q.slice(2));
+  if(q.startsWith('y:')) return q.slice(2)+' 全年';
+  return { today:'今天', week:'本週', month:plMLabel(plThisM()), all:'全部日期' }[q];
+}
+function pgSummary(){
+  const S = pgS();
+  return `${pgQuickLabel()}・${S.status || { all:'全部狀態', open:'未結案', closed:'已結案' }[S.group]}${S.plan?'・'+S.plan:''}${S.staff?'・'+S.staff:''}`;
+}
+// 依內容區寬度選排版：寬＝完整表格；中＝「最後編輯」併到客戶欄；窄（或手機）＝卡片
+function pgLayout(){
+  if(plIsMobile()) return 'cards';
+  const main = document.getElementById('main');
+  let w = window.innerWidth;
+  if(main){ const cs = getComputedStyle(main); w = main.clientWidth - (parseFloat(cs.paddingLeft)||0) - (parseFloat(cs.paddingRight)||0); }
+  return w < 860 ? 'cards' : w < 1100 ? 'compact' : 'table';
+}
+
+// ---- 畫面片段 ----
+function pgPickBtn(c, f, target){
+  const v = c[f]||'', col = pgOptColor(f, v);
+  if(target!=='__modal' && !pgCanEdit(f)) return v ? `<span class="pg-badge${f==='plan'||f==='staff'?' sq':''}" style="${col?`background:${col[0]};color:${col[1]};`:''}">${escHtml(v)}</span>` : '<span class="pl-sub">—</span>';
+  const cls = (f==='plan' ? ' pr' : f==='staff' || f==='source' ? ' pg-sf' : '') + (v ? '' : ' empty');
+  return `<button type="button" class="pl-inl${cls}" data-pg-pk="${escAttr(target||c.id)}" data-pg-f="${f}" aria-haspopup="true" aria-label="${escAttr((c.customer||'')+' 的'+pgFLabel(f)+'：'+(v||'未填'))}" style="${col?`background-color:${col[0]};color:${col[1]};`:''}">${escHtml(v||'選'+pgFLabel(f))}</button>`;
+}
+function pgTxt(c, f, ph, cls, area){
+  if(!pgCanEdit(f)) return c[f] ? `<div class="pg-ro ${cls||''}">${escHtml(c[f])}</div>` : '<span class="pl-sub">—</span>';
+  const aria = escAttr((c.customer||'')+' 的'+ph);
+  if(area) return `<textarea class="pl-t pg-t ${cls||''}" rows="1" data-pg-id="${escAttr(c.id)}" data-pg-t="${f}" placeholder="${ph}" aria-label="${aria}">${plTa(c[f])}</textarea>`;
+  return `<input type="text" class="pl-t pg-t ${cls||''}" data-pg-id="${escAttr(c.id)}" data-pg-t="${f}" value="${escAttr(c[f]||'')}" placeholder="${ph}" aria-label="${aria}"/>`;
+}
+const pgSrcBadge = c => c.source ? `<span class="pg-src ${c.source==='通路'?'ch':'dir'}">${escHtml(c.source)}</span>` : '';
+// 業務欄：廣告客從業務清單選；直客／通路可以直接打通路夥伴名字
+function pgStaffCtl(c, cls){
+  if(pgKind()==='ad' || !pgAdmin()) return pgPickBtn(c, 'staff');
+  return `<input type="text" class="pl-t pg-t ${cls||''}" list="pg-staff-list" data-pg-id="${escAttr(c.id)}" data-pg-t="staff" value="${escAttr(c.staff||'')}" placeholder="業務／通路" aria-label="${escAttr((c.customer||'')+' 的業務／通路')}"/>`;
+}
+function pgStaffCell(c){
+  if(pgKind()==='ad') return pgStaffCtl(c);
+  return `<div class="pg-staffcell">${pgStaffCtl(c)}<div>${pgAdmin() ? pgPickBtn(c, 'source') : pgSrcBadge(c)}</div>${pgAdmin() ? pgTxt(c, 'referrer', '通路備註', 'sub') : c.referrer ? `<div class="pl-sub">${escHtml(c.referrer)}</div>` : ''}</div>`;
+}
+const pgHat = c => (c.wizardHatNote || pgCanEdit('wizardHatNote')) ? `<div class="pg-hat">${whIcon(14)}${pgCanEdit('wizardHatNote') ? `<input type="text" class="pl-t pg-t sub" data-pg-id="${escAttr(c.id)}" data-pg-t="wizardHatNote" value="${escAttr(c.wizardHatNote||'')}" placeholder="金額" aria-label="${escAttr((c.customer||'')+' 的 🧙 金額')}"/>` : escHtml(c.wizardHatNote)}</div>` : '';
+function pgDelCtl(c){
+  if(!pgAdmin()) return '';
+  if(pgS().delRow===c.id) return `<div class="pl-confirm">確定刪除「${escHtml(c.customer||'')}」？<button type="button" class="pl-btn danger" data-pg-delyes="${escAttr(c.id)}">刪除</button><button type="button" class="pl-btn sec" data-pg-delno>不要刪</button></div>`;
+  return `<button type="button" class="pl-del" data-pg-del="${escAttr(c.id)}">刪除</button>`;
+}
+const pgActs = c => pgAdmin() ? `<div class="pl-acts"><button type="button" class="pl-link" data-pg-open="${escAttr(c.id)}">編輯</button>${pgDelCtl(c)}</div>` : '';
+const pgFBtn = (k, label, cls) => `<button type="button" class="pl-fpk${cls?' '+cls:''}" data-pg-fk="${k}" aria-haspopup="true">${escHtml(label)}</button>`;
+const pgSortBtn = () => { const S = pgS(); return pgFBtn('sort', `⇅ ${PG_SORTS.find(s=>s[0]===S.sort.key)[1]}・${pgDirLabel(S.sort.key, S.sort.dir)}`, 'pl-sortsel'); };
+
+function pgTabsHTML(){
+  const n = k => pgList(k).filter(c=>(c.date||'').startsWith(plThisM())).length;
+  return `<div class="pg-seg" role="group" aria-label="切換案件類型">${[['ad','廣告客'],['channel','直客／通路']].map(([k, t])=>
+    `<button type="button" data-pg-tab="${k}" aria-pressed="${pgKind()===k}">${t}<span class="n">本月 ${n(k)}</span></button>`).join('')}</div>`;
+}
+function pgStatsHTML(){
+  const S = pgS(), L = pgList();
+  return `<div class="pl-stats pg-stats">${Object.keys(PG_STATS).map(k=>{ const s = PG_STATS[k], v = L.filter(s.f).length;
+    return `<button type="button" class="pl-stat${k==='docs' && v ? ' pg-warn' : ''}" data-pg-stat="${k}" aria-pressed="${S.stat===k}"><div class="k">${s.t}</div><div class="v">${v}${s.note?`<small class="pg-vnote">${s.note}</small>`:''}</div></button>`; }).join('')}</div>`;
+}
+function pgFilterHTML(m){
+  const S = pgS();
+  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-pg-quick="${k}" aria-pressed="${!S.stat && S.quick===k}">${t}</button>`).join('');
+  const monSel = pgFBtn('month', `月份：${S.quick.startsWith('m:')||S.quick.startsWith('y:') ? pgQuickLabel() : S.quick==='month' ? '本月' : '全部月份'}`);
+  const stSel = pgFBtn('group', `狀態：${S.status || {all:'全部', open:'未結案', closed:'已結案'}[S.group]}`);
+  const plSel = pgFBtn('plan', `方案：${S.plan||'全部'}`);
+  const sfSel = pgAdmin() ? pgFBtn('staff', `${pgKind()==='ad'?'業務':'業務／通路'}：${S.staff||'全部'}`) : '';
+  const search = `<input type="search" class="pl-search" id="pg-search" placeholder="搜尋姓名、電話、備註" value="${escAttr(S.search)}"/>`;
+  if(!m) return `<div class="pl-filters">${chips}${monSel}${stSel}${plSel}${sfSel}${search}</div>`;
+  return `<div class="pl-filters">${chips}<button type="button" class="pl-chip pl-fbtn" data-pg-ftoggle aria-expanded="${S.filterOpen}">${escHtml(pgSummary())} ▾</button>${pgSortBtn()}</div>
+    ${S.filterOpen ? `<div class="pl-panel">${monSel}${stSel}${plSel}${sfSel}${search}<button type="button" class="pl-btn sec" data-pg-ftoggle>完成</button></div>` : ''}`;
+}
+function pgRowsHTML(all, layout){
+  const S = pgS(), rows = all.slice(0, S.limit), ch = pgKind()==='channel';
+  const more = all.length > S.limit ? `<button type="button" class="pl-btn sec pl-more" data-pg-more>顯示更多（還有 ${all.length-S.limit} 筆）</button>` : '';
+  if(layout==='cards') return `<div class="pl-cards${plIsMobile()?'':' pg-cards2'}">${plWithMonths(all, rows, (c, i)=>`
+    <div class="pl-card">
+      <div class="top"><span class="no">${i+1}</span>${pgTxt(c,'customer','客戶姓名','cname')}${pgPickBtn(c,'status')}</div>
+      <div class="line2"><span class="ph">${pgTxt(c,'phone','電話','sub')}</span>${pgPickBtn(c,'plan')}</div>
+      <div class="pg-ln">${ch ? pgSrcBadge(c) : ''}${ch && pgAdmin() ? pgStaffCtl(c, 'sub') : `<span>業務</span>${pgPickBtn(c,'staff')}`}${c.referrer?`<span class="pg-ref">${escHtml(c.referrer)}</span>`:''}</div>
+      ${pgTxt(c,'note','備註','nbox',true)}
+      ${pgAdmin() ? (c.staffNote ? `<div class="pg-snote"><b>業務備註</b>${escHtml(c.staffNote)}</div>` : '') : `<div class="pg-snote"><b>業務備註</b></div>${pgTxt(c,'staffNote','跟行政說明客人狀況','nbox',true)}`}
+      ${pgHat(c)}
+      ${S.delRow===c.id ? pgDelCtl(c) : `<div class="foot"><span>${plMD(c.date)}・${escHtml(pgEditor(c)||'—')}</span>${pgActs(c)}</div>`}
+    </div>`, (k, n)=>`<div class="pl-mhead pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div>`, (y, n)=>`<div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div>`)}</div>${more}`;
+  const compact = layout==='compact';
+  const cols = compact ? PG_SORTS.filter(s=>s[0]!=='_at') : PG_SORTS, span = cols.length + 2;
+  const th = (k, t)=>{ const on = S.sort.key===k; return `<th><button type="button" class="pl-thbtn${on?' on':''}" data-pg-sort="${k}" aria-label="依${t}排序">${t}<span>${on?(S.sort.dir==='asc'?'▲':'▼'):'↕'}</span></button></th>`; };
+  return `<div class="pl-tablewrap${compact?' pg-compact':''}"><table class="pl-table pg-table">
+    <colgroup>${(compact ? PG_COLW_C : PG_COLW).map(w=>`<col style="width:${w}%">`).join('')}</colgroup>
+    <thead><tr><th class="no">#</th>${cols.map(([k,t])=>th(k, k==='staff' && !ch ? '業務' : t)).join('')}<th></th></tr></thead>
+    <tbody>${plWithMonths(all, rows, (c, i)=>`<tr>
+      <td class="no">${i+1}</td>
+      <td class="date">${plMD(c.date)}</td>
+      <td>${pgTxt(c,'customer','客戶姓名','cname')}${pgTxt(c,'phone','電話','sub')}${compact?`<div class="pg-edited">${escHtml(pgEditor(c))}</div>`:''}</td>
+      <td>${pgPickBtn(c,'plan')}</td>
+      <td>${pgStaffCell(c)}</td>
+      <td>${pgPickBtn(c,'status')}</td>
+      <td>${pgTxt(c,'note','點擊輸入備註','',true)}</td>
+      <td>${pgTxt(c,'staffNote','跟行政說明客人狀況','',true)}${pgHat(c)}</td>
+      ${compact ? '' : `<td><span class="pg-edited">${escHtml(pgEditor(c).replace(' · ', '\n'))}</span></td>`}
+      <td>${S.delRow===c.id ? pgDelCtl(c) : pgActs(c)}</td>
+    </tr>`, (k, n)=>`<tr class="pl-mrow"><td colspan="${span}"><div class="pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div></td></tr>`,
+      (y, n)=>`<tr class="pl-yrow"><td colspan="${span}"><div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div></td></tr>`)}</tbody></table></div>${more}`;
+}
+function pgListHTML(all, layout){
+  const S = pgS(), L = pgList();
+  const count = `<div class="pl-count">符合 <b>${all.length}</b> 件・${pgKind()==='ad'?'廣告客':'直客／通路'}全部 <b>${L.length}</b> 件</div>`;
+  if(all.length) return count + pgRowsHTML(all, layout);
+  const msg = !L.length ? (isStaffSales() ? '目前沒有你的案件。' : '尚無案件資料。')
+    : S.quick==='month' && !S.stat && !L.some(c=>(c.date||'').startsWith(plThisM())) ? `${plMLabel(plThisM())}還沒有案件。要看上個月，點「月份」選。`
+    : '沒有符合的案件，換個篩選條件看看。';
+  return count + `<div class="pl-empty">${msg}</div>`;
+}
+function pgFilterPicker(k){
+  const S = pgS();
+  const btn = (val, label, on, c, long)=>{ c = c || PL_NEUTRAL; long = long===undefined ? label.length>6 : long;
+    return `<button type="button" class="pl-pill${long?' long':''}" data-pg-fpick="${k}" data-pg-val="${escAttr(val)}" aria-pressed="${on}" style="background:${c[0]};color:${c[1]};">${on?'✓ ':''}${escHtml(label)}</button>`; };
+  const sec = (t, html)=>`<div class="pl-pickgrp">${t}</div><div class="pl-picks">${html}</div>`;
+  if(k==='group') return sec('範圍', [['all','全部'],['open','未結案'],['closed','已結案']].map(([v,t])=>btn('g:'+v, t, !S.status && S.group===v)).join(''))
+    + PG_ST_GROUPS.map(([g, a])=>sec('只看一種・'+g, a.map(s=>btn('s:'+s, s, S.status===s, pgOptColor('status', s))).join(''))).join('');
+  if(k==='plan') return `<div class="pl-picks">${btn('', '全部方案', !S.plan)}${pgPlans().map(p=>btn(p, p, S.plan===p, pgOptColor('plan', p))).join('')}</div>`;
+  if(k==='staff'){
+    const names = Array.from(new Set(pgAll(pgKind()).map(c=>c.staff).filter(Boolean))).sort(plZh.compare);
+    const inner = names.filter(n=>pgStaffOpts().includes(n)), outer = names.filter(n=>!pgStaffOpts().includes(n));
+    return `<div class="pl-picks">${btn('', '全部', !S.staff)}</div>` + (inner.length ? sec('公司業務', inner.map(n=>btn(n, n, S.staff===n)).join('')) : '')
+      + (outer.length ? sec('通路夥伴', outer.map(n=>btn(n, n, S.staff===n)).join('')) : '');
+  }
+  if(k==='month'){
+    // 先選年、再選月：年份一排（新到舊），下面固定 12 格月份
+    const L = pgList();
+    const cur = S.stat ? '' : S.quick==='month' ? plThisM() : S.quick.startsWith('m:') ? S.quick.slice(2) : '';
+    const years = Array.from(new Set(L.map(c=>(c.date||'').slice(0,4)).filter(Boolean).concat([plThisY()]))).sort().reverse();
+    const py = S.pickYear || (cur || (S.quick.startsWith('y:') ? S.quick.slice(2) : plThisY())).slice(0,4);
+    const n = p => L.filter(c=>(c.date||'').startsWith(p)).length;
+    const months = Array.from({length:12}, (_, i)=>`${py}-${String(i+1).padStart(2,'0')}`);
+    const mBtn = mk=>{
+      const cnt = n(mk), on = cur===mk, now = mk===plThisM(), off = !cnt && !now;
+      return `<button type="button" class="pl-pill mcell${now?' now':''}" data-pg-fpick="month" data-pg-val="m:${mk}" aria-pressed="${on}" ${off?'disabled':''}>${on?'✓ ':''}${Number(mk.slice(5))} 月<small>${now?`本月・${cnt}`:`${cnt} 件`}</small></button>`;
+    };
+    return `<div class="pl-picks">${btn('all','全部月份', S.quick==='all' && !S.stat)}</div>`
+      + `<div class="pl-pickgrp">年份</div><div class="pl-picks yrs">${years.map(y=>`<button type="button" class="pl-pill ycell" data-pg-fpick="month" data-pg-val="py:${y}" aria-pressed="${y===py}">${y}</button>`).join('')}</div>`
+      + `<div class="pl-pickgrp">${py} 年${py===plThisY()?'（今年）':''}</div>`
+      + `<div class="pl-picks">${btn('y:'+py, `${py} 全年（${n(py)} 件）`, !S.stat && S.quick==='y:'+py, PL_NEUTRAL, false).replace('class="pl-pill', 'class="pl-pill wide')}</div>`
+      + `<div class="pl-picks mgrid">${months.map(mBtn).join('')}</div>`;
+  }
+  return sec('依哪一欄排序', PG_SORTS.map(([v,t])=>btn('k:'+v, t, S.sort.key===v)).join(''))
+    + sec('順序', ((S.sort.key==='date' || S.sort.key==='_at') ? ['desc','asc'] : ['asc','desc']).map(d=>btn('d:'+d, pgDirLabel(S.sort.key, d), S.sort.dir===d)).join(''));
+}
+function pgPicker(f, cur, target){
+  const grp = (g, arr)=>`${g?`<div class="pl-pickgrp">${g}</div>`:''}<div class="pl-picks">${arr.map(o=>{ const c = pgOptColor(f, o);
+    return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-pg-pick="${escAttr(o)}" data-pg-pt="${escAttr(target)}" data-pg-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
+  return pgOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
+    + ((f==='plan' || f==='staff') && cur ? `<button type="button" class="pl-pickclear" data-pg-pick="" data-pg-pt="${escAttr(target)}" data-pg-f="${f}">清除，改回未填</button>` : '')
+    + (f==='status' ? `<div class="pg-flowhint">選 <b>對保</b>：記下對保日期（系統每天的對保提醒會用）<br>選 <b>撥款完成</b>：記下撥款日期，並自動建立「客戶關懷追蹤」</div>` : '');
+}
+function pgPopHTML(){
+  const S = pgS(); if(!S.pop) return '';
+  const { id, f, fk } = S.pop;
+  let title, body;
+  if(fk){ title = { month:'選月份', group:'篩選狀態', plan:'篩選方案', staff:'篩選業務', sort:'排序' }[fk]; body = pgFilterPicker(fk); }
+  else {
+    const c = id==='__modal' ? (S.modal && S.modal.rec) : pgList().find(x=>x.id===id);
+    if(!c){ S.pop = null; return ''; }
+    title = `${escHtml(c.customer||'新案件')}・${pgFLabel(f)}`; body = pgPicker(f, c[f]||'', id);
+  }
+  if(plIsMobile()) return `<div class="pl-overlay sheet" data-pg-popbg><div class="pl-dialog"><div class="pl-dlg-h"><h2>${title}</h2><button type="button" class="pl-x" data-pg-popclose aria-label="關閉">×</button></div><div class="pl-dlg-b">${body}</div></div></div>`;
+  return `<div class="pl-pop" id="pg-pop" style="left:${S.pop.x}px;top:${S.pop.y}px;"><div class="pl-pophead">${title}</div>${body}</div>`;
+}
+function pgModalHTML(){
+  const M = pgS().modal; if(!M) return '';
+  const r = M.rec, ch = M.kind==='channel';
+  const del = M.edit ? (M.confirmDel
+    ? `<div class="pl-dconfirm">確定刪除「${escHtml(r.customer||'')}」？<button type="button" class="pl-btn danger" data-pg-mdelyes>刪除</button><button type="button" class="pl-btn sec" data-pg-mdelno>不要刪</button></div>`
+    : `<button type="button" class="pl-btn sec" data-pg-mdel style="margin-right:auto;color:var(--pl-danger);">刪除這筆</button>`) : '';
+  return `<div class="pl-overlay" data-pg-modalbg><form class="pl-dialog" id="pg-form" data-pg-key="${M.key}" novalidate>
+    <div class="pl-dlg-h"><h2>${M.edit?'編輯案件':'新增案件'}（${ch?'直客／通路':'廣告客'}）</h2><button type="button" class="pl-x" data-pg-mclose aria-label="關閉">×</button></div>
+    <div class="pl-dlg-b">
+      <div class="pl-row2">
+        <label class="pl-field"><span>日期 <em>*</em></span><input id="pg-fDate" type="date" value="${escAttr(r.date||'')}"/></label>
+        <label class="pl-field"><span>客戶姓名 <em>*</em></span><input id="pg-fName" value="${escAttr(r.customer||'')}" autocomplete="off"/>${M.err?`<span class="pl-err">${escHtml(M.err)}</span>`:''}</label>
+      </div>
+      <div class="pl-row2">
+        <label class="pl-field"><span>電話</span><input id="pg-fPhone" inputmode="tel" value="${escAttr(r.phone||'')}"/></label>
+        <div class="pl-field"><span>方案</span>${pgPickBtn(r,'plan','__modal')}</div>
+      </div>
+      <div class="pl-row2">
+        <div class="pl-field"><span>${ch?'業務／通路':'負責業務'}</span>${ch ? `<input id="pg-fStaff" list="pg-staff-list" value="${escAttr(r.staff||'')}" placeholder="內部業務或通路夥伴名字"/>` : pgPickBtn(r,'staff','__modal')}</div>
+        <div class="pl-field"><span>狀態</span>${pgPickBtn(r,'status','__modal')}</div>
+      </div>
+      ${ch ? `<div class="pl-row2"><div class="pl-field"><span>來源</span>${pgPickBtn(r,'source','__modal')}</div><label class="pl-field"><span>通路備註</span><input id="pg-fRef" value="${escAttr(r.referrer||'')}" placeholder="選填，例如：透過XX轉介"/></label></div>` : ''}
+      <label class="pl-field"><span>備註</span><textarea id="pg-fNote" rows="3">${plTa(r.note)}</textarea></label>
+      <div class="pl-row2">
+        <label class="pl-field"><span>業務備註</span><input id="pg-fSNote" value="${escAttr(r.staffNote||'')}"/></label>
+        <label class="pl-field"><span>${whIcon(16)} 金額</span><input id="pg-fHat" value="${escAttr(r.wizardHatNote||'')}"/></label>
+      </div>
+      ${M.edit && M.editor ? `<div class="pg-flowhint">最後編輯：${escHtml(M.editor)}</div>` : ''}
+    </div>
+    <div class="pl-dlg-f">${del}
+      ${M.edit ? '' : '<button type="button" class="pl-btn sec" data-pg-savenext>儲存並新增下一筆</button>'}
+      <button type="submit" class="pl-btn">儲存</button></div>
+  </form></div>`;
+}
+// 視窗開著時，畫面重畫前先把已經打的字收進來（只收同一個視窗的，剛按「儲存並新增下一筆」時不會把上一筆帶過來）
+function pgCaptureForm(){
+  const M = pgS().modal, form = document.getElementById('pg-form');
+  if(!M || !form || form.dataset.pgKey!==M.key) return;
+  const v = id=>{ const el = document.getElementById(id); return el ? el.value : undefined; };
+  const r = M.rec, set = (k, val)=>{ if(val!==undefined) r[k] = val; };
+  set('date', v('pg-fDate')); set('customer', v('pg-fName')); set('phone', v('pg-fPhone')); set('note', v('pg-fNote'));
+  set('staffNote', v('pg-fSNote')); set('wizardHatNote', v('pg-fHat'));
+  if(M.kind==='channel'){ set('staff', v('pg-fStaff')); set('referrer', v('pg-fRef')); }
+}
+function pgPageHTML(){
+  const S = pgS();
+  pgCaptureForm();
+  const layout = pgLayout(), all = pgSorted(pgFiltered());
+  const partners = Array.from(new Set(pgStaffOpts().concat(pgAll('channel').map(c=>c.staff).filter(Boolean))));
+  setTimeout(pgAfterRender, 0);
+  S._layout = layout;
+  return `<div class="pg-root">
+    ${pgTabsHTML()}${pgStatsHTML()}${pgFilterHTML(plIsMobile())}${pgListHTML(all, layout)}
+    <datalist id="pg-staff-list">${partners.map(s=>`<option value="${escAttr(s)}">`).join('')}</datalist>
+    ${pgAdmin() ? '<button type="button" class="pl-fab" data-pg-add>＋ 新增案件</button>' : ''}
+    ${pgModalHTML()}${pgPopHTML()}
+  </div>`;
+}
+function pgAfterRender(){
+  document.querySelectorAll('.pg-root textarea.pg-t').forEach(plGrow);
+  const S = pgS(), p = document.getElementById('pg-pop');
+  if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
+    S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
+  }
+}
+// 自己的操作要立刻重畫（不受「正在打字先不重畫」限制）
+function pgRender(){ const S = pgS(); S._force = true; try{ render(); } finally{ S._force = false; } }
+// 別人更新資料時：如果正在列表或視窗裡打字，先不要重畫，等離開欄位再補畫
+const pgTyping = () => { const a = document.activeElement; return !!(a && a.closest && a.closest('.pg-root') && /^(INPUT|TEXTAREA)$/.test(a.tagName)); };
+function pgShouldDefer(){
+  const S = pgS(); if(S._force) return false;
+  if(!pgTyping()) return false;
+  S.pending = true;
+  if(!S._deferTimer) S._deferTimer = setInterval(()=>{
+    if(pgTyping()) return;
+    clearInterval(S._deferTimer); S._deferTimer = null;
+    if(S.pending && APP.view==='progress'){ S.pending = false; render(); }
+  }, 400);
+  return true;
+}
+const pgFail = err => { console.error('進度追蹤儲存失敗', err); alert('儲存失敗，請檢查網路後再試一次：\n' + (err && err.message ? err.message : err)); };
+// 只更新指定欄位，其他欄位不動；狀態有變時順便處理對保／撥款完成的連動，回傳要接在提示後面的說明
+function pgUpdate(kind, id, patch){
+  const c = pgAll(kind).find(x=>x.id===id);
+  const was = c ? (c.status||'') : '';
+  let extra = '', followup = false;
+  if('status' in patch && patch.status!==was){
+    if(patch.status==='對保'){ patch.guarantorStatusDate = todayStr(); extra = '，已記下對保日期'; }
+    if(patch.status==='撥款完成'){ patch.disbursedDate = todayStr(); extra = '，已記下撥款日期'; followup = true; }
+  }
+  const full = stamp(patch);
+  if(c) Object.assign(c, full);
+  updateDoc(doc(db, pgCol(kind), id), full).catch(pgFail);
+  if(c && followup && ensureFollowupOnDisbursed(c, kind)) extra += '並建立客戶關懷追蹤';
+  return extra;
+}
+function pgOpenNew(base){
+  const kind = pgKind();
+  pgS().modal = { key:uid(), kind, edit:false, err:'', rec:{ date:todayStr(), customer:'', phone:'', plan:'', staff:'', status:'教照會', note:'', staffNote:'', wizardHatNote:'', ...(kind==='channel' ? { source:'直客', referrer:'' } : {}), ...(base||{}) } };
+  pgRender(); setTimeout(()=>{ const el = document.getElementById('pg-fName'); if(el) el.focus(); }, 0);
+}
+function pgSaveModal(next){
+  const S = pgS(), M = S.modal; if(!M) return;
+  pgCaptureForm();
+  const r = M.rec, kind = M.kind, keys = kind==='channel' ? PG_KEYS_CH : PG_KEYS_AD;
+  if(!(r.customer||'').trim()){ M.err = '請填客戶姓名'; pgRender(); const el = document.getElementById('pg-fName'); if(el) el.focus(); return; }
+  if(!r.date){ M.err = '請選日期'; pgRender(); return; }
+  M.err = '';
+  if(M.edit){
+    const c = pgAll(kind).find(x=>x.id===r.id);
+    if(!c){ S.modal = null; pgRender(); plToast('這筆案件已經被刪除了'); return; }
+    // 只寫有改的欄位；只差前後空白不算改（舊資料有些尾巴帶空白，不要因為按儲存就被改掉）
+    const patch = {};
+    keys.forEach(k=>{
+      const a = r[k]||'', o = M.orig[k]||'';
+      if(a===o || (k!=='note' && a.trim()===o.trim())) return;
+      patch[k] = k==='note' ? a : a.trim();
+    });
+    const n = Object.keys(patch).length, extra = n ? pgUpdate(kind, c.id, patch) : '';
+    S.modal = null; pgRender();
+    plToast(n ? `已儲存「${r.customer.trim()}」${extra}` : '沒有變更');
+    return;
+  }
+  const rec = stamp({ id:uid(), ...keys.reduce((o, k)=>(o[k] = k==='note' ? (r[k]||'') : (r[k]||'').trim(), o), {}) });
+  if(!rec.status) rec.status = '教照會';
+  if(kind==='channel' && !rec.source) rec.source = '直客';
+  let extra = '';
+  if(rec.status==='對保'){ rec.guarantorStatusDate = todayStr(); extra = '，已記下對保日期'; }
+  if(rec.status==='撥款完成'){ rec.disbursedDate = todayStr(); extra = '，已記下撥款日期'; }
+  (kind==='channel' ? saveProgressChannelCase : saveProgressAdCase)(rec).catch(pgFail);
+  if(rec.status==='撥款完成' && ensureFollowupOnDisbursed(rec, kind)) extra += '並建立客戶關懷追蹤';
+  if(next){ pgOpenNew({ date:rec.date, plan:rec.plan, staff:rec.staff, ...(kind==='channel' ? { source:rec.source } : {}) }); plToast(`已新增「${rec.customer}」${extra}，接著填下一筆`); }
+  else { S.modal = null; pgRender(); plToast(`已新增「${rec.customer}」${extra}`); }
+}
+function pgDelete(kind, c){
+  (kind==='channel' ? deleteProgressChannelCase : deleteProgressAdCase)(c.id).catch(pgFail);
+  plToast(`已刪除「${c.customer||''}」`);
+}
+function pgOpenPop(opener){
+  const S = pgS(), fk = opener.dataset.pgFk, W = 340;
+  S.pickYear = '';
+  const b = opener.getBoundingClientRect();
+  if(opener.dataset.pgPk==='__modal') pgCaptureForm();
+  S.pop = { id: opener.dataset.pgPk, f: opener.dataset.pgF, fk, top: b.top,
+    x: Math.max(8, Math.min(b.left, window.innerWidth - W - 8)), y: b.bottom + 6 };
+  pgRender();
+}
+
+document.addEventListener('click', (e)=>{
+  const t = e.target;
+  if(!t.closest || !(t.closest('.pg-root') || t.closest('[data-pg-add]'))) return;
+  const S = pgS(), kind = pgKind();
+  // 選項面板：方案、業務、狀態、來源
+  const pk = t.closest('[data-pg-pick]');
+  if(pk){
+    const pt = pk.dataset.pgPt, f = pk.dataset.pgF, v = pk.dataset.pgPick; S.pop = null;
+    if(pt==='__modal'){ pgCaptureForm(); if(S.modal) S.modal.rec[f] = v; return pgRender(); }
+    if(!pgCanEdit(f)) return pgRender();
+    const c = pgList().find(x=>x.id===pt); if(!c || (c[f]||'')===v) return pgRender();
+    const extra = pgUpdate(kind, c.id, { [f]: v });
+    pgRender(); plToast(`${c.customer}：${pgFLabel(f)}改為「${v||'未填'}」${extra}`); return;
+  }
+  const fp = t.closest('[data-pg-fpick]');
+  if(fp){
+    const k = fp.dataset.pgFpick, v = fp.dataset.pgVal, keep = S.pop;
+    if(k==='month' && v.startsWith('py:')){ S.pickYear = v.slice(3); return pgRender(); }
+    S.limit = 20; S.pop = null;
+    if(k==='group'){ const [a, b] = v.split(':'); if(a==='g'){ S.group = b; S.status = ''; } else { S.group = 'all'; S.status = b; } }
+    if(k==='plan') S.plan = v;
+    if(k==='staff') S.staff = v;
+    if(k==='month'){ S.stat = ''; S.quick = v==='m:'+plThisM() ? 'month' : v; }
+    if(k==='sort'){
+      const [a, b] = v.split(':');
+      // 選了欄位先留著面板，方便接著選順序
+      if(a==='k'){ S.sort = { key:b, dir: S.sort.key===b ? S.sort.dir : (b==='date' || b==='_at') ? 'desc' : 'asc' }; S.pop = keep; }
+      else S.sort.dir = b;
+    }
+    return pgRender();
+  }
+  const opener = t.closest('[data-pg-pk], [data-pg-fk]');
+  if(S.pop && !t.closest('#pg-pop') && !t.closest('.pl-overlay.sheet .pl-dialog')){
+    const same = opener && (opener.dataset.pgFk ? opener.dataset.pgFk===S.pop.fk : opener.dataset.pgPk===S.pop.id && opener.dataset.pgF===S.pop.f);
+    S.pop = null; pgRender(); if(!opener || same) return;
+  }
+  if(t.closest('[data-pg-popclose]')){ S.pop = null; return pgRender(); }
+  if(opener){ const again = opener.dataset.pgFk ? document.querySelector(`.pg-root [data-pg-fk="${opener.dataset.pgFk}"]`) : document.querySelector(`.pg-root [data-pg-pk="${CSS.escape(opener.dataset.pgPk)}"][data-pg-f="${opener.dataset.pgF}"]`); return pgOpenPop(again || opener); }
+  if(t.closest('[data-pg-add]')){ if(pgAdmin()) pgOpenNew(); return; }
+  const tb = t.closest('[data-pg-tab]');
+  if(tb){ APP.progressTab = tb.dataset.pgTab; S.staff = ''; S.limit = 20; S.delRow = null; return pgRender(); }
+  const so = t.closest('[data-pg-sort]');
+  if(so){ const k = so.dataset.pgSort; S.sort = S.sort.key===k ? { key:k, dir: S.sort.dir==='asc'?'desc':'asc' } : { key:k, dir: (k==='date' || k==='_at')?'desc':'asc' }; return pgRender(); }
+  const dl = t.closest('[data-pg-del]'); if(dl){ S.delRow = dl.dataset.pgDel; return pgRender(); }
+  if(t.closest('[data-pg-delno]')){ S.delRow = null; return pgRender(); }
+  const dy = t.closest('[data-pg-delyes]');
+  if(dy){ const c = pgList().find(x=>x.id===dy.dataset.pgDelyes); S.delRow = null; if(c && pgAdmin()) pgDelete(kind, c); return pgRender(); }
+  const op = t.closest('[data-pg-open]');
+  if(op && !S.modal && pgAdmin()){
+    const c = pgList().find(x=>x.id===op.dataset.pgOpen); if(!c) return;
+    const rec = (kind==='channel' ? PG_KEYS_CH : PG_KEYS_AD).reduce((o, k)=>(o[k] = c[k]||'', o), { id:c.id });
+    S.modal = { key:uid(), kind, edit:true, err:'', rec, orig:{ ...rec }, editor:pgEditor(c) }; return pgRender();
+  }
+  const sb = t.closest('[data-pg-stat]');
+  if(sb){ S.stat = S.stat===sb.dataset.pgStat ? '' : sb.dataset.pgStat; S.group = 'all'; S.status = ''; S.limit = 20; return pgRender(); }
+  const q = t.closest('[data-pg-quick]'); if(q){ S.quick = q.dataset.pgQuick; S.stat = ''; S.limit = 20; return pgRender(); }
+  if(t.closest('[data-pg-ftoggle]')){ S.filterOpen = !S.filterOpen; return pgRender(); }
+  if(t.closest('[data-pg-more]')){ S.limit += 20; return pgRender(); }
+  if(t.closest('[data-pg-mclose]') || t.matches('[data-pg-modalbg]')){ S.modal = null; return pgRender(); }
+  if(t.matches('[data-pg-popbg]')){ S.pop = null; return pgRender(); }
+  if(t.closest('[data-pg-savenext]')) return pgSaveModal(true);
+  if(t.closest('[data-pg-mdel]')){ pgCaptureForm(); S.modal.confirmDel = true; return pgRender(); }
+  if(t.closest('[data-pg-mdelno]')){ S.modal.confirmDel = false; return pgRender(); }
+  if(t.closest('[data-pg-mdelyes]')){ const M = S.modal; S.modal = null; const c = pgAll(M.kind).find(x=>x.id===M.rec.id); if(c) pgDelete(M.kind, c); pgRender(); return; }
+});
+document.addEventListener('submit', (e)=>{
+  if(e.target.id!=='pg-form') return;
+  e.preventDefault(); pgSaveModal(false);
+});
+// 列表上直接打字：離開欄位（或按 Enter）自動儲存，只更新那一欄
+document.addEventListener('change', (e)=>{
+  const el = e.target;
+  if(!el.matches || !el.matches('.pg-root .pg-t')) return;
+  const id = el.dataset.pgId, f = el.dataset.pgT;
+  const c = pgList().find(x=>x.id===id); if(!c || !pgCanEdit(f)) return;
+  const v = el.tagName==='TEXTAREA' ? el.value : el.value.trim();
+  if(f==='customer' && !v){ el.value = c.customer||''; plToast('客戶姓名不能空白'); return; }
+  if((c[f]||'')===v) return;
+  pgUpdate(pgKind(), id, { [f]: v });
+  plToast(`已儲存：${pgFLabel(f)}`);
+});
+document.addEventListener('input', (e)=>{
+  const el = e.target;
+  if(el.matches && el.matches('.pg-root textarea.pg-t')) return plGrow(el);
+  if(el.id!=='pg-search' || e.isComposing) return;
+  pgSearchApply(el);
+});
+document.addEventListener('compositionend', (e)=>{ if(e.target.id==='pg-search') pgSearchApply(e.target); });
+function pgSearchApply(el){
+  const S = pgS(), pos = el.selectionStart;
+  S.search = el.value; S.limit = 20;
+  pgRender();
+  const n = document.getElementById('pg-search'); if(n){ n.focus(); try{ n.setSelectionRange(pos, pos); }catch(_){} }
+}
+document.addEventListener('keydown', (e)=>{
+  if(!e.target.closest || !document.querySelector('.pg-root')) return;
+  // 列表上的欄位按 Enter 就存（備註要換行用 Shift+Enter）
+  if(e.key==='Enter' && e.target.matches('.pg-root .pg-t') && !e.shiftKey && !e.isComposing){ e.preventDefault(); e.target.blur(); return; }
+  if(e.key==='Escape'){
+    const S = pgS();
+    if(S.pop){ S.pop = null; pgRender(); } else if(S.modal){ S.modal = null; pgRender(); }
+  }
+});
+// 離開正在打字的欄位後，補上剛才延後的畫面更新
+document.addEventListener('focusout', (e)=>{
+  if(!e.target.closest || !e.target.closest('.pg-root')) return;
+  setTimeout(()=>{ const S = pgS(); if(S.pending && APP.view==='progress' && !pgShouldDefer()){ S.pending = false; render(); } }, 0);
+});
+// 電腦版：捲動時收起選項面板，免得面板跟按鈕對不上
+document.addEventListener('scroll', (e)=>{
+  const S = APP.pg; if(!S || !S.pop || plIsMobile() || APP.view!=='progress') return;
+  if(e.target && e.target.closest && e.target.closest('#pg-pop')) return;
+  S.pop = null; pgRender();
+}, true);
+// 視窗大小改變到換排版（表格／精簡表格／卡片）時才重畫
+let pgResizeTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(pgResizeTimer);
+  pgResizeTimer = setTimeout(()=>{
+    if(APP.view!=='progress' || !APP.pg || pgLayout()===APP.pg._layout) return;
+    APP.pg.pop = null; render();
+  }, 150);
+});
 /* ---- 逾期未更新案件（超過7天沒更新狀態），總覽的數字跟明細彈窗共用同一套判斷邏輯 ---- */
 function isStaleCase(c){
   if(STATUS_DONE.includes(c.status) || STATUS_CLOSED.includes(c.status)) return false;
@@ -5135,17 +5730,12 @@ function openExportModal(mode){
   });
 }
 function progressHTML(){
-  const tab = APP.progressTab;
-  const body = tab==='ad' ? progressAdView() : progressChannelView();
+  const admin = canEditProgressRow();
   return `
-    <div class="page-header"><div><h1 class="page-title">進度追蹤</h1><p class="page-sub">廣告客與直客／通路案件的送件進度，與獲利報表各自獨立</p></div>
-      <button class="btn ghost" data-action="open-export-modal" data-mode="progress">📤 匯出年度資料</button>
+    <div class="page-header"><div><h1 class="page-title">進度追蹤</h1><p class="page-sub">${admin ? '廣告客與直客／通路案件的送件進度，與獲利報表各自獨立' : '這裡只顯示你的案件。狀態與備註由行政維護；「業務備註」和 🧙 金額可以自己填。'}</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn ghost" data-action="open-export-modal" data-mode="progress">📤 匯出年度資料</button>${admin ? '<button class="btn primary m-hide-640" data-pg-add>＋ 新增案件</button>' : ''}</div>
     </div>
-    <div class="tabs">
-      <button class="tab-btn ${tab==='ad'?'active':''}" data-action="progress-tab" data-tab="ad">廣告客進度</button>
-      <button class="tab-btn ${tab==='channel'?'active':''}" data-action="progress-tab" data-tab="channel">直客／通路進度</button>
-    </div>
-    ${body}
+    ${pgPageHTML()}
   `;
 }
 
@@ -8382,11 +8972,13 @@ document.addEventListener('click', (e)=>{
           data.customer = data.customer || '';
           if(!data.customer){ skipped++; return; }
           data.phone = data.phone || ''; data.note = data.note || ''; data.status = data.status || '教照會';
-          if(data.lineType==='channel'){
-            savePromises.push(saveProgressChannelCase(stamp({ id:uid(), date:data.date, customer:data.customer, phone:data.phone, plan:data.plan||'', staff:data.staff||'', source:'通路', referrer:'', status:data.status, note:data.note })));
-          } else {
-            savePromises.push(saveProgressAdCase(stamp({ id:uid(), date:data.date, customer:data.customer, phone:data.phone, plan:data.plan||'', staff:data.staff||'', status:data.status, note:data.note })));
-          }
+          const isCh = data.lineType==='channel';
+          const rec = stamp({ id:uid(), date:data.date, customer:data.customer, phone:data.phone, plan:data.plan||'', staff:data.staff||'', ...(isCh ? { source:'通路', referrer:'' } : {}), status:data.status, note:data.note });
+          // 跟手動改狀態一樣：對保記對保日期（後端對保提醒用）；撥款完成記撥款日期並建立客戶關懷追蹤
+          if(rec.status==='對保') rec.guarantorStatusDate = todayStr();
+          if(rec.status==='撥款完成') rec.disbursedDate = todayStr();
+          savePromises.push(isCh ? saveProgressChannelCase(rec) : saveProgressAdCase(rec));
+          if(rec.status==='撥款完成') ensureFollowupOnDisbursed(rec, isCh ? 'channel' : 'ad');
         } else if(kind==='attendance'){
           let targetUid, targetName;
           if(isCore()){
