@@ -912,7 +912,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-12';
+const APP_BUILD = '2026-10-28-13';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5128,8 +5128,8 @@ function lxToolbarHTML(px, addLabel, canAdd){
   const S = LX[px].S(), q = S.search||'';
   const box = `<div class="pl-sbox"><span class="pl-sicon" aria-hidden="true">🔍</span><input type="search" class="pl-bigsearch" id="${px}-search" placeholder="搜尋客戶姓名、電話…" value="${escAttr(q)}" autocomplete="off" aria-label="搜尋客戶"/>${q ? `<button type="button" class="pl-sclear" data-lx-sclear="${px}" aria-label="清除搜尋">×</button>` : ''}</div>`;
   if(!plIsMobile()) return `<div class="pl-toolbar">${box}${canAdd ? `<button type="button" class="pl-btn pl-addbtn" data-${px}-add>＋ ${addLabel}</button>` : ''}</div>`;
-  if(S.mSearch) return ''; // 手機搜尋框在 lxSyncMSearch 裡建在畫面最外層，打字時不會被重畫
-  return `<div class="pl-mfabs"><button type="button" class="pl-mfab search${lxSearching(S) ? ' on' : ''}" data-lx-msopen="${px}">🔍 ${lxSearching(S) ? escHtml(q.trim()) : '搜尋'}</button>${canAdd ? `<button type="button" class="pl-mfab add" data-${px}-add>＋ 新增</button>` : ''}</div>`;
+  // 手機搜尋框在 lxSyncMSearch 裡建在畫面最外層（打字時不會被重畫）；開著時左下角按鈕先藏起來
+  return `<div class="pl-mfabs"${S.mSearch ? ' style="display:none"' : ''}><button type="button" class="pl-mfab search${lxSearching(S) ? ' on' : ''}" data-lx-msopen="${px}">🔍 ${lxSearching(S) ? escHtml(q.trim()) : '搜尋'}</button>${canAdd ? `<button type="button" class="pl-mfab add" data-${px}-add>＋ 新增</button>` : ''}</div>`;
 }
 function lxSearchNote(px, n, unit){
   const S = LX[px].S();
@@ -5209,6 +5209,19 @@ function lxSyncMSearch(){
   lxPlaceMSearch();
 }
 document.addEventListener('input', (e)=>{ const b = e.target.closest && e.target.closest('#lx-msearch'); if(b) b.querySelector('.pl-sclear').style.display = e.target.value ? '' : 'none'; });
+function lxCloseMSearch(){
+  const bar = document.getElementById('lx-msearch'); if(!bar) return;
+  const px = bar.dataset.px, S = APP[px];
+  if(document.activeElement && bar.contains(document.activeElement)) document.activeElement.blur();
+  if(S) S.mSearch = false;
+  bar.remove();
+  document.querySelectorAll('.pl-mfabs').forEach(f=>{ f.style.display = ''; });
+}
+document.addEventListener('pointerdown', (e)=>{
+  const bar = document.getElementById('lx-msearch');
+  if(!bar || (e.target.closest && e.target.closest('#lx-msearch'))) return;
+  lxCloseMSearch();
+}, true);
 document.addEventListener('focusin', (e)=>{ if(e.target.closest && e.target.closest('.pl-msearch')){ lxPlaceMSearch(); setTimeout(lxPlaceMSearch, 300); setTimeout(lxPlaceMSearch, 700); } });
 /* ================= 進度追蹤（2026-10 改版）=================
    跟舊版用同一份資料（progressAdCases、progressChannelCases），欄位名稱不變。
