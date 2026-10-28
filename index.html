@@ -94,6 +94,7 @@
   .chat-burn-btn:hover{opacity:1 !important;background:rgba(239,68,68,.12);}
   .sidebar-footer{margin-top:auto;padding:14px 10px 0 10px;border-top:1px solid #4A78F5;}
   .user-chip{font-size:12.5px;color:#FFFFFF;margin-bottom:2px;word-break:break-all;}
+  .app-version{font-size:11px;color:#C7D4FB;margin:8px 0 2px;letter-spacing:.02em;font-variant-numeric:tabular-nums;}
   .role-chip{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:100px;margin-top:6px;margin-bottom:10px;}
   .role-chip.admin{background:rgba(255,255,255,.18);color:#ffffff;}
   .role-chip.editor{background:rgba(255,255,255,.18);color:#ffffff;}
@@ -1564,6 +1565,7 @@ function shellHTML(){
       <span class="role-chip ${APP.role}">${roleLabel}</span>
       ${(localStorage.getItem('xj_push_enabled')!=='1')?`<button class="logout-btn" data-action="enable-push" style="margin-bottom:8px;">🔔 開啟推播通知</button>`:''}
       <button class="logout-btn" id="logout-btn">登出</button>
+      <div class="app-version" title="系統版本（每次正式更新都會換）">版本 ${APP_BUILD}</div>
     </div>
   </div>
   <div id="main"></div>
