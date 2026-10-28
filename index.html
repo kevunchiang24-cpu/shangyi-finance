@@ -868,6 +868,7 @@
   .pl-field.pa-ai .pl-inl{box-shadow:0 0 0 2px #C9B9FA;}
   .pl-field.pa-ai .bk-seg{box-shadow:0 0 0 2px #C9B9FA;border-radius:10px;}
   .pl-field.pa-miss input{background:#FFF4D6 !important;border-color:#F0C552 !important;}
+  .pa-new{display:inline-block;margin-left:6px;background:#FFD84D;color:#4A3500;font-size:10.5px;font-weight:800;line-height:1;border-radius:5px;padding:3px 5px;letter-spacing:.06em;vertical-align:2px;}
   .pa-badge{font-size:10.5px;font-weight:800;border-radius:5px;padding:1px 5px;letter-spacing:.04em;font-style:normal;}
   .pa-badge.pa-ai{background:#6A4BD8;color:#fff;}
   .pa-badge.pa-miss{background:#F0C552;color:#4A3500;}
@@ -964,7 +965,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-01';
+const APP_BUILD = '2026-10-29-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5180,9 +5181,9 @@ const lxSearching = S => !!String(S.search||'').trim();
 function lxToolbarHTML(px, addLabel, canAdd){
   const S = LX[px].S(), q = S.search||'';
   const box = `<div class="pl-sbox"><span class="pl-sicon" aria-hidden="true">🔍</span><input type="search" class="pl-bigsearch" id="${px}-search" placeholder="搜尋客戶姓名、電話…" value="${escAttr(q)}" autocomplete="off" aria-label="搜尋客戶"/>${q ? `<button type="button" class="pl-sclear" data-lx-sclear="${px}" aria-label="清除搜尋">×</button>` : ''}</div>`;
-  if(!plIsMobile()) return `<div class="pl-toolbar">${box}${canAdd ? `<button type="button" class="pl-btn pl-aibtn" data-pa-open="${px}">🤖 AI 幫我填</button><button type="button" class="pl-btn pl-addbtn" data-${px}-add>＋ ${addLabel}</button>` : ''}</div>`;
+  if(!plIsMobile()) return `<div class="pl-toolbar">${box}${canAdd ? `<button type="button" class="pl-btn pl-aibtn" data-pa-open="${px}">🤖 AI 幫我填${paNewTag()}</button><button type="button" class="pl-btn pl-addbtn" data-${px}-add>＋ ${addLabel}</button>` : ''}</div>`;
   // 手機搜尋框在 lxSyncMSearch 裡建在畫面最外層（打字時不會被重畫）；開著時左下角按鈕先藏起來
-  return `<div class="pl-mfabs"${S.mSearch ? ' style="display:none"' : ''}><button type="button" class="pl-mfab search${lxSearching(S) ? ' on' : ''}" data-lx-msopen="${px}">🔍 ${lxSearching(S) ? escHtml(q.trim()) : '搜尋'}</button>${canAdd ? `<button type="button" class="pl-mfab add" data-pa-choose="${px}">＋ 新增</button>` : ''}</div>`;
+  return `<div class="pl-mfabs"${S.mSearch ? ' style="display:none"' : ''}><button type="button" class="pl-mfab search${lxSearching(S) ? ' on' : ''}" data-lx-msopen="${px}">🔍 ${lxSearching(S) ? escHtml(q.trim()) : '搜尋'}</button>${canAdd ? `<button type="button" class="pl-mfab add" data-pa-choose="${px}">＋ 新增${paNewTag()}</button>` : ''}</div>`;
 }
 function lxSearchNote(px, n, unit){
   const S = LX[px].S();
@@ -5306,6 +5307,8 @@ const PA = {
     sel:{ date:'#bk-fDate', customerName:'#bk-fName', phone:'#bk-fPhone', owner:'#bk-fOwner', approvedAmount:'#bk-fAmt', plan:'#bk-fPlan', note:'#bk-fNote', packJob:'[data-bk-mpack]' } },
 };
 let PA_RUN = null; // 這次 AI 整理出來的客人：{ px, kind, src, queue, idx, names, done }
+// 新功能提示：2026-10-29 上線，兩個禮拜後（11/12 起）自動不顯示
+const paNewTag = () => todayStr() < '2026-11-12' ? '<span class="pa-new">NEW</span>' : '';
 const paKind = px => PA[px].kind ? PA[px].kind() : '';
 const paWhere = px => px==='pg' ? `（${paKind(px)==='channel' ? '直客／通路' : '廣告客'}）` : '';
 const paLong = t => t.length > 60 || t.split('\n').length > 3;
@@ -5448,7 +5451,7 @@ function paSkip(px){
 function paHeadBtn(px, M){
   if(!PA[px].can() || M.edit) return '';
   if(M.pa) return `<button type="button" class="pa-hbtn" data-pa-back="${px}">← 改貼上的文字</button>`;
-  return `<button type="button" class="pa-hbtn ai" data-pa-open="${px}">🤖 貼上讓 AI 填</button>`;
+  return `<button type="button" class="pa-hbtn ai" data-pa-open="${px}">🤖 貼上讓 AI 填${paNewTag()}</button>`;
 }
 function paBanner(px, M){
   if(!M.pa) return '';
@@ -5484,7 +5487,7 @@ function paOpenChoose(px){
   o.innerHTML = `<div class="pa-box" role="dialog" aria-modal="true" aria-label="新增方式">
     <div class="pa-h"><h2>新增${escHtml(paWhere(px))}</h2><button type="button" class="pa-x" data-pa-cclose aria-label="關閉">×</button></div>
     <div class="pa-b pa-choose">
-      <button type="button" class="pa-c ai" data-pa-open="${px}">🤖 貼上讓 AI 幫我填<small>貼評估表、LINE 對話，或打一句話</small></button>
+      <button type="button" class="pa-c ai" data-pa-open="${px}"><span>🤖 貼上讓 AI 幫我填${paNewTag()}</span><small>貼評估表、LINE 對話，或打一句話</small></button>
       <button type="button" class="pa-c" data-pa-manual="${px}">✍️ 自己填<small>打開空白的新增表單</small></button>
     </div></div>`;
   o.hidden = false; document.body.classList.add('pa-lock');
