@@ -762,6 +762,27 @@
     .pg-stats{grid-template-columns:repeat(2,1fr);}
     .pg-stats .pl-stat:last-child{grid-column:1/-1;}
   }
+  /* ---- 銀行信貸（2026-10 改版）：沿用「我的客人紀錄」「進度追蹤」的 pl-／pg- 樣式，這裡只放銀行信貸多出來的部分（bk- 開頭） ---- */
+  .bk-root{--pl-brand:#2F5BEA;--pl-soft:#EAF0FF;--pl-ink:#1F2433;--pl-muted:#596277;--pl-line:#E2E6EF;--pl-danger:#C62C2C;display:flex;flex-direction:column;gap:14px;color:var(--pl-ink);}
+  .bk-root button{font-family:inherit;}
+  .bk-table th .pl-thbtn{white-space:normal;text-align:left;}
+  .bk-amt{text-align:right;font-variant-numeric:tabular-nums;}
+  .bk-amt .pl-t{text-align:right;margin-left:0;}
+  .bk-root .pl-search{min-width:180px;}
+  .bk-lbl{font-size:11.5px;color:var(--pl-muted);margin-bottom:-2px;}
+  .bk-amtb{color:var(--pl-ink);}
+  .bk-table td.bk-pc{padding-left:8px;padding-right:8px;}
+  .bk-root .pl-card .pl-t{min-height:32px;}
+  .bk-seg{display:inline-flex;border:1px solid var(--pl-line);border-radius:9px;overflow:hidden;align-self:start;}
+  .bk-seg button{border:0;background:#fff;padding:9px 16px;font-size:14px;cursor:pointer;border-right:1px solid var(--pl-line);color:var(--pl-ink);}
+  .bk-seg button:last-child{border-right:0;}
+  .bk-seg button[aria-pressed="true"]{background:#D4EDBC;color:#11734B;font-weight:700;}
+  .bk-root .pl-card .top .pl-inl{flex:none;max-width:60%;}
+  .bk-root .pl-card .line2 .pl-inl{white-space:nowrap;}
+  .bk-root .pl-card .foot .pl-link,.bk-root .pl-card .foot .pl-del{min-height:36px;padding:6px 8px;}
+  .bk-root .pl-card .foot .pl-acts{gap:2px;flex:none;}
+  .bk-root .pg-ln .pl-t{flex:1;min-width:70px;}
+  @media (max-width:640px){ .bk-root{gap:12px;} }
   @media (max-width:640px){
     .bl-stats{grid-template-columns:1fr 1fr;}
     .bl-filter-box{display:none;}
@@ -824,7 +845,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-28-03';
+const APP_BUILD = '2026-10-28-04';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1194,6 +1215,7 @@ function subscribeAll(){
           const d = snap2.data();
           APP.bankLoanStatusOptions = (d && Array.isArray(d.statuses)) ? d.statuses : [];
           APP.bankLoanStatusColors = (d && d.colors && typeof d.colors==='object') ? d.colors : {};
+          APP.bankLoanStatusGroups = (d && d.groups && typeof d.groups==='object') ? d.groups : {};
           render();
         }, err=>console.error('bankLoanOptions 訂閱失敗', err)));
         unsubs.push(onSnapshot(collection(db,'staffProfiles'), snap2=>{
@@ -2730,6 +2752,7 @@ function render(){
   if(!main) return;
   if(APP.view==='personalLog' && plShouldDefer()) return; // 正在個人業務進度紀錄打字時先不重畫，離開欄位再補畫
   if(APP.view==='progress' && pgShouldDefer()) return; // 正在進度追蹤打字時也一樣
+  if(APP.view==='bankLoan' && bkShouldDefer()) return; // 銀行信貸也一樣
   const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal','customerFollowupOverview'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
@@ -2744,7 +2767,7 @@ function render(){
   else if(APP.view==='vendors' && isCore()) main.innerHTML = vendorsHTML();
   else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
   else if(APP.view==='valuation' && isCore()) main.innerHTML = valuationHTML();
-  else if(APP.view==='bankLoan' && isCore()) main.innerHTML = bankLoanHTML();
+  else if(APP.view==='bankLoan' && isCore()) main.innerHTML = bankLoanPageHTML();
   else if(APP.view==='dailyBonus' && isCore()) main.innerHTML = dailyBonusPageHTML();
   else if(APP.view==='staffOverview' && (isCore() || isStaffAny())) main.innerHTML = staffOverviewHTML();
   else if(APP.view==='customerFollowupOverview' && (isCore() || isStaffAdmin())) main.innerHTML = customerFollowupOverviewHTML();
@@ -5562,6 +5585,538 @@ window.addEventListener('resize', ()=>{
     APP.pg.pop = null; render();
   }, 150);
 });
+/* ================= 銀行信貸（2026-10 改版）=================
+   跟舊版用同一份資料（bankLoanCases），欄位名稱不變：status、date、owner、customerName、phone、packJob、channel、plan、approvedAmount（萬，數字或 null）、note。
+   - 列表上直接改、編輯視窗都只更新改到的欄位（updateDoc）
+   - 每個狀態算在哪一組（評估／送件中／對保／培養／已結束）照「狀態選項」設定（appdata/bankLoanOptions.groups），
+     沒設定過的照內建分組；統計卡、進行中／已結束篩選、選單分組都用同一套
+   - 改成「撥款完成」記 disbursedDate，「本月撥款」照撥款日期算（舊資料沒有就用案件日期）
+   - 樣式、選項面板、月份分段跟「我的客人紀錄」共用（pl- 開頭）；事件只處理 .bk-root 裡的東西 */
+const BK_GROUPS = [['eval','評估／等確定'],['sent','送件中'],['sign','對保'],['nurture','培養'],['end','已結束']];
+const BK_BUILTIN_GROUP = { eval:'eval', sent:'sent', sign:'sign', paid:'end', nurture:'nurture', end:'end' };
+const BK_DEFAULT_GROUP = { 廠商聯絡中:'sent', 客人問題:'sent' }; // 自己加的狀態，還沒在狀態選項設定分組前的預設
+const BK_CHANNELS = ['chen','鄒','王'];
+const BK_PACK = [['包裝','#D4EDBC','#11734B'],['不包裝','#EEF1F7','#3B4252']];
+const BK_LABEL = { customerName:'客戶姓名', phone:'電話', status:'狀態', owner:'誰的客人', channel:'送件管道', packJob:'包工作', plan:'方案', approvedAmount:'核准額度', note:'狀態備註' };
+const BK_SORTS = [['date','日期'],['customerName','客戶'],['status','狀態'],['owner','誰的客人'],['channel','送件管道'],['packJob','包工作'],['plan','方案'],['approvedAmount','核准額度'],['note','狀態備註']];
+// 各欄寬度（%）：#、日期、客戶、狀態、誰的客人、管道、包工作、方案、核准額度、狀態備註、編輯/刪除（管道、包工作分兩欄，每列只要一行高）
+const BK_COLW = [3, 6, 11, 13, 8, 9, 9, 12, 6, 14, 9];
+const BK_COLW_C = [3, 7, 12, 13, 10, 10, 12, 7, 16, 10]; // 中等寬度（約 1280 螢幕）：管道、包工作疊在同一欄，誰的客人才放得下
+const BK_TEXT_KEYS = ['status','date','owner','customerName','phone','packJob','channel','plan','note'];
+// 統計卡：評估、送件中、對保、培養中＝現在手上的案件（不分月份）；本月撥款照撥款日期
+const BK_STATS = {
+  eval:    { t:'評估／等確定', note:'不分月份', f:c=>bkGroupOf(c.status)==='eval' },
+  sent:    { t:'送件中', note:'不分月份', f:c=>bkGroupOf(c.status)==='sent' },
+  sign:    { t:'對保', note:'不分月份', f:c=>bkGroupOf(c.status)==='sign' },
+  nurture: { t:'培養中', note:'不分月份', f:c=>bkGroupOf(c.status)==='nurture' },
+  paid:    { t:'本月撥款', f:c=>c.status==='撥款完成' && (c.disbursedDate||c.date||'').startsWith(plThisM()) },
+};
+
+function bkS(){
+  if(!APP.bk) APP.bk = { quick:'month', group:'active', status:'', pack:'', owner:'', channel:'', stat:'', search:'', limit:20, filterOpen:false,
+    pop:null, pickYear:'', sort:{key:'date', dir:'desc'}, delRow:null, modal:null, pending:false, _force:false };
+  return APP.bk;
+}
+const bkAll = () => APP.data.bankLoanCases || [];
+function bkGroupOf(s){
+  const t = String(s||'').trim();
+  if(!t) return 'eval';
+  const g = (APP.bankLoanStatusGroups||{})[t];
+  if(g && BK_GROUPS.some(x=>x[0]===g)) return g;
+  const hit = BANKLOAN_STATUSES.find(x=>x[0]===t);
+  if(hit) return BK_BUILTIN_GROUP[hit[3]];
+  return BK_DEFAULT_GROUP[t] || 'sent';
+}
+const bkIsEnded = s => bkGroupOf(s)==='end';
+const bkAmt = v => (v===null || v===undefined || v==='') ? '' : String(v);
+function bkOptColor(f, v){
+  if(!v) return null;
+  if(f==='status') return bankLoanStatusColor(v); // 沿用狀態選項設定的顏色
+  if(f==='packJob'){ const p = BK_PACK.find(x=>x[0]===v); return p ? [p[1], p[2]] : PL_NEUTRAL; }
+  return ['#F1F3F7','#2B3245'];
+}
+function bkOptGroups(f){
+  if(f==='status'){ const list = bankLoanStatusList(); return BK_GROUPS.map(([g, n])=>[n, list.filter(s=>bkGroupOf(s)===g)]).filter(x=>x[1].length); }
+  if(f==='packJob') return [['', BK_PACK.map(p=>p[0])]];
+  return [['', BK_CHANNELS]];
+}
+
+function bkInQuick(c){
+  const S = bkS(), d = c.date||'';
+  if(S.quick==='today') return d===todayStr();
+  if(S.quick==='week'){ const t = new Date(); t.setDate(t.getDate()-((t.getDay()+6)%7)); return d>=formatDateLocal(t); }
+  if(S.quick==='month') return d.startsWith(plThisM());
+  if(S.quick.startsWith('m:') || S.quick.startsWith('y:')) return d.startsWith(S.quick.slice(2));
+  return true;
+}
+function bkFiltered(){
+  const S = bkS(), q = S.search.trim().toLowerCase();
+  return bkAll().filter(c=> (S.stat ? BK_STATS[S.stat].f(c) : bkInQuick(c))
+    && (S.stat || S.group==='all' || (S.group==='ended')===bkIsEnded(c.status))
+    && (!S.status || c.status===S.status)
+    && (!S.pack || (S.pack==='__none__' ? !c.packJob : c.packJob===S.pack))
+    && (!S.owner || c.owner===S.owner)
+    && (!S.channel || c.channel===S.channel)
+    && (!q || ['customerName','phone','owner','channel','plan','note','status','packJob','approvedAmount']
+      .some(k=>String(c[k]==null?'':c[k]).toLowerCase().includes(q))));
+}
+// 排序：先依月份分段，月份內照選的欄位排；空白的一律排最後
+function bkSorted(arr){
+  const { key, dir } = bkS().sort, sign = dir==='asc' ? 1 : -1, ord = bankLoanStatusList();
+  const val = c => key==='approvedAmount' ? bkAmt(c.approvedAmount) : (c[key]||'');
+  const cmp = (a, b)=>{
+    const x = val(a), y = val(b);
+    if(key==='date') return x.localeCompare(y);
+    if(key==='approvedAmount') return Number(x) - Number(y);
+    if(key==='status'){ const ix = ord.indexOf(x), iy = ord.indexOf(y); return (ix<0?999:ix) - (iy<0?999:iy); }
+    return plZh.compare(x, y);
+  };
+  const mSign = key==='date' ? sign : -1;
+  return arr.slice().sort((a, b)=>{
+    const mc = plMKey(a.date).localeCompare(plMKey(b.date)); if(mc) return mSign*mc;
+    const x = val(a), y = val(b); if(!x !== !y) return x ? -1 : 1;
+    return sign*cmp(a, b) || (b.date||'').localeCompare(a.date||'');
+  });
+}
+const bkDirLabel = (k, d)=> k==='date' ? (d==='desc'?'新→舊':'舊→新') : k==='approvedAmount' ? (d==='asc'?'少→多':'多→少') : k==='status' ? (d==='asc'?'照選單順序':'選單順序反過來') : (d==='asc'?'筆畫少→多':'筆畫多→少');
+function bkQuickLabel(){
+  const S = bkS(), q = S.quick;
+  if(S.stat) return BK_STATS[S.stat].t;
+  if(q.startsWith('m:')) return plMLabel(q.slice(2));
+  if(q.startsWith('y:')) return q.slice(2)+' 全年';
+  return { today:'今天', week:'本週', month:plMLabel(plThisM()), all:'全部日期' }[q];
+}
+const bkPackLabel = v => v==='__none__' ? '未定' : v;
+function bkSummary(){
+  const S = bkS();
+  return `${bkQuickLabel()}${S.stat ? '' : '・'+(S.status || { active:'進行中', ended:'已結束', all:'全部狀態' }[S.group])}${S.pack?'・'+bkPackLabel(S.pack):''}${S.owner?'・'+S.owner:''}${S.channel?'・'+S.channel:''}`;
+}
+function bkLayout(){
+  if(plIsMobile()) return 'cards';
+  const main = document.getElementById('main');
+  let w = window.innerWidth;
+  if(main){ const cs = getComputedStyle(main); w = main.clientWidth - (parseFloat(cs.paddingLeft)||0) - (parseFloat(cs.paddingRight)||0); }
+  return w < 900 ? 'cards' : w < 1100 ? 'compact' : 'table';
+}
+function bkEditor(c){
+  if(!c || !c._by) return '';
+  const u = (APP.users||[]).find(x=>x.email===c._by);
+  const short = c._by.replace(/@.*/, '');
+  const name = u ? (u.staffName || displayNameFor(u.id, short)) : short;
+  const d = c._at ? new Date(c._at) : null;
+  const t = d && !isNaN(d) ? `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : '';
+  return name + (t ? ' · '+t : '');
+}
+
+// ---- 畫面片段 ----
+function bkPickBtn(c, f, target){
+  const v = c[f]||'', col = bkOptColor(f, v);
+  const empty = { status:'選狀態', packJob:'未定', channel:'選管道' }[f];
+  return `<button type="button" class="pl-inl${f==='status' ? '' : ' pr'}${v?'':' empty'}" data-bk-pk="${escAttr(target||c.id)}" data-bk-f="${f}" aria-haspopup="true" aria-label="${escAttr((c.customerName||'')+' 的'+BK_LABEL[f]+'：'+(v||'未填'))}" style="${col?`background-color:${col[0]};color:${col[1]};`:''}">${escHtml(v||empty)}</button>`;
+}
+function bkTxt(c, f, ph, cls, area, list){
+  const aria = escAttr((c.customerName||'')+' 的'+BK_LABEL[f]);
+  if(area) return `<textarea class="pl-t bk-t ${cls||''}" rows="1" data-bk-id="${escAttr(c.id)}" data-bk-t="${f}" placeholder="${ph}" aria-label="${aria}">${plTa(c[f])}</textarea>`;
+  const v = f==='approvedAmount' ? bkAmt(c[f]) : (c[f]||'');
+  return `<input type="text" class="pl-t bk-t ${cls||''}" ${list?`list="${list}"`:''} ${f==='approvedAmount'?'inputmode="decimal"':''} data-bk-id="${escAttr(c.id)}" data-bk-t="${f}" value="${escAttr(v)}" placeholder="${ph}" aria-label="${aria}"/>`;
+}
+function bkDelCtl(c){
+  if(bkS().delRow===c.id) return `<div class="pl-confirm">確定刪除「${escHtml(c.customerName||'')}」？<button type="button" class="pl-btn danger" data-bk-delyes="${escAttr(c.id)}">刪除</button><button type="button" class="pl-btn sec" data-bk-delno>不要刪</button></div>`;
+  return `<button type="button" class="pl-del" data-bk-del="${escAttr(c.id)}">刪除</button>`;
+}
+const bkActs = c => `<div class="pl-acts"><button type="button" class="pl-link" data-bk-open="${escAttr(c.id)}">編輯</button>${bkDelCtl(c)}</div>`;
+const bkFBtn = (k, label, cls) => `<button type="button" class="pl-fpk${cls?' '+cls:''}" data-bk-fk="${k}" aria-haspopup="true">${escHtml(label)}</button>`;
+const bkSortBtn = () => { const S = bkS(); return bkFBtn('sort', `⇅ ${BK_SORTS.find(s=>s[0]===S.sort.key)[1]}・${bkDirLabel(S.sort.key, S.sort.dir)}`, 'pl-sortsel'); };
+
+function bkStatsHTML(){
+  const S = bkS(), L = bkAll();
+  return `<div class="pl-stats pg-stats">${Object.keys(BK_STATS).map(k=>{ const s = BK_STATS[k];
+    return `<button type="button" class="pl-stat" data-bk-stat="${k}" aria-pressed="${S.stat===k}"><div class="k">${s.t}</div><div class="v">${L.filter(s.f).length}${s.note?`<small class="pg-vnote">${s.note}</small>`:''}</div></button>`; }).join('')}</div>`;
+}
+function bkFilterHTML(m){
+  const S = bkS();
+  const chips = [['today','今天'],['week','本週'],['month','本月'],['all','全部']].map(([k,t])=>`<button type="button" class="pl-chip" data-bk-quick="${k}" aria-pressed="${!S.stat && S.quick===k}">${t}</button>`).join('');
+  const sels = bkFBtn('month', `月份：${S.quick.startsWith('m:')||S.quick.startsWith('y:') ? bkQuickLabel() : S.quick==='month' ? '本月' : '全部月份'}`)
+    + bkFBtn('group', `狀態：${S.status || {active:'進行中', ended:'已結束', all:'全部'}[S.group]}`)
+    + bkFBtn('pack', `包工作：${S.pack ? bkPackLabel(S.pack) : '全部'}`)
+    + bkFBtn('owner', `誰的客人：${S.owner||'全部'}`)
+    + bkFBtn('channel', `管道：${S.channel||'全部'}`);
+  const search = `<input type="search" class="pl-search" id="bk-search" placeholder="搜尋姓名、電話、備註" value="${escAttr(S.search)}"/>`;
+  if(!m) return `<div class="pl-filters">${chips}${sels}${search}</div>`;
+  return `<div class="pl-filters">${chips}<button type="button" class="pl-chip pl-fbtn" data-bk-ftoggle aria-expanded="${S.filterOpen}">${escHtml(bkSummary())} ▾</button>${bkSortBtn()}</div>
+    ${S.filterOpen ? `<div class="pl-panel">${sels}${search}<button type="button" class="pl-btn sec" data-bk-ftoggle>完成</button></div>` : ''}`;
+}
+function bkRowsHTML(all, layout){
+  const S = bkS(), rows = all.slice(0, S.limit);
+  const more = all.length > S.limit ? `<button type="button" class="pl-btn sec pl-more" data-bk-more>顯示更多（還有 ${all.length-S.limit} 件）</button>` : '';
+  if(layout==='cards') return `<div class="pl-cards${plIsMobile()?'':' pg-cards2'}">${plWithMonths(all, rows, (c, i)=>`
+    <div class="pl-card">
+      <div class="top"><span class="no">${i+1}</span>${bkTxt(c,'customerName','客戶姓名','cname')}${bkPickBtn(c,'status')}</div>
+      <div class="line2"><span class="ph">${bkTxt(c,'phone','電話','sub')}</span>${bkPickBtn(c,'packJob')}</div>
+      <div class="pg-ln"><span>誰的客人</span>${bkTxt(c,'owner','誰的客人','sub',false,'bk-owner-list')}<span>管道</span>${bkPickBtn(c,'channel')}</div>
+      ${c.plan ? `<div class="bk-lbl">方案</div>${bkTxt(c,'plan','方案','nbox',true)}` : ''}
+      ${bkTxt(c,'note','狀態備註','nbox',true)}
+      ${S.delRow===c.id ? bkDelCtl(c) : `<div class="foot"><span>${plMD(c.date)}${bkAmt(c.approvedAmount) ? `・核准 <b class="bk-amtb">${escHtml(bkAmt(c.approvedAmount))} 萬</b>` : ''}</span>${bkActs(c)}</div>`}
+    </div>`, (k, n)=>`<div class="pl-mhead pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div>`, (y, n)=>`<div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div>`)}</div>${more}`;
+  const th = (k, t)=>{ const on = S.sort.key===k; return `<th${k==='approvedAmount'?' class="bk-amt"':''}><button type="button" class="pl-thbtn${on?' on':''}" data-bk-sort="${k}" aria-label="依${t}排序">${t}<span>${on?(S.sort.dir==='asc'?'▲':'▼'):'↕'}</span></button></th>`; };
+  const compact = layout==='compact', span = compact ? 10 : 11;
+  const cols = compact ? BK_SORTS.filter(s=>s[0]!=='packJob') : BK_SORTS;
+  return `<div class="pl-tablewrap"><table class="pl-table pg-table bk-table">
+    <colgroup>${(compact ? BK_COLW_C : BK_COLW).map(w=>`<col style="width:${w}%">`).join('')}</colgroup>
+    <thead><tr><th class="no">#</th>${cols.map(([k,t])=>th(k, { channel:'管道', approvedAmount:'額度(萬)' }[k] || t)).join('')}<th></th></tr></thead>
+    <tbody>${plWithMonths(all, rows, (c, i)=>`<tr>
+      <td class="no">${i+1}</td>
+      <td class="date">${plMD(c.date)}</td>
+      <td>${bkTxt(c,'customerName','客戶姓名','cname')}${bkTxt(c,'phone','電話','sub')}</td>
+      <td>${bkPickBtn(c,'status')}</td>
+      <td>${bkTxt(c,'owner','誰的客人','',false,'bk-owner-list')}</td>
+      ${compact ? `<td class="bk-pc"><div class="pg-staffcell">${bkPickBtn(c,'channel')}<div>${bkPickBtn(c,'packJob')}</div></div></td>`
+        : `<td class="bk-pc">${bkPickBtn(c,'channel')}</td><td class="bk-pc">${bkPickBtn(c,'packJob')}</td>`}
+      <td>${bkTxt(c,'plan','方案','',true)}</td>
+      <td class="bk-amt">${bkTxt(c,'approvedAmount','—')}</td>
+      <td>${bkTxt(c,'note','點擊輸入備註','',true)}</td>
+      <td>${S.delRow===c.id ? bkDelCtl(c) : bkActs(c)}</td>
+    </tr>`, (k, n)=>`<tr class="pl-mrow"><td colspan="${span}"><div class="pl-mlabel">${k}<span class="pl-sub">${n} 件</span></div></td></tr>`,
+      (y, n)=>`<tr class="pl-yrow"><td colspan="${span}"><div class="pl-yhead">${y}<span class="pl-sub">共 ${n} 件</span></div></td></tr>`)}</tbody></table></div>${more}`;
+}
+function bkListHTML(all, layout){
+  const S = bkS(), L = bkAll();
+  const count = `<div class="pl-count">符合 <b>${all.length}</b> 件・全部 <b>${L.length}</b> 件</div>`;
+  if(all.length) return count + bkRowsHTML(all, layout);
+  const msg = !L.length ? '尚無銀行信貸案件，按「＋ 新增案件」開始登記。'
+    : S.quick==='month' && !S.stat && !L.some(c=>(c.date||'').startsWith(plThisM())) ? `${plMLabel(plThisM())}還沒有案件。要看上個月，點「月份」選。`
+    : '沒有符合的案件，換個篩選條件看看。';
+  return count + `<div class="pl-empty">${msg}</div>`;
+}
+function bkFilterPicker(k){
+  const S = bkS();
+  const btn = (val, label, on, c, long)=>{ c = c || PL_NEUTRAL; long = long===undefined ? label.length>6 : long;
+    return `<button type="button" class="pl-pill${long?' long':''}" data-bk-fpick="${k}" data-bk-val="${escAttr(val)}" aria-pressed="${on}" style="background:${c[0]};color:${c[1]};">${on?'✓ ':''}${escHtml(label)}</button>`; };
+  const sec = (t, html)=>`<div class="pl-pickgrp">${t}</div><div class="pl-picks">${html}</div>`;
+  if(k==='group') return sec('範圍', [['active','進行中'],['ended','已結束'],['all','全部']].map(([v,t])=>btn('g:'+v, t, !S.status && S.group===v)).join(''))
+    + bkOptGroups('status').map(([g, a])=>sec('只看一種・'+g, a.map(s=>btn('s:'+s, s, S.status===s, bkOptColor('status', s))).join(''))).join('');
+  if(k==='pack') return `<div class="pl-picks">${btn('', '全部', !S.pack)}${BK_PACK.map(p=>btn(p[0], p[0], S.pack===p[0], [p[1], p[2]])).join('')}${btn('__none__', '未定', S.pack==='__none__')}</div>`;
+  if(k==='owner' || k==='channel'){
+    const names = Array.from(new Set(bkAll().map(c=>c[k]).concat(k==='channel' ? BK_CHANNELS : []).filter(Boolean))).sort(plZh.compare);
+    return `<div class="pl-picks">${btn('', '全部', !S[k])}${names.map(n=>btn(n, n, S[k]===n)).join('')}</div>`;
+  }
+  if(k==='month'){
+    const L = bkAll();
+    const cur = S.stat ? '' : S.quick==='month' ? plThisM() : S.quick.startsWith('m:') ? S.quick.slice(2) : '';
+    const years = Array.from(new Set(L.map(c=>(c.date||'').slice(0,4)).filter(Boolean).concat([plThisY()]))).sort().reverse();
+    const py = S.pickYear || (cur || (S.quick.startsWith('y:') ? S.quick.slice(2) : plThisY())).slice(0,4);
+    const n = p => L.filter(c=>(c.date||'').startsWith(p)).length;
+    const months = Array.from({length:12}, (_, i)=>`${py}-${String(i+1).padStart(2,'0')}`);
+    const mBtn = mk=>{
+      const cnt = n(mk), on = cur===mk, now = mk===plThisM(), off = !cnt && !now;
+      return `<button type="button" class="pl-pill mcell${now?' now':''}" data-bk-fpick="month" data-bk-val="m:${mk}" aria-pressed="${on}" ${off?'disabled':''}>${on?'✓ ':''}${Number(mk.slice(5))} 月<small>${now?`本月・${cnt}`:`${cnt} 件`}</small></button>`;
+    };
+    return `<div class="pl-picks">${btn('all','全部月份', S.quick==='all' && !S.stat)}</div>`
+      + `<div class="pl-pickgrp">年份</div><div class="pl-picks yrs">${years.map(y=>`<button type="button" class="pl-pill ycell" data-bk-fpick="month" data-bk-val="py:${y}" aria-pressed="${y===py}">${y}</button>`).join('')}</div>`
+      + `<div class="pl-pickgrp">${py} 年${py===plThisY()?'（今年）':''}</div>`
+      + `<div class="pl-picks">${btn('y:'+py, `${py} 全年（${n(py)} 件）`, !S.stat && S.quick==='y:'+py, PL_NEUTRAL, false).replace('class="pl-pill', 'class="pl-pill wide')}</div>`
+      + `<div class="pl-picks mgrid">${months.map(mBtn).join('')}</div>`;
+  }
+  return sec('依哪一欄排序', BK_SORTS.map(([v,t])=>btn('k:'+v, t, S.sort.key===v)).join(''))
+    + sec('順序', (S.sort.key==='date' ? ['desc','asc'] : ['asc','desc']).map(d=>btn('d:'+d, bkDirLabel(S.sort.key, d), S.sort.dir===d)).join(''));
+}
+function bkPicker(f, cur, target){
+  const grp = (g, arr)=>`${g?`<div class="pl-pickgrp">${g}</div>`:''}<div class="pl-picks">${arr.map(o=>{ const c = bkOptColor(f, o);
+    return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-bk-pick="${escAttr(o)}" data-bk-pt="${escAttr(target)}" data-bk-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
+  return bkOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
+    + ((f==='packJob' || f==='channel') && cur ? `<button type="button" class="pl-pickclear" data-bk-pick="" data-bk-pt="${escAttr(target)}" data-bk-f="${f}">${f==='packJob'?'改回未定':'清除，改回未填'}</button>` : '')
+    + (f==='status' ? `<div class="pg-flowhint">選 <b>撥款完成</b>：記下撥款日期，「本月撥款」照這個日期算</div>${target==='__modal' ? '' : '<button type="button" class="pl-pickclear" data-bk-opts>⚙ 新增／編輯狀態選項（名稱、顏色、算在哪一組）</button>'}` : '');
+}
+function bkPopHTML(){
+  const S = bkS(); if(!S.pop) return '';
+  const { id, f, fk } = S.pop;
+  let title, body;
+  if(fk){ title = { month:'選月份', group:'篩選狀態', pack:'篩選包工作', owner:'篩選誰的客人', channel:'篩選送件管道', sort:'排序' }[fk]; body = bkFilterPicker(fk); }
+  else {
+    const c = id==='__modal' ? (S.modal && S.modal.rec) : bkAll().find(x=>x.id===id);
+    if(!c){ S.pop = null; return ''; }
+    title = `${escHtml(c.customerName||'新案件')}・${BK_LABEL[f]}`; body = bkPicker(f, c[f]||'', id);
+  }
+  if(plIsMobile()) return `<div class="pl-overlay sheet" data-bk-popbg><div class="pl-dialog"><div class="pl-dlg-h"><h2>${title}</h2><button type="button" class="pl-x" data-bk-popclose aria-label="關閉">×</button></div><div class="pl-dlg-b">${body}</div></div></div>`;
+  return `<div class="pl-pop" id="bk-pop" style="left:${S.pop.x}px;top:${S.pop.y}px;"><div class="pl-pophead">${title}</div>${body}</div>`;
+}
+function bkModalHTML(){
+  const M = bkS().modal; if(!M) return '';
+  const r = M.rec;
+  const del = M.edit ? (M.confirmDel
+    ? `<div class="pl-dconfirm">確定刪除「${escHtml(r.customerName||'')}」？<button type="button" class="pl-btn danger" data-bk-mdelyes>刪除</button><button type="button" class="pl-btn sec" data-bk-mdelno>不要刪</button></div>`
+    : `<button type="button" class="pl-btn sec" data-bk-mdel style="margin-right:auto;color:var(--pl-danger);">刪除這筆</button>`) : '';
+  return `<div class="pl-overlay" data-bk-modalbg><form class="pl-dialog" id="bk-form" data-bk-key="${M.key}" novalidate>
+    <div class="pl-dlg-h"><h2>${M.edit?'編輯案件':'新增銀行信貸案件'}</h2><button type="button" class="pl-x" data-bk-mclose aria-label="關閉">×</button></div>
+    <div class="pl-dlg-b">
+      <div class="pl-row2">
+        <label class="pl-field"><span>客戶姓名 <em>*</em></span><input id="bk-fName" value="${escAttr(r.customerName||'')}" autocomplete="off"/>${M.err?`<span class="pl-err">${escHtml(M.err)}</span>`:''}</label>
+        <div class="pl-field"><span>狀態</span>${bkPickBtn(r,'status','__modal')}</div>
+      </div>
+      <div class="pl-row2">
+        <label class="pl-field"><span>日期</span><input id="bk-fDate" type="date" value="${escAttr(r.date||'')}"/></label>
+        <label class="pl-field"><span>電話</span><input id="bk-fPhone" inputmode="tel" value="${escAttr(r.phone||'')}"/></label>
+      </div>
+      <div class="pl-row2">
+        <label class="pl-field"><span>誰的客人</span><input id="bk-fOwner" list="bk-owner-list" value="${escAttr(r.owner||'')}"/></label>
+        <div class="pl-field"><span>送件管道</span>${bkPickBtn(r,'channel','__modal')}</div>
+      </div>
+      <div class="pl-row2">
+        <div class="pl-field"><span>包工作</span><div class="bk-seg" role="group" aria-label="包工作">${[['包裝','包裝'],['不包裝','不包裝'],['','未定']].map(([v,t])=>`<button type="button" data-bk-mpack="${v}" aria-pressed="${(r.packJob||'')===v}">${t}</button>`).join('')}</div></div>
+        <label class="pl-field"><span>核准額度（萬）</span><input id="bk-fAmt" inputmode="decimal" value="${escAttr(bkAmt(r.approvedAmount))}"/></label>
+      </div>
+      <label class="pl-field"><span>方案</span><textarea id="bk-fPlan" rows="2" placeholder="例：可收 70 萬、用原公司包">${plTa(r.plan)}</textarea></label>
+      <label class="pl-field"><span>狀態備註</span><textarea id="bk-fNote" rows="3">${plTa(r.note)}</textarea></label>
+      ${M.edit && M.editor ? `<div class="pg-flowhint">最後編輯：${escHtml(M.editor)}</div>` : ''}
+    </div>
+    <div class="pl-dlg-f">${del}
+      ${M.edit ? '' : '<button type="button" class="pl-btn sec" data-bk-savenext>儲存並新增下一筆</button>'}
+      <button type="submit" class="pl-btn">儲存</button></div>
+  </form></div>`;
+}
+function bkCaptureForm(){
+  const M = bkS().modal, form = document.getElementById('bk-form');
+  if(!M || !form || form.dataset.bkKey!==M.key) return;
+  const v = id=>{ const el = document.getElementById(id); return el ? el.value : undefined; };
+  const r = M.rec, set = (k, val)=>{ if(val!==undefined) r[k] = val; };
+  set('customerName', v('bk-fName')); set('date', v('bk-fDate')); set('phone', v('bk-fPhone')); set('owner', v('bk-fOwner'));
+  set('approvedAmount', v('bk-fAmt')); set('plan', v('bk-fPlan')); set('note', v('bk-fNote'));
+}
+function bkPageHTML(){
+  const S = bkS();
+  bkCaptureForm();
+  const layout = bkLayout(), all = bkSorted(bkFiltered());
+  const owners = Array.from(new Set(bkAll().map(c=>c.owner).filter(Boolean))).sort(plZh.compare);
+  setTimeout(bkAfterRender, 0);
+  S._layout = layout;
+  return `<div class="bk-root">
+    ${bkStatsHTML()}${bkFilterHTML(plIsMobile())}${bkListHTML(all, layout)}
+    <datalist id="bk-owner-list">${owners.map(s=>`<option value="${escAttr(s)}">`).join('')}</datalist>
+    <button type="button" class="pl-fab" data-bk-add>＋ 新增案件</button>
+    ${bkModalHTML()}${bkPopHTML()}
+  </div>`;
+}
+function bkAfterRender(){
+  document.querySelectorAll('.bk-root textarea.bk-t').forEach(plGrow);
+  const S = bkS(), p = document.getElementById('bk-pop');
+  if(p && S.pop && S.pop.top!=null && S.pop.y + p.offsetHeight > window.innerHeight - 8){
+    S.pop.y = Math.max(8, S.pop.top - p.offsetHeight - 6); p.style.top = S.pop.y + 'px';
+  }
+}
+function bkRender(){ const S = bkS(); S._force = true; try{ render(); } finally{ S._force = false; } }
+const bkTyping = () => { const a = document.activeElement; return !!(a && a.closest && a.closest('.bk-root') && /^(INPUT|TEXTAREA)$/.test(a.tagName)); };
+function bkShouldDefer(){
+  const S = bkS(); if(S._force) return false;
+  if(!bkTyping()) return false;
+  S.pending = true;
+  if(!S._deferTimer) S._deferTimer = setInterval(()=>{
+    if(bkTyping()) return;
+    clearInterval(S._deferTimer); S._deferTimer = null;
+    if(S.pending && APP.view==='bankLoan'){ S.pending = false; render(); }
+  }, 400);
+  return true;
+}
+const bkFail = err => { console.error('銀行信貸儲存失敗', err); alert('儲存失敗，請檢查網路後再試一次：\n' + (err && err.message ? err.message : err)); };
+// 只更新指定欄位；狀態改成撥款完成時記撥款日期，回傳要接在提示後面的說明
+function bkUpdate(id, patch){
+  const c = bkAll().find(x=>x.id===id);
+  let extra = '';
+  if('status' in patch && c && patch.status!==(c.status||'') && patch.status==='撥款完成'){ patch.disbursedDate = todayStr(); extra = '，已記下撥款日期'; }
+  const full = stamp(patch);
+  if(c) Object.assign(c, full);
+  updateDoc(doc(db,'bankLoanCases', id), full).catch(bkFail);
+  return extra;
+}
+// 核准額度：空白存 null，其他要是數字（單位：萬）；不是數字回傳 undefined
+function bkParseAmt(v){ const t = String(v==null?'':v).trim(); if(t==='') return null; const n = Number(t); return isNaN(n) ? undefined : n; }
+function bkOpenNew(base){
+  bkS().modal = { key:uid(), edit:false, err:'', rec:{ status:'評估中', date:todayStr(), owner:'', customerName:'', phone:'', packJob:'', channel:'', plan:'', approvedAmount:'', note:'', ...(base||{}) } };
+  bkRender(); setTimeout(()=>{ const el = document.getElementById('bk-fName'); if(el) el.focus(); }, 0);
+}
+function bkSaveModal(next){
+  const S = bkS(), M = S.modal; if(!M) return;
+  bkCaptureForm();
+  const r = M.rec;
+  if(!(r.customerName||'').trim()){ M.err = '請填客戶姓名'; bkRender(); const el = document.getElementById('bk-fName'); if(el) el.focus(); return; }
+  const amt = bkParseAmt(r.approvedAmount);
+  if(amt===undefined){ M.err = '核准額度請填數字（單位：萬）'; bkRender(); return; }
+  M.err = '';
+  if(M.edit){
+    const c = bkAll().find(x=>x.id===r.id);
+    if(!c){ S.modal = null; bkRender(); plToast('這筆案件已經被刪除了'); return; }
+    // 只寫有改的欄位；只差前後空白不算改
+    const patch = {};
+    BK_TEXT_KEYS.forEach(k=>{
+      const a = String(r[k]==null?'':r[k]), o = String(M.orig[k]==null?'':M.orig[k]);
+      if(a===o || (k!=='note' && k!=='plan' && a.trim()===o.trim())) return;
+      patch[k] = (k==='note' || k==='plan') ? a : a.trim();
+    });
+    const oAmt = M.orig.approvedAmount==='' || M.orig.approvedAmount==null ? null : Number(M.orig.approvedAmount);
+    if(amt!==oAmt) patch.approvedAmount = amt;
+    const n = Object.keys(patch).length, extra = n ? bkUpdate(c.id, patch) : '';
+    S.modal = null; bkRender();
+    plToast(n ? `已儲存「${r.customerName.trim()}」${extra}` : '沒有變更');
+    return;
+  }
+  const rec = stamp({ id:uid(), ...BK_TEXT_KEYS.reduce((o, k)=>(o[k] = (k==='note' || k==='plan') ? String(r[k]||'') : String(r[k]||'').trim(), o), {}), approvedAmount:amt });
+  if(!rec.status) rec.status = '評估中';
+  let extra = '';
+  if(rec.status==='撥款完成'){ rec.disbursedDate = todayStr(); extra = '，已記下撥款日期'; }
+  saveBankLoanCase(rec).catch(bkFail);
+  if(next){ bkOpenNew({ date:rec.date, owner:rec.owner, channel:rec.channel, packJob:rec.packJob }); plToast(`已新增「${rec.customerName}」${extra}，接著填下一筆`); }
+  else { S.modal = null; bkRender(); plToast(`已新增「${rec.customerName}」${extra}`); }
+}
+function bkDelete(c){
+  deleteBankLoanCase(c.id).catch(bkFail);
+  plToast(`已刪除「${c.customerName||''}」`);
+}
+function bkOpenPop(opener){
+  const S = bkS(), fk = opener.dataset.bkFk, W = 340;
+  S.pickYear = '';
+  const b = opener.getBoundingClientRect();
+  if(opener.dataset.bkPk==='__modal') bkCaptureForm();
+  S.pop = { id: opener.dataset.bkPk, f: opener.dataset.bkF, fk, top: b.top,
+    x: Math.max(8, Math.min(b.left, window.innerWidth - W - 8)), y: b.bottom + 6 };
+  bkRender();
+}
+
+document.addEventListener('click', (e)=>{
+  const t = e.target;
+  if(!t.closest || !(t.closest('.bk-root') || t.closest('[data-bk-add]') || t.closest('[data-bk-opts]'))) return;
+  const S = bkS();
+  if(t.closest('[data-bk-opts]')){ S.pop = null; bkRender(); openBankLoanStatusOptionsModal(); return; }
+  const pk = t.closest('[data-bk-pick]');
+  if(pk){
+    const pt = pk.dataset.bkPt, f = pk.dataset.bkF, v = pk.dataset.bkPick; S.pop = null;
+    if(pt==='__modal'){ bkCaptureForm(); if(S.modal) S.modal.rec[f] = v; return bkRender(); }
+    const c = bkAll().find(x=>x.id===pt); if(!c || (c[f]||'')===v) return bkRender();
+    const extra = bkUpdate(c.id, { [f]: v });
+    let msg = `${c.customerName}：${BK_LABEL[f]}改為「${v || (f==='packJob'?'未定':'未填')}」${extra}`;
+    if(f==='status' && !S.stat && !S.status && S.group!=='all' && (S.group==='ended')!==bkIsEnded(v)) msg += `，已移到「${bkIsEnded(v)?'已結束':'進行中'}」`;
+    bkRender(); plToast(msg); return;
+  }
+  const fp = t.closest('[data-bk-fpick]');
+  if(fp){
+    const k = fp.dataset.bkFpick, v = fp.dataset.bkVal, keep = S.pop;
+    if(k==='month' && v.startsWith('py:')){ S.pickYear = v.slice(3); return bkRender(); }
+    S.limit = 20; S.pop = null;
+    if(k==='group'){ S.stat = ''; const [a, b] = v.split(':'); if(a==='g'){ S.group = b; S.status = ''; } else { S.group = 'all'; S.status = b; } }
+    if(k==='pack') S.pack = v;
+    if(k==='owner') S.owner = v;
+    if(k==='channel') S.channel = v;
+    if(k==='month'){ S.stat = ''; S.quick = v==='m:'+plThisM() ? 'month' : v; }
+    if(k==='sort'){
+      const [a, b] = v.split(':');
+      if(a==='k'){ S.sort = { key:b, dir: S.sort.key===b ? S.sort.dir : b==='date' ? 'desc' : 'asc' }; S.pop = keep; }
+      else S.sort.dir = b;
+    }
+    return bkRender();
+  }
+  const opener = t.closest('[data-bk-pk], [data-bk-fk]');
+  if(S.pop && !t.closest('#bk-pop') && !t.closest('.pl-overlay.sheet .pl-dialog')){
+    const same = opener && (opener.dataset.bkFk ? opener.dataset.bkFk===S.pop.fk : opener.dataset.bkPk===S.pop.id && opener.dataset.bkF===S.pop.f);
+    S.pop = null; bkRender(); if(!opener || same) return;
+  }
+  if(t.closest('[data-bk-popclose]')){ S.pop = null; return bkRender(); }
+  if(opener){ const again = opener.dataset.bkFk ? document.querySelector(`.bk-root [data-bk-fk="${opener.dataset.bkFk}"]`) : document.querySelector(`.bk-root [data-bk-pk="${CSS.escape(opener.dataset.bkPk)}"][data-bk-f="${opener.dataset.bkF}"]`); return bkOpenPop(again || opener); }
+  if(t.closest('[data-bk-add]')) return bkOpenNew();
+  const mp = t.closest('[data-bk-mpack]'); if(mp && S.modal){ bkCaptureForm(); S.modal.rec.packJob = mp.dataset.bkMpack; return bkRender(); }
+  const so = t.closest('[data-bk-sort]');
+  if(so){ const k = so.dataset.bkSort; S.sort = S.sort.key===k ? { key:k, dir: S.sort.dir==='asc'?'desc':'asc' } : { key:k, dir: k==='date'?'desc':'asc' }; return bkRender(); }
+  const dl = t.closest('[data-bk-del]'); if(dl){ S.delRow = dl.dataset.bkDel; return bkRender(); }
+  if(t.closest('[data-bk-delno]')){ S.delRow = null; return bkRender(); }
+  const dy = t.closest('[data-bk-delyes]');
+  if(dy){ const c = bkAll().find(x=>x.id===dy.dataset.bkDelyes); S.delRow = null; if(c) bkDelete(c); return bkRender(); }
+  const op = t.closest('[data-bk-open]');
+  if(op && !S.modal){
+    const c = bkAll().find(x=>x.id===op.dataset.bkOpen); if(!c) return;
+    const rec = BK_TEXT_KEYS.reduce((o, k)=>(o[k] = c[k]||'', o), { id:c.id, approvedAmount:bkAmt(c.approvedAmount) });
+    S.modal = { key:uid(), edit:true, err:'', rec, orig:{ ...rec }, editor:bkEditor(c) }; return bkRender();
+  }
+  const sb = t.closest('[data-bk-stat]');
+  if(sb){ S.stat = S.stat===sb.dataset.bkStat ? '' : sb.dataset.bkStat; S.status = ''; S.limit = 20; return bkRender(); }
+  const q = t.closest('[data-bk-quick]'); if(q){ S.quick = q.dataset.bkQuick; S.stat = ''; S.limit = 20; return bkRender(); }
+  if(t.closest('[data-bk-ftoggle]')){ S.filterOpen = !S.filterOpen; return bkRender(); }
+  if(t.closest('[data-bk-more]')){ S.limit += 20; return bkRender(); }
+  if(t.closest('[data-bk-mclose]') || t.matches('[data-bk-modalbg]')){ S.modal = null; return bkRender(); }
+  if(t.matches('[data-bk-popbg]')){ S.pop = null; return bkRender(); }
+  if(t.closest('[data-bk-savenext]')) return bkSaveModal(true);
+  if(t.closest('[data-bk-mdel]')){ bkCaptureForm(); S.modal.confirmDel = true; return bkRender(); }
+  if(t.closest('[data-bk-mdelno]')){ S.modal.confirmDel = false; return bkRender(); }
+  if(t.closest('[data-bk-mdelyes]')){ const M = S.modal; S.modal = null; const c = bkAll().find(x=>x.id===M.rec.id); if(c) bkDelete(c); bkRender(); return; }
+});
+document.addEventListener('submit', (e)=>{
+  if(e.target.id!=='bk-form') return;
+  e.preventDefault(); bkSaveModal(false);
+});
+// 列表上直接打字：離開欄位（或按 Enter）自動儲存，只更新那一欄
+document.addEventListener('change', (e)=>{
+  const el = e.target;
+  if(!el.matches || !el.matches('.bk-root .bk-t')) return;
+  const id = el.dataset.bkId, f = el.dataset.bkT;
+  const c = bkAll().find(x=>x.id===id); if(!c) return;
+  if(f==='approvedAmount'){
+    const n = bkParseAmt(el.value);
+    if(n===undefined){ el.value = bkAmt(c.approvedAmount); plToast('核准額度請填數字（單位：萬）'); return; }
+    const o = c.approvedAmount==='' || c.approvedAmount==null ? null : Number(c.approvedAmount);
+    if(n===o) return;
+    bkUpdate(id, { approvedAmount: n }); plToast('已儲存：核准額度'); return;
+  }
+  const v = el.tagName==='TEXTAREA' ? el.value : el.value.trim();
+  if(f==='customerName' && !v){ el.value = c.customerName||''; plToast('客戶姓名不能空白'); return; }
+  if((c[f]||'')===v) return;
+  bkUpdate(id, { [f]: v });
+  plToast(`已儲存：${BK_LABEL[f]}`);
+});
+document.addEventListener('input', (e)=>{
+  const el = e.target;
+  if(el.matches && el.matches('.bk-root textarea.bk-t')) return plGrow(el);
+  if(el.id!=='bk-search' || e.isComposing) return;
+  bkSearchApply(el);
+});
+document.addEventListener('compositionend', (e)=>{ if(e.target.id==='bk-search') bkSearchApply(e.target); });
+function bkSearchApply(el){
+  const S = bkS(), pos = el.selectionStart;
+  S.search = el.value; S.limit = 20;
+  bkRender();
+  const n = document.getElementById('bk-search'); if(n){ n.focus(); try{ n.setSelectionRange(pos, pos); }catch(_){} }
+}
+document.addEventListener('keydown', (e)=>{
+  if(!e.target.closest || !document.querySelector('.bk-root')) return;
+  if(e.key==='Enter' && e.target.matches('.bk-root .bk-t') && !e.shiftKey && !e.isComposing){ e.preventDefault(); e.target.blur(); return; }
+  if(e.key==='Escape'){
+    const S = bkS();
+    if(S.pop){ S.pop = null; bkRender(); } else if(S.modal){ S.modal = null; bkRender(); }
+  }
+});
+document.addEventListener('focusout', (e)=>{
+  if(!e.target.closest || !e.target.closest('.bk-root')) return;
+  setTimeout(()=>{ const S = bkS(); if(S.pending && APP.view==='bankLoan' && !bkShouldDefer()){ S.pending = false; render(); } }, 0);
+});
+document.addEventListener('scroll', (e)=>{
+  const S = APP.bk; if(!S || !S.pop || plIsMobile() || APP.view!=='bankLoan') return;
+  if(e.target && e.target.closest && e.target.closest('#bk-pop')) return;
+  S.pop = null; bkRender();
+}, true);
+let bkResizeTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(bkResizeTimer);
+  bkResizeTimer = setTimeout(()=>{
+    if(APP.view!=='bankLoan' || !APP.bk || bkLayout()===APP.bk._layout) return;
+    APP.bk.pop = null; render();
+  }, 150);
+});
+function bankLoanPageHTML(){
+  return `
+    <div class="page-header"><div><h1 class="page-title">銀行信貸</h1><p class="page-sub">信貸送件追蹤・只有核心成員可以查看與編輯・名字、電話、方案、備註等直接點就能改，離開欄位自動儲存</p></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn ghost m-hide-640" data-bk-opts>⚙ 新增／編輯狀態</button>
+        <button class="btn ghost m-hide-640" data-action="bankloan-import">📥 匯入試算表</button>
+        <button class="btn primary m-hide-640" data-bk-add>＋ 新增案件</button>
+      </div>
+    </div>
+    ${bkPageHTML()}`;
+}
 /* ---- 逾期未更新案件（超過7天沒更新狀態），總覽的數字跟明細彈窗共用同一套判斷邏輯 ---- */
 function isStaleCase(c){
   if(STATUS_DONE.includes(c.status) || STATUS_CLOSED.includes(c.status)) return false;
@@ -6087,18 +6642,20 @@ function openBankLoanStatusOptionsModal(){
   const list = bankLoanStatusList();
   const swatches = ['#FFE5A0','#FFC8AA','#D4EDBC','#BBD3FF','#E9D5FF','#FBCFE8','#11734B','#215A6C','#B10202','#3D3D3D'];
   const rowHtml = (name, isNew)=>{
-    let c = String(bankLoanStatusColor(name)[0] || '').toLowerCase();
+    let c = isNew ? '#bbd3ff' : String(bankLoanStatusColor(name)[0] || '').toLowerCase(); // 新的一列先給淺藍，不然是白色看不到
     if(!/^#[0-9a-f]{6}$/.test(c)) c = '#bbd3ff';
-    return `<div class="blo-row" data-old="${escAttr(isNew?'':name)}" data-orig="${c}" data-new="${isNew?1:0}" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #EEF1F8;">
+    return `<div class="blo-row" data-old="${escAttr(isNew?'':name)}" data-orig="${c}" data-new="${isNew?1:0}" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #EEF1F8;">
       <span class="blo-pill bl-pill" style="min-width:70px;text-align:center;background:${c};color:${bankLoanContrast(c)};">${escHtml(name||'新狀態')}</span>
       <input type="text" class="blo-name" value="${escAttr(name)}" style="flex:1;min-width:0;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font:inherit;"/>
       <input type="color" class="blo-color" value="${c}" style="width:42px;height:38px;border:1px solid var(--border);border-radius:8px;padding:2px;background:#fff;cursor:pointer;"/>
+      <select class="blo-group" title="算在哪一組" style="height:38px;border:1px solid var(--border);border-radius:8px;padding:0 6px;font:inherit;background:#fff;">${BK_GROUPS.map(([g, n])=>`<option value="${g}" ${bkGroupOf(name)===g?'selected':''}>${n}</option>`).join('')}</select>
       <button type="button" class="icon-btn blo-up" title="上移">↑</button><button type="button" class="icon-btn blo-down" title="下移">↓</button><button type="button" class="icon-btn blo-del" title="刪除">✕</button>
     </div>`;
   };
-  openModal('編輯銀行信貸狀態選項', `
-    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每一列是一個狀態:左邊改名稱,中間按色塊選顏色(文字會自動配成看得清楚的黑或白),右邊可上下移動或刪除。已經有案件在用的狀態,就算刪掉也會留在選單裡,不會改到案件;改名時,正在使用舊名稱的案件會在你按儲存後一起改成新名稱(儲存前會先告訴你有幾筆)。</p>
+  openModal('新增／編輯銀行信貸狀態選項', `
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每一列是一個狀態:左邊改名稱,中間按色塊選顏色(文字會自動配成看得清楚的黑或白),再選它<b>算在哪一組</b>（統計卡、進行中／已結束篩選都照這個算），右邊可上下移動或刪除。已經有案件在用的狀態,就算刪掉也會留在選單裡,不會改到案件;改名時,正在使用舊名稱的案件會在你按儲存後一起改成新名稱(儲存前會先告訴你有幾筆)。</p>
     <div id="blo-swatches" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0;"><span style="font-size:12px;color:var(--muted);">常用色(先點某一列,再點色點):</span>${swatches.map(c=>`<b data-c="${c}" style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2px solid #fff;box-shadow:0 0 0 1px #D5DAE5;"></b>`).join('')}</div>
+    <button type="button" id="blo-add-top" class="btn ghost" style="width:100%;margin:2px 0 6px;border-style:dashed;">＋ 新增狀態</button>
     <div id="blo-rows">${list.map(n=>rowHtml(n,false)).join('')}</div>
     <button type="button" id="blo-add" class="btn ghost" style="width:100%;margin-top:10px;border-style:dashed;">＋ 新增狀態</button>`, 'bankloan-status-form', null);
   const form = document.getElementById('bankloan-status-form');
@@ -6121,6 +6678,7 @@ function openBankLoanStatusOptionsModal(){
     rowsEl.insertAdjacentHTML('beforeend', rowHtml('', true));
     const r = rowsEl.lastElementChild; activeRow = r; r.querySelector('.blo-name').focus();
   });
+  document.getElementById('blo-add-top').addEventListener('click', ()=>{ document.getElementById('blo-add').click(); rowsEl.lastElementChild.scrollIntoView({block:'center'}); });
   form.addEventListener('submit', async (e)=>{
     e.preventDefault();
     // 找出「改名」的狀態(舊名稱 → 新名稱),已經有案件在用的,會一起改成新名稱
@@ -6145,17 +6703,18 @@ function openBankLoanStatusOptionsModal(){
         }
         if(APP.bankLoanFilter && APP.bankLoanFilter.status===job.from) APP.bankLoanFilter = Object.assign({}, APP.bankLoanFilter, {status:job.to});
       }
-      const names = [], colors = {};
+      const names = [], colors = {}, groups = {};
       const oldColors = APP.bankLoanStatusColors || {};
       form.querySelectorAll('.blo-row').forEach(row=>{
         const n = row.querySelector('.blo-name').value.trim();
         if(!n || names.includes(n)) return;
         names.push(n);
+        groups[n] = row.querySelector('.blo-group').value;
         const picked = row.querySelector('.blo-color').value.toLowerCase();
         if(row.dataset.new==='1' || picked !== row.dataset.orig || (row.dataset.old && row.dataset.old !== n)) colors[n] = picked; // 改名的狀態把原本的顏色帶到新名稱
         else if(oldColors[row.dataset.old]) colors[n] = oldColors[row.dataset.old];
       });
-      await setDoc(doc(db,'appdata','bankLoanOptions'), stamp({statuses:names, colors}));
+      await setDoc(doc(db,'appdata','bankLoanOptions'), stamp({statuses:names, colors, groups}));
     } catch(err){
       console.error('儲存銀行信貸狀態選項失敗:', err);
       alert('儲存失敗:' + (err && err.message ? err.message : err));
@@ -6455,8 +7014,10 @@ function openBankLoanImportModal(){
           const base = parsed[Number(tr.dataset.i)];
           const g = (k)=>tr.querySelector(`[data-k="${k}"]`).value.trim();
           const amt = g('approvedAmount');
+          const exBl = (APP.data.bankLoanCases||[]).find(x=>x.id===base.id);
           picked.push(stamp({ id:base.id, status:g('status'), date:g('date'), owner:base.owner, customerName:g('customerName'), phone:base.phone,
-            packJob:base.packJob, channel:base.channel, plan:g('plan'), approvedAmount: (amt===''||isNaN(Number(amt))) ? null : Number(amt), note:base.note }));
+            packJob:base.packJob, channel:base.channel, plan:g('plan'), approvedAmount: (amt===''||isNaN(Number(amt))) ? null : Number(amt), note:base.note,
+            ...(exBl && exBl.disbursedDate ? { disbursedDate: exBl.disbursedDate } : {}) }));
         });
         if(picked.length===0){ msg.textContent = '沒有勾選任何資料。'; return; }
         for(let i=0;i<picked.length;i+=400){
@@ -9065,6 +9626,7 @@ document.addEventListener('click', (e)=>{
           const bAmt = String(data.approvedAmount==null?'':data.approvedAmount).trim();
           bf.approvedAmount = (bAmt===''||isNaN(Number(bAmt))) ? null : Number(bAmt);
           const blRec = oldBl ? Object.assign({}, oldBl, bf) : { id:uid(), ...bf };
+          if(bf.status==='撥款完成' && !(oldBl && oldBl.status==='撥款完成')) blRec.disbursedDate = todayStr();
           savePromises.push(saveBankLoanCase(stamp(blRec)));
         } else if(kind==='adspend'){
           if(!data.month){ skipped++; return; }
