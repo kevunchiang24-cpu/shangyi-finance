@@ -965,7 +965,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-02';
+const APP_BUILD = '2026-10-29-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1758,17 +1758,8 @@ function shellHTML(){
       <div class="app-version" title="系統版本（每次正式更新都會換）">版本 ${APP_BUILD}</div>
     </div>
   </div>
-  <div id="main"></div>
-  ${(core || staffAny) ? `
-  <button class="ai-chat-fab" id="ai-chat-toggle">🤖</button>
-  <div class="ai-chat-panel hidden" id="ai-chat-panel">
-    <div class="ai-chat-header"><span>${core ? '問 AI · 財務資料' : '問 AI · 我的工作'}</span><button type="button" id="ai-chat-close">✕</button></div>
-    <div class="ai-chat-messages" id="ai-chat-messages"></div>
-    <form class="ai-chat-form" id="ai-chat-form">
-      <input type="text" id="ai-chat-input" placeholder="${core ? '問財務、案件進度、廣告成效，或請它給建議' : '問我的案件進度、獎金、行程，或請它給建議'}" autocomplete="off"/>
-      <button type="submit">送出</button>
-    </form>
-  </div>` : ''}`;
+  <div id="main"></div>`;
+  // 右下角 🤖 聊天助理 2026-10-29 拿掉（登記資料改用各頁「🤖 AI 幫我填」）；聊天程式先留著，要恢復把按鈕和面板加回這裡
 }
 /* ================= DASHBOARD ================= */
 function dashboardHTML(){
