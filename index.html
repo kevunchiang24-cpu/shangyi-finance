@@ -991,7 +991,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-05';
+const APP_BUILD = '2026-10-29-06';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1767,7 +1767,6 @@ function shellHTML(){
     <div class="nav-item${hasAnyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupOverview"><span class="nav-icon">${navSvg('care')}</span>客戶關懷追蹤${hasAnyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>
     <div class="nav-group-label">公司管理</div>
     <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">${navSvg('hr')}</span>人事管理</div>
-    <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">${navSvg('vendors')}</span>廠商管理</div>
     <div class="nav-group-label">系統</div>
     <div class="nav-item" data-action="nav" data-view="settings"><span class="nav-icon">${navSvg('settings')}</span>設定</div>
     <div class="nav-item" data-action="nav" data-view="optionColors"><span class="nav-icon">${navSvg('colors')}</span>選單顏色設定</div>
@@ -2932,7 +2931,7 @@ function render(){
   else if(APP.view==='settings' && isCore()) main.innerHTML = settingsHTML();
   else if(APP.view==='optionColors' && (isCore() || isStaffAdmin())) main.innerHTML = optionColorSettingsView();
   else if(APP.view==='hr' && isCore()) main.innerHTML = hrHTML();
-  else if(APP.view==='vendors' && isCore()) main.innerHTML = vendorsHTML();
+  // 廠商管理 2026-10-29 拿掉（從來沒有資料）；vendorsHTML 等程式先留著
   else if(APP.view==='cases' && isCore()) main.innerHTML = casesHTML();
   else if(APP.view==='valuation' && isCore()) main.innerHTML = valuationPageHTML();
   else if(APP.view==='bankLoan' && isCore()) main.innerHTML = bankLoanPageHTML();
