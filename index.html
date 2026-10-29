@@ -481,6 +481,19 @@
   .oc-editbtn{border-style:dashed !important;color:#1D3FA8 !important;background:#F5F8FF !important;font-weight:700;}
   .oc-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;}
   .oc-pair .pl-pickclear{margin:0;width:100%;}
+  .op-box{width:min(540px,100%);}
+  .op-row{display:flex;align-items:center;gap:6px;}
+  .op-row input{flex:1;min-width:0;height:38px;border:1px solid var(--oc-line);border-radius:8px;padding:0 10px;font-size:14px;font-family:inherit;color:var(--oc-ink);box-sizing:border-box;}
+  .op-row input.chg{border-color:#E3A21A;background:#FFF8E6;}
+  .op-n{font-size:11.5px;color:var(--oc-muted);width:66px;text-align:right;flex:none;}
+  .op-ib{border:1px solid var(--oc-line);background:#fff;border-radius:8px;width:34px;height:34px;cursor:pointer;flex:none;font-family:inherit;color:var(--oc-ink);}
+  .op-ib.del{color:#C62C2C;}
+  .op-add{border:1px dashed var(--oc-line);background:#fff;border-radius:9px;padding:9px;cursor:pointer;font-weight:600;font-family:inherit;color:var(--oc-ink);margin-top:4px;}
+  .op-warn{background:#FFF4D6;border:1px solid #F0C552;color:#7A4E00;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.7;}
+  .op-f{gap:8px;}
+  .op-sec{border:1px solid var(--oc-line);background:#fff;border-radius:10px;padding:9px 16px;font-size:14px;cursor:pointer;font-family:inherit;color:var(--oc-ink);}
+  #op-dlg{--oc-ink:#1F2433;--oc-muted:#596277;--oc-line:#E2E6EF;}
+  @media (max-width:640px){ .op-f .op-sec{flex:1;} .op-n{width:auto;} }
   .oc-note{font-size:11.5px;color:var(--pl-muted,#596277);line-height:1.5;padding:2px 2px 0;}
   #oc-dlg{--oc-ink:#1F2433;--oc-muted:#596277;--oc-line:#E2E6EF;}
   .oc-ov{position:fixed;inset:0;z-index:10004;background:rgba(18,26,48,.42);display:flex;align-items:center;justify-content:center;padding:16px;color:var(--oc-ink);}
@@ -1148,7 +1161,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-10';
+const APP_BUILD = '2026-10-29-11';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1514,6 +1527,9 @@ function subscribeAll(){
           APP.data.bankLoanCases = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
         }, err=>console.error('bankLoanCases 訂閱失敗', err)));
+        unsubs.push(onSnapshot(doc(db,'appdata','bankLoanChannels'), snap2=>{
+          const d = snap2.data(); APP.bankLoanChannels = (d && Array.isArray(d.list) && d.list.length) ? d.list : null; render();
+        }, err=>console.error('bankLoanChannels 訂閱失敗', err)));
         unsubs.push(onSnapshot(doc(db,'appdata','bankLoanOptions'), snap2=>{
           const d = snap2.data();
           APP.bankLoanStatusOptions = (d && Array.isArray(d.statuses)) ? d.statuses : [];
@@ -5700,7 +5716,7 @@ const PA = {
     sel:{ date:'#va-fDate', customerName:'#va-fName', handler:'#va-fHandler', area:'#va-fArea', valuation:'#va-fVal', plan:'#va-fPlan', memo:'#va-fMemo', category:'[data-va-mcat]' } },
   bk: { title:'銀行信貸', nameKey:'customerName', S:()=>bkS(), open:b=>bkOpenNew(b), render:()=>bkRender(), can:()=>true,
     fields:()=>({ date:'日期', customerName:'客戶姓名', phone:'電話', owner:'誰的客人', status:'狀態', channel:'送件管道', packJob:'包工作', approvedAmount:'核准額度（萬）', plan:'方案', note:'狀態備註' }),
-    opts:()=>({ status:paFlat(bkOptGroups('status')), channel:BK_CHANNELS, packJob:BK_PACK.map(p=>p[0]) }),
+    opts:()=>({ status:paFlat(bkOptGroups('status')), channel:bkChannels(), packJob:BK_PACK.map(p=>p[0]) }),
     sel:{ date:'#bk-fDate', customerName:'#bk-fName', phone:'#bk-fPhone', owner:'#bk-fOwner', approvedAmount:'#bk-fAmt', plan:'#bk-fPlan', note:'#bk-fNote', packJob:'[data-bk-mpack]' } },
 };
 let PA_RUN = null; // 這次 AI 整理出來的客人：{ px, kind, src, queue, idx, names, done }
@@ -5933,7 +5949,7 @@ const OC_FIELDS = {
   vaStatus:      { title:'房屋土地估價・狀態',    opts:()=>valuationStatusList(),        shown:v=>vaOptColor('status', v),          ...ocStore('vaStatus') },
   vaCategory:    { title:'房屋土地估價・類別',    opts:()=>VA_CATS.map(c=>c[0]),         shown:v=>vaOptColor('category', v),        ...ocStore('vaCategory') },
   bkPack:        { title:'銀行信貸・包工作',      opts:()=>BK_PACK.map(p=>p[0]),         shown:v=>bkOptColor('packJob', v),         ...ocStore('bkPack') },
-  bkChannel:     { title:'銀行信貸・送件管道',    opts:()=>BK_CHANNELS,                  shown:v=>bkOptColor('channel', v),         ...ocStore('bkChannel') },
+  bkChannel:     { title:'銀行信貸・送件管道',    opts:()=>bkChannels(),                 shown:v=>bkOptColor('channel', v),         ...ocStore('bkChannel') },
   bkStatus:      { title:'銀行信貸・狀態',        opts:()=>bankLoanStatusList(),         shown:v=>bkOptColor('status', v),
     get: v => { const h = (APP.bankLoanStatusColors||{})[v]; return h && /^#[0-9a-fA-F]{6}$/.test(h) ? { bg:h, text:bankLoanContrast(h) } : null; },
     set: (v, c) => { const colors = { ...(APP.bankLoanStatusColors||{}) }; if(c) colors[v] = c.bg; else delete colors[v]; APP.bankLoanStatusColors = colors;
@@ -5982,6 +5998,114 @@ document.addEventListener('click', (e)=>{
   if(t.closest('[data-oc-close]') || t.matches('[data-oc-bg]')){ OC_OPEN = null; ocRender(); }
 }, true);
 document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && OC_OPEN){ OC_OPEN = null; ocRender(); } });
+/* ================= 選項新增／改名／刪除（2026-10-29）=================
+   在選項面板最下面「⚙ 編輯選項」：
+   - 進度追蹤・方案：appdata/caseSettings.planOptions（跟「設定 → 案件分潤參數」同一份），只有管理員能改（照原本）
+   - 銀行信貸・送件管道：appdata/bankLoanChannels.list（沒存過就是 chen、鄒、王），核心能改
+   改名：先列出會一起改的資料，確定才改（舊資料、顏色都帶到新名稱）；刪除：選單不再出現，舊資料保留原本的字 */
+const OP_FIELDS = {
+  plan: { title:'進度追蹤・方案', label:'方案', can:()=>isAdmin(), list:()=>pgPlans().slice(),
+    uses: v => ({ 進度追蹤: APP.data.progressAd.filter(c=>c.plan===v).length + APP.data.progressChannel.filter(c=>c.plan===v).length,
+      獲利報表: APP.data.casesAd.filter(c=>c.plan===v).length + APP.data.casesChannel.filter(c=>c.plan===v).length,
+      客戶關懷: (APP.data.customerFollowups||[]).filter(f=>f.plan===v).length }),
+    async save(list, renames){
+      for(const r of renames){
+        await opBatch('progressAdCases', APP.data.progressAd.filter(c=>c.plan===r.from), { plan:r.to });
+        await opBatch('progressChannelCases', APP.data.progressChannel.filter(c=>c.plan===r.from), { plan:r.to });
+        await opBatch('customerFollowups', (APP.data.customerFollowups||[]).filter(f=>f.plan===r.from), { plan:r.to });
+        let ad = false, ch = false;
+        APP.data.casesAd.forEach(c=>{ if(c.plan===r.from){ c.plan = r.to; ad = true; } });
+        APP.data.casesChannel.forEach(c=>{ if(c.plan===r.from){ c.plan = r.to; ch = true; } });
+        if(ad) await saveCasesAd(); if(ch) await saveCasesChannel();
+      }
+      opMoveColors('plan', renames);
+      APP.data.caseSettings = { ...APP.data.caseSettings, planOptions:list };
+      await saveCaseSettings();
+    } },
+  bkChannel: { title:'銀行信貸・送件管道', label:'送件管道', can:()=>isCore(), list:()=>bkChannels().slice(),
+    uses: v => ({ 銀行信貸: bkAll().filter(c=>c.channel===v).length }),
+    async save(list, renames){
+      for(const r of renames) await opBatch('bankLoanCases', bkAll().filter(c=>c.channel===r.from), { channel:r.to });
+      opMoveColors('bkChannel', renames);
+      APP.bankLoanChannels = list;
+      await setDoc(doc(db,'appdata','bankLoanChannels'), stamp({ list }));
+    } },
+};
+APP.bankLoanChannels = APP.bankLoanChannels || null;
+const bkChannels = () => (APP.bankLoanChannels && APP.bankLoanChannels.length) ? APP.bankLoanChannels : BK_CHANNELS;
+// 一次最多改 400 筆（Firestore 一批的上限是 500）
+async function opBatch(col, recs, patch){
+  for(let i=0; i<recs.length; i+=400){
+    const batch = writeBatch(db);
+    recs.slice(i, i+400).forEach(c=>{ batch.set(doc(db, col, c.id), stamp({ ...patch }), { merge:true }); Object.assign(c, patch); });
+    await batch.commit();
+  }
+}
+// 改名時，自己設定的顏色跟著帶到新名稱
+function opMoveColors(cat, renames){
+  const cur = APP.data.optionColors && APP.data.optionColors[cat]; if(!cur || !renames.length) return;
+  const m = { ...cur }; let changed = false;
+  renames.forEach(r=>{ if(m[r.from]){ if(!m[r.to]) m[r.to] = m[r.from]; delete m[r.from]; changed = true; } });
+  if(!changed) return;
+  const oc = { ...APP.data.optionColors, [cat]:m }; APP.data.optionColors = oc; saveOptionColors(oc).catch(()=>{});
+}
+const opEditBtn = key => OP_FIELDS[key] && OP_FIELDS[key].can() ? `<button type="button" class="pl-pickclear" data-op-edit="${key}">⚙ 編輯選項</button>` : '';
+let OP = null; // { key, rows:[{name, old}], confirm:[{from,to}] | null, busy }
+const opUseText = (F, v) => { const u = F.uses(v), t = Object.values(u).reduce((a, b)=>a + b, 0); return { u, t }; };
+function opRender(){
+  let o = document.getElementById('op-dlg');
+  if(!OP){ if(o) o.remove(); document.body.classList.remove('pa-lock'); return; }
+  const F = OP_FIELDS[OP.key];
+  if(!o){ o = document.createElement('div'); o.id = 'op-dlg'; document.body.appendChild(o); }
+  if(OP.confirm){
+    o.innerHTML = `<div class="oc-ov"><div class="oc-box op-box" role="dialog" aria-modal="true" aria-label="確定要改名嗎"><div class="oc-h"><h2>確定要改名嗎？</h2></div>
+      <div class="oc-b"><div class="op-warn">這些${escHtml(F.label)}改名後，正在用舊名稱的資料會一起改成新名稱：<br>${OP.confirm.map(r=>{ const { u } = opUseText(F, r.from); const parts = Object.entries(u).filter(([, n])=>n).map(([k, n])=>`${k} ${n} 筆`);
+        return `「${escHtml(r.from)}」→「${escHtml(r.to)}」：${parts.join('、') || '沒有資料在用'}`; }).join('<br>')}<br>顏色也會跟著帶過去。</div></div>
+      <div class="oc-f op-f"><button type="button" class="op-sec" data-op-back ${OP.busy?'disabled':''}>回去改</button><button type="button" class="oc-done" data-op-yes ${OP.busy?'disabled':''}>${OP.busy ? '儲存中…' : '確定改名並儲存'}</button></div></div></div>`;
+  } else {
+    o.innerHTML = `<div class="oc-ov"><div class="oc-box op-box" role="dialog" aria-modal="true" aria-label="${escAttr(F.title)}選項"><div class="oc-h"><h2>${escHtml(F.title)}選項</h2><button type="button" class="oc-x" data-op-close aria-label="關閉">×</button></div>
+      <div class="oc-b"><p class="oc-hint">直接改名、↑↓ 排順序、✕ 刪除。刪除的選項，舊資料保留原本的字。</p>
+      ${OP.rows.map((r, i)=>{ const t = r.old ? opUseText(F, r.old).t : 0;
+        return `<div class="op-row"><input data-op-name="${i}" value="${escAttr(r.name)}" class="${r.old && r.name.trim()!==r.old ? 'chg' : ''}" aria-label="選項名稱" autocomplete="off"/><span class="op-n">${r.old ? (t ? t + ' 筆在用' : '沒有在用') : '新增'}</span>
+          <button type="button" class="op-ib" data-op-up="${i}" aria-label="上移">↑</button><button type="button" class="op-ib" data-op-down="${i}" aria-label="下移">↓</button><button type="button" class="op-ib del" data-op-del="${i}" aria-label="刪除">✕</button></div>`; }).join('')}
+      <button type="button" class="op-add" data-op-add>＋ 新增${escHtml(F.label)}</button></div>
+      <div class="oc-f op-f"><button type="button" class="op-sec" data-op-close>取消</button><button type="button" class="oc-done" data-op-save>儲存</button></div></div></div>`;
+  }
+  document.body.classList.add('pa-lock');
+}
+function opOpen(key){
+  const F = OP_FIELDS[key]; if(!F || !F.can()) return;
+  ['pl','pg','bk','va'].forEach(k=>{ if(APP[k]) APP[k].pop = null; });
+  OP = { key, rows: F.list().map(v=>({ name:v, old:v })), confirm:null, busy:false }; render(); opRender();
+}
+// 找出改名：舊名稱 → 新名稱（新名稱跟其他保留下來的舊名稱一樣時不算改名）
+function opRenames(){
+  const kept = new Set(OP.rows.map(r=>r.name.trim()).filter(Boolean)), out = [];
+  OP.rows.forEach(r=>{ const n = r.name.trim(); if(n && r.old && n!==r.old && !kept.has(r.old) && !out.some(x=>x.from===r.old)) out.push({ from:r.old, to:n }); });
+  return out;
+}
+async function opSave(){
+  const F = OP_FIELDS[OP.key], list = Array.from(new Set(OP.rows.map(r=>r.name.trim()).filter(Boolean))), renames = opRenames();
+  OP.busy = true; opRender();
+  try{ await F.save(list, renames); OP = null; opRender(); render(); plToast(renames.length ? `已儲存，${renames.map(r=>`「${r.from}」改成「${r.to}」`).join('、')}，舊資料一起改好了` : '已儲存'); }
+  catch(err){ console.error('選項儲存失敗', err); OP.busy = false; OP.confirm = null; opRender(); alert('儲存失敗，請檢查網路後再試一次：' + (err && err.message ? err.message : err)); }
+}
+document.addEventListener('click', (e)=>{
+  const t = e.target; if(!t.closest) return;
+  const ed = t.closest('[data-op-edit]'); if(ed){ e.stopPropagation(); opOpen(ed.dataset.opEdit); return; }
+  if(!OP || OP.busy) return;
+  const R = OP.rows;
+  const up = t.closest('[data-op-up]'); if(up){ const i = +up.dataset.opUp; if(i>0) [R[i-1], R[i]] = [R[i], R[i-1]]; opRender(); return; }
+  const dn = t.closest('[data-op-down]'); if(dn){ const i = +dn.dataset.opDown; if(i<R.length-1) [R[i+1], R[i]] = [R[i], R[i+1]]; opRender(); return; }
+  const de = t.closest('[data-op-del]'); if(de){ R.splice(+de.dataset.opDel, 1); opRender(); return; }
+  if(t.closest('[data-op-add]')){ R.push({ name:'', old:'' }); opRender(); const ins = document.querySelectorAll('#op-dlg [data-op-name]'); if(ins.length) ins[ins.length-1].focus(); return; }
+  if(t.closest('[data-op-save]')){ const r = opRenames(); if(r.length){ OP.confirm = r; opRender(); } else opSave(); return; }
+  if(t.closest('[data-op-yes]')){ opSave(); return; }
+  if(t.closest('[data-op-back]')){ OP.confirm = null; opRender(); return; }
+  if(t.closest('[data-op-close]')){ OP = null; opRender(); }
+}, true);
+document.addEventListener('input', (e)=>{ const n = e.target.dataset && e.target.dataset.opName; if(n==null || !OP) return; const r = OP.rows[+n]; r.name = e.target.value; e.target.classList.toggle('chg', !!r.old && r.name.trim()!==r.old); });
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && OP && !OP.busy){ OP = null; opRender(); } });
 /* ================= 進度追蹤（2026-10 改版）=================
    跟舊版用同一份資料（progressAdCases、progressChannelCases），欄位名稱不變。
    - 列表上直接改、編輯視窗都只更新改到的欄位（updateDoc），不整筆覆蓋；業務只會寫 staffNote、wizardHatNote（符合資料庫規則）
@@ -6242,7 +6366,7 @@ function pgPicker(f, cur, target){
     return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-pg-pick="${escAttr(o)}" data-pg-pt="${escAttr(target)}" data-pg-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
   return pgOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
     + ((f==='plan' || f==='staff') && cur ? `<button type="button" class="pl-pickclear" data-pg-pick="" data-pg-pt="${escAttr(target)}" data-pg-f="${f}">清除，改回未填</button>` : '')
-    + ocEditBtn({ plan:'plan', status:'status', staff:'pgStaff', source:'pgSource' }[f], pgFLabel(f))
+    + (f==='plan' ? ocPairHTML('plan', pgFLabel(f), opEditBtn('plan')) : ocEditBtn({ status:'status', staff:'pgStaff', source:'pgSource' }[f], pgFLabel(f)))
     + (f==='status' ? `<div class="pg-flowhint">選 <b>對保</b>：記下對保日期（系統每天的對保提醒會用）<br>選 <b>撥款完成</b>：記下撥款日期，並自動建立「客戶關懷追蹤」</div>` : '');
 }
 function pgPopHTML(){
@@ -6583,7 +6707,7 @@ function bkOptColor(f, v){
 function bkOptGroups(f){
   if(f==='status'){ const list = bankLoanStatusList(); return BK_GROUPS.map(([g, n])=>[n, list.filter(s=>bkGroupOf(s)===g)]).filter(x=>x[1].length); }
   if(f==='packJob') return [['', BK_PACK.map(p=>p[0])]];
-  return [['', BK_CHANNELS]];
+  return [['', bkChannels()]];
 }
 
 function bkInQuick(c){
@@ -6742,7 +6866,7 @@ function bkFilterPicker(k){
     + bkOptGroups('status').map(([g, a])=>sec('只看一種・'+g, a.map(s=>btn('s:'+s, s, S.status===s, bkOptColor('status', s))).join(''))).join('');
   if(k==='pack') return `<div class="pl-picks">${btn('', '全部', !S.pack)}${BK_PACK.map(p=>btn(p[0], p[0], S.pack===p[0], [p[1], p[2]])).join('')}${btn('__none__', '未定', S.pack==='__none__')}</div>`;
   if(k==='owner' || k==='channel'){
-    const names = Array.from(new Set(bkAll().map(c=>c[k]).concat(k==='channel' ? BK_CHANNELS : []).filter(Boolean))).sort(plZh.compare);
+    const names = Array.from(new Set(bkAll().map(c=>c[k]).concat(k==='channel' ? bkChannels() : []).filter(Boolean))).sort(plZh.compare);
     return `<div class="pl-picks">${btn('', '全部', !S[k])}${names.map(n=>btn(n, n, S[k]===n)).join('')}</div>`;
   }
   if(k==='month'){
@@ -6770,7 +6894,7 @@ function bkPicker(f, cur, target){
     return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-bk-pick="${escAttr(o)}" data-bk-pt="${escAttr(target)}" data-bk-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
   return bkOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
     + ((f==='packJob' || f==='channel') && cur ? `<button type="button" class="pl-pickclear" data-bk-pick="" data-bk-pt="${escAttr(target)}" data-bk-f="${f}">${f==='packJob'?'改回未定':'清除，改回未填'}</button>` : '')
-    + (f==='status' ? '' : ocEditBtn({ packJob:'bkPack', channel:'bkChannel' }[f], BK_LABEL[f]))
+    + (f==='status' ? '' : f==='channel' ? ocPairHTML('bkChannel', BK_LABEL[f], opEditBtn('bkChannel')) : ocEditBtn('bkPack', BK_LABEL[f]))
     + (f==='status' ? `<div class="oc-note">選「撥款完成」會記下撥款日期（本月撥款照這個日期算）</div>` + ocPairHTML('bkStatus', BK_LABEL[f], target==='__modal' ? '' : '<button type="button" class="pl-pickclear" data-bk-opts>⚙ 名稱和分組</button>') : '');
 }
 function bkPopHTML(){
