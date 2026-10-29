@@ -102,6 +102,30 @@
   .role-chip.staffAdmin{background:rgba(255,255,255,.18);color:#ffffff;}
   .role-chip.staffSales{background:rgba(255,255,255,.18);color:#ffffff;}
   .logout-btn{width:100%;padding:8px;border-radius:8px;border:1px solid #FFFFFF;background:transparent;color:#FFFFFF;cursor:pointer;font-size:12.5px;}
+  /* 電腦版選單收合（2026-10-29）：收成一排圖示，滑鼠移上去顯示名稱；手機版照舊用 ☰ */
+  .sb-colbtn{margin-left:auto;flex:none;width:28px;height:28px;border:0;border-radius:8px;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;font-size:14px;line-height:1;font-family:inherit;}
+  .sb-colbtn:hover{background:rgba(255,255,255,.28);}
+  .sb-tip{position:fixed;z-index:200;background:#12233F;color:#fff;font-size:12.5px;font-weight:600;padding:5px 10px;border-radius:7px;white-space:nowrap;pointer-events:none;transform:translateY(-50%);box-shadow:0 4px 12px rgba(0,0,0,.2);}
+  @media (min-width:901px){
+    #sidebar{transition:width .18s ease,padding .18s ease;}
+    .sb-col #sidebar{width:68px;padding:20px 10px;}
+    .sb-col .brand{flex-direction:column;gap:8px;padding:4px 0 14px;}
+    .sb-col .brand-text{display:none;}
+    .sb-col .sb-colbtn{margin-left:0;}
+    .sb-col #sidebar .nav-item,.sb-col #sidebar .chat-nav-button,.sb-col #toggle-core-nav{font-size:0 !important;justify-content:center;padding:10px 0 !important;gap:0;position:relative;}
+    .sb-col #sidebar .nav-icon{font-size:15px;width:auto;}
+    .sb-col #sidebar .chat-nav-icon{font-size:18px;}
+    .sb-col #sidebar .chat-nav-button > span:not(.chat-nav-icon):not(.chat-nav-badge){display:none;}
+    .sb-col #sidebar .chat-nav-badge{font-size:10px;right:3px;top:3px;transform:none;padding:1px 5px;}
+    .sb-col #sidebar .nav-pulse-dot{position:absolute;top:6px;right:6px;margin:0;}
+    .sb-col #sidebar .nav-group-label{font-size:0;height:1px;padding:0;margin:8px 6px;background:rgba(255,255,255,.16);}
+    .sb-col #toggle-core-nav::before{content:'☰';font-size:15px;}
+    .sb-col .sidebar-footer{padding:12px 0 0;}
+    .sb-col .user-chip,.sb-col #sidebar .role-chip,.sb-col .app-version,.sb-col .sidebar-footer [data-action="enable-push"]{display:none;}
+    .sb-col #logout-btn{padding:8px 0;font-size:12px;}
+  }
+  @media (max-width:900px){ .sb-colbtn{display:none;} }
+  @media (prefers-reduced-motion:reduce){ #sidebar{transition:none !important;} }
 
   /* Main */
   #main{flex:1;padding:34px 40px;max-width:1400px;}
@@ -965,7 +989,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-03';
+const APP_BUILD = '2026-10-29-04';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1690,6 +1714,7 @@ function shellHTML(){
     <div class="brand">
       <div class="brand-logo" style="background:transparent;padding:0;"><img src="${APP.data.companyPublic.logoDataUrl || ('data:image/png;base64,'+DEFAULT_LOGO_B64)}" style="width:100%;height:100%;object-fit:contain;" alt="尚益資產"/></div>
       <div class="brand-text"><div class="t1">${escHtml(APP.data.companyPublic.systemName || '財務管理系統')}</div><div class="t2">${escHtml(APP.data.companyPublic.systemSubtitle || '尚益資產 · 內部工具')}</div></div>
+      ${sbColBtnHTML()}
     </div>
     <div class="chat-nav-button" data-action="nav" data-view="chatRoom">
       <span class="chat-nav-icon">💬</span><span>聊天室</span>
@@ -9618,6 +9643,35 @@ function closeSidebar(){
   const sb = document.getElementById('sidebar'); const bd = document.getElementById('sidebar-backdrop');
   if(sb) sb.classList.remove('open'); if(bd) bd.classList.remove('open');
 }
+
+/* ---------------- 電腦版選單收合（2026-10-29）----------------
+   點選單右上角「«」收成一排圖示、「»」打開；記在這台電腦（localStorage）。收起時滑鼠移到圖示上顯示名稱。手機版照舊用 ☰ */
+const SB_KEY = 'sb_collapsed';
+try{ if(localStorage.getItem(SB_KEY)==='1') document.documentElement.classList.add('sb-col'); }catch(_){}
+const sbCollapsed = () => document.documentElement.classList.contains('sb-col');
+function sbColBtnHTML(){
+  const c = document.documentElement.classList.contains('sb-col'), l = c ? '打開選單' : '收起選單';
+  return `<button type="button" class="sb-colbtn" id="sb-colbtn" aria-label="${l}" title="${l}">${c ? '»' : '«'}</button>`;
+}
+let sbTipEl = null;
+const sbTipHide = () => { if(sbTipEl){ sbTipEl.remove(); sbTipEl = null; } };
+document.addEventListener('click', (e)=>{
+  sbTipHide();
+  const b = e.target.closest && e.target.closest('#sb-colbtn'); if(!b) return;
+  const c = document.documentElement.classList.toggle('sb-col');
+  try{ localStorage.setItem(SB_KEY, c ? '1' : '0'); }catch(_){}
+  b.outerHTML = sbColBtnHTML();
+});
+document.addEventListener('mouseover', (e)=>{
+  if(!sbCollapsed() || window.innerWidth <= 900) return sbTipHide();
+  const it = e.target.closest && e.target.closest('#sidebar .nav-item, #sidebar .chat-nav-button, #toggle-core-nav');
+  if(!it) return sbTipHide();
+  const c = it.cloneNode(true); c.querySelectorAll('.nav-icon,.chat-nav-icon,.chat-nav-badge,.nav-pulse-dot').forEach(x=>x.remove());
+  const txt = c.textContent.replace('☰', '').trim(); if(!txt) return sbTipHide();
+  const r = it.getBoundingClientRect();
+  if(!sbTipEl){ sbTipEl = document.createElement('div'); sbTipEl.className = 'sb-tip'; document.body.appendChild(sbTipEl); }
+  sbTipEl.textContent = txt; sbTipEl.style.left = Math.round(r.right + 10) + 'px'; sbTipEl.style.top = Math.round(r.top + r.height / 2) + 'px';
+});
 
 /* ---------------- PWA service worker ---------------- */
 if('serviceWorker' in navigator){
