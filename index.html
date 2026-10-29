@@ -479,6 +479,9 @@
   }
   /* ---- 選項顏色視窗（2026-10-29，取代「選單顏色設定」頁）：oc- 開頭，建在 body 最外層 ---- */
   .oc-editbtn{border-style:dashed !important;color:#1D3FA8 !important;background:#F5F8FF !important;font-weight:700;}
+  .oc-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;}
+  .oc-pair .pl-pickclear{margin:0;width:100%;}
+  .oc-note{font-size:11.5px;color:var(--pl-muted,#596277);line-height:1.5;padding:2px 2px 0;}
   #oc-dlg{--oc-ink:#1F2433;--oc-muted:#596277;--oc-line:#E2E6EF;}
   .oc-ov{position:fixed;inset:0;z-index:10004;background:rgba(18,26,48,.42);display:flex;align-items:center;justify-content:center;padding:16px;color:var(--oc-ink);}
   .oc-box{background:#fff;border-radius:16px;width:min(640px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(18,26,48,.3);}
@@ -1145,7 +1148,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-09';
+const APP_BUILD = '2026-10-29-10';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5938,6 +5941,9 @@ const OC_FIELDS = {
       return setDoc(doc(db,'appdata','bankLoanOptions'), stamp({ statuses:names, colors, groups:APP.bankLoanStatusGroups||{} })); } },
 };
 const ocCanEdit = () => isCore() || isStaffAdmin();
+// 狀態面板：「🎨 顏色」跟「⚙ 名稱和分組」並排（extra 是 ⚙ 那顆；沒有 ⚙ 時就是一般的 🎨 按鈕）
+const ocPairHTML = (cat, label, extra) => { const c = ocCanEdit() && OC_FIELDS[cat] ? `<button type="button" class="pl-pickclear oc-editbtn" data-oc-edit="${cat}">🎨 顏色</button>` : '';
+  return extra ? `<div class="oc-pair">${c}${extra}</div>` : ocEditBtn(cat, label); };
 const ocEditBtn = (cat, label) => ocCanEdit() && OC_FIELDS[cat] ? `<button type="button" class="pl-pickclear oc-editbtn" data-oc-edit="${cat}">🎨 調整${escHtml(label)}的顏色</button>` : '';
 let OC_OPEN = null;
 function ocRender(){
@@ -6764,8 +6770,8 @@ function bkPicker(f, cur, target){
     return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-bk-pick="${escAttr(o)}" data-bk-pt="${escAttr(target)}" data-bk-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
   return bkOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
     + ((f==='packJob' || f==='channel') && cur ? `<button type="button" class="pl-pickclear" data-bk-pick="" data-bk-pt="${escAttr(target)}" data-bk-f="${f}">${f==='packJob'?'改回未定':'清除，改回未填'}</button>` : '')
-    + ocEditBtn({ status:'bkStatus', packJob:'bkPack', channel:'bkChannel' }[f], BK_LABEL[f])
-    + (f==='status' ? `<div class="pg-flowhint">選 <b>撥款完成</b>：記下撥款日期，「本月撥款」照這個日期算</div>${target==='__modal' ? '' : '<button type="button" class="pl-pickclear" data-bk-opts>⚙ 新增／編輯狀態選項（名稱、顏色、算在哪一組）</button>'}` : '');
+    + (f==='status' ? '' : ocEditBtn({ packJob:'bkPack', channel:'bkChannel' }[f], BK_LABEL[f]))
+    + (f==='status' ? `<div class="oc-note">選「撥款完成」會記下撥款日期（本月撥款照這個日期算）</div>` + ocPairHTML('bkStatus', BK_LABEL[f], target==='__modal' ? '' : '<button type="button" class="pl-pickclear" data-bk-opts>⚙ 名稱和分組</button>') : '');
 }
 function bkPopHTML(){
   const S = bkS(); if(!S.pop) return '';
@@ -7051,7 +7057,6 @@ function bankLoanPageHTML(){
   return `
     <div class="page-header"><div><h1 class="page-title">銀行信貸</h1><p class="page-sub">信貸送件追蹤・只有核心成員可以查看與編輯・名字、電話、方案、備註等直接點就能改，離開欄位自動儲存</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn ghost m-hide-640" data-bk-opts>⚙ 新增／編輯狀態</button>
         <button class="btn ghost m-hide-640" data-action="bankloan-import">📥 匯入試算表</button>
       </div>
     </div>
@@ -7263,8 +7268,7 @@ function vaPicker(f, cur, target){
   return `<div class="pl-picks">${vaOptList(f).map(o=>{ const c = vaOptColor(f, o);
     return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-va-pick="${escAttr(o)}" data-va-pt="${escAttr(target)}" data-va-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`
     + (cur ? `<button type="button" class="pl-pickclear" data-va-pick="" data-va-pt="${escAttr(target)}" data-va-f="${f}">清除，改回未填</button>` : '')
-    + ocEditBtn(f==='status' ? 'vaStatus' : 'vaCategory', VA_LABEL[f])
-    + (f==='status' && target!=='__modal' ? '<button type="button" class="pl-pickclear" data-va-opts>⚙ 新增／編輯狀態選項</button>' : '');
+    + (f==='status' ? ocPairHTML('vaStatus', VA_LABEL[f], target==='__modal' ? '' : '<button type="button" class="pl-pickclear" data-va-opts>⚙ 狀態名稱</button>') : ocEditBtn('vaCategory', VA_LABEL[f]));
 }
 function vaPopHTML(){
   const S = vaS(); if(!S.pop) return '';
@@ -7599,7 +7603,6 @@ function valuationPageHTML(){
   return `
     <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub">估價紀錄與方案追蹤・只有核心成員可以查看與編輯・方案填好按「儲存並推播」才會發到 LINE，其他欄位直接點就能改</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn ghost m-hide-640" data-va-opts>⚙ 狀態選項</button>
         <button class="btn ghost m-hide-640" data-action="valuation-targets">🔔 推播對象</button>
         <button class="btn ghost m-hide-640" data-action="valuation-import">📥 匯入 Excel</button>
       </div>
@@ -8129,33 +8132,28 @@ function bankLoanStatusList(extra){
 }
 function openBankLoanStatusOptionsModal(){
   const list = bankLoanStatusList();
-  const swatches = ['#FFE5A0','#FFC8AA','#D4EDBC','#BBD3FF','#E9D5FF','#FBCFE8','#11734B','#215A6C','#B10202','#3D3D3D'];
   const rowHtml = (name, isNew)=>{
     let c = isNew ? '#bbd3ff' : String(bankLoanStatusColor(name)[0] || '').toLowerCase(); // 新的一列先給淺藍，不然是白色看不到
     if(!/^#[0-9a-f]{6}$/.test(c)) c = '#bbd3ff';
     return `<div class="blo-row" data-old="${escAttr(isNew?'':name)}" data-orig="${c}" data-new="${isNew?1:0}" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #EEF1F8;">
       <span class="blo-pill bl-pill" style="min-width:70px;text-align:center;background:${c};color:${bankLoanContrast(c)};">${escHtml(name||'新狀態')}</span>
       <input type="text" class="blo-name" value="${escAttr(name)}" style="flex:1;min-width:0;height:38px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font:inherit;"/>
-      <input type="color" class="blo-color" value="${c}" style="width:42px;height:38px;border:1px solid var(--border);border-radius:8px;padding:2px;background:#fff;cursor:pointer;"/>
       <select class="blo-group" title="算在哪一組" style="height:38px;border:1px solid var(--border);border-radius:8px;padding:0 6px;font:inherit;background:#fff;">${BK_GROUPS.map(([g, n])=>`<option value="${g}" ${bkGroupOf(name)===g?'selected':''}>${n}</option>`).join('')}</select>
       <button type="button" class="icon-btn blo-up" title="上移">↑</button><button type="button" class="icon-btn blo-down" title="下移">↓</button><button type="button" class="icon-btn blo-del" title="刪除">✕</button>
     </div>`;
   };
   openModal('新增／編輯銀行信貸狀態選項', `
-    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每一列是一個狀態:左邊改名稱,中間按色塊選顏色(文字會自動配成看得清楚的黑或白),再選它<b>算在哪一組</b>（統計卡、進行中／已結束篩選都照這個算），右邊可上下移動或刪除。已經有案件在用的狀態,就算刪掉也會留在選單裡,不會改到案件;改名時,正在使用舊名稱的案件會在你按儲存後一起改成新名稱(儲存前會先告訴你有幾筆)。</p>
-    <div id="blo-swatches" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0;"><span style="font-size:12px;color:var(--muted);">常用色(先點某一列,再點色點):</span>${swatches.map(c=>`<b data-c="${c}" style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2px solid #fff;box-shadow:0 0 0 1px #D5DAE5;"></b>`).join('')}</div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;">每一列是一個狀態:左邊改名稱，再選它<b>算在哪一組</b>（統計卡、進行中／已結束篩選都照這個算），右邊可上下移動或刪除。已經有案件在用的狀態,就算刪掉也會留在選單裡,不會改到案件;改名時,正在使用舊名稱的案件會在你按儲存後一起改成新名稱(儲存前會先告訴你有幾筆)。</p>
     <button type="button" id="blo-add-top" class="btn ghost" style="width:100%;margin:2px 0 6px;border-style:dashed;">＋ 新增狀態</button>
     <div id="blo-rows">${list.map(n=>rowHtml(n,false)).join('')}</div>
     <button type="button" id="blo-add" class="btn ghost" style="width:100%;margin-top:10px;border-style:dashed;">＋ 新增狀態</button>`, 'bankloan-status-form', null);
   const form = document.getElementById('bankloan-status-form');
   const rowsEl = document.getElementById('blo-rows');
   let activeRow = null;
-  const syncRow = (row)=>{ const c = row.querySelector('.blo-color').value; const p = row.querySelector('.blo-pill'); p.style.background = c; p.style.color = bankLoanContrast(c); p.textContent = row.querySelector('.blo-name').value.trim() || '新狀態'; };
+  const syncRow = (row)=>{ row.querySelector('.blo-pill').textContent = row.querySelector('.blo-name').value.trim() || '新狀態'; }; // 顏色改在狀態面板的「🎨 顏色」
   form.addEventListener('focusin', (e)=>{ const r = e.target.closest ? e.target.closest('.blo-row') : null; if(r) activeRow = r; });
   form.addEventListener('input', (e)=>{ const r = e.target.closest ? e.target.closest('.blo-row') : null; if(r) syncRow(r); });
   form.addEventListener('click', (e)=>{
-    const sw = e.target.closest('[data-c]');
-    if(sw){ if(activeRow){ activeRow.querySelector('.blo-color').value = sw.dataset.c; syncRow(activeRow); } return; }
     const row = e.target.closest('.blo-row');
     if(!row) return;
     activeRow = row;
@@ -8199,9 +8197,7 @@ function openBankLoanStatusOptionsModal(){
         if(!n || names.includes(n)) return;
         names.push(n);
         groups[n] = row.querySelector('.blo-group').value;
-        const picked = row.querySelector('.blo-color').value.toLowerCase();
-        if(row.dataset.new==='1' || picked !== row.dataset.orig || (row.dataset.old && row.dataset.old !== n)) colors[n] = picked; // 改名的狀態把原本的顏色帶到新名稱
-        else if(oldColors[row.dataset.old]) colors[n] = oldColors[row.dataset.old];
+        if(row.dataset.old && oldColors[row.dataset.old]) colors[n] = oldColors[row.dataset.old]; // 原本有設定顏色就照留（改名的帶到新名稱）；新狀態用自動顏色
       });
       await setDoc(doc(db,'appdata','bankLoanOptions'), stamp({statuses:names, colors, groups}));
     } catch(err){
