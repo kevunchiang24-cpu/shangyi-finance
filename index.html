@@ -349,6 +349,134 @@
     .chat-hide-mobile{ display:none !important; }
     .chat-hide-desktop{ display:inline-flex; }
   }
+  /* ---- 聊天室改版（2026-10-29）：cr- 開頭；看大圖、總覽、手機附件選單在 body 最外層，自帶顏色 ---- */
+  .chat-contact-header{display:grid;gap:10px;}
+  .cr-title{display:flex;align-items:center;gap:8px;}
+  .cr-title .nav-svg{width:21px;height:21px;color:var(--navy);}
+  .cr-find{width:100%;box-sizing:border-box;height:38px;border:1px solid var(--border);border-radius:10px;padding:0 12px 0 34px;font-size:14px;font-family:inherit;background:#F7F8FB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2366708A' stroke-width='2'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cpath d='M11 11l3.5 3.5'/%3E%3C/svg%3E") no-repeat 11px center;}
+  .cr-find:focus{outline:none;border-color:#9FB4F5;background-color:#fff;}
+  .cr-r1{display:flex;align-items:center;gap:6px;min-width:0;}
+  .cr-r1 b{font-size:14.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+  .cr-r1 time{font-size:11.5px;color:var(--muted);flex:none;margin-left:auto;}
+  .cr-sys{font-size:11.5px;font-weight:500;color:var(--muted);background:#EEF1F7;border-radius:6px;padding:1px 6px;white-space:nowrap;flex:none;}
+  .chat-contact-row.active .cr-sys{background:#fff;}
+  .cr-r2{display:flex;align-items:center;gap:8px;margin-top:3px;}
+  .cr-r2 span{flex:1;min-width:0;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cr-unread .cr-r2 span{color:var(--ink);font-weight:600;}
+  .cr-cnt{background:#D92D20;color:#fff;font-size:11px;font-weight:800;font-style:normal;border-radius:99px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 6px;flex:none;box-sizing:border-box;}
+  #chat-main{position:relative;}
+  .cr-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);background:#fff;}
+  .cr-hname{flex:1;min-width:0;display:flex;align-items:center;gap:7px;}
+  .cr-hname b{font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cr-morewrap{position:relative;flex:none;}
+  .cr-morebtn{border:1px solid var(--border);background:#fff;border-radius:9px;height:34px;min-width:36px;padding:0 10px;cursor:pointer;font-size:14px;color:var(--muted);font-family:inherit;}
+  .cr-menu{position:absolute;right:0;top:40px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 30px rgba(20,30,60,.15);padding:6px;z-index:6;min-width:170px;}
+  .cr-menu[hidden]{display:none;}
+  .cr-menu button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:9px 10px;border-radius:7px;cursor:pointer;font-size:13.5px;color:var(--ink);font-family:inherit;}
+  .cr-menu button:hover{background:#F3F5FA;}
+  .cr-menu button.red{color:#D92D20;}
+  .cr-msgs{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:2px;min-height:0;}
+  .cr-day{align-self:center;font-size:11.5px;color:var(--muted);background:#EEF1F7;border-radius:99px;padding:3px 10px;margin:12px 0 8px;}
+  .cr-g{display:flex;gap:8px;align-items:flex-end;margin-top:8px;}
+  .cr-g.me{justify-content:flex-end;}
+  .cr-col{display:flex;flex-direction:column;gap:3px;max-width:68%;min-width:0;}
+  .cr-g.me .cr-col{align-items:flex-end;}
+  .cr-b{padding:9px 13px;border-radius:18px;background:#EEF1F7;color:var(--ink);font-size:14.5px;line-height:1.5;word-break:break-word;white-space:pre-wrap;position:relative;}
+  .cr-g.me .cr-b{background:var(--navy);color:#fff;}
+  .cr-b a{color:inherit;text-decoration:underline;}
+  .cr-b.att{background:transparent !important;padding:0;border-radius:0;}
+  .cr-meta{font-size:11px;color:var(--muted);padding:0 4px;}
+  .cr-x{display:none;position:absolute;top:50%;right:calc(100% + 6px);transform:translateY(-50%);border:1px solid var(--border);background:#fff;border-radius:8px;font-size:12px;padding:3px 7px;cursor:pointer;color:#D92D20;white-space:nowrap;font-family:inherit;}
+  .cr-b:hover > .cr-x,.cr-b.held > .cr-x{display:block;}
+  .cr-ims{display:grid;gap:3px;border-radius:14px;overflow:hidden;width:250px;max-width:100%;}
+  .cr-ims.n2,.cr-ims.n3,.cr-ims.n4{grid-template-columns:1fr 1fr;}
+  .cr-ims.n3 .cr-im:first-child{grid-column:1/-1;aspect-ratio:2/1;}
+  .cr-im{border:0;padding:0;background:#DDE2EC;cursor:zoom-in;position:relative;display:block;aspect-ratio:1/1;overflow:hidden;width:100%;}
+  .cr-ims.n1 .cr-im{aspect-ratio:4/3;}
+  .cr-im img{width:100%;height:100%;object-fit:cover;display:block;}
+  .cr-more4{position:absolute;inset:0;background:rgba(20,24,36,.55);color:#fff;font-size:22px;font-weight:800;display:grid;place-items:center;}
+  .cr-prog{position:absolute;left:8px;right:8px;bottom:8px;height:6px;border-radius:99px;background:rgba(255,255,255,.65);overflow:hidden;}
+  .cr-prog i{display:block;height:100%;background:var(--navy);transition:width .15s;}
+  .cr-im.up img{filter:brightness(.75);}
+  .cr-fc{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:9px 10px;width:270px;max-width:100%;box-sizing:border-box;color:var(--ink);white-space:normal;}
+  .cr-fc + .cr-fc{margin-top:3px;}
+  .cr-fc.wide{width:100%;}
+  .cr-ext{width:38px;height:44px;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800;flex:none;letter-spacing:.02em;}
+  .cr-ext.pdf{background:#D93B30;}.cr-ext.xls{background:#1E7B45;}.cr-ext.doc{background:#2B5DB9;}.cr-ext.oth{background:#6B7280;}
+  .cr-fc > div{flex:1;min-width:0;display:grid;gap:1px;}
+  .cr-fc b{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cr-fc small{font-size:11.5px;color:var(--muted);}
+  .cr-dl{border:1px solid var(--border);background:#F5F7FB;border-radius:8px;height:32px;padding:0 10px;cursor:pointer;font-size:12.5px;font-weight:700;color:var(--navy);flex:none;display:flex;align-items:center;gap:4px;font-family:inherit;}
+  .cr-dl svg{width:15px;height:15px;}
+  .cr-fail{color:#D92D20;font-weight:700;}
+  .cr-retry{border:1px solid var(--border);background:#fff;border-radius:7px;padding:2px 8px;font-size:11.5px;cursor:pointer;font-family:inherit;color:var(--navy);}
+  .cr-newchip{position:absolute;left:50%;transform:translateX(-50%);bottom:84px;border:0;background:var(--navy);color:#fff;border-radius:99px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(47,91,234,.35);z-index:4;font-family:inherit;}
+  .cr-tray{display:flex;gap:8px;padding:10px 12px 0;background:#fff;border-top:1px solid var(--border);overflow-x:auto;align-items:flex-end;}
+  .cr-tray:empty{display:none;}
+  .cr-ti{position:relative;flex:none;width:72px;display:grid;gap:3px;}
+  .cr-th{width:72px;height:72px;border-radius:10px;overflow:hidden;background:#EEF1F7;display:grid;place-items:center;border:1px solid var(--border);box-sizing:border-box;}
+  .cr-th img{width:100%;height:100%;object-fit:cover;}
+  .cr-ti small{font-size:10.5px;color:var(--muted);text-align:center;line-height:1.3;white-space:nowrap;}
+  .cr-rm{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:99px;border:2px solid #fff;background:#1F2433;color:#fff;font-size:11px;cursor:pointer;display:grid;place-items:center;padding:0;}
+  .cr-trayopt{padding:4px 14px 0;background:#fff;font-size:11.5px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .cr-trayopt:empty{display:none;}
+  .cr-trayopt label{display:flex;gap:4px;align-items:center;cursor:pointer;color:var(--ink);}
+  .cr-inbar{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;border-top:1px solid var(--border);background:#fff;}
+  .cr-tray:not(:empty) ~ .cr-inbar{border-top:0;}
+  .cr-ib{border:0;background:transparent;width:40px;height:40px;border-radius:99px;display:grid;place-items:center;cursor:pointer;color:var(--muted);flex:none;}
+  .cr-ib:hover{background:#F1F3F8;}
+  .cr-ib svg{width:22px;height:22px;}
+  .cr-ta{flex:1;min-width:0;border:1px solid var(--border);border-radius:20px;padding:9px 14px;font-size:15px;line-height:1.45;resize:none;max-height:140px;min-height:40px;box-sizing:border-box;background:#F7F8FB;font-family:inherit;color:var(--ink);}
+  .cr-ta:focus{outline:none;border-color:#9FB4F5;background:#fff;}
+  .cr-send{border:0;background:var(--navy);color:#fff;width:40px;height:40px;border-radius:99px;display:grid;place-items:center;cursor:pointer;flex:none;}
+  .cr-send:disabled{background:#C9D3F0;cursor:default;}
+  .cr-send svg{width:19px;height:19px;}
+  .cr-hint{font-size:11px;color:var(--muted);padding:0 16px 8px;background:#fff;}
+  .cr-drop{position:absolute;inset:0;z-index:7;background:rgba(47,91,234,.1);border:3px dashed var(--navy);border-radius:12px;display:grid;place-items:center;color:var(--navy);font-size:18px;font-weight:800;pointer-events:none;}
+  #cr-lb,#cr-gal,#cr-sheet{--cr-ink:#1F2433;--cr-line:#E2E6EF;--cr-navy:#2F5BEA;}
+  .cr-lb{position:fixed;inset:0;z-index:10003;background:rgba(10,12,20,.94);display:flex;flex-direction:column;color:#fff;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);}
+  .cr-lbh{display:flex;align-items:center;gap:10px;padding:12px 14px;}
+  .cr-lbh div{flex:1;min-width:0;display:grid;gap:1px;}
+  .cr-lbh b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cr-lbh small{font-size:12px;color:#B8C0D4;}
+  .cr-lbb{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;border-radius:9px;height:38px;padding:0 12px;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;flex:none;font-family:inherit;}
+  .cr-lbb svg{width:16px;height:16px;}
+  .cr-lbm{flex:1;min-height:0;position:relative;display:grid;place-items:center;overflow:auto;}
+  .cr-lbm img{max-width:92%;max-height:100%;object-fit:contain;cursor:zoom-in;}
+  .cr-lbm.zoom{place-items:start;}
+  .cr-lbm.zoom img{max-width:none;max-height:none;width:200%;cursor:zoom-out;}
+  .cr-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:99px;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:26px;cursor:pointer;}
+  .cr-nav:hover{background:rgba(255,255,255,.26);}
+  .cr-nav.p{left:12px;}.cr-nav.n{right:12px;}
+  .cr-lbf{text-align:center;padding:10px;font-size:13px;color:#B8C0D4;}
+  .cr-galbg{position:fixed;inset:0;z-index:10002;background:rgba(18,26,48,.42);display:flex;align-items:center;justify-content:center;padding:24px;}
+  .cr-gal{background:#fff;color:var(--cr-ink);border-radius:16px;width:min(720px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;}
+  .cr-galh{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--cr-line);}
+  .cr-galh b{flex:1;font-size:16px;}
+  .cr-galb{overflow:auto;padding:14px 16px;display:grid;gap:16px;}
+  .cr-galb h4{margin:0 0 8px;font-size:13px;color:#66708A;font-weight:600;}
+  .cr-gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:4px;}
+  .cr-gg .cr-im{border-radius:8px;}
+  .cr-none{color:#66708A;}
+  .cr-sheetbg{position:fixed;inset:0;z-index:10002;background:rgba(18,26,48,.42);display:flex;align-items:flex-end;}
+  .cr-sheet{background:#fff;width:100%;border-radius:18px 18px 0 0;padding:12px 12px calc(14px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;}
+  .cr-sheet button{display:flex;align-items:center;gap:12px;border:1px solid var(--cr-line);background:#fff;border-radius:12px;padding:13px 14px;font-size:15.5px;font-weight:600;cursor:pointer;text-align:left;font-family:inherit;color:var(--cr-ink);}
+  .cr-sheet button span{font-size:22px;}
+  .cr-sheet .cancel{justify-content:center;color:#66708A;font-weight:500;}
+  @media (max-width:900px){
+    #main.cr-full{padding:0 !important;}
+    .cr-full .chat-room-split{position:fixed;left:0;right:0;top:var(--cr-top,52px);height:var(--cr-h,calc(100dvh - 52px));z-index:50;border:0;border-radius:0;}
+    .cr-col{max-width:80%;}
+    .cr-msgs{padding:12px 10px;}
+    .cr-ims{width:220px;}
+    .cr-hint{display:none;}
+    .cr-inbar{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));}
+    .cr-ta{font-size:16px;}
+    .cr-b:hover > .cr-x{display:none;}
+    .cr-b.held > .cr-x{display:block;}
+    .cr-galbg{padding:0;align-items:stretch;}
+    .cr-gal{border-radius:0;width:100%;}
+  }
   /* ========== 霍格華茲卡片：背景圖+呼吸光+煙霧+極光+星星閃爍，全部 hogwarts- 開頭命名，不會影響其他頁面 ========== */
   .hogwarts-card{
     position:relative; overflow:hidden; border:1px solid rgba(167,139,250,.45);
@@ -985,13 +1113,13 @@ import {
   getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection, updateDoc, query, where, writeBatch, addDoc
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
-  getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+  getStorage, ref, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-06';
+const APP_BUILD = '2026-10-29-07';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1539,12 +1667,18 @@ function sendDirectMessage(peerUid, peerName, message, attachments){
     message: message||'', attachments: attachments||[], read:false, _at: new Date().toISOString()
   });
 }
-/* ---- 聊天室檔案上傳：直接上傳原始檔案，不經過canvas重繪/壓縮，圖片畫質不打折 ---- */
-function uploadChatFile(peerUid, file){
-  const safeName = (file.name||'file').replace(/[^\w.\-]/g, '_');
+/* ---- 聊天室檔案上傳（2026-10-29）：回報上傳進度；檔名記在 contentDisposition，下載時用原本的檔名（圖片在聊天室送出前可能已壓縮） ---- */
+function uploadChatFile(peerUid, file, onProg, displayName){
+  const name = displayName || file.name || 'file';
+  const safeName = name.replace(/[^\w.\-]/g, '_');
   const path = `directMessages/${[APP.user.uid, peerUid].sort().join('_')}/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${safeName}`;
-  const storageRef = ref(storage, path);
-  return uploadBytes(storageRef, file).then(()=>getDownloadURL(storageRef)).then(url=>({url, name:file.name, type:file.type||'application/octet-stream', size:file.size}));
+  const storageRef = ref(storage, path), type = file.type || 'application/octet-stream';
+  const meta = { contentType:type, contentDisposition:`${type.indexOf('image/')===0 ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(name)}` };
+  return new Promise((resolve, reject)=>{
+    const task = uploadBytesResumable(storageRef, file, meta);
+    task.on('state_changed', snap=>{ if(onProg && snap.totalBytes) onProg(Math.min(99, Math.round(snap.bytesTransferred / snap.totalBytes * 100))); }, reject,
+      ()=>getDownloadURL(task.snapshot.ref).then(url=>{ if(onProg) onProg(100); resolve({ url, name, type, size:file.size }); }, reject));
+  });
 }
 function uploadXjAttachment(pathPrefix, item){
   const safeName = (item.name||'file').replace(/[^\w.\-]/g, '_');
@@ -2922,6 +3056,8 @@ function render(){
   main.style.minHeight = ['personalLog','progress','bankLoan','valuation'].includes(APP.view) ? main.offsetHeight + 'px' : '';
   const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal','customerFollowupOverview'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
+  if(APP.view!=='chatRoom') crLeave(main);
+  main.classList.toggle('cr-full', APP.view==='chatRoom');
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
   else if(APP.view==='xiaojiangDashboard' && isCore()) main.innerHTML = xiaojiangDashboardView();
@@ -2940,11 +3076,7 @@ function render(){
   else if(APP.view==='customerFollowupOverview' && (isCore() || isStaffAdmin())) main.innerHTML = customerFollowupOverviewHTML();
   else if(APP.view==='customerFollowupPersonal' && (isCore() || isStaffAny())) main.innerHTML = customerFollowupPersonalView();
   else if(APP.view==='xiaojiangInbox' && (isCore() || isStaffAny())) main.innerHTML = xiaojiangInboxView();
-  else if(APP.view==='chatRoom' && (isCore() || isStaffAny())){
-    main.innerHTML = chatRoomView();
-    const msgBox = document.getElementById('chat-thread-messages');
-    if(msgBox) msgBox.scrollTop = msgBox.scrollHeight;
-  }
+  else if(APP.view==='chatRoom' && (isCore() || isStaffAny())) chatRender(main);
   else if(APP.view==='progress') main.innerHTML = progressHTML();
   else if(APP.view==='personalLog' && roomOk) main.innerHTML = personalLogPageHTML();
   else if(APP.view==='attendance' && roomOk) main.innerHTML = attendancePageHTML();
@@ -4331,122 +4463,314 @@ function xiaojiangChatView(threadUid, threadName){
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px;">${xiaojiangChatInputHtml(threadUid)}</div>
     </div>`;
 }
-function renderChatFilePreview(){
-  const box = document.getElementById('chat-file-preview');
-  if(!box) return;
-  const files = APP._pendingChatFiles||[];
-  if(files.length===0){ box.style.display='none'; box.innerHTML=''; return; }
-  box.style.display='flex';
-  box.innerHTML = files.map((f,i)=>`
-    <div style="position:relative;">
-      ${f.previewUrl ? `<img src="${f.previewUrl}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);"/>`
-                      : `<div style="width:56px;height:56px;background:#F1F2F6;border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;">📄</div>`}
-      <button type="button" data-action="remove-pending-chat-file" data-idx="${i}" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0;">✕</button>
-    </div>
-  `).join('');
+/* ================= 聊天室（2026-10-29 改版）=================
+   - 畫面只建一次（同一個對話、同一種版面）：之後收到訊息或系統其他資料更新，只更新聯絡人和訊息區，
+     輸入框、送出前的檔案列不重做 → 打到一半的字不會被清掉、iPhone 鍵盤不會收起
+   - 名字：先顯示自己改的暱稱，後面灰色小標籤標系統名稱
+   - 同一人 10 分鐘內連續訊息合併；「已讀」只標最後一則；🔥 只能燒自己的（電腦滑鼠移上去、手機長按）
+   - 檔案：📎／Ctrl+V 貼截圖／拖進來；手機 📎 → 拍照／相簿／檔案；照片超過 800KB 自動壓縮（可勾傳原圖）；送出後顯示上傳進度
+   - 圖片在系統內放大看（左右切換整個對話的圖）；檔案卡顯示類型、大小、下載；「⋯」→ 圖片和檔案總覽 */
+const CR = { count:-1, newBelow:0, lastHtml:'', sending:[], lb:null, held:null, peer:null };
+// 離開聊天室時收掉看大圖、總覽、手機附件選單（render() 呼叫）
+function crLeave(main){ if(main && main.dataset.crKey){ delete main.dataset.crKey; } if(CR.lb) crLbClose(); if(document.getElementById('cr-gal')) crGalClose(); crSheet(false); }
+APP.chatDraft = APP.chatDraft || {};
+APP.chatFind = APP.chatFind || '';
+const crIsM = () => window.innerWidth <= 900;
+const crName = u => displayNameFor(u.id, u.staffName || (u.email||'').split('@')[0] || '未命名');
+const crSys = u => !u.staffName ? '<small class="cr-sys">未設名字</small>' : u.staffName!==crName(u) ? `<small class="cr-sys">${escHtml(u.staffName)}</small>` : '';
+const crThread = peer => { const me = APP.user.uid; return (APP.data.directMessages||[]).filter(m=>(m.senderUid===me && m.recipientUid===peer) || (m.senderUid===peer && m.recipientUid===me)); };
+const crHM = t => t ? new Date(t).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : '';
+const crDay = t => { if(!t) return ''; const d = new Date(t), n = new Date(), y = new Date(Date.now()-864e5);
+  return d.toDateString()===n.toDateString() ? '今天' : d.toDateString()===y.toDateString() ? '昨天' : (d.getFullYear()===n.getFullYear() ? '' : d.getFullYear()+'年') + (d.getMonth()+1) + '月' + d.getDate() + '日'; };
+const crShort = t => { if(!t) return ''; return new Date(t).toDateString()===new Date().toDateString() ? crHM(t) : crDay(t); };
+const crKB = n => !n ? '' : n >= 1e6 ? (n/1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n/1024)) + ' KB';
+const crIsImg = a => !!(a && a.type && a.type.indexOf('image/')===0);
+const crExt = n => { const e = (String(n||'').split('.').pop()||'').toLowerCase(); return e==='pdf' ? ['pdf','PDF'] : /^(xlsx?|csv)$/.test(e) ? ['xls','EXCEL'] : /^docx?$/.test(e) ? ['doc','WORD'] : ['oth', (e.toUpperCase().slice(0,4)) || '檔案']; };
+const crLink = s => escHtml(s).replace(/https?:\/\/[^\s<]+/g, u=>`<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+const crLast = m => !m ? '' : m.message || ((m.attachments||[]).some(crIsImg) ? '[圖片]' : (m.attachments||[]).length ? '[檔案] ' + (m.attachments[0].name||'') : '');
+const CR_DL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>';
+const CR_CLIP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l8-8"/></svg>';
+const CR_SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>';
+
+function crContactsHTML(){
+  const me = APP.user.uid, q = APP.chatFind.trim().toLowerCase();
+  const rows = APP.users.filter(u=>u.id!==me && u.role!=='pending').map(u=>{
+    const t = crThread(u.id), last = t[t.length-1];
+    return { u, name: crName(u), last, unread: t.filter(m=>m.recipientUid===me && !m.read).length };
+  }).filter(r=>!q || (r.name + ' ' + (r.u.staffName||'') + ' ' + (r.u.email||'')).toLowerCase().includes(q))
+    .sort((a,b)=>(b.unread>0)-(a.unread>0) || String(b.last ? b.last._at : '').localeCompare(String(a.last ? a.last._at : '')));
+  if(!rows.length) return `<div class="empty" style="padding:20px;">${q ? '找不到這位同事' : '目前系統裡沒有其他人可以聊天'}</div>`;
+  return rows.map(r=>`<div class="chat-contact-row${r.u.id===APP.chatRoomActivePeer?' active':''}${r.unread?' cr-unread':''}" data-action="open-chat-thread" data-peer="${r.u.id}">
+      ${avatarHtml(r.u.id, r.name, 44)}
+      <div class="chat-contact-info"><div class="cr-r1"><b>${escHtml(r.name)}</b>${crSys(r.u)}${r.last ? `<time>${crShort(r.last._at)}</time>` : ''}</div>
+      <div class="cr-r2"><span>${r.last ? (r.last.senderUid===me ? '你：' : '') + escHtml(crLast(r.last)).slice(0, 60) : '還沒有對話紀錄'}</span>${r.unread ? `<i class="cr-cnt">${r.unread>99?'99+':r.unread}</i>` : ''}</div></div>
+    </div>`).join('');
 }
-function chatRoomView(){
-  const myUid = APP.user.uid;
-  const activePeer = APP.chatRoomActivePeer;
-  const others = APP.users.filter(u => u.id !== myUid && u.role !== 'pending');
-
-  const contactList = others.map(u => {
-    const name = displayNameFor(u.id, u.staffName || u.email);
-    const threadMsgs = (APP.data.directMessages||[]).filter(m =>
-      (m.senderUid===myUid && m.recipientUid===u.id) || (m.senderUid===u.id && m.recipientUid===myUid)
-    );
-    const lastMsg = threadMsgs[threadMsgs.length-1];
-    const unreadCount = threadMsgs.filter(m => m.recipientUid===myUid && !m.read).length;
-    return { uid: u.id, name, lastMsg, unreadCount };
-  }).sort((a,b) => {
-    if((a.unreadCount>0) !== (b.unreadCount>0)) return b.unreadCount>0 ? 1 : -1;
-    const at = a.lastMsg ? a.lastMsg._at : '';
-    const bt = b.lastMsg ? b.lastMsg._at : '';
-    return bt.localeCompare(at);
-  });
-
-  const sidebarHtml = `
-    <div class="chat-room-sidebar${activePeer?' chat-hide-mobile':''}">
-      <div class="chat-contact-header"><h1>💬 聊天室</h1></div>
-      ${contactList.length===0 ? `<div class="empty" style="padding:20px;">目前系統裡沒有其他人可以聊天</div>` :
-      contactList.map(c=>`
-        <div class="chat-contact-row${c.uid===activePeer?' active':''}" data-action="open-chat-thread" data-peer="${c.uid}">
-          ${avatarHtml(c.uid, c.name, 44)}
-          <div class="chat-contact-info">
-            <div class="chat-contact-name">${escHtml(c.name)}${c.unreadCount>0?`<span class="badge expense">${c.unreadCount}</span>`:''}</div>
-            <div class="chat-contact-preview">${c.lastMsg ? escHtml((c.lastMsg.message||'（附件）').slice(0,26)) : '還沒有對話紀錄'}</div>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
-
-  let mainHtml;
-  if(!activePeer){
-    mainHtml = `<div class="chat-room-main chat-hide-mobile" style="align-items:center;justify-content:center;color:var(--muted);font-size:13.5px;">選一位同事開始聊天</div>`;
-  } else {
-    const peer = APP.users.find(u=>u.id===activePeer);
-    const peerName = peer ? displayNameFor(peer.id, peer.staffName||peer.email) : '（找不到這個人）';
-    const threadMsgs = (APP.data.directMessages||[]).filter(m =>
-      (m.senderUid===myUid && m.recipientUid===activePeer) || (m.senderUid===activePeer && m.recipientUid===myUid)
-    );
-    let lastDateLabel = '';
-    const bubbles = threadMsgs.map(m=>{
-      const isMine = m.senderUid===myUid;
-      const dateLabel = m._at ? new Date(m._at).toLocaleDateString('zh-TW',{month:'long',day:'numeric'}) : '';
-      let separator = '';
-      if(dateLabel && dateLabel!==lastDateLabel){
-        separator = `<div style="text-align:center;color:var(--muted);font-size:11.5px;margin:10px 0;">${dateLabel}</div>`;
-        lastDateLabel = dateLabel;
-      }
-      const timeStr = m._at ? new Date(m._at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : '';
-      const attachments = m.attachments||[];
-      const attachmentsHtml = attachments.map(a=>{
-        const isImg = a.type && a.type.startsWith('image/');
-        if(isImg){
-          return `<a href="${a.url}" target="_blank" rel="noopener"><img src="${a.url}" style="max-width:220px;max-height:220px;border-radius:12px;display:block;margin-top:4px;object-fit:cover;"/></a>`;
-        }
-        return `<a href="${a.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;background:${isMine?'rgba(255,255,255,.15)':'#fff'};border:1px solid ${isMine?'rgba(255,255,255,.3)':'var(--border)'};border-radius:10px;padding:8px 12px;margin-top:4px;text-decoration:none;color:${isMine?'#fff':'var(--ink)'};font-size:12.5px;">📎 ${escHtml(a.name||'檔案')}</a>`;
-      }).join('');
-      return `${separator}<div class="chat-msg-row" style="display:flex;align-items:flex-end;gap:6px;justify-content:${isMine?'flex-end':'flex-start'};">
-        ${isMine?`<button type="button" class="chat-burn-btn" data-action="burn-message" data-id="${m.id}" title="燒掉這則訊息">🔥</button>`:''}
-        ${isMine?'':avatarHtml(m.senderUid, m.senderName, 32)}
-        <div style="max-width:62%;display:flex;flex-direction:column;align-items:${isMine?'flex-end':'flex-start'};">
-          ${m.message?`<div style="background:${isMine?'var(--navy)':'#F1F2F6'};color:${isMine?'#fff':'var(--ink)'};padding:11px 16px;border-radius:18px;${isMine?'border-bottom-right-radius:4px;':'border-bottom-left-radius:4px;'}font-size:14.5px;line-height:1.5;word-break:break-word;">${escHtml(m.message)}</div>`:''}
-          ${attachmentsHtml}
-          <div style="font-size:10.5px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:5px;">
-            <span>${timeStr}</span>${isMine?`<span style="color:${m.read?'#4A78F5':'var(--muted)'};">${m.read?'已讀':'已送出'}</span>`:''}
-          </div>
-        </div>
-        ${isMine?avatarHtml(myUid, '我', 32):''}
-        ${isMine?'':`<button type="button" class="chat-burn-btn" data-action="burn-message" data-id="${m.id}" title="燒掉這則訊息">🔥</button>`}
-      </div>`;
-    }).join('');
-
-    mainHtml = `
-      <div class="chat-room-main">
-        <div style="display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--border);background:#fff;">
-          <button class="icon-btn chat-hide-desktop" data-action="close-chat-thread">←</button>
-          ${avatarHtml(activePeer, peerName, 38)}
-          <h3 style="margin:0;font-size:16px;font-weight:700;flex:1;">${escHtml(peerName)}</h3>
-          ${threadMsgs.length>0?`<button type="button" class="icon-btn" data-action="burn-whole-thread" data-peer="${activePeer}" title="燒掉整個對話">🔥 清空對話</button>`:''}
-        </div>
-        <div id="chat-thread-messages" style="flex:1;overflow-y:auto;padding:24px 26px;display:flex;flex-direction:column;gap:16px;">
-          ${threadMsgs.length===0 ? `<div class="empty">還沒有任何對話，說聲嗨吧</div>` : bubbles}
-        </div>
-        <div id="chat-file-preview" style="display:none;gap:8px;flex-wrap:wrap;padding:0 20px;"></div>
-        <form id="chat-thread-form" style="display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--border);background:#fff;align-items:center;">
-          <input type="file" id="chat-file-input" multiple style="display:none;"/>
-          <button type="button" class="icon-btn" data-action="pick-chat-file" style="flex-shrink:0;font-size:18px;padding:8px 10px;">📎</button>
-          <input type="text" id="chat-thread-input" placeholder="輸入訊息……" autocomplete="off" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:20px;font-size:14px;"/>
-          <button type="submit" class="btn primary" style="border-radius:20px;">送出</button>
-        </form>
-      </div>
-    `;
+// 圖片排成方格（超過 4 張顯示 +N），檔案顯示類型、檔名、大小、下載
+function crAttHTML(atts, msgId){
+  const ims = atts.filter(crIsImg), fs = atts.filter(a=>!crIsImg(a)), n = Math.min(4, ims.length);
+  const g = ims.length ? `<div class="cr-ims n${n}">${ims.slice(0, 4).map((a, j)=>{ const up = a.prog!=null && a.prog<100;
+    return `<button type="button" class="cr-im${up?' up':''}" ${a.url ? `data-cr-view="${escAttr(msgId)}:${atts.indexOf(a)}"` : ''} aria-label="放大看 ${escAttr(a.name||'圖片')}"><img src="${escAttr(a.url || a.previewUrl || '')}" alt="${escAttr(a.name||'')}" loading="lazy">${j===3 && ims.length>4 ? `<span class="cr-more4">+${ims.length-4}</span>` : ''}${up ? `<span class="cr-prog"><i style="width:${a.prog}%"></i></span>` : ''}</button>`; }).join('')}</div>` : '';
+  const f = fs.map(a=>{ const [c, t] = crExt(a.name), up = a.prog!=null && a.prog<100;
+    return `<div class="cr-fc"><span class="cr-ext ${c}">${t}</span><div><b title="${escAttr(a.name||'')}">${escHtml(a.name||'檔案')}</b><small>${up ? `上傳中 ${a.prog}%` : crKB(a.size)}</small></div>${a.url ? `<button type="button" class="cr-dl" data-cr-dl="${escAttr(a.url)}" data-cr-name="${escAttr(a.name||'檔案')}">${CR_DL}下載</button>` : ''}</div>`; }).join('');
+  return g + f;
+}
+function crMsgsHTML(peer){
+  const me = APP.user.uid, t = crThread(peer);
+  const pend = CR.sending.filter(s=>s.peer===peer);
+  if(!t.length && !pend.length) return '<div class="empty">還沒有任何對話，說聲嗨吧</div>';
+  const peerU = APP.users.find(u=>u.id===peer), peerName = peerU ? crName(peerU) : '';
+  let out = '', lastDay = '', i = 0;
+  let lastMine = -1; t.forEach((m, k)=>{ if(m.senderUid===me) lastMine = k; });
+  while(i < t.length){
+    const who = t[i].senderUid, day = crDay(t[i]._at);
+    if(day!==lastDay){ out += `<div class="cr-day">${day}</div>`; lastDay = day; }
+    const grp = [];
+    while(i < t.length && t[i].senderUid===who && crDay(t[i]._at)===day && (!grp.length || new Date(t[i]._at) - new Date(grp[grp.length-1].m._at) < 10*6e4)){ grp.push({ m:t[i], k:i }); i++; }
+    const mine = who===me, last = grp[grp.length-1];
+    out += `<div class="cr-g${mine?' me':''}">${mine ? '' : avatarHtml(who, peerName, 30)}<div class="cr-col">
+      ${grp.map(({m})=>{ const burn = mine ? `<button type="button" class="cr-x" data-action="burn-message" data-id="${escAttr(m.id)}">🔥 燒掉</button>` : '';
+        return (m.message ? `<div class="cr-b${CR.held===m.id?' held':''}" data-cr-id="${escAttr(m.id)}">${crLink(m.message)}${burn}</div>` : '')
+          + ((m.attachments||[]).length ? `<div class="cr-b att${CR.held===m.id?' held':''}" data-cr-id="${escAttr(m.id)}">${crAttHTML(m.attachments, m.id)}${m.message ? '' : burn}</div>` : ''); }).join('')}
+      <div class="cr-meta">${crHM(last.m._at)}${mine && grp.some(x=>x.k===lastMine) ? ` · ${t[lastMine].read ? '已讀' : '已送出'}` : ''}</div></div></div>`;
   }
-
-  return `<div class="chat-room-split">${sidebarHtml}${mainHtml}</div>`;
+  // 還在上傳的（送出後馬上顯示、跑進度；失敗可以重試）
+  pend.forEach(s=>{
+    out += `<div class="cr-g me"><div class="cr-col">${s.message ? `<div class="cr-b">${crLink(s.message)}</div>` : ''}<div class="cr-b att">${crAttHTML(s.atts, '')}</div>
+      <div class="cr-meta">${s.failed ? `<span class="cr-fail">傳送失敗</span> <button type="button" class="cr-retry" data-cr-retry="${s.id}">重試</button> <button type="button" class="cr-retry" data-cr-drop="${s.id}">取消</button>` : '傳送中…'}</div></div></div>`;
+  });
+  return out;
 }
+function crHeadNameHTML(peer){ const u = APP.users.find(x=>x.id===peer); return u ? `<b>${escHtml(crName(u))}</b>${crSys(u)}` : '<b>（找不到這個人）</b>'; }
+
+function chatRoomView(){
+  const peer = APP.chatRoomActivePeer;
+  const u = peer && APP.users.find(x=>x.id===peer);
+  const side = `<div class="chat-room-sidebar${peer?' chat-hide-mobile':''}">
+      <div class="chat-contact-header"><h1 class="cr-title">${navSvg('chat')}聊天室</h1><input type="search" id="chat-find" class="cr-find" placeholder="搜尋同事" value="${escAttr(APP.chatFind)}" autocomplete="off" aria-label="搜尋同事"/></div>
+      <div id="chat-contacts">${crContactsHTML()}</div></div>`;
+  if(!peer) return `<div class="chat-room-split" id="chat-split">${side}<div class="chat-room-main chat-hide-mobile" style="align-items:center;justify-content:center;color:var(--muted);font-size:13.5px;">選一位同事開始聊天</div></div>`;
+  return `<div class="chat-room-split" id="chat-split">${side}
+    <div class="chat-room-main" id="chat-main">
+      <div class="cr-head"><button type="button" class="icon-btn chat-hide-desktop" data-action="close-chat-thread" aria-label="回聯絡人">←</button>
+        ${avatarHtml(peer, u ? crName(u) : '', 36)}<div class="cr-hname" id="chat-hname">${crHeadNameHTML(peer)}</div>
+        <div class="cr-morewrap"><button type="button" class="cr-morebtn" data-cr-more aria-label="更多" aria-expanded="false">⋯</button>
+          <div class="cr-menu" id="cr-menu" hidden><button type="button" data-cr-gal>🖼 圖片和檔案</button><button type="button" class="red" data-action="burn-whole-thread" data-peer="${escAttr(peer)}">🔥 清空整個對話</button></div></div></div>
+      <div id="chat-thread-messages" class="cr-msgs"></div>
+      <div class="cr-tray" id="chat-tray"></div><div class="cr-trayopt" id="chat-trayopt"></div>
+      <input type="file" id="chat-file-input" multiple hidden/><input type="file" id="chat-photo-input" accept="image/*" multiple hidden/><input type="file" id="chat-camera-input" accept="image/*" capture="environment" hidden/>
+      <form id="chat-thread-form" class="cr-inbar" novalidate>
+        <button type="button" class="cr-ib" data-cr-clip aria-label="附加檔案或照片" title="附加檔案（也可以直接貼上截圖、或把檔案拖進來）">${CR_CLIP}</button>
+        <textarea id="chat-thread-input" class="cr-ta" rows="1" placeholder="輸入訊息…" aria-label="輸入訊息"></textarea>
+        <button type="submit" class="cr-send" id="chat-send" aria-label="送出" disabled>${CR_SEND}</button>
+      </form>
+      <div class="cr-hint">Enter 送出・Shift+Enter 換行・截圖可以直接 Ctrl+V 貼上・檔案可以拖進來</div>
+    </div></div>`;
+}
+// render() 呼叫：同一個對話只更新聯絡人和訊息，不重做輸入框
+function chatRender(main){
+  const peer = APP.chatRoomActivePeer || '', key = peer + '|' + (crIsM() ? 'm' : 'd');
+  if(main.dataset.crKey!==key || !document.getElementById('chat-split')){
+    // 換了對象：還沒送出的檔案不帶過去（免得傳錯人）；打到一半的字每個人分開記
+    if(CR.peer!==peer){ (APP._pendingChatFiles||[]).forEach(f=>{ if(f.previewUrl) URL.revokeObjectURL(f.previewUrl); }); APP._pendingChatFiles = []; APP._chatOrig = false; CR.peer = peer; }
+    main.innerHTML = chatRoomView(); main.dataset.crKey = key;
+    CR.count = -1; CR.newBelow = 0; CR.lastHtml = ''; CR.held = null;
+    const ta = document.getElementById('chat-thread-input'); if(ta){ ta.value = APP.chatDraft[peer] || ''; crGrow(ta); }
+    crRenderTray(); crFit();
+  } else {
+    const box = document.getElementById('chat-contacts'); if(box) box.innerHTML = crContactsHTML();
+    const hn = document.getElementById('chat-hname'); if(hn) hn.innerHTML = crHeadNameHTML(peer);
+  }
+  crRenderMsgs();
+}
+function crRenderMsgs(forceBottom){
+  const peer = APP.chatRoomActivePeer, box = document.getElementById('chat-thread-messages'); if(!peer || !box) return;
+  const html = crMsgsHTML(peer);
+  const t = crThread(peer), first = CR.count < 0;
+  if(html!==CR.lastHtml){
+    const atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+    box.innerHTML = html; CR.lastHtml = html;
+    const added = first ? 0 : t.slice(Math.max(0, CR.count)).filter(m=>m.senderUid!==APP.user.uid).length;
+    if(first || forceBottom || atEnd){ CR.newBelow = 0; box.scrollTop = box.scrollHeight; }
+    else if(added > 0) CR.newBelow += added;
+  }
+  CR.count = t.length;
+  crChip();
+}
+function crChip(){
+  const main = document.getElementById('chat-main'), box = document.getElementById('chat-thread-messages'); if(!main || !box) return;
+  let c = document.getElementById('cr-newchip');
+  if(!CR.newBelow){ if(c) c.remove(); return; }
+  if(!c){ c = document.createElement('button'); c.type = 'button'; c.id = 'cr-newchip'; c.className = 'cr-newchip'; c.dataset.crDown = '1'; main.appendChild(c); }
+  c.textContent = `↓ ${CR.newBelow} 則新訊息`;
+  c.style.bottom = Math.round(main.getBoundingClientRect().bottom - box.getBoundingClientRect().bottom + 12) + 'px';
+}
+const crGrow = ta => { ta.style.height = 'auto'; ta.style.height = Math.min(140, ta.scrollHeight + 2) + 'px'; };
+function crSendState(){ const b = document.getElementById('chat-send'), ta = document.getElementById('chat-thread-input'); if(b) b.disabled = !(ta && ta.value.trim()) && !(APP._pendingChatFiles||[]).length; }
+
+// ---- 送出前的檔案列（獨立一塊，收到訊息不會被清掉）----
+APP._chatOrig = false;
+function crRenderTray(){
+  const tray = document.getElementById('chat-tray'), opt = document.getElementById('chat-trayopt'); if(!tray) return;
+  const files = APP._pendingChatFiles || [];
+  tray.innerHTML = files.map((f, i)=>`<div class="cr-ti"><div class="cr-th">${f.previewUrl ? `<img src="${f.previewUrl}" alt="">` : `<span class="cr-ext ${crExt(f.name)[0]}">${crExt(f.name)[1]}</span>`}</div>
+    <small>${crCanShrink(f.file) && !APP._chatOrig ? `${crKB(f.file.size)}<br>會自動壓縮` : crKB(f.file.size)}</small><button type="button" class="cr-rm" data-action="remove-pending-chat-file" data-idx="${i}" aria-label="拿掉 ${escAttr(f.name)}">✕</button></div>`).join('');
+  const imgs = files.filter(f=>crCanShrink(f.file)).length;
+  if(opt) opt.innerHTML = files.length ? `<span>${files.length} 個檔案準備送出</span>${imgs ? `<label><input type="checkbox" id="chat-orig" ${APP._chatOrig?'checked':''}/> 傳原圖（不壓縮）</label>` : ''}` : '';
+  crSendState(); crChip();
+}
+const renderChatFilePreview = crRenderTray; // 舊名字（移除檔案時呼叫）
+function crAddFiles(list){
+  if(!APP._pendingChatFiles) APP._pendingChatFiles = [];
+  let n = 0;
+  Array.from(list||[]).forEach(f=>{
+    if(f.size > 25*1024*1024){ plToast(`「${f.name}」超過 25MB，請選小一點的檔案`); return; }
+    const name = f.name && f.name!=='image.png' ? f.name : `截圖_${new Date().toTimeString().slice(0,8).replace(/:/g,'')}.png`;
+    APP._pendingChatFiles.push({ file:f, name, type:f.type||'application/octet-stream', previewUrl: (f.type||'').indexOf('image/')===0 ? URL.createObjectURL(f) : null }); n++;
+  });
+  if(n){ crRenderTray(); const ta = document.getElementById('chat-thread-input'); if(ta && !crIsM()) ta.focus(); }
+}
+// 照片超過 800KB 才壓縮：長邊最多 2048px、JPEG 品質 0.82（文件上的字看得清楚）
+const crCanShrink = f => !!f && /^image\/(jpeg|png|webp)$/.test(f.type||'') && f.size > 800*1024;
+async function crShrink(f, orig){
+  if(orig || !crCanShrink(f) || typeof createImageBitmap!=='function') return f;
+  try{
+    const bmp = await createImageBitmap(f), k = Math.min(1, 2048 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise(r=>c.toBlob(r, 'image/jpeg', 0.82));
+    if(!blob || blob.size >= f.size) return f;
+    return new File([blob], (f.name||'photo').replace(/\.[^.]+$/, '') + '.jpg', { type:'image/jpeg' });
+  }catch(_){ return f; }
+}
+// 送出：文字直接送；有檔案就先顯示在對話裡跑進度，全部傳完才送出訊息
+function crSend(){
+  const ta = document.getElementById('chat-thread-input'), peer = APP.chatRoomActivePeer; if(!ta || !peer) return;
+  const msg = ta.value.trim(), files = (APP._pendingChatFiles||[]).slice();
+  if(!msg && !files.length) return;
+  ta.value = ''; APP.chatDraft[peer] = ''; crGrow(ta);
+  APP._pendingChatFiles = []; const orig = APP._chatOrig; APP._chatOrig = false; crRenderTray();
+  if(!crIsM()) ta.focus();
+  const peerU = APP.users.find(u=>u.id===peer), peerName = peerU ? crName(peerU) : '';
+  if(!files.length){ sendDirectMessage(peer, peerName, msg).catch(err=>{ alert('訊息傳送失敗，請檢查網路後再試一次：' + (err && err.message ? err.message : err)); ta.value = msg; crSendState(); }); return; }
+  const s = { id: uid(), peer, peerName, message: msg, orig, files, failed:false,
+    atts: files.map(f=>({ name:f.name, type:f.type, size:f.file.size, previewUrl:f.previewUrl, prog:0 })) };
+  CR.sending.push(s); crRenderMsgs(true); crUpload(s);
+}
+function crUpload(s){
+  s.failed = false; s.atts.forEach(a=>{ a.prog = 0; }); crRenderMsgs(true);
+  Promise.all(s.files.map(async (f, i)=>{
+    const file = await crShrink(f.file, s.orig); s.atts[i].size = file.size;
+    return uploadChatFile(s.peer, file, p=>{ s.atts[i].prog = p; crRenderMsgs(); }, file===f.file ? f.name : (f.name||'').replace(/\.[^.]+$/, '') + '.jpg');
+  })).then(attachments=>sendDirectMessage(s.peer, s.peerName, s.message, attachments))
+    .then(()=>{ s.files.forEach(f=>{ if(f.previewUrl) URL.revokeObjectURL(f.previewUrl); }); CR.sending = CR.sending.filter(x=>x!==s); crRenderMsgs(true); })
+    .catch(err=>{ console.error('聊天室檔案上傳失敗', err); s.failed = true; crRenderMsgs(); });
+}
+
+// ---- 看大圖（整個對話的圖片可以左右切換）、圖片和檔案總覽、手機附件選單：都放在 body 最外層 ----
+function crImgs(){ const out = []; crThread(APP.chatRoomActivePeer).forEach(m=>(m.attachments||[]).forEach((a, j)=>{ if(crIsImg(a) && a.url) out.push({ ...a, mid:m.id, j, who:m.senderUid, at:m._at }); })); return out; }
+function crWho(uidv){ if(uidv===APP.user.uid) return '你'; const u = APP.users.find(x=>x.id===uidv); return u ? crName(u) : ''; }
+function crOverlay(id, html){ let o = document.getElementById(id); if(!html){ if(o) o.remove(); return null; } if(!o){ o = document.createElement('div'); o.id = id; document.body.appendChild(o); } o.innerHTML = html; return o; }
+function crLbRender(){
+  const L = CR.lb, list = crImgs(); if(!L || !list.length){ CR.lb = null; crOverlay('cr-lb', ''); return; }
+  L.i = (L.i + list.length) % list.length; const a = list[L.i];
+  const o = crOverlay('cr-lb', `<div class="cr-lb" role="dialog" aria-modal="true" aria-label="看圖片"><div class="cr-lbh"><div><b>${escHtml(a.name||'圖片')}</b><small>${escHtml(crWho(a.who))}・${crDay(a.at)} ${crHM(a.at)}${a.size ? '・' + crKB(a.size) : ''}</small></div>
+    <button type="button" class="cr-lbb" data-cr-dl="${escAttr(a.url)}" data-cr-name="${escAttr(a.name||'圖片.jpg')}">${CR_DL}下載</button><button type="button" class="cr-lbb" data-cr-lbclose aria-label="關閉">✕</button></div>
+    <div class="cr-lbm${L.zoom?' zoom':''}"><img src="${escAttr(a.url)}" alt="${escAttr(a.name||'')}" data-cr-zoom>${list.length>1 ? '<button type="button" class="cr-nav p" data-cr-lbgo="-1" aria-label="上一張">‹</button><button type="button" class="cr-nav n" data-cr-lbgo="1" aria-label="下一張">›</button>' : ''}</div>
+    <div class="cr-lbf">${L.i+1} / ${list.length}${crIsM() ? '' : '　← → 切換・點圖片放大・Esc 關閉'}</div></div>`);
+  document.body.classList.add('pa-lock');
+  return o;
+}
+function crLbClose(){ CR.lb = null; crOverlay('cr-lb', ''); if(!document.getElementById('cr-gal')) document.body.classList.remove('pa-lock'); }
+function crGalRender(){
+  const list = crImgs(), files = []; crThread(APP.chatRoomActivePeer).forEach(m=>(m.attachments||[]).forEach(a=>{ if(!crIsImg(a) && a.url) files.push({ ...a, who:m.senderUid, at:m._at }); }));
+  crOverlay('cr-gal', `<div class="cr-galbg" data-cr-galbg><div class="cr-gal" role="dialog" aria-modal="true" aria-label="圖片和檔案"><div class="cr-galh"><b>圖片和檔案</b><button type="button" class="cr-morebtn" data-cr-galclose aria-label="關閉">✕</button></div><div class="cr-galb">
+    <div><h4>圖片 ${list.length} 張</h4>${list.length ? `<div class="cr-gg">${list.map((a, n)=>`<button type="button" class="cr-im" data-cr-lbopen="${n}"><img src="${escAttr(a.url)}" alt="${escAttr(a.name||'')}" loading="lazy"></button>`).join('')}</div>` : '<small class="cr-none">還沒有</small>'}</div>
+    <div><h4>檔案 ${files.length} 個</h4>${files.length ? files.reverse().map(a=>{ const [c, t] = crExt(a.name); return `<div class="cr-fc wide"><span class="cr-ext ${c}">${t}</span><div><b>${escHtml(a.name||'檔案')}</b><small>${crKB(a.size)}${a.size ? '・' : ''}${escHtml(crWho(a.who))}・${crDay(a.at)}</small></div><button type="button" class="cr-dl" data-cr-dl="${escAttr(a.url)}" data-cr-name="${escAttr(a.name||'檔案')}">${CR_DL}下載</button></div>`; }).join('') : '<small class="cr-none">還沒有</small>'}</div>
+  </div></div></div>`);
+  document.body.classList.add('pa-lock');
+}
+function crGalClose(){ crOverlay('cr-gal', ''); if(!CR.lb) document.body.classList.remove('pa-lock'); }
+function crSheet(open){
+  crOverlay('cr-sheet', open ? `<div class="cr-sheetbg" data-cr-sheetbg><div class="cr-sheet"><button type="button" data-cr-pick="camera"><span>📷</span>拍照</button><button type="button" data-cr-pick="photo"><span>🖼</span>從相簿選照片</button><button type="button" data-cr-pick="file"><span>📄</span>選檔案（PDF、Excel…）</button><button type="button" class="cancel" data-cr-sheetbg>取消</button></div></div>` : '');
+}
+// 下載：盡量用原本的檔名存；瀏覽器擋住時改成另開分頁
+async function crDownload(url, name){
+  try{
+    const r = await fetch(url); if(!r.ok) throw new Error(r.status);
+    const b = await r.blob(), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name || '檔案';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+  }catch(_){ window.open(url, '_blank', 'noopener'); }
+}
+// 手機：對話占滿螢幕，鍵盤打開時跟著可見區域縮小（輸入框不會被蓋住）
+function crFit(){
+  const sp = document.getElementById('chat-split'); if(!sp) return;
+  if(!crIsM()){ sp.style.removeProperty('--cr-top'); sp.style.removeProperty('--cr-h'); return; }
+  const vv = window.visualViewport, bar = document.getElementById('mobile-topbar');
+  const top = bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) : 0;
+  const h = vv ? vv.height + vv.offsetTop : window.innerHeight;
+  sp.style.setProperty('--cr-top', top + 'px'); sp.style.setProperty('--cr-h', Math.max(240, Math.round(h - top)) + 'px');
+}
+if(window.visualViewport){ window.visualViewport.addEventListener('resize', crFit); window.visualViewport.addEventListener('scroll', crFit); }
+window.addEventListener('resize', ()=>{ if(APP.view==='chatRoom') render(); });
+
+document.addEventListener('click', (e)=>{
+  const t = e.target; if(!t.closest) return;
+  if(t.closest('[data-cr-clip]')){ if(crIsM()) crSheet(true); else { const i = document.getElementById('chat-file-input'); if(i) i.click(); } return; }
+  const pk = t.closest('[data-cr-pick]'); if(pk){ crSheet(false); const i = document.getElementById('chat-' + pk.dataset.crPick + '-input'); if(i) i.click(); return; }
+  if(t.closest('[data-cr-sheetbg]') && (t.matches('[data-cr-sheetbg]'))){ crSheet(false); return; }
+  const mb = t.closest('[data-cr-more]'); const menu = document.getElementById('cr-menu');
+  if(mb){ if(menu){ menu.hidden = !menu.hidden; mb.setAttribute('aria-expanded', String(!menu.hidden)); } return; }
+  if(menu && !menu.hidden && !t.closest('#cr-menu')){ menu.hidden = true; }
+  if(t.closest('[data-cr-gal]')){ if(menu) menu.hidden = true; crGalRender(); return; }
+  if(t.closest('[data-cr-galclose]') || t.matches('[data-cr-galbg]')){ crGalClose(); return; }
+  const vw = t.closest('[data-cr-view]'); if(vw){ const [mid, j] = vw.dataset.crView.split(':'); const i = crImgs().findIndex(a=>a.mid===mid && String(a.j)===j); CR.lb = { i: Math.max(0, i), zoom:false }; crLbRender(); return; }
+  const lo = t.closest('[data-cr-lbopen]'); if(lo){ CR.lb = { i: +lo.dataset.crLbopen, zoom:false }; crLbRender(); return; }
+  const go = t.closest('[data-cr-lbgo]'); if(go && CR.lb){ CR.lb.i += Number(go.dataset.crLbgo); CR.lb.zoom = false; crLbRender(); return; }
+  if(t.closest('[data-cr-zoom]') && CR.lb){ CR.lb.zoom = !CR.lb.zoom; crLbRender(); return; }
+  if(t.closest('[data-cr-lbclose]')){ crLbClose(); return; }
+  const dl = t.closest('[data-cr-dl]'); if(dl){ crDownload(dl.dataset.crDl, dl.dataset.crName); return; }
+  if(t.closest('[data-cr-down]')){ const b = document.getElementById('chat-thread-messages'); if(b) b.scrollTop = b.scrollHeight; CR.newBelow = 0; crChip(); return; }
+  const rt = t.closest('[data-cr-retry]'); if(rt){ const s = CR.sending.find(x=>x.id===rt.dataset.crRetry); if(s) crUpload(s); return; }
+  const dp = t.closest('[data-cr-drop]'); if(dp){ CR.sending = CR.sending.filter(x=>x.id!==dp.dataset.crDrop); crRenderMsgs(); return; }
+  if(CR.held && !t.closest('.cr-b')){ CR.held = null; CR.lastHtml = ''; crRenderMsgs(); }
+});
+document.addEventListener('input', (e)=>{
+  const t = e.target;
+  if(t.id==='chat-thread-input'){ APP.chatDraft[APP.chatRoomActivePeer] = t.value; crGrow(t); crSendState(); }
+  else if(t.id==='chat-find'){ APP.chatFind = t.value; const b = document.getElementById('chat-contacts'); if(b) b.innerHTML = crContactsHTML(); }
+});
+document.addEventListener('change', (e)=>{
+  const t = e.target;
+  if(t.id==='chat-file-input' || t.id==='chat-photo-input' || t.id==='chat-camera-input'){ crAddFiles(t.files); t.value = ''; }
+  else if(t.id==='chat-orig'){ APP._chatOrig = t.checked; crRenderTray(); }
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.target && e.target.id==='chat-thread-input' && e.key==='Enter' && !e.shiftKey && !e.isComposing && e.keyCode!==229 && !crIsM()){ e.preventDefault(); crSend(); return; }
+  if(CR.lb){ if(e.key==='Escape') crLbClose(); else if(e.key==='ArrowLeft' || e.key==='ArrowRight'){ CR.lb.i += e.key==='ArrowLeft' ? -1 : 1; CR.lb.zoom = false; crLbRender(); } return; }
+  if(e.key==='Escape'){ if(document.getElementById('cr-gal')) crGalClose(); else if(document.getElementById('cr-sheet')) crSheet(false); }
+});
+// 直接貼上截圖
+document.addEventListener('paste', (e)=>{
+  if(APP.view!=='chatRoom' || !APP.chatRoomActivePeer || !e.target.closest || !e.target.closest('#chat-main')) return;
+  const fs = Array.from((e.clipboardData && e.clipboardData.files) || []); if(fs.length){ e.preventDefault(); crAddFiles(fs); }
+});
+// 把檔案拖進對話框
+let crDragN = 0;
+const crDropEl = on => { const m = document.getElementById('chat-main'); if(!m) return; let d = document.getElementById('cr-drop'); if(on && !d){ m.insertAdjacentHTML('beforeend', '<div class="cr-drop" id="cr-drop">放開就加入檔案</div>'); } else if(!on && d) d.remove(); };
+document.addEventListener('dragenter', (e)=>{ if(APP.view!=='chatRoom' || !APP.chatRoomActivePeer || !e.dataTransfer || !Array.from(e.dataTransfer.types||[]).includes('Files')) return; e.preventDefault(); crDragN++; crDropEl(true); });
+document.addEventListener('dragover', (e)=>{ if(document.getElementById('cr-drop')) e.preventDefault(); });
+document.addEventListener('dragleave', ()=>{ if(--crDragN <= 0){ crDragN = 0; crDropEl(false); } });
+document.addEventListener('drop', (e)=>{ if(!document.getElementById('cr-drop')) return; e.preventDefault(); crDragN = 0; crDropEl(false); if(e.target.closest && e.target.closest('#chat-main')) crAddFiles(e.dataTransfer.files); });
+// 手機長按自己的訊息 → 出現「燒掉」
+let crPress = null;
+document.addEventListener('pointerdown', (e)=>{ const b = e.target.closest && e.target.closest('.cr-g.me .cr-b[data-cr-id]'); if(!b || !crIsM()) return; clearTimeout(crPress); crPress = setTimeout(()=>{ CR.held = b.dataset.crId; CR.lastHtml = ''; crRenderMsgs(); }, 450); });
+['pointerup','pointercancel','pointermove'].forEach(ev=>document.addEventListener(ev, (e)=>{ if(ev!=='pointermove' || Math.abs(e.movementY) > 4) clearTimeout(crPress); }));
+document.addEventListener('scroll', (e)=>{ if(e.target && e.target.id==='chat-thread-messages' && CR.newBelow){ const b = e.target; if(b.scrollHeight - b.scrollTop - b.clientHeight < 60){ CR.newBelow = 0; crChip(); } } }, true);
+// 看大圖：手機左右滑換張
+let crTX = null;
+document.addEventListener('touchstart', (e)=>{ if(CR.lb && e.target.closest && e.target.closest('.cr-lbm') && !CR.lb.zoom) crTX = e.touches[0].clientX; }, { passive:true });
+document.addEventListener('touchend', (e)=>{ if(crTX==null || !CR.lb) return; const dx = e.changedTouches[0].clientX - crTX; crTX = null; if(Math.abs(dx) > 50){ CR.lb.i += dx < 0 ? 1 : -1; crLbRender(); } });
 function xiaojiangInboxView(){
   const xjName = APP.data.caseSettings.xiaojiangName || '小江';
   if(!isCore()){
@@ -10129,7 +10453,7 @@ document.addEventListener('click', (e)=>{
     if(action==='burn-message'){
       const msgId = el.dataset.id;
       const msg = (APP.data.directMessages||[]).find(m=>m.id===msgId);
-      if(!msg) return;
+      if(!msg || msg.senderUid!==APP.user.uid) return; // 只能燒自己傳的
       openConfirm('確定要燒掉這則訊息嗎？燒掉後無法復原。', ()=>{
         (msg.attachments||[]).forEach(a=>{ if(a.url) deleteObject(ref(storage, a.url)).catch(()=>{}); });
         deleteDoc(doc(db,'directMessages', msgId)).catch(()=>{});
@@ -11171,18 +11495,6 @@ document.addEventListener('change', (e)=>{
     reader.readAsDataURL(file);
     return;
   }
-  if(e.target.id==='chat-file-input'){
-    const files = Array.from(e.target.files||[]);
-    if(!files.length) return;
-    if(!APP._pendingChatFiles) APP._pendingChatFiles = [];
-    for(const f of files){
-      if(f.size > 25*1024*1024){ alert(`「${f.name}」超過 25MB，請選小一點的檔案。`); continue; }
-      APP._pendingChatFiles.push({ file:f, name:f.name, type:f.type||'application/octet-stream', previewUrl: f.type.startsWith('image/') ? URL.createObjectURL(f) : null });
-    }
-    e.target.value = '';
-    renderChatFilePreview();
-    return;
-  }
   if(e.target.id==='xj-chat-file-input'){
     const file2 = e.target.files[0];
     const xjPreview = document.getElementById('xj-chat-preview');
@@ -11361,34 +11673,7 @@ document.addEventListener('submit', (e)=>{
     sendChatMessage(q);
     return;
   }
-  if(e.target.id==='chat-thread-form'){
-    e.preventDefault();
-    const input = document.getElementById('chat-thread-input');
-    const msg = input.value.trim();
-    const pendingFiles = APP._pendingChatFiles||[];
-    if(!msg && pendingFiles.length===0) return;
-    if(!APP.chatRoomActivePeer) return;
-    input.value = '';
-    const peer = APP.users.find(u=>u.id===APP.chatRoomActivePeer);
-    const peerName = peer ? displayNameFor(peer.id, peer.staffName||peer.email) : '';
-    const peerUid = APP.chatRoomActivePeer;
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    if(pendingFiles.length===0){
-      sendDirectMessage(peerUid, peerName, msg);
-    } else {
-      if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = '上傳中…'; }
-      APP._pendingChatFiles = [];
-      renderChatFilePreview();
-      Promise.all(pendingFiles.map(f=>uploadChatFile(peerUid, f.file)))
-        .then(attachments=>{
-          pendingFiles.forEach(f=>{ if(f.previewUrl) URL.revokeObjectURL(f.previewUrl); });
-          return sendDirectMessage(peerUid, peerName, msg, attachments);
-        })
-        .catch(err=>{ alert('檔案上傳失敗：' + (err&&err.message?err.message:err)); })
-        .finally(()=>{ if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = '送出'; } });
-    }
-    return;
-  }
+  if(e.target.id==='chat-thread-form'){ e.preventDefault(); crSend(); return; }
   if(e.target.id==='login-form'){
     e.preventDefault();
     const fd = new FormData(e.target);
