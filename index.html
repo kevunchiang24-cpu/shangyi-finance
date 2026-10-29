@@ -1001,6 +1001,11 @@
   .pl-field .pl-inl{width:100%;min-height:40px;border-radius:9px;font-size:14px;padding-left:12px;}
   .pl-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .pl-err{color:var(--pl-danger);font-size:12px;}
+  .pl-src{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .pl-src button{height:40px;border:1.5px solid var(--pl-line,#E2E6EF);background:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--pl-ink,#1F2433);}
+  .pl-src button[aria-pressed="true"]{border-color:var(--pl-brand);background:#EAF0FF;color:var(--pl-brand);}
+  .pl-src + input{margin-top:6px;}
+  .pl-row2:has(.pl-src){align-items:start;}
   .pl-toggle-more{border:0;background:transparent;color:var(--pl-brand);font-weight:700;padding:4px 0;text-align:left;cursor:pointer;font-size:13.5px;}
   .pl-dconfirm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#FDECEC;border-radius:10px;padding:8px 10px;color:#7A1414;font-size:13px;margin-right:auto;}
   .pl-toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#12233F;color:#F4F6FB;padding:9px 16px;border-radius:10px;font-size:13px;z-index:10001;max-width:calc(100vw - 32px);box-sizing:border-box;text-align:center;pointer-events:none;}
@@ -1266,7 +1271,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-13';
+const APP_BUILD = '2026-10-29-14';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5372,7 +5377,9 @@ const PL_STATUS_ACTIVE = [['已加LINE未回覆','#DCF5E4','#11633A'],['已聯�
 const PL_STATUS_ENDED = [['不回應','#EDEFF3','#454C5C'],['失聯','#EDEFF3','#454C5C'],['放棄','#EDEFF3','#454C5C'],['無需求','#EDEFF3','#454C5C'],['客不要','#EDEFF3','#454C5C'],['封鎖我','#EDEFF3','#454C5C'],['中途退','#EDEFF3','#454C5C'],['轉單','#E6F1FA','#1E5A85']];
 const PL_STATUS_ALL = [...PL_STATUS_ACTIVE, ...PL_STATUS_ENDED];
 const PL_DOING = ['收資','審核','補資'];
-const PL_SOURCES = ['公司','自己開發','自來','通路','廣告'];
+const PL_SOURCES = ['自己','公司'];
+/* 來源三顆按鈕：自己／公司是固定值，其他（含舊資料的自由文字）都算「自己打字」 */
+const plSrcFree = (M, r) => M.srcFree || (!!r.source && !PL_SOURCES.includes(r.source));
 const PL_NEUTRAL = ['#EEF1F7','#2B3245'];
 const PL_LABEL = { customer:'客戶姓名', phone:'電話', caseRemark:'案件狀況備註', dealProduct:'方案', contactStatus:'聯絡狀態', caseStatus:'案件狀態' };
 const PL_SORTS = [['date','日期'],['customer','客戶'],['dealProduct','方案'],['contactStatus','聯絡狀態'],['latestNote','客戶詳細資料'],['caseRemark','案件狀況備註'],['caseStatus','案件狀態']];
@@ -5618,7 +5625,8 @@ function plModalHTML(){
   const r = M.rec;
   const more = M.more ? `
       <div class="pl-row2">
-        <label class="pl-field"><span>來源</span><input id="pl-fSource" list="pl-source-list" value="${escAttr(r.source||'')}" placeholder="例：公司、自己開發"/><datalist id="pl-source-list">${PL_SOURCES.map(s=>`<option value="${s}">`).join('')}</datalist></label>
+        <div class="pl-field"><span id="pl-srcl">來源</span><div class="pl-src" role="group" aria-labelledby="pl-srcl">${(()=>{ const free = plSrcFree(M, r), cur = free ? '' : (r.source||'公司'); return PL_SOURCES.map(x=>`<button type="button" data-pl-src="${x}" aria-pressed="${!free && cur===x}">${x}</button>`).join('') + `<button type="button" data-pl-src="" aria-pressed="${free}">自己打字</button>`; })()}</div>
+          <input id="pl-fSource" value="${escAttr(plSrcFree(M, r) ? (r.source||'') : (r.source||'公司'))}" placeholder="打來源，例如：朋友介紹、IG" aria-label="自己打來源" ${plSrcFree(M, r)?'':'hidden'}/></div>
         <label class="pl-field"><span>LINE ID（選填）</span><input id="pl-fLine" value="${escAttr(r.lineId||'')}" placeholder="例：abc1234"/></label>
       </div>
       <div class="pl-row2">
@@ -5725,6 +5733,7 @@ function plSaveModal(next){
   if(!r.customer){ M.err = '請填客戶姓名'; plRender(); const el = document.getElementById('pl-fName'); if(el) el.focus(); return; }
   if(!r.date){ M.err = '請選日期'; plRender(); return; }
   M.err = '';
+  if(!(r.source||'').trim()) r.source = '公司'; // 選了「自己打字」但沒寫，就當公司
   if(M.edit){
     const orig = M.orig, patch = {};
     // 只寫有改的欄位；姓名、電話只差前後空白不算改（舊資料有些尾巴帶空白，不要因為按儲存就被改掉）
@@ -5826,6 +5835,8 @@ document.addEventListener('click', (e)=>{
   if(t.closest('[data-pl-mclose]') || t.matches('[data-pl-modalbg]')){ S.modal = null; return plRender(); }
   if(t.matches('[data-pl-popbg]')){ S.pop = null; return plRender(); }
   if(t.closest('[data-pl-mmore]')){ plCaptureForm(); S.modal.more = !S.modal.more; return plRender(); }
+  const srcB = t.closest('[data-pl-src]');
+  if(srcB && S.modal){ plCaptureForm(); const v = srcB.dataset.plSrc; S.modal.srcFree = v===''; if(v) S.modal.rec.source = v; else if(PL_SOURCES.includes(S.modal.rec.source)) S.modal.rec.source = ''; const box = document.getElementById('pl-fSource'); if(box) box.value = S.modal.rec.source; plRender(); if(v===''){ const el = document.getElementById('pl-fSource'); if(el) el.focus(); } return; }
   if(t.closest('[data-pl-savenext]')) return plSaveModal(true);
   if(t.closest('[data-pl-mdel]')){ plCaptureForm(); S.modal.confirmDel = true; return plRender(); }
   if(t.closest('[data-pl-mdelno]')){ S.modal.confirmDel = false; return plRender(); }
