@@ -477,6 +477,32 @@
     .cr-galbg{padding:0;align-items:stretch;}
     .cr-gal{border-radius:0;width:100%;}
   }
+  /* ---- 選項顏色視窗（2026-10-29，取代「選單顏色設定」頁）：oc- 開頭，建在 body 最外層 ---- */
+  .oc-editbtn{border-style:dashed !important;color:#1D3FA8 !important;background:#F5F8FF !important;font-weight:700;}
+  #oc-dlg{--oc-ink:#1F2433;--oc-muted:#596277;--oc-line:#E2E6EF;}
+  .oc-ov{position:fixed;inset:0;z-index:10004;background:rgba(18,26,48,.42);display:flex;align-items:center;justify-content:center;padding:16px;color:var(--oc-ink);}
+  .oc-box{background:#fff;border-radius:16px;width:min(640px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(18,26,48,.3);}
+  .oc-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--oc-line);}
+  .oc-h h2{margin:0;font-size:17px;flex:1;}
+  .oc-x{border:0;background:#EEF1F7;width:32px;height:32px;border-radius:99px;font-size:18px;cursor:pointer;color:var(--oc-muted);}
+  .oc-b{padding:12px 18px;overflow:auto;display:grid;gap:2px;}
+  .oc-hint{font-size:12.5px;color:var(--oc-muted);margin:0 0 6px;line-height:1.6;}
+  .oc-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 0;border-bottom:1px solid #F0F2F7;}
+  .oc-bd{min-width:104px;text-align:center;border-radius:8px;padding:5px 10px;font-weight:700;font-size:13px;}
+  .oc-sw{display:flex;gap:3px;flex-wrap:wrap;flex:1;min-width:0;}
+  .oc-sw button{width:21px;height:21px;border-radius:6px;border:2px solid transparent;cursor:pointer;padding:0;flex:none;}
+  .oc-sw button[aria-pressed="true"]{border-color:var(--oc-ink);}
+  .oc-auto{font-size:11.5px;color:var(--oc-muted);border:1px solid var(--oc-line);background:#fff;border-radius:7px;padding:3px 8px;cursor:pointer;font-family:inherit;}
+  .oc-autotag{font-size:11px;color:var(--oc-muted);}
+  .oc-f{display:flex;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--oc-line);}
+  .oc-done{border:0;border-radius:10px;padding:9px 20px;font-weight:700;font-size:14px;background:#2F5BEA;color:#fff;cursor:pointer;font-family:inherit;}
+  @media (max-width:640px){
+    .oc-ov{align-items:flex-end;padding:0;}
+    .oc-box{width:100%;border-radius:18px 18px 0 0;max-height:92vh;}
+    .oc-f{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+    .oc-done{flex:1;}
+    .oc-bd{min-width:0;flex:1 1 100%;text-align:left;}
+  }
   /* ========== 霍格華茲卡片：背景圖+呼吸光+煙霧+極光+星星閃爍，全部 hogwarts- 開頭命名，不會影響其他頁面 ========== */
   .hogwarts-card{
     position:relative; overflow:hidden; border:1px solid rgba(167,139,250,.45);
@@ -1119,7 +1145,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-07';
+const APP_BUILD = '2026-10-29-08';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1903,7 +1929,6 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">${navSvg('hr')}</span>人事管理</div>
     <div class="nav-group-label">系統</div>
     <div class="nav-item" data-action="nav" data-view="settings"><span class="nav-icon">${navSvg('settings')}</span>設定</div>
-    <div class="nav-item" data-action="nav" data-view="optionColors"><span class="nav-icon">${navSvg('colors')}</span>選單顏色設定</div>
     ${isAdmin() ? `<div class="nav-item" data-action="nav" data-view="users"><span class="nav-icon">${navSvg('accounts')}</span>帳號管理</div>` : ''}
     </div>
     ${inRoom ? `<button id="toggle-core-nav" style="width:100%;text-align:left;background:transparent;border:none;color:#C7D4FB;font-size:12px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;">☰ 展開完整選單</button>
@@ -1934,7 +1959,6 @@ function shellHTML(){
     <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">${navSvg('attendance')}</span>出勤請假</div>
     <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">${navSvg('calendar')}</span>行事曆</div>
     <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">${navSvg('team')}</span>業務總覽</div>
-    ${isStaffAdmin() ? `<div class="nav-item" data-action="nav" data-view="optionColors"><span class="nav-icon">${navSvg('colors')}</span>選單顏色設定</div>` : ''}
     ${meIsHuang ? `<div class="nav-item" data-action="nav" data-view="socialAccounts"><span class="nav-icon">${navSvg('lock')}</span>社群帳號庫</div>` : ''}
     ` : ''}
     <div class="sidebar-footer">
@@ -5048,7 +5072,8 @@ const plOrder = { dealProduct: DEAL_PRODUCT_OPTIONS, contactStatus: PL_STATUS_AL
 function plOptColor(f, v){
   if(!v) return null;
   if(f==='dealProduct'){ const c = colorForOption(v, 'dealProduct'); return [c.bg, c.text]; } // 沿用「選單顏色設定」
-  if(f==='contactStatus'){ const s = PL_STATUS_ALL.find(x=>x[0]===v); return s ? [s[1], s[2]] : PL_NEUTRAL; }
+  if(f==='contactStatus'){ const cu = APP.data.optionColors && APP.data.optionColors.contactStatus && APP.data.optionColors.contactStatus[v]; if(cu) return [cu.bg, cu.text];
+    const s = PL_STATUS_ALL.find(x=>x[0]===v); return s ? [s[1], s[2]] : PL_NEUTRAL; }
   if(f==='caseStatus') return v==='核准' ? ['#E3F5EA','#17663A'] : /婉拒|取消/.test(v) ? ['#ECEDF1','#5E6475'] : ['#EEF1F7','#3B4252'];
   return null;
 }
@@ -5245,7 +5270,8 @@ function plPicker(f, cur, target){
   const grp = (g, arr)=>`${g?`<div class="pl-pickgrp">${g}</div>`:''}<div class="pl-picks">${arr.map(o=>{ const c = plOptColor(f, o);
     return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-pl-pick="${escAttr(o)}" data-pl-pt="${escAttr(target)}" data-pl-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
   return plOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
-    + (cur ? `<button type="button" class="pl-pickclear" data-pl-pick="" data-pl-pt="${escAttr(target)}" data-pl-f="${f}">清除，改回未填</button>` : '');
+    + (cur ? `<button type="button" class="pl-pickclear" data-pl-pick="" data-pl-pt="${escAttr(target)}" data-pl-f="${f}">清除，改回未填</button>` : '')
+    + (f==='dealProduct' || f==='contactStatus' ? ocEditBtn(f, PL_LABEL[f]) : '');
 }
 function plPopHTML(){
   const S = plS(); if(!S.pop) return '';
@@ -5881,6 +5907,61 @@ document.addEventListener('keydown', (e)=>{
   else if(document.querySelector('#pa-dlg:not([hidden])') && !(run && run.dataset.busy)) paCloseDlg();
 });
 document.addEventListener('focusin', (e)=>{ if(e.target && e.target.id==='pa-text') setTimeout(paPlace, 300); });
+/* ================= 選項顏色（2026-10-29）=================
+   「選單顏色設定」頁從選單拿掉，改在進度追蹤、我的客人紀錄的選項面板最下面「🎨 調整〇〇的顏色」（只有核心、行政看得到）。
+   資料一樣存在 appdata/optionColors（plan、status、dealProduct、contactStatus），視窗建在 body 最外層。 */
+const OC_FIELDS = {
+  plan:          { title:'進度追蹤・方案',        opts:()=>pgPlans() },
+  status:        { title:'進度追蹤・狀態',        opts:()=>PG_ST_ALL },
+  dealProduct:   { title:'我的客人紀錄・方案',    opts:()=>DEAL_PRODUCT_OPTIONS },
+  contactStatus: { title:'我的客人紀錄・聯絡狀態', opts:()=>PL_STATUS_ALL.map(s=>s[0]) },
+};
+const ocCanEdit = () => isCore() || isStaffAdmin();
+const ocEditBtn = (cat, label) => ocCanEdit() && OC_FIELDS[cat] ? `<button type="button" class="pl-pickclear oc-editbtn" data-oc-edit="${cat}">🎨 調整${escHtml(label)}的顏色</button>` : '';
+// 視窗裡顯示的顏色跟頁面上一樣（聯絡狀態沒指定時用客人紀錄的固定顏色）
+function ocShown(cat, v){
+  if(cat==='contactStatus'){ const c = plOptColor('contactStatus', v); return { bg:c[0], text:c[1] }; }
+  return colorForOption(v, cat);
+}
+const ocCustom = (cat, v) => APP.data.optionColors && APP.data.optionColors[cat] && APP.data.optionColors[cat][v];
+let OC_OPEN = null;
+function ocRender(){
+  let o = document.getElementById('oc-dlg');
+  if(!OC_OPEN){ if(o) o.remove(); document.body.classList.remove('pa-lock'); return; }
+  const F = OC_FIELDS[OC_OPEN];
+  if(!o){ o = document.createElement('div'); o.id = 'oc-dlg'; document.body.appendChild(o); }
+  o.innerHTML = `<div class="oc-ov" data-oc-bg><div class="oc-box" role="dialog" aria-modal="true" aria-label="${escAttr(F.title)}的顏色">
+    <div class="oc-h"><h2>${escHtml(F.title)}的顏色</h2><button type="button" class="oc-x" data-oc-close aria-label="關閉">×</button></div>
+    <div class="oc-b"><p class="oc-hint">點色塊就換，表格馬上跟著變。「自動」＝沒指定，系統自己配色。改完大家看到的都會變。</p>
+    ${F.opts().map(opt=>{ const cu = ocCustom(OC_OPEN, opt), c = ocShown(OC_OPEN, opt);
+      return `<div class="oc-row"><span class="oc-bd" style="background:${c.bg};color:${c.text};">${escHtml(opt)}</span>
+        <div class="oc-sw">${OPTION_COLOR_PALETTE.map((p, i)=>`<button type="button" data-oc-sw="${i}" data-oc-opt="${escAttr(opt)}" aria-label="${escAttr(opt)} 用第 ${i+1} 個顏色" aria-pressed="${!!cu && cu.bg===p.bg && cu.text===p.text}" style="background:${p.bg};box-shadow:inset 0 0 0 1px ${p.text}40;"></button>`).join('')}</div>
+        ${cu ? `<button type="button" class="oc-auto" data-oc-auto="${escAttr(opt)}">改回自動</button>` : '<span class="oc-autotag">自動</span>'}</div>`; }).join('')}
+    </div><div class="oc-f"><button type="button" class="oc-done" data-oc-close>完成</button></div></div></div>`;
+  document.body.classList.add('pa-lock');
+}
+function ocOpen(cat){
+  if(!OC_FIELDS[cat] || !ocCanEdit()) return;
+  if(APP.pl) APP.pl.pop = null; if(APP.pg) APP.pg.pop = null;
+  OC_OPEN = cat; render(); ocRender();
+}
+function ocSet(opt, idx){
+  const cat = OC_OPEN; if(!cat) return;
+  const oc = { ...APP.data.optionColors }; oc[cat] = { ...(oc[cat]||{}) };
+  if(idx==null) delete oc[cat][opt]; else { const c = OPTION_COLOR_PALETTE[idx]; if(!c) return; oc[cat][opt] = c; }
+  APP.data.optionColors = oc;
+  saveOptionColors(oc).catch(err=>alert('顏色儲存失敗，請檢查網路後再試一次：' + (err && err.message ? err.message : err)));
+  render(); ocRender();
+}
+document.addEventListener('click', (e)=>{
+  const t = e.target; if(!t.closest) return;
+  const ed = t.closest('[data-oc-edit]'); if(ed){ e.stopPropagation(); ocOpen(ed.dataset.ocEdit); return; }
+  if(!OC_OPEN) return;
+  const sw = t.closest('[data-oc-sw]'); if(sw){ ocSet(sw.dataset.ocOpt, Number(sw.dataset.ocSw)); return; }
+  const au = t.closest('[data-oc-auto]'); if(au){ ocSet(au.dataset.ocAuto, null); return; }
+  if(t.closest('[data-oc-close]') || t.matches('[data-oc-bg]')){ OC_OPEN = null; ocRender(); }
+}, true);
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && OC_OPEN){ OC_OPEN = null; ocRender(); } });
 /* ================= 進度追蹤（2026-10 改版）=================
    跟舊版用同一份資料（progressAdCases、progressChannelCases），欄位名稱不變。
    - 列表上直接改、編輯視窗都只更新改到的欄位（updateDoc），不整筆覆蓋；業務只會寫 staffNote、wizardHatNote（符合資料庫規則）
@@ -6141,6 +6222,7 @@ function pgPicker(f, cur, target){
     return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-pg-pick="${escAttr(o)}" data-pg-pt="${escAttr(target)}" data-pg-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
   return pgOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
     + ((f==='plan' || f==='staff') && cur ? `<button type="button" class="pl-pickclear" data-pg-pick="" data-pg-pt="${escAttr(target)}" data-pg-f="${f}">清除，改回未填</button>` : '')
+    + (f==='plan' || f==='status' ? ocEditBtn(f, f==='plan' ? '方案' : '狀態') : '')
     + (f==='status' ? `<div class="pg-flowhint">選 <b>對保</b>：記下對保日期（系統每天的對保提醒會用）<br>選 <b>撥款完成</b>：記下撥款日期，並自動建立「客戶關懷追蹤」</div>` : '');
 }
 function pgPopHTML(){
