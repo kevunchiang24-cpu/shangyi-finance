@@ -55,7 +55,9 @@
   .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;color:#FFFFFF;margin-bottom:2px;}
   .nav-item:hover{background:rgba(255,255,255,.14);}
   .nav-item.active{background:#FFFFFF;color:var(--navy);font-weight:700;}
-  .nav-icon{width:18px;text-align:center;font-size:14px;}
+  .nav-icon{width:19px;text-align:center;font-size:14px;display:inline-flex;justify-content:center;flex:none;}
+  .nav-svg{width:19px;height:19px;display:block;}
+  .chat-nav-icon .nav-svg{width:20px;height:20px;}
   .chat-nav-button{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;cursor:pointer;
     background:linear-gradient(135deg,#4A78F5,#7B6CFA);color:#fff;font-size:14.5px;font-weight:700;
     margin-bottom:2px;box-shadow:0 4px 14px rgba(74,120,245,.45);position:relative;transition:transform .12s,box-shadow .12s;}
@@ -64,7 +66,7 @@
   .valuation-nav-button:hover{box-shadow:0 6px 18px rgba(16,185,129,.55);}
   .valuation-nav-button.is-active{outline:2px solid #fff;}
   .val-longcell:hover{border-color:#94A3B8 !important;background:#F8FAFC;}
-  .chat-nav-icon{font-size:19px;}
+  .chat-nav-icon{font-size:19px;display:inline-flex;}
   .chat-nav-badge{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#EF4444;color:#fff;
     font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px;min-width:18px;text-align:center;line-height:1.4;}
   .nav-section-divider{height:1px;background:rgba(255,255,255,.16);margin:12px 6px 14px;}
@@ -989,7 +991,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-04';
+const APP_BUILD = '2026-10-29-05';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1684,6 +1686,33 @@ function pendingHTML(){
     <button class="btn ghost" id="pending-logout" style="margin-top:16px;">登出</button>
   </div></div>`;
 }
+/* 左邊選單的扁平線條圖示（2026-10-29 取代表情符號）：24×24、線寬 1.8、顏色跟著文字 */
+const NAV_ICONS = {
+  chat:      '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/>',
+  valuation: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  bankLoan:  '<path d="M3 9.5L12 4l9 5.5"/><path d="M4 10h16"/><path d="M6 10v8M10 10v8M14 10v8M18 10v8"/><path d="M3 20h18"/>',
+  dashboard: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="4" rx="1.5"/><rect x="13" y="10" width="7" height="10" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/>',
+  bonus:     '<rect x="3" y="6.5" width="18" height="11" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 10v4M17.5 10v4"/>',
+  moon:      '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  receipt:   '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  reports:   '<path d="M4 20h16"/><path d="M7 16v-5M12 16V7M17 16v-8"/>',
+  progress:  '<path d="M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11"/><path d="M11 6h9M11 12h9M11 18h9"/><path d="M5.5 18h.5"/>',
+  profit:    '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  team:      '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18.5 14.3A6.5 6.5 0 0 1 21.5 20"/>',
+  care:      '<path d="M5 4h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  hr:        '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.5 16.5a3.5 3.5 0 0 1 7 0"/><path d="M15 10h3M15 13.5h3"/>',
+  vendors:   '<path d="M4 21V5l8-2v18"/><path d="M12 9h8v12"/><path d="M2 21h20"/><path d="M7 8h2M7 12h2M7 16h2M15 13h2M15 17h2"/>',
+  settings:  '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+  colors:    '<path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-1.3-1-1.6-1-2.8 0-1 .8-1.5 1.8-1.5H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><path d="M7.5 11h.01M10 7h.01M15 7.5h.01"/>',
+  accounts:  '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l2 2M18 5l2 2"/>',
+  myDash:    '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/><path d="M4 18h16"/>',
+  myLog:     '<path d="M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6z"/><path d="M4 7h3M4 12h3M4 17h3"/><circle cx="12.5" cy="10" r="2.3"/><path d="M9 16.5a3.5 3.5 0 0 1 7 0"/>',
+  attendance:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  calendar:  '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16"/><path d="M8 3v4M16 3v4"/>',
+  lock:      '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  back:      '<path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/>',
+};
+const navSvg = (k, cls) => `<svg class="${cls||'nav-svg'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICONS[k]||''}</svg>`;
 function shellHTML(){
   const roleLabel = {admin:'管理員', editor:'一般編輯', viewer:'唯讀', staffAdmin:'行政', staffSales:'業務'}[APP.role] || APP.role;
   const core = isCore();
@@ -1717,32 +1746,32 @@ function shellHTML(){
       ${sbColBtnHTML()}
     </div>
     <div class="chat-nav-button" data-action="nav" data-view="chatRoom">
-      <span class="chat-nav-icon">💬</span><span>聊天室</span>
+      <span class="chat-nav-icon">${navSvg('chat')}</span><span>聊天室</span>
       ${totalDmUnread>0?`<span class="chat-nav-badge">${totalDmUnread>9?'9+':totalDmUnread}</span>`:''}
     </div>
-    ${core ? `<div class="chat-nav-button valuation-nav-button${APP.view==='valuation'?' is-active':''}" data-action="nav" data-view="valuation"><span class="chat-nav-icon">🏡</span><span>房屋土地估價</span></div>` : ''}
-    ${core ? `<div class="chat-nav-button valuation-nav-button${APP.view==='bankLoan'?' is-active':''}" data-action="nav" data-view="bankLoan"><span class="chat-nav-icon">🏦</span><span>銀行信貸</span></div>` : ''}
+    ${core ? `<div class="chat-nav-button valuation-nav-button${APP.view==='valuation'?' is-active':''}" data-action="nav" data-view="valuation"><span class="chat-nav-icon">${navSvg('valuation')}</span><span>房屋土地估價</span></div>` : ''}
+    ${core ? `<div class="chat-nav-button valuation-nav-button${APP.view==='bankLoan'?' is-active':''}" data-action="nav" data-view="bankLoan"><span class="chat-nav-icon">${navSvg('bankLoan')}</span><span>銀行信貸</span></div>` : ''}
     <div class="nav-section-divider"></div>
     ${core ? `
     <div class="${inRoom?'core-nav-collapsed':''}" id="core-nav-block" style="${inRoom?'display:none;':''}">
-    <div class="nav-item" data-action="nav" data-view="dashboard"><span class="nav-icon">▦</span>總覽</div>
-    <div class="nav-item${hasUnpaidToday?' nav-item-pulse':''}" data-action="nav" data-view="dailyBonus"><span class="nav-icon">💰</span>每日獎金${hasUnpaidToday?'<span class="nav-pulse-dot"></span>':''}</div>
-    ${meIsXiaojiang ? `<div class="nav-item" data-action="nav" data-view="xiaojiangDashboard"><span class="nav-icon">🌙</span>我的個人空間</div>` : ''}
+    <div class="nav-item" data-action="nav" data-view="dashboard"><span class="nav-icon">${navSvg('dashboard')}</span>總覽</div>
+    <div class="nav-item${hasUnpaidToday?' nav-item-pulse':''}" data-action="nav" data-view="dailyBonus"><span class="nav-icon">${navSvg('bonus')}</span>每日獎金${hasUnpaidToday?'<span class="nav-pulse-dot"></span>':''}</div>
+    ${meIsXiaojiang ? `<div class="nav-item" data-action="nav" data-view="xiaojiangDashboard"><span class="nav-icon">${navSvg('moon')}</span>我的個人空間</div>` : ''}
     <div class="nav-group-label">財務</div>
-    <div class="nav-item" data-action="nav" data-view="transactions"><span class="nav-icon">≣</span>收支明細</div>
-    <div class="nav-item" data-action="nav" data-view="reports"><span class="nav-icon">▤</span>財報</div>
+    <div class="nav-item" data-action="nav" data-view="transactions"><span class="nav-icon">${navSvg('receipt')}</span>收支明細</div>
+    <div class="nav-item" data-action="nav" data-view="reports"><span class="nav-icon">${navSvg('reports')}</span>財報</div>
     <div class="nav-group-label">業務營運</div>
-    <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
-    <div class="nav-item" data-action="nav" data-view="cases"><span class="nav-icon">📋</span>獲利報表</div>
-    <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
-    <div class="nav-item${hasAnyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupOverview"><span class="nav-icon">📞</span>客戶關懷追蹤${hasAnyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>
+    <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">${navSvg('progress')}</span>進度追蹤</div>
+    <div class="nav-item" data-action="nav" data-view="cases"><span class="nav-icon">${navSvg('profit')}</span>獲利報表</div>
+    <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">${navSvg('team')}</span>業務總覽</div>
+    <div class="nav-item${hasAnyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupOverview"><span class="nav-icon">${navSvg('care')}</span>客戶關懷追蹤${hasAnyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>
     <div class="nav-group-label">公司管理</div>
-    <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">☺</span>人事管理</div>
-    <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">▣</span>廠商管理</div>
+    <div class="nav-item" data-action="nav" data-view="hr"><span class="nav-icon">${navSvg('hr')}</span>人事管理</div>
+    <div class="nav-item" data-action="nav" data-view="vendors"><span class="nav-icon">${navSvg('vendors')}</span>廠商管理</div>
     <div class="nav-group-label">系統</div>
-    <div class="nav-item" data-action="nav" data-view="settings"><span class="nav-icon">⚙</span>設定</div>
-    <div class="nav-item" data-action="nav" data-view="optionColors"><span class="nav-icon">🎨</span>選單顏色設定</div>
-    ${isAdmin() ? `<div class="nav-item" data-action="nav" data-view="users"><span class="nav-icon">🔑</span>帳號管理</div>` : ''}
+    <div class="nav-item" data-action="nav" data-view="settings"><span class="nav-icon">${navSvg('settings')}</span>設定</div>
+    <div class="nav-item" data-action="nav" data-view="optionColors"><span class="nav-icon">${navSvg('colors')}</span>選單顏色設定</div>
+    ${isAdmin() ? `<div class="nav-item" data-action="nav" data-view="users"><span class="nav-icon">${navSvg('accounts')}</span>帳號管理</div>` : ''}
     </div>
     ${inRoom ? `<button id="toggle-core-nav" style="width:100%;text-align:left;background:transparent;border:none;color:#C7D4FB;font-size:12px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;">☰ 展開完整選單</button>
     <div style="border-top:1px solid rgba(255,255,255,.15);margin:4px 0 8px 0;"></div>` : ''}
@@ -1750,30 +1779,30 @@ function shellHTML(){
     ${inRoom ? `
     <div style="background:rgba(124,58,237,.22);border:1px solid rgba(124,58,237,.45);border-radius:12px;padding:10px 8px;margin:10px 0;">
       <div class="nav-group-label" style="color:#E9D5FF;">${escHtml(displayNameFor(APP.viewingStaff.uid, APP.viewingStaff.name))} 的房間</div>
-      <div class="nav-item" data-action="nav" data-view="personalDashboard"><span class="nav-icon">📊</span>個人儀表板</div>
-      <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
-      <div class="nav-item${hasRoomOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupPersonal"><span class="nav-icon">📞</span>客戶關懷追蹤${hasRoomOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>
+      <div class="nav-item" data-action="nav" data-view="personalDashboard"><span class="nav-icon">${navSvg('myDash')}</span>個人儀表板</div>
+      <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">${navSvg('progress')}</span>進度追蹤</div>
+      <div class="nav-item${hasRoomOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupPersonal"><span class="nav-icon">${navSvg('care')}</span>客戶關懷追蹤${hasRoomOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>
       <div class="nav-group-label" style="color:#E9D5FF;">個人空間</div>
-      <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>我的客人紀錄</div>
-      <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
-      <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">📅</span>行事曆</div>
-      <div class="nav-item" data-action="exit-staff-room" style="background:rgba(255,255,255,.12);"><span class="nav-icon">←</span>返回業務總覽</div>
+      <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">${navSvg('myLog')}</span>我的客人紀錄</div>
+      <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">${navSvg('attendance')}</span>出勤請假</div>
+      <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">${navSvg('calendar')}</span>行事曆</div>
+      <div class="nav-item" data-action="exit-staff-room" style="background:rgba(255,255,255,.12);"><span class="nav-icon">${navSvg('back')}</span>返回業務總覽</div>
     </div>
     ` : ''}
     ${staffAny ? `
-    <div class="nav-item" data-action="nav" data-view="personalDashboard"><span class="nav-icon">📊</span>個人儀表板</div>
+    <div class="nav-item" data-action="nav" data-view="personalDashboard"><span class="nav-icon">${navSvg('myDash')}</span>個人儀表板</div>
     <div class="nav-group-label">工作項目</div>
-    <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">📍</span>進度追蹤</div>
+    <div class="nav-item" data-action="nav" data-view="progress"><span class="nav-icon">${navSvg('progress')}</span>進度追蹤</div>
     ${isStaffAdmin()
-      ? `<div class="nav-item${hasAnyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupOverview"><span class="nav-icon">📞</span>客戶關懷追蹤${hasAnyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>`
-      : `<div class="nav-item${hasMyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupPersonal"><span class="nav-icon">📞</span>客戶關懷追蹤${hasMyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>`}
+      ? `<div class="nav-item${hasAnyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupOverview"><span class="nav-icon">${navSvg('care')}</span>客戶關懷追蹤${hasAnyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>`
+      : `<div class="nav-item${hasMyOverdueFollowup?' nav-item-pulse':''}" data-action="nav" data-view="customerFollowupPersonal"><span class="nav-icon">${navSvg('care')}</span>客戶關懷追蹤${hasMyOverdueFollowup?'<span class="nav-pulse-dot"></span>':''}</div>`}
     <div class="nav-group-label">個人空間</div>
-    <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">📝</span>我的客人紀錄</div>
-    <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">🗓</span>出勤請假</div>
-    <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">📅</span>行事曆</div>
-    <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">🏠</span>業務總覽</div>
-    ${isStaffAdmin() ? `<div class="nav-item" data-action="nav" data-view="optionColors"><span class="nav-icon">🎨</span>選單顏色設定</div>` : ''}
-    ${meIsHuang ? `<div class="nav-item" data-action="nav" data-view="socialAccounts"><span class="nav-icon">🔐</span>社群帳號庫</div>` : ''}
+    <div class="nav-item" data-action="nav" data-view="personalLog"><span class="nav-icon">${navSvg('myLog')}</span>我的客人紀錄</div>
+    <div class="nav-item" data-action="nav" data-view="attendance"><span class="nav-icon">${navSvg('attendance')}</span>出勤請假</div>
+    <div class="nav-item" data-action="nav" data-view="calendar"><span class="nav-icon">${navSvg('calendar')}</span>行事曆</div>
+    <div class="nav-item" data-action="nav" data-view="staffOverview"><span class="nav-icon">${navSvg('team')}</span>業務總覽</div>
+    ${isStaffAdmin() ? `<div class="nav-item" data-action="nav" data-view="optionColors"><span class="nav-icon">${navSvg('colors')}</span>選單顏色設定</div>` : ''}
+    ${meIsHuang ? `<div class="nav-item" data-action="nav" data-view="socialAccounts"><span class="nav-icon">${navSvg('lock')}</span>社群帳號庫</div>` : ''}
     ` : ''}
     <div class="sidebar-footer">
       <div class="user-chip">${escHtml(APP.userEmail)}</div>
