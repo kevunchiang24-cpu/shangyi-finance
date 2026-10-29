@@ -275,6 +275,27 @@
   .cs-mfoot{position:sticky;bottom:-24px;background:#fff;margin:12px -24px -24px;padding:12px 24px 18px;border-top:1px solid var(--border);flex-wrap:wrap;align-items:center;z-index:2;}
   .cs-live{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-right:auto;}
   .cs-live b{display:block;font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .cs-mstep{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:11px;padding:3px;}
+  .cs-mstep button{border:0;background:transparent;width:36px;height:34px;border-radius:8px;font-size:20px;cursor:pointer;color:var(--ink);font-family:inherit;}
+  .cs-mstep button:disabled{color:#C9CFDB;cursor:default;} .cs-mstep button:not(:disabled):hover{background:#EAF0FF;}
+  .cs-mstep select{height:34px;border:0;background:transparent;font-weight:700;font-size:14.5px;padding:0 6px;cursor:pointer;font-family:inherit;color:var(--ink);}
+  .cs-paybar{background:#FFF4D6;border:1px solid #F0C552;border-radius:14px;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin-bottom:14px;}
+  .cs-paybar .k{font-size:14px;font-weight:700;color:#8A5300;} .cs-paybar b{font-size:24px;font-weight:800;color:#8A5300;font-variant-numeric:tabular-nums;} .cs-paybar .c{font-size:12.5px;color:#8A5300;}
+  .cs-grp{display:grid;max-width:520px;} .cs-grp h3{margin:6px 0 4px;font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.04em;}
+  .cs-rl{display:flex;justify-content:space-between;gap:12px;padding:7px 0;font-size:14.5px;border-bottom:1px solid #F0F2F7;}
+  .cs-rl b{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;}
+  .cs-rl.m span{color:var(--muted);} .cs-rl.m b{color:var(--red);font-weight:500;}
+  .cs-rl.sub{color:var(--muted);font-size:13.5px;} .cs-rl.sub b{color:var(--ink);}
+  .cs-rl.res{border-bottom:0;border-top:1.5px solid var(--ink);font-weight:700;} .cs-rl.res b{font-weight:800;}
+  .cs-grp h3 + .cs-rl.res{border-top:0;}
+  .cs-tot{background:#DFF5E8;border-radius:10px;padding:4px 12px;max-width:544px;margin-top:6px;}
+  .cs-rl.big{border:0;font-weight:800;font-size:15.5px;} .cs-rl.big b{font-size:19px;}
+  .cs-flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .cs-flow div{background:#F7F8FC;border-radius:12px;padding:10px 16px;display:grid;justify-items:center;min-width:84px;}
+  .cs-flow b{font-size:24px;font-variant-numeric:tabular-nums;} .cs-flow span{font-size:12.5px;color:var(--muted);} .cs-flow i{font-style:normal;color:var(--muted);font-size:18px;}
+  .cs-yr td{background:#F7F8FC;color:var(--muted);font-weight:700;font-size:12.5px;padding:6px 12px;}
+  .cs-more{justify-self:center;border:1px solid var(--border);background:#fff;border-radius:99px;padding:8px 18px;color:var(--navy,#2F5BEA);font-weight:700;cursor:pointer;font-size:13.5px;font-family:inherit;}
+  .cs-more:hover{background:#EAF0FF;}
   @media (max-width:760px){
     .cs-root .page-header{padding-right:0;}
     .cs-root .table-wrap:has(+ .cs-cards){display:none;}
@@ -286,6 +307,7 @@
     .cs-spgrid{grid-template-columns:1fr;}
     .cs-st{grid-template-columns:1fr auto;} .cs-st .cs-barw{display:none;}
     .cs-sptop .btn{flex:1;justify-content:center;}
+    .cs-sptop .cs-mstep{width:100%;justify-content:space-between;} .cs-sptop .cs-mstep select{flex:1;text-align:center;} .cs-sptop .cs-sp{display:none;} .cs-sptop .btn{white-space:nowrap;}
   }
   .icon-btn{background:transparent;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:4px 6px;border-radius:6px;}
   .icon-btn:hover{background:#EEF1F8;color:var(--ink);}
@@ -1338,7 +1360,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-15';
+const APP_BUILD = '2026-10-29-16';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -9652,7 +9674,8 @@ function adSpendView(){
   const editable = canEdit();
   const cs = APP.data.caseSettings;
   const list = APP.data.adSpend.slice().sort((x,y)=>String(y.month||'').localeCompare(String(x.month||'')));
-  const hint = `房租＋固定人事成本，由廣告線全額吸收，<b>自動抓收支明細裡當月「房租水電」＋「薪資支出」的實際加總</b>；廣告投手月獎金 ＝（廣告線案件利潤加總 − 固定成本 − 廣告投放金額）× ${(cs.pilotBonusRate*100).toFixed(0)}%，於每月 5 號發放，此區塊公式固定不開放手動調整。`;
+  const rate = (cs.pilotBonusRate*100).toFixed(0);
+  const hint = `房租＋固定人事成本，由廣告線全額吸收，<b>自動抓收支明細裡當月「房租水電」＋「薪資支出」的實際加總</b>；廣告投手月獎金 ＝（廣告線案件利潤加總 − 固定成本 − 廣告投放金額）× ${rate}%，於每月 5 號發放，此區塊公式固定不開放手動調整。`;
   const addBtn = editable ? `<button class="btn primary" data-action="open-adspend-modal">＋ 新增月份資料</button>` : '';
   if(list.length===0) return `<div class="cs-sptop"><span class="cs-sp"></span>${addBtn}</div><details class="cs-hint"><summary>公式怎麼算</summary><p>${hint}</p></details><div class="table-wrap"><div class="empty">尚無資料</div></div>`;
   let i = list.findIndex(a=>a.id===APP.csSpendId); if(i<0) i = 0;
@@ -9660,37 +9683,52 @@ function adSpendView(){
   const diff = (k, lessIsGood) => { if(!pv) return ''; const d = v[k] - pv[k]; if(!d) return '<span class="cs-dd">跟上個月一樣</span>';
     const up = d > 0, good = lessIsGood ? !up : up; return `<span class="cs-dd ${good?'up':'down'}">${up?'▲':'▼'} ${money(Math.abs(d))}<em>比上個月</em></span>`; };
   const cls = n => n>=0 ? 'amount-pos' : 'amount-neg';
-  const maxW = Math.max(1, Math.abs(v.adRevenue), Math.abs(v.companyFinalNet), Math.abs(v.adTotalNet));
-  const bar = n => `<span class="cs-barw"><i style="width:${Math.min(100, Math.round(Math.abs(n)/maxW*100))}%"></i></span>`;
-  const step = (t, n, k, key, sign) => `<div class="cs-st ${k}"><span class="t">${t}</span>${bar(n)}<b data-sp="${key}" class="${k==='minus'?'amount-neg':k==='plus'?'amount-pos':''}">${sign||''}${money(n)}</b></div>`;
-  const funnel = [['私訊', a.messages, 'messages'], ['送件', a.submitted, 'submitted'], ['核准', a.approved, 'approved']];
-  const fmax = Math.max(1, ...funnel.map(f=>Number(f[1])||0));
-  const label = m => { const [y, mm] = String(m||'').split('-'); return y && mm ? `${y} 年 ${Number(mm)} 月` : escHtml(m||''); };
-  return `<div class="cs-sptop"><div class="cs-mpick" role="group" aria-label="月份">${list.map((x,j)=>`<button type="button" data-cs-spm="${escAttr(x.id)}" aria-pressed="${j===i}">${label(x.month)}</button>`).join('')}</div>
+  const ym = m => { const [y, mm] = String(m||'').split('-'); return { y: y||'', m: mm ? Number(mm) : '' }; };
+  const label = m => { const p = ym(m); return p.y && p.m ? `${p.y} 年 ${p.m} 月` : escHtml(m||''); };
+  const mlab = m => { const p = ym(m); return p.m ? `${p.m} 月` : escHtml(m||''); };
+  const ln = (t, n, k, key, sign) => `<div class="cs-rl ${k||''}"><span>${t}</span><b data-sp="${key}">${sign||''}${money(n)}</b></div>`;
+  const years = [...new Set(list.map(x=>ym(x.month).y))];
+  const showAll = !!APP.csSpendAll, hist = showAll ? list : list.slice(0, 6);
+  return `<div class="cs-sptop"><div class="cs-mstep" role="group" aria-label="月份">
+        <button type="button" data-cs-spm="${escAttr((list[i+1]||a).id)}" ${i>=list.length-1?'disabled':''} aria-label="上個月">‹</button>
+        <select id="cs-spsel" aria-label="選月份">${years.map(y=>`<optgroup label="${escAttr(y)} 年">${list.map((x,j)=>ym(x.month).y===y?`<option value="${escAttr(x.id)}" ${j===i?'selected':''}>${label(x.month)}</option>`:'').join('')}</optgroup>`).join('')}</select>
+        <button type="button" data-cs-spm="${escAttr((list[i-1]||a).id)}" ${i<=0?'disabled':''} aria-label="下個月">›</button></div>
+      ${i>0 ? `<button type="button" class="btn ghost" data-cs-spm="${escAttr(list[0].id)}">回到最新月份</button>` : ''}
       <span class="cs-sp"></span>${editable ? `<button class="btn ghost" data-action="edit-adspend" data-id="${a.id}">編輯這個月</button>` : ''}${addBtn}</div>
     <div class="cs-hero"><div class="cs-big"><span class="k">${label(a.month)}・全公司最終淨利</span><b data-sp="companyFinalNet" class="${cls(v.companyFinalNet)}">${money(v.companyFinalNet)}</b>${diff('companyFinalNet')}</div>
       <div class="cs-mini"><div><span>廣告線最終淨利</span><b class="${cls(v.adFinalNet)}">${money(v.adFinalNet)}</b>${diff('adFinalNet')}</div><div><span>通路線案件利潤</span><b>${money(v.chProfit)}</b>${diff('chProfit')}</div><div><span>投放金額</span><b data-sp="spend">${money(a.spend)}</b>${diff('spend', true)}</div></div></div>
+    <div class="cs-paybar"><span class="k">${mlab(a.month)}投手月獎金・要發</span><b>${money(v.pilotBonus)}</b><span class="c">每月 5 號發放・（廣告線案件利潤 − 固定成本 − 投放金額）× ${rate}%</span></div>
     <div class="cs-spgrid">
-      <section class="cs-panel"><h2>這個月怎麼算出淨利</h2>
-        ${step('廣告線案件利潤', v.adRevenue, 'base', 'adRevenue')}
-        ${step('固定成本（房租水電＋薪資）', v.fixedCostThisMonth, 'minus', 'fixedCost', '－ ')}
-        ${step('廣告投放金額', v.spend, 'minus', 'spend2', '－ ')}
-        ${step('廣告總淨利', v.adTotalNet, 'sub', 'adTotalNet')}
-        ${step(`投手月獎金（${(cs.pilotBonusRate*100).toFixed(0)}%，5 號發）`, v.pilotBonus, 'minus', 'pilotBonus', '－ ')}
-        ${step('廣告線最終淨利', v.adFinalNet, 'sub', 'adFinalNet')}
-        ${step('＋ 通路線案件利潤', v.chProfit, 'plus', 'chProfit')}
-        <div class="cs-st total"><span class="t">＝ 全公司最終淨利</span>${bar(v.companyFinalNet)}<b class="${cls(v.companyFinalNet)}">${money(v.companyFinalNet)}</b></div>
+      <section class="cs-panel"><h2>淨利怎麼來的</h2>
+        <div class="cs-grp"><h3>廣告線</h3>
+          ${ln('案件利潤', v.adRevenue, '', 'adRevenue')}
+          ${ln('扣 固定成本（房租水電＋薪資）', v.fixedCostThisMonth, 'm', 'fixedCost', '－')}
+          ${ln('扣 廣告投放金額', v.spend, 'm', 'spend2', '－')}
+          ${ln('廣告總淨利', v.adTotalNet, 'sub', 'adTotalNet')}
+          ${ln(`扣 投手月獎金（${rate}%，5 號發）`, v.pilotBonus, 'm', 'pilotBonus', '－')}
+          ${ln('廣告線最終淨利', v.adFinalNet, 'res', 'adFinalNet')}
+        </div>
+        <div class="cs-grp"><h3>通路線</h3>${ln('案件利潤', v.chProfit, 'res', 'chProfit')}</div>
+        <div class="cs-grp cs-tot"><div class="cs-rl big"><span>全公司最終淨利（廣告線＋通路線）</span><b class="${cls(v.companyFinalNet)}">${money(v.companyFinalNet)}</b></div></div>
         <details class="cs-hint in"><summary>公式怎麼算</summary><p>${hint}</p></details>
       </section>
-      <section class="cs-panel"><h2>投放成效</h2>
-        <div class="cs-fun">${funnel.map(([t,n,key],j)=>`<div class="cs-fr"><span class="t">${t}</span><span class="cs-fb"><i style="width:${Math.max(4, Math.round((Number(n)||0)/fmax*100))}%"></i></span><b data-sp="${key}">${n||'—'}</b><small>${j && Number(funnel[j-1][1]) && n ? ((Number(n)/Number(funnel[j-1][1]))*100).toFixed(1)+'%' : ''}</small></div>`).join('')}</div>
-        <div class="cs-kpi"><div><span>CPC（每則私訊）</span><b data-sp="cpc">${v.cpc?money(v.cpc):'—'}</b></div><div><span>CPA（每件核准）</span><b data-sp="cpa">${v.cpa?money(v.cpa):'—'}</b></div>
-          <div><span>核准率</span><b data-sp="approveRate">${v.approveRate?(v.approveRate*100).toFixed(1)+'%':'—'}</b></div><div><span>ROI</span><b data-sp="roi">${(v.roi*100).toFixed(1)}%</b></div></div>
+      <section class="cs-panel"><h2>廣告投放成效</h2>
+        <div class="cs-flow"><div><b data-sp="messages">${a.messages||'—'}</b><span>私訊</span></div><i>→</i><div><b data-sp="submitted">${a.submitted||'—'}</b><span>送件</span></div><i>→</i><div><b data-sp="approved">${a.approved||'—'}</b><span>核准</span></div></div>
+        <div class="cs-grp">
+          <div class="cs-rl"><span>投放金額</span><b>${money(a.spend)}</b></div>
+          <div class="cs-rl"><span>每則私訊花（CPC）</span><b data-sp="cpc">${v.cpc?money(v.cpc):'—'}</b></div>
+          <div class="cs-rl"><span>每件核准花（CPA）</span><b data-sp="cpa">${v.cpa?money(v.cpa):'—'}</b></div>
+          <div class="cs-rl"><span>送件後核准率</span><b data-sp="approveRate">${v.approveRate?(v.approveRate*100).toFixed(1)+'%':'—'}</b></div>
+          <div class="cs-rl"><span>ROI</span><b data-sp="roi">${(v.roi*100).toFixed(1)}%</b></div>
+        </div>
       </section>
     </div>
-    <section class="cs-panel"><h2>歷月比較</h2><div class="table-wrap cs-hist"><table><thead><tr><th>月份</th><th>投放金額</th><th>核准數</th><th>廣告線最終淨利</th><th>全公司最終淨利</th>${editable?'<th></th>':''}</tr></thead>
-      <tbody>${list.map((x,j)=>{ const w = csSpendCalc(x); return `<tr class="${j===i?'on':''}" data-cs-spm="${escAttr(x.id)}" tabindex="0"><td><b>${escHtml(x.month)}</b></td><td>${money(x.spend)}</td><td>${x.approved||'—'}</td><td class="${cls(w.adFinalNet)}">${money(w.adFinalNet)}</td><td class="${cls(w.companyFinalNet)}" style="font-weight:700;">${money(w.companyFinalNet)}</td>
-        ${editable?`<td><div class="row-actions"><button class="icon-btn" data-action="edit-adspend" data-id="${x.id}">編輯</button><button class="icon-btn" data-action="delete-adspend" data-id="${x.id}">刪除</button></div></td>`:''}</tr>`; }).join('')}</tbody></table></div></section>`;
+    <section class="cs-panel"><h2>歷月比較</h2><div class="table-wrap cs-hist"><table><thead><tr><th>月份</th><th>投放金額</th><th>核准數</th><th>投手月獎金</th><th>廣告線最終淨利</th><th>全公司最終淨利</th>${editable?'<th></th>':''}</tr></thead>
+      <tbody>${hist.map((x,j)=>{ const w = csSpendCalc(x), y = ym(x.month).y;
+        const yr = j===0 || ym(hist[j-1].month).y!==y ? `<tr class="cs-yr"><td colspan="${editable?7:6}">${escHtml(y)} 年</td></tr>` : '';
+        return `${yr}<tr class="${x.id===a.id?'on':''}" data-cs-spm="${escAttr(x.id)}" tabindex="0"><td><b>${mlab(x.month)}</b></td><td>${money(x.spend)}</td><td>${x.approved||'—'}</td><td>${money(w.pilotBonus)}</td><td class="${cls(w.adFinalNet)}">${money(w.adFinalNet)}</td><td class="${cls(w.companyFinalNet)}" style="font-weight:700;">${money(w.companyFinalNet)}</td>
+        ${editable?`<td><div class="row-actions"><button class="icon-btn" data-action="edit-adspend" data-id="${x.id}">編輯</button><button class="icon-btn" data-action="delete-adspend" data-id="${x.id}">刪除</button></div></td>`:''}</tr>`; }).join('')}</tbody></table></div>
+      ${list.length>6 ? `<button type="button" class="cs-more" data-cs-spall>${showAll ? '只看最近 6 個月' : `看全部 ${list.length} 個月`}</button>` : ''}</section>`;
 }
 /* 新增／編輯視窗底部：把原本試算顯示的數字同步到固定在底部的那一列（只讀畫面上的值，不另外算） */
 function csLiveSync(){
@@ -9707,6 +9745,8 @@ document.addEventListener('click', e=>{
   const m = e.target.closest('[data-cs-spm]');
   if(m && !e.target.closest('.row-actions')){ APP.csSpendId = m.dataset.csSpm; render(); }
 });
+document.addEventListener('change', e=>{ if(e.target.id==='cs-spsel'){ APP.csSpendId = e.target.value; render(); } });
+document.addEventListener('click', e=>{ if(e.target.closest('[data-cs-spall]')){ APP.csSpendAll = !APP.csSpendAll; render(); } });
 document.addEventListener('keydown', e=>{ const m = e.target.closest && e.target.closest('tr[data-cs-spm]'); if(m && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); APP.csSpendId = m.dataset.csSpm; render(); } });
 
 /* ---------------- Modal system ---------------- */
