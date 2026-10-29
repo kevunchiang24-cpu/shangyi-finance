@@ -1145,7 +1145,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-08';
+const APP_BUILD = '2026-10-29-09';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5074,7 +5074,7 @@ function plOptColor(f, v){
   if(f==='dealProduct'){ const c = colorForOption(v, 'dealProduct'); return [c.bg, c.text]; } // 沿用「選單顏色設定」
   if(f==='contactStatus'){ const cu = APP.data.optionColors && APP.data.optionColors.contactStatus && APP.data.optionColors.contactStatus[v]; if(cu) return [cu.bg, cu.text];
     const s = PL_STATUS_ALL.find(x=>x[0]===v); return s ? [s[1], s[2]] : PL_NEUTRAL; }
-  if(f==='caseStatus') return v==='核准' ? ['#E3F5EA','#17663A'] : /婉拒|取消/.test(v) ? ['#ECEDF1','#5E6475'] : ['#EEF1F7','#3B4252'];
+  if(f==='caseStatus') return ocPair(ocOpt('plCaseStatus', v)) || (v==='核准' ? ['#E3F5EA','#17663A'] : /婉拒|取消/.test(v) ? ['#ECEDF1','#5E6475'] : ['#EEF1F7','#3B4252']);
   return null;
 }
 function plOptGroups(f){
@@ -5271,7 +5271,7 @@ function plPicker(f, cur, target){
     return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-pl-pick="${escAttr(o)}" data-pl-pt="${escAttr(target)}" data-pl-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
   return plOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
     + (cur ? `<button type="button" class="pl-pickclear" data-pl-pick="" data-pl-pt="${escAttr(target)}" data-pl-f="${f}">清除，改回未填</button>` : '')
-    + (f==='dealProduct' || f==='contactStatus' ? ocEditBtn(f, PL_LABEL[f]) : '');
+    + ocEditBtn({ dealProduct:'dealProduct', contactStatus:'contactStatus', caseStatus:'plCaseStatus' }[f], PL_LABEL[f]);
 }
 function plPopHTML(){
   const S = plS(); if(!S.pop) return '';
@@ -5908,49 +5908,63 @@ document.addEventListener('keydown', (e)=>{
 });
 document.addEventListener('focusin', (e)=>{ if(e.target && e.target.id==='pa-text') setTimeout(paPlace, 300); });
 /* ================= 選項顏色（2026-10-29）=================
-   「選單顏色設定」頁從選單拿掉，改在進度追蹤、我的客人紀錄的選項面板最下面「🎨 調整〇〇的顏色」（只有核心、行政看得到）。
-   資料一樣存在 appdata/optionColors（plan、status、dealProduct、contactStatus），視窗建在 body 最外層。 */
+   「選單顏色設定」頁從選單拿掉，改在四個改版頁的選項面板最下面「🎨 調整〇〇的顏色」（只有核心、行政看得到）。
+   - 大部分存在 appdata/optionColors（每一類一個 { 選項: {bg, text} }）
+   - 銀行信貸的狀態：沿用「⚙ 新增／編輯狀態選項」那一份（appdata/bankLoanOptions.colors，只存底色、字色自動）
+   視窗建在 body 最外層。 */
+const ocOpt = (cat, v) => APP.data.optionColors && APP.data.optionColors[cat] && APP.data.optionColors[cat][v];
+const ocPair = c => c ? [c.bg, c.text] : null; // 頁面用 [底色, 字色]
+// 一般類別：讀寫 appdata/optionColors
+const ocStore = cat => ({
+  get: v => ocOpt(cat, v) || null,
+  set: (v, c) => { const oc = { ...APP.data.optionColors }; oc[cat] = { ...(oc[cat]||{}) }; if(c) oc[cat][v] = c; else delete oc[cat][v]; APP.data.optionColors = oc; return saveOptionColors(oc); },
+});
 const OC_FIELDS = {
-  plan:          { title:'進度追蹤・方案',        opts:()=>pgPlans() },
-  status:        { title:'進度追蹤・狀態',        opts:()=>PG_ST_ALL },
-  dealProduct:   { title:'我的客人紀錄・方案',    opts:()=>DEAL_PRODUCT_OPTIONS },
-  contactStatus: { title:'我的客人紀錄・聯絡狀態', opts:()=>PL_STATUS_ALL.map(s=>s[0]) },
+  plan:          { title:'進度追蹤・方案',        opts:()=>pgPlans(),                    shown:v=>pgOptColor('plan', v),            ...ocStore('plan') },
+  status:        { title:'進度追蹤・狀態',        opts:()=>PG_ST_ALL,                    shown:v=>pgOptColor('status', v),          ...ocStore('status') },
+  pgStaff:       { title:'進度追蹤・業務',        opts:()=>pgStaffOpts(),                shown:v=>pgOptColor('staff', v),           ...ocStore('pgStaff') },
+  pgSource:      { title:'進度追蹤・來源',        opts:()=>['直客','通路'],              shown:v=>pgOptColor('source', v),          ...ocStore('pgSource') },
+  dealProduct:   { title:'我的客人紀錄・方案',    opts:()=>DEAL_PRODUCT_OPTIONS,         shown:v=>plOptColor('dealProduct', v),     ...ocStore('dealProduct') },
+  contactStatus: { title:'我的客人紀錄・聯絡狀態', opts:()=>PL_STATUS_ALL.map(s=>s[0]),   shown:v=>plOptColor('contactStatus', v),   ...ocStore('contactStatus') },
+  plCaseStatus:  { title:'我的客人紀錄・案件狀態', opts:()=>LOG_CASE_STATUS_OPTIONS,      shown:v=>plOptColor('caseStatus', v),      ...ocStore('plCaseStatus') },
+  vaStatus:      { title:'房屋土地估價・狀態',    opts:()=>valuationStatusList(),        shown:v=>vaOptColor('status', v),          ...ocStore('vaStatus') },
+  vaCategory:    { title:'房屋土地估價・類別',    opts:()=>VA_CATS.map(c=>c[0]),         shown:v=>vaOptColor('category', v),        ...ocStore('vaCategory') },
+  bkPack:        { title:'銀行信貸・包工作',      opts:()=>BK_PACK.map(p=>p[0]),         shown:v=>bkOptColor('packJob', v),         ...ocStore('bkPack') },
+  bkChannel:     { title:'銀行信貸・送件管道',    opts:()=>BK_CHANNELS,                  shown:v=>bkOptColor('channel', v),         ...ocStore('bkChannel') },
+  bkStatus:      { title:'銀行信貸・狀態',        opts:()=>bankLoanStatusList(),         shown:v=>bkOptColor('status', v),
+    get: v => { const h = (APP.bankLoanStatusColors||{})[v]; return h && /^#[0-9a-fA-F]{6}$/.test(h) ? { bg:h, text:bankLoanContrast(h) } : null; },
+    set: (v, c) => { const colors = { ...(APP.bankLoanStatusColors||{}) }; if(c) colors[v] = c.bg; else delete colors[v]; APP.bankLoanStatusColors = colors;
+      const names = (APP.bankLoanStatusOptions && APP.bankLoanStatusOptions.length) ? APP.bankLoanStatusOptions : bankLoanStatusList();
+      return setDoc(doc(db,'appdata','bankLoanOptions'), stamp({ statuses:names, colors, groups:APP.bankLoanStatusGroups||{} })); } },
 };
 const ocCanEdit = () => isCore() || isStaffAdmin();
 const ocEditBtn = (cat, label) => ocCanEdit() && OC_FIELDS[cat] ? `<button type="button" class="pl-pickclear oc-editbtn" data-oc-edit="${cat}">🎨 調整${escHtml(label)}的顏色</button>` : '';
-// 視窗裡顯示的顏色跟頁面上一樣（聯絡狀態沒指定時用客人紀錄的固定顏色）
-function ocShown(cat, v){
-  if(cat==='contactStatus'){ const c = plOptColor('contactStatus', v); return { bg:c[0], text:c[1] }; }
-  return colorForOption(v, cat);
-}
-const ocCustom = (cat, v) => APP.data.optionColors && APP.data.optionColors[cat] && APP.data.optionColors[cat][v];
 let OC_OPEN = null;
 function ocRender(){
   let o = document.getElementById('oc-dlg');
   if(!OC_OPEN){ if(o) o.remove(); document.body.classList.remove('pa-lock'); return; }
   const F = OC_FIELDS[OC_OPEN];
   if(!o){ o = document.createElement('div'); o.id = 'oc-dlg'; document.body.appendChild(o); }
+  const list = F.opts().filter(Boolean);
   o.innerHTML = `<div class="oc-ov" data-oc-bg><div class="oc-box" role="dialog" aria-modal="true" aria-label="${escAttr(F.title)}的顏色">
     <div class="oc-h"><h2>${escHtml(F.title)}的顏色</h2><button type="button" class="oc-x" data-oc-close aria-label="關閉">×</button></div>
-    <div class="oc-b"><p class="oc-hint">點色塊就換，表格馬上跟著變。「自動」＝沒指定，系統自己配色。改完大家看到的都會變。</p>
-    ${F.opts().map(opt=>{ const cu = ocCustom(OC_OPEN, opt), c = ocShown(OC_OPEN, opt);
-      return `<div class="oc-row"><span class="oc-bd" style="background:${c.bg};color:${c.text};">${escHtml(opt)}</span>
-        <div class="oc-sw">${OPTION_COLOR_PALETTE.map((p, i)=>`<button type="button" data-oc-sw="${i}" data-oc-opt="${escAttr(opt)}" aria-label="${escAttr(opt)} 用第 ${i+1} 個顏色" aria-pressed="${!!cu && cu.bg===p.bg && cu.text===p.text}" style="background:${p.bg};box-shadow:inset 0 0 0 1px ${p.text}40;"></button>`).join('')}</div>
-        ${cu ? `<button type="button" class="oc-auto" data-oc-auto="${escAttr(opt)}">改回自動</button>` : '<span class="oc-autotag">自動</span>'}</div>`; }).join('')}
+    <div class="oc-b"><p class="oc-hint">點色塊就換，表格馬上跟著變。「自動」＝沒指定，用系統原本的顏色。改完大家看到的都會變。</p>
+    ${list.length ? list.map(opt=>{ const cu = F.get(opt), c = F.shown(opt) || ['#F1F2F6','#6B7280'];
+      return `<div class="oc-row"><span class="oc-bd" style="background:${c[0]};color:${c[1]};">${escHtml(opt)}</span>
+        <div class="oc-sw">${OPTION_COLOR_PALETTE.map((p, i)=>`<button type="button" data-oc-sw="${i}" data-oc-opt="${escAttr(opt)}" aria-label="${escAttr(opt)} 用第 ${i+1} 個顏色" aria-pressed="${!!cu && cu.bg.toLowerCase()===p.bg.toLowerCase()}" style="background:${p.bg};box-shadow:inset 0 0 0 1px ${p.text}40;"></button>`).join('')}</div>
+        ${cu ? `<button type="button" class="oc-auto" data-oc-auto="${escAttr(opt)}">改回自動</button>` : '<span class="oc-autotag">自動</span>'}</div>`; }).join('') : '<p class="oc-hint">目前沒有選項。</p>'}
     </div><div class="oc-f"><button type="button" class="oc-done" data-oc-close>完成</button></div></div></div>`;
   document.body.classList.add('pa-lock');
 }
 function ocOpen(cat){
   if(!OC_FIELDS[cat] || !ocCanEdit()) return;
-  if(APP.pl) APP.pl.pop = null; if(APP.pg) APP.pg.pop = null;
+  ['pl','pg','bk','va'].forEach(k=>{ if(APP[k]) APP[k].pop = null; });
   OC_OPEN = cat; render(); ocRender();
 }
 function ocSet(opt, idx){
-  const cat = OC_OPEN; if(!cat) return;
-  const oc = { ...APP.data.optionColors }; oc[cat] = { ...(oc[cat]||{}) };
-  if(idx==null) delete oc[cat][opt]; else { const c = OPTION_COLOR_PALETTE[idx]; if(!c) return; oc[cat][opt] = c; }
-  APP.data.optionColors = oc;
-  saveOptionColors(oc).catch(err=>alert('顏色儲存失敗，請檢查網路後再試一次：' + (err && err.message ? err.message : err)));
+  const F = OC_FIELDS[OC_OPEN]; if(!F) return;
+  const c = idx==null ? null : OPTION_COLOR_PALETTE[idx]; if(idx!=null && !c) return;
+  Promise.resolve(F.set(opt, c)).catch(err=>alert('顏色儲存失敗，請檢查網路後再試一次：' + (err && err.message ? err.message : err)));
   render(); ocRender();
 }
 document.addEventListener('click', (e)=>{
@@ -6020,8 +6034,8 @@ function pgEditor(c){
 function pgOptColor(f, v){
   if(!v) return null;
   if(f==='plan' || f==='status'){ const c = colorForOption(v, f); return [c.bg, c.text]; } // 沿用「選單顏色設定」
-  if(f==='source') return PG_SRC_COLOR[v] || PG_STAFF_COLOR;
-  return PG_STAFF_COLOR;
+  if(f==='source') return ocPair(ocOpt('pgSource', v)) || PG_SRC_COLOR[v] || PG_STAFF_COLOR;
+  return ocPair(ocOpt('pgStaff', v)) || PG_STAFF_COLOR;
 }
 function pgOptGroups(f){
   if(f==='status') return PG_ST_GROUPS;
@@ -6222,7 +6236,7 @@ function pgPicker(f, cur, target){
     return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-pg-pick="${escAttr(o)}" data-pg-pt="${escAttr(target)}" data-pg-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
   return pgOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
     + ((f==='plan' || f==='staff') && cur ? `<button type="button" class="pl-pickclear" data-pg-pick="" data-pg-pt="${escAttr(target)}" data-pg-f="${f}">清除，改回未填</button>` : '')
-    + (f==='plan' || f==='status' ? ocEditBtn(f, f==='plan' ? '方案' : '狀態') : '')
+    + ocEditBtn({ plan:'plan', status:'status', staff:'pgStaff', source:'pgSource' }[f], pgFLabel(f))
     + (f==='status' ? `<div class="pg-flowhint">選 <b>對保</b>：記下對保日期（系統每天的對保提醒會用）<br>選 <b>撥款完成</b>：記下撥款日期，並自動建立「客戶關懷追蹤」</div>` : '');
 }
 function pgPopHTML(){
@@ -6557,8 +6571,8 @@ const bkAmt = v => (v===null || v===undefined || v==='') ? '' : String(v);
 function bkOptColor(f, v){
   if(!v) return null;
   if(f==='status') return bankLoanStatusColor(v); // 沿用狀態選項設定的顏色
-  if(f==='packJob'){ const p = BK_PACK.find(x=>x[0]===v); return p ? [p[1], p[2]] : PL_NEUTRAL; }
-  return ['#F1F3F7','#2B3245'];
+  if(f==='packJob'){ const cu = ocPair(ocOpt('bkPack', v)); if(cu) return cu; const p = BK_PACK.find(x=>x[0]===v); return p ? [p[1], p[2]] : PL_NEUTRAL; }
+  return ocPair(ocOpt('bkChannel', v)) || ['#F1F3F7','#2B3245'];
 }
 function bkOptGroups(f){
   if(f==='status'){ const list = bankLoanStatusList(); return BK_GROUPS.map(([g, n])=>[n, list.filter(s=>bkGroupOf(s)===g)]).filter(x=>x[1].length); }
@@ -6750,6 +6764,7 @@ function bkPicker(f, cur, target){
     return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-bk-pick="${escAttr(o)}" data-bk-pt="${escAttr(target)}" data-bk-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`;
   return bkOptGroups(f).map(([g, arr])=>grp(g, arr)).join('')
     + ((f==='packJob' || f==='channel') && cur ? `<button type="button" class="pl-pickclear" data-bk-pick="" data-bk-pt="${escAttr(target)}" data-bk-f="${f}">${f==='packJob'?'改回未定':'清除，改回未填'}</button>` : '')
+    + ocEditBtn({ status:'bkStatus', packJob:'bkPack', channel:'bkChannel' }[f], BK_LABEL[f])
     + (f==='status' ? `<div class="pg-flowhint">選 <b>撥款完成</b>：記下撥款日期，「本月撥款」照這個日期算</div>${target==='__modal' ? '' : '<button type="button" class="pl-pickclear" data-bk-opts>⚙ 新增／編輯狀態選項（名稱、顏色、算在哪一組）</button>'}` : '');
 }
 function bkPopHTML(){
@@ -7071,7 +7086,8 @@ const vaAll = () => APP.data.valuationCases || [];
 const vaHasPlan = c => !!String(c.plan||'').trim();
 function vaOptColor(f, v){
   if(!v) return null;
-  if(f==='status') return valuationStatusColor(v); // 跟舊版同一套顏色
+  if(f==='status') return ocPair(ocOpt('vaStatus', v)) || valuationStatusColor(v); // 沒自己設定就跟舊版同一套顏色
+  const cu = ocPair(ocOpt('vaCategory', v)); if(cu) return cu;
   const c = VA_CATS.find(x=>x[0]===v); return c ? [c[1], c[2]] : PL_NEUTRAL;
 }
 const vaOptList = f => f==='status' ? valuationStatusList() : VA_CATS.map(c=>c[0]);
@@ -7247,6 +7263,7 @@ function vaPicker(f, cur, target){
   return `<div class="pl-picks">${vaOptList(f).map(o=>{ const c = vaOptColor(f, o);
     return `<button type="button" class="pl-pill${o.length>6?' long':''}" data-va-pick="${escAttr(o)}" data-va-pt="${escAttr(target)}" data-va-f="${f}" aria-pressed="${cur===o}" style="background:${c[0]};color:${c[1]};">${cur===o?'✓ ':''}${escHtml(o)}</button>`; }).join('')}</div>`
     + (cur ? `<button type="button" class="pl-pickclear" data-va-pick="" data-va-pt="${escAttr(target)}" data-va-f="${f}">清除，改回未填</button>` : '')
+    + ocEditBtn(f==='status' ? 'vaStatus' : 'vaCategory', VA_LABEL[f])
     + (f==='status' && target!=='__modal' ? '<button type="button" class="pl-pickclear" data-va-opts>⚙ 新增／編輯狀態選項</button>' : '');
 }
 function vaPopHTML(){
