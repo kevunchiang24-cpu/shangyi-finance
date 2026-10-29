@@ -499,12 +499,6 @@
     --fu-red:#C62C2C; --fu-red-soft:#FDECEC; --fu-amb:#8A5300; --fu-amb-soft:#FFF4D6; --fu-ok:#11734B; --fu-ok-soft:#DFF5E8; --fu-vio:#5B3CC4; --fu-vio-soft:#EEE8FF; }
   .fu-root{ display:flex; flex-direction:column; gap:14px; color:var(--fu-ink); }
   .fu-root .page-header{ margin-bottom:0; }
-  .fu-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-  .fu-st{ background:var(--fu-card); border:1px solid var(--fu-line); border-radius:12px; padding:11px 13px; text-align:left; cursor:pointer; display:grid; gap:2px; font-family:inherit; color:inherit; }
-  .fu-st[aria-pressed="true"]{ border-color:var(--fu-brand); box-shadow:0 0 0 2px var(--fu-soft); }
-  .fu-st .k{ font-size:12px; color:var(--fu-muted); }
-  .fu-st .v{ font-size:24px; font-weight:800; font-variant-numeric:tabular-nums; }
-  .fu-st.red .v{ color:var(--fu-red); } .fu-st.amb .v{ color:var(--fu-amb); } .fu-st.ok .v{ color:var(--fu-ok); }
   .fu-tabs{ display:flex; gap:6px; flex-wrap:wrap; }
   .fu-tabs button{ border:1px solid var(--fu-line); background:var(--fu-card); border-radius:10px; padding:9px 14px; cursor:pointer; font-size:14px; font-weight:600; font-family:inherit; color:var(--fu-ink); }
   .fu-tabs button[aria-pressed="true"]{ background:var(--fu-brand); border-color:var(--fu-brand); color:#fff; }
@@ -517,32 +511,23 @@
   .fu-sec h2 small{ font-size:12px; color:var(--fu-muted); font-weight:500; }
   .fu-dot{ width:10px; height:10px; border-radius:99px; flex:none; }
   .fu-list{ display:grid; gap:8px; }
-  .fu-item{ background:var(--fu-card); border:1px solid var(--fu-line); border-radius:12px; padding:12px 14px; display:grid; grid-template-columns:minmax(150px,1.3fr) minmax(130px,1fr) minmax(150px,1fr) auto; gap:12px; align-items:center; }
-  .fu-item.od{ border-left:4px solid var(--fu-red); } .fu-item.td{ border-left:4px solid #E3A21A; }
-  .fu-item.unpaid{ background:#FFF6F6; }
   .fu-who b{ font-size:15px; }
   .fu-sub{ font-size:12.5px; color:var(--fu-muted); margin-top:2px; display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center; }
+  .fu-due.soon{ color:var(--fu-ink); }
   .fu-tel{ color:var(--fu-brand); text-decoration:none; font-weight:600; font-variant-numeric:tabular-nums; }
   .fu-chip{ font-size:11.5px; font-weight:700; border-radius:6px; padding:1px 7px; background:#EEF1F7; color:#3B4252; white-space:nowrap; }
   .fu-chip.ch{ background:var(--fu-vio-soft); color:var(--fu-vio); }
   .fu-chip.unpaid{ background:var(--fu-red); color:#fff; }
-  .fu-stg{ display:grid; gap:4px; }
-  .fu-dots{ display:flex; gap:4px; }
-  .fu-dots i{ width:22px; height:6px; border-radius:99px; background:#E2E6EF; }
-  .fu-dots i.d{ background:var(--fu-ok); } .fu-dots i.c{ background:#E3A21A; } .fu-dots i.o{ background:var(--fu-red); }
   .fu-due{ font-size:13px; font-weight:700; }
   .fu-due.od{ color:var(--fu-red); } .fu-due.td{ color:var(--fu-amb); } .fu-due.later,.fu-due.done{ color:var(--fu-muted); font-weight:500; }
   .fu-last{ font-size:12px; color:var(--fu-muted); line-height:1.5; }
   .fu-res{ font-size:11.5px; font-weight:700; border-radius:6px; padding:1px 7px; display:inline-block; background:#EEF1F7; color:#3B4252; }
   .fu-res.need{ background:var(--fu-ok-soft); color:var(--fu-ok); } .fu-res.miss{ background:var(--fu-amb-soft); color:var(--fu-amb); } .fu-res.ref{ background:var(--fu-vio-soft); color:var(--fu-vio); }
-  .fu-act{ display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; align-items:center; }
-  .fu-act .fu-sel{ height:36px; font-size:13px; }
   .fu-btn{ border:0; border-radius:10px; padding:9px 14px; font-weight:700; background:var(--fu-brand); color:#fff; cursor:pointer; font-size:13.5px; white-space:nowrap; font-family:inherit; }
   .fu-btn:disabled{ opacity:.45; cursor:not-allowed; }
   .fu-btn.ghost{ background:var(--fu-card); border:1px solid var(--fu-line); color:var(--fu-ink); font-weight:600; }
   .fu-btn.ghost.on{ background:var(--fu-red-soft); border-color:#F4B4B4; color:var(--fu-red); }
   .fu-btn.red{ background:var(--fu-red); }
-  .fu-more{ justify-self:start; }
   .fu-empty{ background:var(--fu-card); border:1px dashed var(--fu-line); border-radius:12px; padding:16px; color:var(--fu-muted); text-align:center; font-size:13px; }
   .fu-assignbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--fu-vio-soft); border:1px solid #D4C8FF; border-radius:12px; padding:10px 12px; font-size:13.5px; }
   .fu-assignbar b{ color:var(--fu-vio); }
@@ -567,19 +552,48 @@
   .fu-out small{ font-weight:400; font-size:12px; color:var(--fu-muted); }
   .fu-out[aria-pressed="true"]{ border-color:var(--fu-brand); background:var(--fu-soft); }
   #fu-note{ width:100%; min-height:70px; border:1px solid var(--fu-line); border-radius:10px; padding:9px 11px; font-size:14px; resize:vertical; font-family:inherit; color:inherit; box-sizing:border-box; }
-  .fu-chk{ display:flex; gap:8px; align-items:flex-start; background:var(--fu-ok-soft); border:1px solid #9CD9B6; border-radius:10px; padding:10px 12px; font-size:13.5px; color:#0D5A39; cursor:pointer; }
-  .fu-chk input{ margin-top:3px; }
   .fu-df{ display:flex; justify-content:flex-end; gap:8px; padding:12px 18px; border-top:1px solid var(--fu-line); }
   #fu-toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--fu-ink); color:#fff; padding:9px 16px; border-radius:99px; font-size:13px; z-index:3100; max-width:90%; text-align:center; opacity:0; pointer-events:none; transition:opacity .2s; }
   #fu-toast.on{ opacity:1; }
   .fu-nrow{ display:block; padding:12px 14px; border-bottom:1px solid var(--border); font-size:13px; line-height:1.55; cursor:pointer; background:#FFF8E6; }
   .fu-nrow b{ color:#C62C2C; }
   .fu-nrow small{ display:block; font-size:11px; color:var(--muted); }
-  @media (max-width:1100px){ .fu-item{ grid-template-columns:1fr 1fr; } .fu-act{ grid-column:1/-1; } .fu-citem{ grid-template-columns:28px 1fr 1fr; } .fu-citem > :nth-child(n+4){ grid-column:2/-1; } }
-  @media (max-width:640px){
-    .fu-stats{ grid-template-columns:repeat(2,1fr); gap:8px; }
-    .fu-item{ grid-template-columns:1fr; gap:8px; padding:12px; }
-    .fu-act{ justify-content:stretch; } .fu-act .fu-btn, .fu-act .fu-sel{ flex:1; }
+  .fu-tabs{ align-self:flex-start; }
+  .fu-board{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; align-items:start; }
+  .fu-col{ background:#E9EDF6; border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .fu-col.od{ background:#F8E9E9; } .fu-col.td{ background:#FBF1DC; } .fu-col.soon{ background:#E6ECFA; }
+  .fu-ch{ display:flex; align-items:center; gap:8px; padding:4px 4px 6px; }
+  .fu-ch h2{ margin:0; font-size:15px; } .fu-ch small{ display:block; font-size:12px; color:var(--fu-muted); font-weight:500; }
+  .fu-ch .n{ font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; margin-left:auto; }
+  .fu-col.od .n{ color:var(--fu-red); } .fu-col.td .n{ color:var(--fu-amb); } .fu-col.soon .n{ color:var(--fu-brand); }
+  .fu-cards{ display:flex; flex-direction:column; gap:8px; max-height:640px; overflow:auto; padding:2px; }
+  .fu-card{ background:var(--fu-card); border-radius:12px; padding:11px 12px; box-shadow:0 1px 2px rgba(20,30,60,.08); display:grid; gap:6px; border:1px solid transparent; min-width:0; }
+  .fu-card.unpaid{ border-color:#F4B4B4; }
+  .fu-r1{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; } .fu-r1 b{ font-size:15.5px; }
+  .fu-own{ margin-left:auto; font-size:12px; color:var(--fu-muted); white-space:nowrap; }
+  .fu-col.soon .fu-due{ color:var(--fu-ink); }
+  .fu-r3{ display:flex; gap:6px; align-items:center; }
+  .fu-r3 .fu-tel{ flex:1; min-width:0; display:inline-flex; align-items:center; justify-content:center; gap:6px; border:1px solid var(--fu-line); border-radius:9px; height:36px; background:#F8FAFF; font-weight:700; font-size:13px; }
+  .fu-notel{ flex:1; font-size:12px; color:var(--fu-muted); }
+  .fu-r3 .fu-btn{ height:36px; padding:0 12px; }
+  .fu-foot2{ display:flex; gap:8px; flex-wrap:wrap; }
+  .fu-foot2 button{ border:1px solid var(--fu-line); background:var(--fu-card); border-radius:99px; padding:6px 13px; cursor:pointer; font-size:13px; color:var(--fu-muted); font-family:inherit; }
+  .fu-foot2 button[aria-pressed="true"]{ border-color:var(--fu-brand); color:var(--fu-brand); background:var(--fu-soft); }
+  .fu-extra{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:8px; }
+  .fu-mcols{ display:none; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .fu-mcols button{ border:1px solid var(--fu-line); background:var(--fu-card); border-radius:11px; padding:8px 4px; cursor:pointer; display:grid; gap:1px; font-size:12px; color:var(--fu-muted); font-family:inherit; }
+  .fu-mcols button b{ font-size:20px; color:var(--fu-ink); }
+  .fu-mcols button.od b{ color:var(--fu-red); } .fu-mcols button.td b{ color:var(--fu-amb); } .fu-mcols button.soon b{ color:var(--fu-brand); }
+  .fu-mcols button[aria-pressed="true"]{ border-color:var(--fu-brand); box-shadow:0 0 0 2px var(--fu-soft); color:var(--fu-ink); font-weight:700; }
+  .fu-paybox{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--fu-muted); }
+  .fu-paybox .fu-sel{ height:36px; }
+  @media (max-width:1100px){ .fu-citem{ grid-template-columns:28px 1fr 1fr; } .fu-citem > :nth-child(n+4){ grid-column:2/-1; } }
+  @media (max-width:760px){
+    .fu-mcols{ display:grid; }
+    .fu-board{ grid-template-columns:1fr; }
+    .fu-col{ display:none; } .fu-col.on{ display:flex; }
+    .fu-ch .n{ display:none; }
+    .fu-cards{ max-height:none; overflow:visible; }
     .fu-citem{ grid-template-columns:28px 1fr; gap:8px; } .fu-citem > :nth-child(n+3){ grid-column:2; }
     .fu-ov{ align-items:flex-end; padding:0; }
     .fu-dlgbox{ border-radius:18px 18px 0 0; max-height:92%; }
@@ -1252,7 +1266,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-12';
+const APP_BUILD = '2026-10-29-13';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5005,7 +5019,6 @@ function fuDueText(s, b){
   if(b==='td') return `第 ${s.n} 次關懷・今天`;
   return `第 ${s.n} 次關懷・${fuMD(fuAddDays(s.left))}（${s.left} 天後）`;
 }
-function fuBackThisMonth(f){ return ['reminder1','reminder2','reminder3'].some(k=>{ const r = f[k]||{}; return r.done && r.result==='need' && monthKey(r.doneDate)===nowMonthKey; }); }
 /* 鈴鐺用：我負責、今天要聯絡＋超過時間的人數（處理完才會消失） */
 function fuMyTodo(){
   const me = myStaffName(); if(!me) return { n:0, od:0 };
@@ -5024,38 +5037,31 @@ function fuNotifRowsHTML(){
   return h;
 }
 
-function fuState(){ if(!APP.fu) APP.fu = { tab:'staff', card:'', q:'', staff:'', unpaid:false, sel:new Set(), bulk:'' }; return APP.fu; }
+function fuState(){ if(!APP.fu) APP.fu = { tab:'staff', mcol:'od', q:'', staff:'', unpaid:false, sel:new Set(), bulk:'' }; return APP.fu; }
 function fuAssignableStaff(){ return Array.from(new Set(APP.users.filter(u=>u.staffName && ['staffSales','staffAdmin','admin','editor'].includes(u.role)).map(u=>u.staffName))).sort(); }
-function fuItemHTML(f, opt){
+function fuCardHTML(f, opt){
   const s = fuStage(f), b = fuBucket(f), last = fuLast(f), unpaid = f.paymentStatus==='unpaid';
   const partner = opt.names && fuIsPartner(f, opt.names) ? f.staff : '';
-  const dots = [1,2,3].map(i=>`<i class="${s.all || i<=s.done ? 'd' : i===s.n ? (b==='od'?'o':b==='td'?'c':'') : ''}"></i>`).join('');
   const tel = (f.phone||'').replace(/[^\d+]/g,'');
-  return `<div class="fu-item${b==='od'?' od':b==='td'?' td':''}${unpaid?' unpaid':''}">
-    <div class="fu-who"><b>${escHtml(f.customer||'未填')}</b><div class="fu-sub">${tel?`<a class="fu-tel" href="tel:${tel}">📞 ${escHtml(f.phone)}</a>`:''}${f.plan?`<span class="fu-chip">${escHtml(f.plan)}</span>`:''}${partner?`<span class="fu-chip ch">通路：${escHtml(partner)}介紹</span>`:''}${unpaid?'<span class="fu-chip unpaid">未繳費</span>':''}</div></div>
-    <div class="fu-stg"><div class="fu-dots">${dots}</div><div class="fu-due ${b}">${fuDueText(s, b)}</div><div class="fu-last">撥款 ${fuMD(f.disbursedDate)||'—'}${opt.core ? `・負責 ${escHtml(fuOwner(f, opt.names)||'—')}` : ''}${s.retry ? '・上次聯絡不到' : ''}</div></div>
-    <div class="fu-last">${last ? `上次（${fuMD(last.d)}）${last.res && FU_RES[last.res] ? `<span class="fu-res ${last.res}">${FU_RES[last.res][0]}</span>` : '<span class="fu-res">已完成</span>'}${last.n?`<br>${escHtml(last.n)}`:''}` : '還沒有關懷紀錄'}</div>
-    <div class="fu-act">${opt.pay ? `<select class="fu-sel payment-status-select" data-id="${f.id}" aria-label="繳費狀態"><option value="" ${!unpaid?'selected':''}>繳費正常</option><option value="unpaid" ${unpaid?'selected':''}>未繳費</option></select>` : ''}${s.all ? '' : `<button type="button" class="fu-btn${b==='od'?' red':b==='soon'||b==='later'?' ghost':''}" data-fu-rec="${f.id}">${b==='soon'||b==='later' ? '提早記錄' : '記錄這次關懷'}</button>`}</div>
+  return `<div class="fu-card${unpaid?' unpaid':''}">
+    <div class="fu-r1"><b>${escHtml(f.customer||'未填')}</b>${f.plan?`<span class="fu-chip">${escHtml(f.plan)}</span>`:''}${partner?`<span class="fu-chip ch">通路：${escHtml(partner)}</span>`:''}${unpaid?'<span class="fu-chip unpaid">未繳費</span>':''}${opt.core?`<span class="fu-own">負責 ${escHtml(fuOwner(f, opt.names)||'—')}</span>`:''}</div>
+    <div class="fu-due ${b}">${fuDueText(s, b)}</div>
+    <div class="fu-last">撥款 ${fuMD(f.disbursedDate)||'—'}${last ? `・上次 ${last.res && FU_RES[last.res] ? `<span class="fu-res ${last.res}">${FU_RES[last.res][0]}</span>` : '<span class="fu-res">已完成</span>'}${last.n?' '+escHtml(last.n):''}` : ''}</div>
+    ${s.all ? '' : `<div class="fu-r3">${tel?`<a class="fu-tel" href="tel:${tel}">📞 ${escHtml(f.phone)}</a>`:'<span class="fu-notel">沒有電話</span>'}<button type="button" class="fu-btn${b==='od'?' red':b==='soon'||b==='later'?' ghost':''}" data-fu-rec="${f.id}">${b==='soon'||b==='later' ? '提早記錄' : '記錄'}</button></div>`}
   </div>`;
 }
-function fuListHTML(L, opt){
-  const S = fuState(), g = k => L.filter(f=>fuBucket(f)===k);
-  const SEC = { od:['超過時間還沒關懷','#C62C2C'], td:['今天要聯絡','#E3A21A'], soon:['這 7 天要聯絡','#2F5BEA'], later:['之後才要聯絡','#B8C0D4'], done:['三次都完成','#11734B'] };
-  const show = S.card==='back' ? [['back','本月回流（客人說有新需求）', L.filter(fuBackThisMonth), '#11734B']]
-    : S.card ? [[S.card, SEC[S.card][0], g(S.card), SEC[S.card][1]]]
-    : Object.keys(SEC).map(k=>[k, SEC[k][0], g(k), SEC[k][1]]);
+const FU_COLS = [['od','超過時間','還沒關懷，先打這欄'],['td','今天','今天該聯絡'],['soon','這 7 天','快到了，可以提早打']];
+function fuBoardHTML(L, opt){
+  const S = fuState();
   const by = (a,b)=>{ const x = fuStage(a).left, y = fuStage(b).left; return (x===null?9999:x) - (y===null?9999:y); };
-  return show.map(([k,t,arr,c])=>{
-    const big = (k==='later' || k==='done') && !S.card && !S.q && arr.length>8 && !S['open_'+k];
-    const rows = arr.sort(by);
-    return `<div class="fu-sec"><h2><span class="fu-dot" style="background:${c}"></span>${t}<small>${arr.length} 位</small></h2>
-      ${arr.length ? `<div class="fu-list">${(big ? rows.slice(0,8) : rows).map(f=>fuItemHTML(f, opt)).join('')}</div>${big?`<button type="button" class="fu-btn ghost fu-more" data-fu-open="${k}">再看 ${arr.length-8} 位</button>`:''}` : `<div class="fu-empty">${k==='od'?'都有準時關懷，很棒':'沒有'}</div>`}</div>`;
-  }).join('');
-}
-function fuStatsHTML(L){
-  const S = fuState(), n = k => L.filter(f=>fuBucket(f)===k).length;
-  const c = [['td','今天要聯絡',n('td'),'amb'],['od','超過時間',n('od'),'red'],['soon','這 7 天要聯絡',n('soon'),''],['back','本月回流',L.filter(fuBackThisMonth).length,'ok']];
-  return `<div class="fu-stats">${c.map(([k,t,v,cl])=>`<button type="button" class="fu-st ${cl}" data-fu-card="${k}" aria-pressed="${S.card===k}"><span class="k">${t}</span><span class="v">${v}</span></button>`).join('')}</div>`;
+  const g = k => L.filter(f=>fuBucket(f)===k).sort(by);
+  const later = g('later'), done = g('done');
+  return `<div class="fu-mcols" role="group" aria-label="欄位">${FU_COLS.map(([k,t])=>`<button type="button" class="${k}" data-fu-mcol="${k}" aria-pressed="${S.mcol===k}"><b>${g(k).length}</b>${t}</button>`).join('')}</div>
+    <div class="fu-board">${FU_COLS.map(([k,t,h])=>{ const arr = g(k);
+      return `<section class="fu-col ${k}${S.mcol===k?' on':''}" aria-label="${t}"><div class="fu-ch"><div><h2>${t}</h2><small>${h}</small></div><span class="n">${arr.length}</span></div>
+        <div class="fu-cards">${arr.length ? arr.map(f=>fuCardHTML(f, opt)).join('') : `<div class="fu-empty">${k==='od'?'都有準時關懷，很棒':'沒有'}</div>`}</div></section>`; }).join('')}</div>
+    <div class="fu-foot2"><button type="button" data-fu-open="later" aria-pressed="${S.open==='later'}">之後才要聯絡 ${later.length} 位</button><button type="button" data-fu-open="done" aria-pressed="${S.open==='done'}">三次都完成 ${done.length} 位</button></div>
+    ${S.open==='later' || S.open==='done' ? `<div class="fu-extra">${(S.open==='later'?later:done).map(f=>fuCardHTML(f, opt)).join('') || '<div class="fu-empty">沒有</div>'}</div>` : ''}`;
 }
 function fuToolsHTML(L, opt){
   const S = fuState(), unpaidN = L.filter(f=>f.paymentStatus==='unpaid').length;
@@ -5063,7 +5069,7 @@ function fuToolsHTML(L, opt){
   return `<div class="fu-tools"><input class="fu-find" id="fu-q" type="search" placeholder="搜尋客人姓名、電話${opt.core?'、通路夥伴':''}" value="${escAttr(S.q)}" aria-label="搜尋">
     ${staffs.length ? `<select class="fu-sel" id="fu-staff" aria-label="業務"><option value="">全部業務</option>${staffs.map(x=>`<option ${x===S.staff?'selected':''}>${escHtml(x)}</option>`).join('')}</select>` : ''}
     <button type="button" class="fu-btn ghost${S.unpaid?' on':''}" data-fu-unpaid aria-pressed="${S.unpaid}">只看未繳費（${unpaidN}）</button>
-    ${S.card?`<button type="button" class="fu-btn ghost" data-fu-card="${S.card}">✕ 取消篩選</button>`:''}</div>`;
+    </div>`;
 }
 function fuFilter(L, opt){
   const S = fuState();
@@ -5093,16 +5099,16 @@ const FU_SUB = '撥款後提醒業務聯絡老客人：第 1 次撥款後 25 天
 function customerFollowupPersonalView(){
   const me = effectiveStaffName();
   if(!me) return `<div class="table-wrap"><div class="empty">你的帳號還沒有設定「對應業務姓名」，請聯絡管理員設定後才能看到客戶關懷資料。</div></div>`;
-  const names = fuStaffNames(), S = fuState(), opt = { core:false, names, pay: isCore() || isStaffAdmin() };
+  const names = fuStaffNames(), S = fuState(), opt = { core:false, names };
   let L = (APP.data.customerFollowups||[]).filter(f=>fuOwner(f, names)===me);
   const base = fuFilter(L, opt);
   const shown = S.unpaid ? base.filter(f=>f.paymentStatus==='unpaid') : base;
   return `<div class="fu-root">
     <div class="page-header"><div><h1 class="page-title">📞 客戶關懷追蹤${roomTitleSuffix()}</h1><p class="page-sub">${FU_SUB}</p></div></div>
-    ${fuStatsHTML(base)}${fuToolsHTML(base, opt)}${fuListHTML(shown, opt)}</div>`;
+    ${fuToolsHTML(base, opt)}${fuBoardHTML(shown, opt)}</div>`;
 }
 function customerFollowupOverviewHTML(){
-  const names = fuStaffNames(), S = fuState(), opt = { core:true, names, pay:true };
+  const names = fuStaffNames(), S = fuState(), opt = { core:true, names };
   const all = APP.data.customerFollowups||[];
   const staffL = all.filter(f=>!fuIsPartner(f, names) || f.assignee), partL = all.filter(f=>fuIsPartner(f, names));
   const partnerUn = partL.filter(f=>!f.assignee && fuBucket(f)!=='done').length;
@@ -5111,7 +5117,7 @@ function customerFollowupOverviewHTML(){
   return `<div class="fu-root">
     <div class="page-header"><div><h1 class="page-title">客戶關懷追蹤總覽</h1><p class="page-sub">${FU_SUB}</p></div></div>
     <div class="fu-tabs"><button type="button" data-fu-tab="staff" aria-pressed="${S.tab==='staff'}">公司業務的客人</button><button type="button" data-fu-tab="partner" aria-pressed="${S.tab==='partner'}">通路夥伴的客人${partnerUn?`<b>${partnerUn}</b>`:''}</button></div>
-    ${S.tab==='partner' ? fuToolsHTML(base, opt) + fuPartnerHTML(shown, opt) : fuStatsHTML(base) + fuToolsHTML(base, opt) + fuListHTML(shown, opt)}
+    ${S.tab==='partner' ? fuToolsHTML(base, opt) + fuPartnerHTML(shown, opt) : fuToolsHTML(base, opt) + fuBoardHTML(shown, opt)}
     <div class="fu-foot">撥款完成的案件會自動建立關懷紀錄。如果有漏掉的，可以 <button type="button" class="fu-link" data-action="backfill-followups">整理現有撥款客戶</button></div></div>`;
 }
 function fuAfterRender(){
@@ -5123,7 +5129,7 @@ function fuAfterRender(){
 function fuOpenRec(id){
   const f = (APP.data.customerFollowups||[]).find(x=>x.id===id); if(!f) return;
   const s = fuStage(f); if(s.all) return;
-  APP.fuDlg = { id, res:'', note:'', mk:true };
+  APP.fuDlg = { id, res:'', note:'', pay: f.paymentStatus==='unpaid' ? 'unpaid' : '' };
   fuDlgRender();
 }
 function fuDlgRender(){
@@ -5138,7 +5144,7 @@ function fuDlgRender(){
     <div class="fu-db"><div class="fu-q">這次聯絡的結果是？</div>
       <div class="fu-outs">${Object.entries(FU_RES).map(([k,[t,h]])=>`<button type="button" class="fu-out" data-fu-out="${k}" aria-pressed="${D.res===k}">${t}<small>${h}</small></button>`).join('')}</div>
       <textarea id="fu-note" placeholder="備註（選填）：例如想增貸多少、什麼時候再聯絡">${escHtml(D.note||'')}</textarea>
-      ${D.res==='need' ? `<label class="fu-chk"><input type="checkbox" id="fu-mk" ${D.mk?'checked':''}><span>同時在「我的客人紀錄」建一筆（來源：<b>舊客回流</b>${f.plan?`、方案：${escHtml(f.plan)}`:''}），之後照一般客人追</span></label>` : ''}
+      ${isCore() || isStaffAdmin() ? `<label class="fu-paybox">繳費狀態 <select class="fu-sel" id="fu-pay"><option value="" ${D.pay!=='unpaid'?'selected':''}>繳費正常</option><option value="unpaid" ${D.pay==='unpaid'?'selected':''}>未繳費</option></select></label>` : ''}
     </div>
     <div class="fu-df"><button type="button" class="fu-btn ghost" data-fu-x>取消</button><button type="button" class="fu-btn" data-fu-save ${D.res?'':'disabled'}>儲存</button></div></div></div>`;
 }
@@ -5146,23 +5152,20 @@ function fuSave(){
   const D = APP.fuDlg; if(!D || !D.res) return;
   const f = (APP.data.customerFollowups||[]).find(x=>x.id===D.id); if(!f) return;
   const s = fuStage(f); if(s.all) return;
-  const n = document.getElementById('fu-note'), mk = document.getElementById('fu-mk');
+  const n = document.getElementById('fu-note'), ps = document.getElementById('fu-pay');
   const note = n ? n.value.trim() : '', today = todayStr(), old = f[s.key] || {};
   const patch = {};
   if(D.res==='miss') patch[s.key] = { ...old, done:false, note: old.note||'', missDate:today, missNote:note, missCount:(old.missCount||0)+1 };
   else patch[s.key] = { ...old, done:true, note, doneDate:today, result:D.res };
-  const owner = fuOwner(f);
-  let msg = D.res==='miss' ? `已記錄聯絡不到，${FU_MISS_RETRY_DAYS} 天後會再提醒` : s.n<3 ? '已記錄，下一次會在 25 天後提醒' : '已記錄，三次關懷都完成了';
+  const newPay = ps ? ps.value : null, payChanged = ps && newPay !== (f.paymentStatus==='unpaid' ? 'unpaid' : '');
+  if(payChanged) patch.paymentStatus = newPay;
+  const msg = (D.res==='miss' ? `已記錄聯絡不到，${FU_MISS_RETRY_DAYS} 天後會再提醒` : s.n<3 ? '已記錄，下一次會在 25 天後提醒' : '已記錄，三次關懷都完成了') + (payChanged ? `，繳費狀態改成「${newPay==='unpaid'?'未繳費':'繳費正常'}」` : '');
   updateDoc(doc(db,'customerFollowups', f.id), stamp(patch)).catch(err=>alert('儲存失敗：' + (err&&err.message?err.message:err)));
-  if(D.res==='need' && mk && mk.checked){
-    const u = APP.users.find(x=>x.staffName===owner);
-    const uidFor = u ? u.id : effectiveUid();
-    if(isCore() || uidFor===APP.user.uid){
-      const rec = stamp({ id:uid(), staffUid:uidFor, staffName: owner || effectiveStaffName(), ...PL_FORM_KEYS.reduce((o,k)=>(o[k]='', o), {}),
-        date:today, customer:f.customer||'', phone:f.phone||'', source:'舊客回流', dealProduct:f.plan||'', latestNote: note ? `舊客關懷：${note}` : '舊客關懷：客人有新需求' });
-      savePersonalProgress(rec).catch(err=>alert('客人紀錄建立失敗：' + (err&&err.message?err.message:err)));
-      msg = `已記錄，並在${uidFor===APP.user.uid?'你':owner}的客人紀錄建了一筆「${f.customer||''}」（舊客回流）`;
-    } else msg = '已記錄。客人紀錄要由負責的業務自己建（你沒有權限建在別人名下）';
+  if(payChanged && newPay==='unpaid' && isCore()){
+    const staffUser = APP.users.find(u=>u.staffName===fuOwner(f));
+    if(staffUser) addDoc(collection(db,'announcements'), { scope:'targeted', targetUid: staffUser.id,
+      message: `⚠️ 客戶「${f.customer||'未填'}」被標記為未繳費，請盡快聯絡確認。`,
+      senderName: displayNameFor(APP.user.uid, APP.userEmail), senderUid: APP.user.uid, _at: new Date().toISOString() }).catch(()=>{});
   }
   APP.fuDlg = null; fuDlgRender(); fuToast(msg);
 }
@@ -5179,17 +5182,17 @@ document.addEventListener('click', e=>{
   if(t.closest('#fu-dlg')){
     if(t.closest('[data-fu-save]')){ fuSave(); return; }
     const ou = t.closest('[data-fu-out]');
-    if(ou){ const n = document.getElementById('fu-note'), mk = document.getElementById('fu-mk'); APP.fuDlg.note = n ? n.value : ''; if(mk) APP.fuDlg.mk = mk.checked; APP.fuDlg.res = ou.dataset.fuOut; fuDlgRender(); return; }
+    if(ou){ const n = document.getElementById('fu-note'), ps = document.getElementById('fu-pay'); APP.fuDlg.note = n ? n.value : ''; if(ps) APP.fuDlg.pay = ps.value; APP.fuDlg.res = ou.dataset.fuOut; fuDlgRender(); return; }
     if(t.closest('.fu-xb') || t.matches('.fu-ov') || (t.closest('[data-fu-x]') && t.closest('.fu-df'))){ APP.fuDlg = null; fuDlgRender(); }
     return;
   }
   if(!t.closest('.fu-root')) return;
   const S = fuState();
   const rc = t.closest('[data-fu-rec]'); if(rc){ fuOpenRec(rc.dataset.fuRec); return; }
-  const cd = t.closest('[data-fu-card]'); if(cd){ S.card = S.card===cd.dataset.fuCard ? '' : cd.dataset.fuCard; render(); return; }
-  const tb = t.closest('[data-fu-tab]'); if(tb){ S.tab = tb.dataset.fuTab; S.card = ''; S.sel.clear(); render(); return; }
+  const mc = t.closest('[data-fu-mcol]'); if(mc){ S.mcol = mc.dataset.fuMcol; render(); return; }
+  const tb = t.closest('[data-fu-tab]'); if(tb){ S.tab = tb.dataset.fuTab; S.sel.clear(); render(); return; }
   if(t.closest('[data-fu-unpaid]')){ S.unpaid = !S.unpaid; render(); return; }
-  const op = t.closest('[data-fu-open]'); if(op){ S['open_'+op.dataset.fuOpen] = true; render(); return; }
+  const op = t.closest('[data-fu-open]'); if(op){ S.open = S.open===op.dataset.fuOpen ? '' : op.dataset.fuOpen; render(); return; }
   if(t.closest('[data-fu-bulk]')){
     if(!S.sel.size || !S.bulk) return;
     const ids = [...S.sel], who = S.bulk; fuAssign(ids, who); S.sel.clear(); S.bulk = '';
