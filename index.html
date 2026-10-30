@@ -290,6 +290,16 @@
   .cs-grp h3 + .cs-rl.res{border-top:0;}
   .cs-tot{background:#DFF5E8;border-radius:10px;padding:4px 12px;max-width:544px;margin-top:6px;}
   .cs-rl.big{border:0;font-weight:800;font-size:15.5px;} .cs-rl.big b{font-size:19px;}
+  .cs-lines{display:flex;flex-wrap:wrap;gap:12px;}
+  .cs-line{border:1px solid #E5E8F0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;}
+  .cs-line.ad{flex:1.4 1 330px;} .cs-line.ch{flex:1 1 200px;}
+  .cs-line h3{margin:0;padding:9px 14px;font-size:14.5px;color:#fff;display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+  .cs-line.ad h3{background:#2563EB;} .cs-line.ch h3{background:#7C3AED;}
+  .cs-line h3 small{font-size:12.5px;font-weight:600;opacity:.92;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .cs-line .in{padding:2px 14px 8px;flex:1;display:flex;flex-direction:column;}
+  .cs-line .none{color:var(--muted);font-size:12.5px;padding:8px 0;flex:1;}
+  .cs-lines + .cs-tot{max-width:none;margin-top:12px;}
+  .cs-eq{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:6px;} .cs-eq .a{color:#2563EB;font-weight:700;} .cs-eq .c{color:#7C3AED;font-weight:700;}
   .cs-flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .cs-flow div{background:#F7F8FC;border-radius:12px;padding:10px 16px;display:grid;justify-items:center;min-width:84px;}
   .cs-flow b{font-size:24px;font-variant-numeric:tabular-nums;} .cs-flow span{font-size:12.5px;color:var(--muted);} .cs-flow i{font-style:normal;color:var(--muted);font-size:18px;}
@@ -1360,7 +1370,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-29-16';
+const APP_BUILD = '2026-10-30-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -9700,16 +9710,18 @@ function adSpendView(){
     <div class="cs-paybar"><span class="k">${mlab(a.month)}投手月獎金・要發</span><b>${money(v.pilotBonus)}</b><span class="c">每月 5 號發放・（廣告線案件利潤 − 固定成本 − 投放金額）× ${rate}%</span></div>
     <div class="cs-spgrid">
       <section class="cs-panel"><h2>淨利怎麼來的</h2>
-        <div class="cs-grp"><h3>廣告線</h3>
+        <div class="cs-lines">
+          <div class="cs-line ad"><h3>廣告線<small>${money(v.adFinalNet)}</small></h3><div class="in">
           ${ln('案件利潤', v.adRevenue, '', 'adRevenue')}
           ${ln('扣 固定成本（房租水電＋薪資）', v.fixedCostThisMonth, 'm', 'fixedCost', '－')}
           ${ln('扣 廣告投放金額', v.spend, 'm', 'spend2', '－')}
           ${ln('廣告總淨利', v.adTotalNet, 'sub', 'adTotalNet')}
           ${ln(`扣 投手月獎金（${rate}%，5 號發）`, v.pilotBonus, 'm', 'pilotBonus', '－')}
           ${ln('廣告線最終淨利', v.adFinalNet, 'res', 'adFinalNet')}
+          </div></div>
+          <div class="cs-line ch"><h3>通路線<small>${money(v.chProfit)}</small></h3><div class="in"><div class="none">通路線沒有固定成本、投放、投手獎金要扣</div>${ln('通路線案件利潤', v.chProfit, 'res', 'chProfit')}</div></div>
         </div>
-        <div class="cs-grp"><h3>通路線</h3>${ln('案件利潤', v.chProfit, 'res', 'chProfit')}</div>
-        <div class="cs-grp cs-tot"><div class="cs-rl big"><span>全公司最終淨利（廣告線＋通路線）</span><b class="${cls(v.companyFinalNet)}">${money(v.companyFinalNet)}</b></div></div>
+        <div class="cs-grp cs-tot"><div class="cs-eq"><span class="a">廣告線 ${money(v.adFinalNet)}</span> ＋ <span class="c">通路線 ${money(v.chProfit)}</span></div><div class="cs-rl big"><span>全公司最終淨利</span><b class="${cls(v.companyFinalNet)}">${money(v.companyFinalNet)}</b></div></div>
         <details class="cs-hint in"><summary>公式怎麼算</summary><p>${hint}</p></details>
       </section>
       <section class="cs-panel"><h2>廣告投放成效</h2>
