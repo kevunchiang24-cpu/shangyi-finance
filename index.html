@@ -1277,6 +1277,12 @@
   .pa-badge{font-size:10.5px;font-weight:800;border-radius:5px;padding:1px 5px;letter-spacing:.04em;font-style:normal;}
   .pa-badge.pa-ai{background:#6A4BD8;color:#fff;}
   .pa-badge.pa-miss{background:#F0C552;color:#4A3500;}
+  .pa-lv{display:flex;align-items:center;gap:8px;} .pa-lv b{margin-left:auto;font-variant-numeric:tabular-nums;} .pa-lvs{font-size:12px;color:#6A5AA8;}
+  .pa-spin{width:14px;height:14px;border:2px solid #C9B9FA;border-top-color:#6A4BD8;border-radius:50%;animation:paSpin .8s linear infinite;flex:none;}
+  @keyframes paSpin{to{transform:rotate(360deg);}}
+  .pa-streaming .pl-dlg-b{pointer-events:none;}
+  .pa-streaming .pl-dlg-f button[type=submit]{opacity:.45;pointer-events:none;}
+  .pl-field.pa-typing input,.pl-field.pa-typing textarea{box-shadow:0 0 0 3px rgba(106,75,216,.25) !important;border-color:#6A4BD8 !important;}
   body.pa-lock{overflow:hidden;}
   .pa-ov{--pa-ink:#1F2433;--pa-muted:#596277;--pa-line:#E2E6EF;--pa-ai:#6A4BD8;position:fixed;inset:0;z-index:10002;background:rgba(18,26,48,.42);display:flex;align-items:flex-start;justify-content:center;padding:48px 16px 16px;overflow:auto;color:var(--pa-ink);}
   .pa-ov[hidden]{display:none;}
@@ -1370,7 +1376,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-30-02';
+const APP_BUILD = '2026-10-30-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -6232,18 +6238,44 @@ async function paRun(){
   if(!o || !ta) return;
   const px = o.dataset.px, text = ta.value.trim(); if(!text) return;
   run.dataset.busy = '1'; run.disabled = true; run.textContent = 'AI 整理中…'; paMeta('AI 整理中，大約 5～15 秒…');
-  let list = null, fail = '';
+  let list = null, fail = '', live = null;
+  const ctrl = window.AbortController ? new AbortController() : null;
   try{
-    const resp = await fetch(AI_WORKER_URL, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(paPayload(px, text)) });
-    const data = await resp.json();
-    if(data.error) fail = String(data.error);
-    else list = paParse(data.raw);
-  }catch(e){ fail = '連線失敗，請確認網路後再試一次。'; }
-  const still = document.getElementById('pa-dlg');
-  if(!still || still.hidden || still.dataset.px!==px) return; // 等的時候已經關掉了
-  delete run.dataset.busy; run.textContent = '整理並填入 →'; run.disabled = false;
-  if(fail){ paMeta(fail.length > 120 ? 'AI 暫時沒有回應，請稍後再試一次。' : fail, true); return; }
-  if(!list || !list.length){ paMeta('AI 沒有整理出客人資料，請多寫一點（例如姓名、電話、方案）再試一次。', true); return; }
+    const resp = await fetch(AI_WORKER_URL, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ ...paPayload(px, text), stream:true }), signal: ctrl ? ctrl.signal : undefined });
+    // 新版 Worker 回 text/plain＝邊寫邊傳；舊版或出錯回 JSON（照原本處理）
+    if(resp.ok && resp.body && /text\/plain/.test(resp.headers.get('content-type')||'')){
+      const still0 = document.getElementById('pa-dlg');
+      if(!still0 || still0.hidden || still0.dataset.px!==px){ if(ctrl) ctrl.abort(); return; }
+      live = paLiveStart(px, text, ctrl);
+      const rd = resp.body.getReader(), dec = new TextDecoder(); let raw = '', last = 0;
+      for(;;){
+        const { done, value } = await rd.read(); if(done) break;
+        raw += dec.decode(value, { stream:true });
+        if(!PA_LIVE){ if(ctrl) ctrl.abort(); return; } // 寫的時候視窗被關掉、或按了「改貼上的文字」
+        if(Date.now() - last > 120){ last = Date.now(); paLiveShow(raw); }
+      }
+      raw += dec.decode();
+      const errAt = raw.indexOf('\n[[PA_ERROR]]');
+      if(errAt >= 0) fail = raw.slice(errAt + 13).trim() || 'AI 暫時沒有回應，請稍後再試一次。';
+      else list = paParse(raw);
+    } else {
+      const data = await resp.json();
+      if(data.error) fail = String(data.error);
+      else list = paParse(data.raw);
+    }
+  }catch(e){ if(live && !PA_LIVE) return; fail = '連線失敗，請確認網路後再試一次。'; }
+  if(live){
+    if(!PA_LIVE || PA[px].S().modal!==PA_LIVE.M){ PA_LIVE = null; return; }
+    PA_LIVE = null;
+    if(fail || !list || !list.length){ PA[px].S().modal = null; PA[px].render(); paOpenDlg(px, text);
+      paMeta(fail ? (fail.length > 120 ? 'AI 暫時沒有回應，請稍後再試一次。' : fail) : 'AI 沒有整理出客人資料，請多寫一點（例如姓名、電話、方案）再試一次。', true); return; }
+  } else {
+    const still = document.getElementById('pa-dlg');
+    if(!still || still.hidden || still.dataset.px!==px) return; // 等的時候已經關掉了
+    delete run.dataset.busy; run.textContent = '整理並填入 →'; run.disabled = false;
+    if(fail){ paMeta(fail.length > 120 ? 'AI 暫時沒有回應，請稍後再試一次。' : fail, true); return; }
+    if(!list || !list.length){ paMeta('AI 沒有整理出客人資料，請多寫一點（例如姓名、電話、方案）再試一次。', true); return; }
+  }
   const single = list.length===1;
   const queue = list.slice(0, 20).map(x=>paClean(px, x, single, text));
   const nk = PA[px].nameKey;
@@ -6251,6 +6283,87 @@ async function paRun(){
   paCloseDlg();
   paOpenItem();
 }
+/* ---- 邊寫邊填（2026-10-30）----
+   AI 一邊寫一邊傳回來：先開新增視窗，把寫好的文字欄位一格一格顯示（第 1 位客人）；
+   寫的時候欄位鎖住、不能儲存；全部寫完再走上面原本的整理流程（paClean → paOpenItem），存的內容跟以前一樣 */
+let PA_LIVE = null; // { px, M, ctrl, src }
+function paLiveStart(px, text, ctrl){
+  const P = PA[px];
+  paCloseDlg(); PA_RUN = null;
+  P.open({});
+  const M = P.S().modal; if(!M) return null;
+  M.pa = { keys:[], dropped:[], live:{ f:[], typing:'', more:false } };
+  PA_LIVE = { px, M, ctrl, src:text };
+  P.render();
+  return PA_LIVE;
+}
+// 從寫到一半的 JSON 陣列撈出每一位客人目前寫好的欄位（只拿來顯示，最後還是用 JSON.parse 的結果）
+function paPartial(raw){
+  const s = String(raw||''), out = []; let i = s.indexOf('['); if(i < 0) return out;
+  let cur = null, key = null, buf = '', mode = 0; // 0 找欄位、1 欄位名稱、2 等值、3 值（字串）
+  for(i++; i < s.length; i++){
+    const c = s[i];
+    if(mode===1 || mode===3){
+      if(c==='\\'){
+        const n = s[i+1]; if(n===undefined) break;
+        if(n==='u'){ const h = s.slice(i+2, i+6); if(h.length < 4) break; buf += String.fromCharCode(parseInt(h, 16) || 32); i += 5; }
+        else { buf += n==='n' ? '\n' : n==='t' ? '\t' : n==='r' ? '' : n; i++; }
+      } else if(c==='"'){
+        if(mode===1){ key = buf; mode = 2; } else { cur.vals[key] = buf; cur.done.push(key); key = null; mode = 0; }
+        buf = ''; continue;
+      } else buf += c;
+      if(mode===3) cur.vals[key] = buf;
+      continue;
+    }
+    if(c==='{'){ cur = { vals:{}, done:[], closed:false }; out.push(cur); mode = 0; key = null; continue; }
+    if(!cur) continue;
+    if(c==='}'){ cur.closed = true; mode = 0; key = null; continue; }
+    if(c==='"'){ if(mode===2){ mode = 3; cur.vals[key] = ''; } else mode = 1; buf = ''; continue; }
+    if(mode===2 && /[-0-9tfn]/.test(c)){
+      let j = i; while(j < s.length && !/[,}\s\]]/.test(s[j])) j++;
+      if(j >= s.length) break;
+      const v = s.slice(i, j); if(v!=='null'){ cur.vals[key] = v; cur.done.push(key); }
+      key = null; mode = 0; i = j - 1;
+    }
+  }
+  return out;
+}
+// 只填一般文字框（日期、按鈕、下拉選單等寫完再一次填）
+const paLiveBox = el => el && (el.tagName==='TEXTAREA' || (el.tagName==='INPUT' && !['date','checkbox','radio','hidden'].includes(el.type)));
+function paLiveShow(raw){
+  const L = PA_LIVE; if(!L) return;
+  const P = PA[L.px], M = P.S().modal;
+  if(M!==L.M){ PA_LIVE = null; if(L.ctrl) L.ctrl.abort(); return; }
+  const recs = paPartial(raw), r = recs[0]; if(!r) return;
+  const F = P.fields(paKind(L.px)), lv = M.pa.live, form = document.getElementById(L.px + '-form');
+  lv.typing = ''; lv.more = recs.length > 1;
+  Object.keys(r.vals).forEach(f=>{
+    const v = String(r.vals[f]||''); if(!F[f] || f==='date' || !v.trim()) return;
+    const el = form && P.sel[f] ? form.querySelector(P.sel[f]) : null;
+    if(!paLiveBox(el)) return;
+    M.rec[f] = v; if(el.value!==v) el.value = v;
+    if(!lv.f.includes(f)) lv.f.push(f);
+    if(!r.done.includes(f)) lv.typing = f;
+  });
+  paLiveMark(L.px);
+}
+const paLiveMsg = lv => `<div class="pa-lv"><span class="pa-spin"></span><span>${lv.f.length ? 'AI 正在填…' : 'AI 正在讀資料…'}</span>${lv.f.length ? `<b>已填 ${lv.f.length} 格</b>` : ''}</div>`
+  + (lv.more ? '<div>還有別位客人，AI 繼續整理中…這位填完會一位一位給你看。</div>' : '') + '<div class="pa-lvs">寫完才能儲存</div>';
+// 每次畫面重畫（或有新內容）後：鎖住欄位、標紫色、正在寫的那格加外框
+function paLiveMark(px){
+  const P = PA[px], M = P.S().modal, form = document.getElementById(px + '-form');
+  if(!M || !M.pa || !M.pa.live || !form) return;
+  const lv = M.pa.live;
+  form.classList.add('pa-streaming');
+  form.querySelectorAll('.pl-dlg-b input, .pl-dlg-b textarea').forEach(el=>{ el.readOnly = true; });
+  Object.keys(P.sel).forEach(f=>{
+    const el = form.querySelector(P.sel[f]), fd = el && el.closest('.pl-field'); if(!fd) return;
+    fd.classList.toggle('pa-ai', lv.f.includes(f)); fd.classList.toggle('pa-typing', lv.typing===f);
+  });
+  const b = document.getElementById('pa-live'); if(b) b.innerHTML = paLiveMsg(lv);
+}
+// 寫的時候不能存（按 Enter 也不行）
+document.addEventListener('submit', (e)=>{ if(e.target.classList && e.target.classList.contains('pa-streaming')){ e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 // 打開第 idx 位：用這頁平常的新增視窗，帶入 AI 填好的內容
 function paOpenItem(){
   const R = PA_RUN; if(!R) return;
@@ -6286,6 +6399,7 @@ function paHeadBtn(px, M){
 }
 function paBanner(px, M){
   if(!M.pa) return '';
+  if(M.pa.live) return `<div class="pa-ban ai" id="pa-live">${paLiveMsg(M.pa.live)}</div>`;
   const R = PA_RUN, r = M.rec;
   const steps = R && R.queue.length > 1 ? `<div class="pa-steps">${R.queue.map((q, i)=>`<span class="${R.done[i] ? 'done' : i===R.idx ? 'cur' : ''}">${R.done[i] ? '✓ ' : ''}${escHtml(R.names[i] || '第 ' + (i + 1) + ' 位')}</span>`).join('')}</div>` : '';
   let warn = '';
@@ -6304,6 +6418,7 @@ const paSaveLabel = M => paMulti(M) && PA_RUN.idx < PA_RUN.queue.length - 1 ? '�
 function paMark(px){
   const P = PA[px], M = P.S().modal, form = document.getElementById(px + '-form');
   if(!M || !M.pa || !form) return;
+  if(M.pa.live) return paLiveMark(px);
   const find = f => (P.sel[f] && form.querySelector(P.sel[f])) || form.querySelector(`[data-${px}-pk="__modal"][data-${px}-f="${f}"]`);
   const tag = (el, cls, txt) => { const fd = el && el.closest('.pl-field'); if(!fd || fd.classList.contains(cls)) return; fd.classList.add(cls); const sp = fd.querySelector(':scope > span'); if(sp) sp.insertAdjacentHTML('beforeend', ` <b class="pa-badge ${cls}">${txt}</b>`); };
   M.pa.keys.forEach(f=>tag(find(f), 'pa-ai', 'AI'));
@@ -6333,7 +6448,7 @@ document.addEventListener('click', (e)=>{
   if(t.closest('[data-pa-cclose]') || (t.id==='pa-choose')){ paCloseChoose(); return; }
   if(t.closest('[data-pa-close]') || t.id==='pa-dlg'){ const run = document.getElementById('pa-run'); if(run && run.dataset.busy && t.id==='pa-dlg') return; paCloseDlg(); return; }
   if(t.closest('[data-pa-run]')){ paRun(); return; }
-  const bk = t.closest('[data-pa-back]'); if(bk){ const px = bk.dataset.paBack, src = PA_RUN ? PA_RUN.src : ''; PA[px].S().modal = null; PA[px].render(); PA_RUN = null; paOpenDlg(px, src); return; }
+  const bk = t.closest('[data-pa-back]'); if(bk){ const px = bk.dataset.paBack, src = PA_RUN ? PA_RUN.src : PA_LIVE ? PA_LIVE.src : ''; PA[px].S().modal = null; PA[px].render(); PA_RUN = null; paOpenDlg(px, src); return; }
   const sk = t.closest('[data-pa-skip]'); if(sk){ paSkip(sk.dataset.paSkip); return; }
 });
 document.addEventListener('input', (e)=>{ if(e.target && e.target.id==='pa-text') paMeta(); });
