@@ -1370,7 +1370,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-30-01';
+const APP_BUILD = '2026-10-30-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -6128,7 +6128,7 @@ const PA = {
     hints:k=>(k==='channel' ? { staff:pgStaffOpts() } : {}),
     sel:{ date:'#pg-fDate', customer:'#pg-fName', phone:'#pg-fPhone', note:'#pg-fNote', referrer:'#pg-fRef', staff:'#pg-fStaff' } },
   va: { title:'估價', nameKey:'customerName', S:()=>vaS(), open:b=>vaOpenNew(b), render:()=>vaRender(), can:()=>true,
-    fields:()=>({ date:'日期', customerName:'客戶姓名', handler:'經手人', category:'類別', area:'地區', status:'狀態', valuation:'估價資訊', plan:'方案', memo:'備註' }),
+    fields:()=>({ date:'日期', customerName:'客戶姓名', handler:'經手人', category:'類別', area:'地址', status:'狀態', valuation:'估價資訊', plan:'方案', memo:'備註' }),
     opts:()=>({ category:VA_CATS.map(c=>c[0]), status:valuationStatusList() }),
     hints:()=>({ handler:Array.from(new Set(vaAll().map(c=>c.handler).filter(Boolean))).slice(0, 60) }),
     sel:{ date:'#va-fDate', customerName:'#va-fName', handler:'#va-fHandler', area:'#va-fArea', valuation:'#va-fVal', plan:'#va-fPlan', memo:'#va-fMemo', category:'[data-va-mcat]' } },
@@ -7610,9 +7610,9 @@ function bankLoanPageHTML(){
    - 其他欄位列表上直接改、編輯視窗都只更新改到的欄位（updateDoc）；改日期時 month 一起改（LINE「@姓名」查詢會用）
    - 樣式、選項面板、月份分段跟「我的客人紀錄」等共用（pl-／pg- 開頭）；事件只處理 .va-root 裡的東西 */
 const VA_CATS = [['銀行','#E6F1FA','#1E5A85'],['民間','#FDF0E1','#8A4B0F']];
-const VA_LABEL = { customerName:'客戶姓名', handler:'經手人', status:'狀態', category:'類別', area:'地區', valuation:'估價資訊', plan:'方案', memo:'備註' };
-const VA_SORTS = [['date','日期'],['customerName','客戶'],['handler','經手人'],['status','狀態'],['area','地區'],['valuation','估價資訊'],['plan','方案'],['memo','備註']];
-// 各欄寬度（%）：#、日期、客戶（＋類別）、經手人、狀態、地區、估價資訊、方案、備註、編輯/刪除
+const VA_LABEL = { customerName:'客戶姓名', handler:'經手人', status:'狀態', category:'類別', area:'地址', valuation:'估價資訊', plan:'方案', memo:'備註' };
+const VA_SORTS = [['date','日期'],['customerName','客戶'],['handler','經手人'],['status','狀態'],['area','地址'],['valuation','估價資訊'],['plan','方案'],['memo','備註']];
+// 各欄寬度（%）：#、日期、客戶（＋類別）、經手人、狀態、地址、估價資訊、方案、備註、編輯/刪除
 const VA_COLW = [3, 6, 10, 8, 10, 12, 10, 15, 17, 9];
 const VA_COLW_C = [3, 7, 14, 11, 13, 10, 16, 17, 9]; // 中等寬度（約 1280 螢幕）：沒有經手人欄，經手人放在客戶欄的類別旁邊
 const VA_KEYS = ['date','status','handler','customerName','area','category','valuation','plan','memo'];
@@ -7738,7 +7738,7 @@ function vaRowsHTML(all, layout){
     <div class="pl-card">
       <div class="top"><span class="no">${i+1}</span>${vaTxt(c,'customerName','客戶姓名','cname')}${vaPickBtn(c,'status')}</div>
       <div class="pg-ln">${vaPickBtn(c,'category')}<span>經手</span>${vaTxt(c,'handler','經手人','sub',false,'va-handler-list')}</div>
-      <div class="bk-lbl">地區</div>${vaMemoBox(c,'area')}
+      <div class="bk-lbl">地址</div>${vaMemoBox(c,'area')}
       <div class="bk-lbl">估價資訊</div>${vaMemoBox(c,'valuation')}
       <div class="bk-lbl">方案</div>${vaPlanBox(c)}
       <div class="bk-lbl">備註</div>${vaMemoBox(c)}
@@ -7825,8 +7825,8 @@ function vaPopHTML(){
   if(plIsMobile()) return `<div class="pl-overlay sheet" data-va-popbg><div class="pl-dialog"><div class="pl-dlg-h"><h2>${title}</h2><button type="button" class="pl-x" data-va-popclose aria-label="關閉">×</button></div><div class="pl-dlg-b">${body}</div></div></div>`;
   return `<div class="pl-pop" id="va-pop" style="left:${S.pop.x}px;top:${S.pop.y}px;"><div class="pl-pophead">${title}</div>${body}</div>`;
 }
-const vaPushWarn = what => `<div class="va-pushwarn">按「<b>${what}</b>」後，如果方案內容有改，會把<b>客戶、地區、估價、方案、備註、狀態</b>推播到 LINE。只改錯字也會再推播一次；方案清空不推播。</div>`;
-// 地區、估價資訊、備註：列表最多顯示 3 行，點了彈出大視窗看全文、修改（這三欄都不會推播）
+const vaPushWarn = what => `<div class="va-pushwarn">按「<b>${what}</b>」後，如果方案內容有改，會把<b>客戶、地址、估價、方案、備註、狀態</b>推播到 LINE。只改錯字也會再推播一次；方案清空不推播。</div>`;
+// 地址、估價資訊、備註：列表最多顯示 3 行，點了彈出大視窗看全文、修改（這三欄都不會推播）
 const vaMemoBox = (c, f) => { f = f || 'memo'; return `<button type="button" class="va-memobox${c[f]?'':' empty'}" data-va-memo="${escAttr(c.id)}" data-va-mf="${f}" aria-label="${escAttr((c.customerName||'')+' 的'+VA_LABEL[f])}">${c[f] ? escHtml(c[f]) : '＋ '+VA_LABEL[f]}</button>`; };
 function vaMemoDlgHTML(){
   const P = vaS().memoEdit; if(!P) return '';
@@ -7876,7 +7876,7 @@ function vaModalHTML(){
         <div class="pl-field"><span>類別</span><div class="bk-seg" role="group" aria-label="類別">${[['銀行','銀行'],['民間','民間'],['','未填']].map(([v,t])=>`<button type="button" data-va-mcat="${v}" aria-pressed="${(r.category||'')===v}">${t}</button>`).join('')}</div></div>
       </div>
       <div class="pl-row2"><div class="pl-field"><span>狀態</span>${vaPickBtn(r,'status','__modal')}</div><span></span></div>
-      <label class="pl-field"><span>地區</span><input id="va-fArea" value="${escAttr(r.area||'')}" placeholder="例：台中市北屯區 透天"/></label>
+      <label class="pl-field"><span>地址</span><input id="va-fArea" value="${escAttr(r.area||'')}" placeholder="例：台中市北屯區崇德路二段 100 號"/></label>
       <label class="pl-field"><span>估價資訊</span><textarea id="va-fVal" rows="2">${plTa(r.valuation)}</textarea></label>
       <label class="pl-field"><span>方案 <span class="va-warnlbl">（有改的話，儲存後會推播到 LINE）</span></span><textarea id="va-fPlan" rows="3">${plTa(r.plan)}</textarea></label>
       <label class="pl-field"><span>備註</span><textarea id="va-fMemo" rows="2">${plTa(r.memo)}</textarea></label>
@@ -8425,7 +8425,7 @@ function openValuationStatusOptionsModal(){
     }
   });
 }
-const VAL_FIELD_LABELS = {area:'地區', valuation:'估價資訊', plan:'方案', memo:'備註'};
+const VAL_FIELD_LABELS = {area:'地址', valuation:'估價資訊', plan:'方案', memo:'備註'};
 function openValuationFieldModal(id, field){
   const c = (APP.data.valuationCases||[]).find(x=>x.id===id);
   if(!c || !VAL_FIELD_LABELS[field]) return;
@@ -8520,7 +8520,7 @@ function valuationHTML(){
   const vStat = (label, n)=>`<div class="bl-stat"><div class="bl-stat-l">${label}</div><div class="bl-stat-n">${n}</div></div>`;
   const vStatsHtml = `<div class="bl-stats">${vStat('本月估價', all.filter(c=>(c.date||'').slice(0,7)===today.slice(0,7)).length)}${vStat('本週新增', all.filter(c=>c.date && c.date>=weekStart && c.date<=today).length)}${vStat('未填方案', all.filter(c=>!String(c.plan||'').trim()).length)}${vStat('尚未填狀態', all.filter(c=>!String(c.status||'').trim()).length)}${vStat('全部案件', all.length)}</div>`;
   return `
-    <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub" style="display:var(--val-sub,block)">估價紀錄與方案追蹤・只有核心成員可以查看與編輯・狀態、日期、經手人、客戶姓名、類別可直接在表格修改;地區、估價資訊、方案、備註點一下會跳出視窗編輯;填寫或修改「方案」會推播到 LINE;在 LINE 輸入「@客戶姓名」可查詢</p></div>
+    <div class="page-header"><div><h1 class="page-title">房屋土地估價</h1><p class="page-sub" style="display:var(--val-sub,block)">估價紀錄與方案追蹤・只有核心成員可以查看與編輯・狀態、日期、經手人、客戶姓名、類別可直接在表格修改;地址、估價資訊、方案、備註點一下會跳出視窗編輯;填寫或修改「方案」會推播到 LINE;在 LINE 輸入「@客戶姓名」可查詢</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn ghost m-hide-640" data-action="valuation-targets">🔔 推播對象</button>
         <button class="btn ghost m-hide-640" data-action="valuation-import">📥 匯入 Excel</button>
@@ -8538,7 +8538,7 @@ function valuationHTML(){
       ${sel('status','狀態','status')}
       ${sel('handler','經手人','handler')}
       ${sel('category','案件類別','category')}
-      <div class="filter-field"><label>地區(關鍵字)</label><input type="text" data-case-filter="valuation-f-area" value="${escAttr(f.area)}" placeholder="例如 台中" style="min-width:110px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;"/></div>
+      <div class="filter-field"><label>地址(關鍵字)</label><input type="text" data-case-filter="valuation-f-area" value="${escAttr(f.area)}" placeholder="例如 台中、崇德路" style="min-width:110px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;"/></div>
       <div class="filter-field"><label>方案</label><select data-case-filter="valuation-f-planState">
         <option value="" ${!f.planState?'selected':''}>全部</option><option value="filled" ${f.planState==='filled'?'selected':''}>已填方案</option><option value="empty" ${f.planState==='empty'?'selected':''}>未填方案</option></select></div>
       <div class="filter-field"><label>日期從</label><input type="date" data-case-filter="valuation-f-from" value="${escAttr(f.from)}" style="padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;"/></div>
@@ -8552,7 +8552,7 @@ function valuationHTML(){
     <div class="table-wrap val-desktop">
       ${list.length===0?`<div class="empty">${all.length===0?'尚無估價資料':'沒有符合篩選條件的資料'}</div>`:`
       <table class="bl-table"><thead><tr>
-        ${thSort('日期','date','valuationSort')}${thSort('狀態','status','valuationSort')}${thSort('客戶姓名','customerName','valuationSort')}${thSort('經手人','handler','valuationSort')}${thSort('類別','category','valuationSort')}${thSort('地區','area','valuationSort')}<th>估價資訊</th><th>方案</th><th>備註</th><th></th>
+        ${thSort('日期','date','valuationSort')}${thSort('狀態','status','valuationSort')}${thSort('客戶姓名','customerName','valuationSort')}${thSort('經手人','handler','valuationSort')}${thSort('類別','category','valuationSort')}${thSort('地址','area','valuationSort')}<th>估價資訊</th><th>方案</th><th>備註</th><th></th>
       </tr></thead><tbody>${rows}</tbody></table>`}
     </div>`;
 }
@@ -8565,7 +8565,7 @@ function openValuationModal(existing){
       <label class="field"><span>狀態</span><input type="text" name="status" list="val-status-list" value="${escAttr(c.status||'')}"/><datalist id="val-status-list">${statuses.map(x=>`<option value="${escAttr(x)}">`).join('')}</datalist></label>
       <label class="field"><span>經手人</span><input type="text" name="handler" value="${escAttr(c.handler||'')}"/></label>
       <label class="field"><span>客戶姓名</span><input type="text" name="customerName" value="${escAttr(c.customerName||'')}" required/></label>
-      <label class="field"><span>地區</span><input type="text" name="area" value="${escAttr(c.area||'')}"/></label>
+      <label class="field"><span>地址</span><input type="text" name="area" value="${escAttr(c.area||'')}"/></label>
       <label class="field"><span>案件類別</span><select name="category"><option value="">—</option><option value="銀行" ${c.category==='銀行'?'selected':''}>銀行</option><option value="民間" ${c.category==='民間'?'selected':''}>民間</option></select></label>
     </div>
     <label class="field"><span>估價資訊</span><textarea name="valuation" rows="3">${escHtml(c.valuation||'')}</textarea></label>
@@ -9986,7 +9986,7 @@ function buildValuationRowHtml(r, idx){
     <input type="checkbox" class="ai-row-check" checked/>
     <input type="hidden" class="ai-row-field" data-key="id" value="${escAttr(existing?existing.id:'')}"/>
     <span class="badge ${existing?'pending':'active'}">${existing?'修改':'新增'}</span>
-    ${inp('date','日期',130,'date')}${inp('customerName','客戶姓名',90)}${inp('handler','經手人',70)}${inp('area','地區',80)}
+    ${inp('date','日期',130,'date')}${inp('customerName','客戶姓名',90)}${inp('handler','經手人',70)}${inp('area','地址',80)}
     <select class="ai-row-field" data-key="category" style="padding:4px;border:1px solid var(--border);border-radius:6px;"><option value="">類別</option><option value="銀行" ${r.category==='銀行'?'selected':''}>銀行</option><option value="民間" ${r.category==='民間'?'selected':''}>民間</option></select>
     ${inp('status','狀態',80)}${inp('valuation','估價資訊',140)}${inp('plan','方案(填寫/改動會推播LINE)',170)}${inp('memo','備註',110)}
   </div>`;
@@ -10930,7 +10930,7 @@ function buildValuationContext(){
   const lines = all.filter(c=>recent.includes(c.month||'未知'))
     .sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))
     .slice(0,150)
-    .map(c=>`[id:${c.id}] ${c.date||''}｜狀態:${c.status||'—'}｜經手人:${c.handler||'—'}｜客戶:${c.customerName||''}｜地區:${c.area||'—'}｜類別:${c.category||'—'}｜估價:${cut(c.valuation,60)}｜方案:${cut(c.plan,60)}｜備註:${cut(c.memo,50)}`);
+    .map(c=>`[id:${c.id}] ${c.date||''}｜狀態:${c.status||'—'}｜經手人:${c.handler||'—'}｜客戶:${c.customerName||''}｜地址:${c.area||'—'}｜類別:${c.category||'—'}｜估價:${cut(c.valuation,60)}｜方案:${cut(c.plan,60)}｜備註:${cut(c.memo,50)}`);
   return `【房屋土地估價】（只有核心看得到；共 ${all.length} 筆，各月份筆數：${monthLines}）
 近兩個月明細（最多 150 筆，由新到舊；更早的月份只有上面的筆數統計，沒有逐筆明細）：
 ${lines.join('\n') || '無'}`;
