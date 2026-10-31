@@ -1447,7 +1447,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-31-03';
+const APP_BUILD = '2026-10-31-04';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5502,7 +5502,7 @@ function staffOverviewHTML(){
     return `<div class="so-card${viewerIsCore ? ' click' : ''}${i===0 && p.bonus>0 ? ' top' : ''}" style="animation-delay:${i*0.05}s"${viewerIsCore ? ` data-action="enter-staff-room" data-name="${escAttr(p.name)}" data-uid="${escAttr(p.u.id)}"` : ''}>
       <span class="so-dot${p.online ? '' : ' off'}" title="${p.online ? '線上中' : '未上線' + (p.seen ? '（最後上線 ' + p.seen + '）' : '')}"></span><span class="so-rank${i<3 ? ' m' : ''}">${String(i+1).padStart(2,'0')}</span><span class="so-rk2">No.${i+1}</span>
       <div class="so-body">
-        <div class="so-avw${t.cur ? ' so-f-'+t.cur.key : ''}">${avatarHtml(p.u.id, p.disp, 78)}</div>
+        <div class="so-avw">${avatarHtml(p.u.id, p.disp, 78)}</div>
         <div class="so-nm">${escHtml(p.disp)}${p.leave ? '<span class="so-leave">請假</span>' : ''}</div>
         <div class="so-role">${p.role}</div>
         <div class="so-bonus">${n(p.bonus, true)}<small>本月累計獎金</small></div>
