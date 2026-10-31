@@ -331,7 +331,7 @@
   .so-rank{position:absolute;top:14px;left:16px;font-size:13px;font-weight:800;color:#B9BFCD;font-variant-numeric:tabular-nums;}
   .so-rank.m{color:var(--ink);} .so-card.top .so-rank{color:#B7791F;}
   .so-body{padding:22px 18px 16px;display:grid;justify-items:center;text-align:center;}
-  .so-avw{position:relative;margin-bottom:12px;}
+  .so-avw{position:relative;margin-bottom:12px;display:flex;} /* flex：大頭照圖片下方不留文字基線空隙，外框才會正中對齊 */
   /* 牌位頭像外框（2026-10-31）：圖片 512 規格、頭像直徑＝外框 62.5%，所以外框＝頭像的 160%，疊在上面、點擊穿透 */
   .so-fr{position:absolute;left:50%;top:50%;width:160%;height:160%;transform:translate(-50%,-50%);pointer-events:none;user-select:none;}
   .so-avw.has-fr{margin:12px 0 26px;}
@@ -375,8 +375,8 @@
   @media (max-width:640px){
     .so-tiles{grid-template-columns:1fr 1fr 1fr;gap:8px;} .so-tile{padding:9px 10px;} .so-tile.wide{grid-column:1/-1;} .so-tile b{font-size:17px;} .so-tile b::before{height:15px;}
     .so-sub{margin-bottom:14px;}
-    .so-grid{grid-template-columns:1fr;gap:8px;}
-    .so-body{display:grid;grid-template-columns:68px 1fr auto;grid-template-areas:"av nm bo" "av pr bo" "av th th";gap:2px 10px;justify-items:start;text-align:left;padding:12px;}
+    .so-grid{grid-template-columns:1fr;gap:12px;}
+    .so-body{display:grid;grid-template-columns:80px 1fr auto;grid-template-areas:"av nm bo" "av pr bo" "av th th";gap:2px 10px;justify-items:start;text-align:left;padding:14px 12px;min-height:108px;align-content:center;}
     .so-avw{grid-area:av;margin:0;align-self:center;} .so-avw > img:not(.so-fr),.so-avw > div{width:50px !important;height:50px !important;font-size:19px !important;} .so-avw.has-fr{margin:0;} .so-avw{justify-self:center;} .so-dot{right:12px;top:13px;width:9px;height:9px;}
     .so-nm{grid-area:nm;font-size:15px;margin:0;} .so-role,.so-need,.so-profit,.so-rank{display:none;}
     .so-bonus{grid-area:bo;margin:0;font-size:16px;text-align:right;align-self:start;padding-top:14px;} .so-bonus small{display:none;}
@@ -384,7 +384,7 @@
     .so-three{grid-area:th;margin:6px 0 0;display:flex;gap:9px;width:auto;padding-right:84px;} .so-three span{background:none;padding:0;flex-direction:row;gap:2px;font-size:11px;align-items:baseline;white-space:nowrap;} .so-three b{font-size:13px;}
     .so-rk2{display:block !important;}
     .so-foot{position:absolute;right:10px;bottom:10px;border:0;margin:0;}
-    .so-ch{border-radius:999px;background:#EAF0FF;padding:5px 11px;font-size:12px;}
+    .so-ch{border-radius:999px;background:#EAF0FF;padding:5px 11px;font-size:12px;position:relative;} .so-ch i{position:absolute;top:-7px;right:-6px;box-shadow:0 0 0 2px #fff;} /* 未讀數字貼在右上角，按鈕不變寬、不蓋到數字 */
   }
   .so-rk2{display:none;position:absolute;right:28px;top:9px;font-size:11.5px;font-weight:800;color:#B9BFCD;font-variant-numeric:tabular-nums;} .so-card.top .so-rk2{color:#B7791F;}
   .icon-btn{background:transparent;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:4px 6px;border-radius:6px;}
@@ -1444,7 +1444,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-31-05';
+const APP_BUILD = '2026-10-31-06';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
