@@ -1447,7 +1447,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-31-02';
+const APP_BUILD = '2026-10-31-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5515,7 +5515,7 @@ function staffOverviewHTML(){
     </div>`;
   };
   const tot = k => people.reduce((a, p)=>a + p[k], 0);
-  const tiles = `<div class="so-tile wide" style="--c:#F5C542"><span>本月獎金合計</span><b>${n(tot('bonus'), true)}</b></div>
+  const tiles = `${viewerIsCore ? `<div class="so-tile wide" style="--c:#F5C542"><span>本月獎金合計</span><b>${n(tot('bonus'), true)}</b></div>` : ''}
     <div class="so-tile" style="--c:#16A34A"><span>本月撥款</span><b>${n(tot('done'))}</b></div>
     <div class="so-tile" style="--c:#D97706"><span>對保中</span><b>${n(tot('guar'))}</b></div>
     <div class="so-tile" style="--c:#7C3AED"><span>等撥款</span><b>${n(tot('wait'))}</b></div>
