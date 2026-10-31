@@ -338,8 +338,8 @@
   .so-f-gold::before{background:conic-gradient(#EAB308,#FEF08A,#CA8A04,#FDE047,#EAB308);filter:drop-shadow(0 0 4px rgba(234,179,8,.5));}
   .so-f-diamond::before{inset:-8px;background:conic-gradient(#38BDF8,#E0F2FE,#818CF8,#22D3EE,#F0ABFC,#38BDF8);filter:drop-shadow(0 0 6px rgba(56,189,248,.7));animation:soSpin 6s linear infinite;}
   @keyframes soSpin{to{transform:rotate(360deg);}}
-  .so-dot{position:absolute;right:2px;top:4px;width:14px;height:14px;border-radius:50%;border:3px solid #fff;background:#22C55E;}
-  .so-dot.off{background:#EF4444;}
+  .so-dot{position:absolute;right:14px;top:14px;width:10px;height:10px;border-radius:50%;background:#22C55E;box-shadow:0 0 0 3px rgba(34,197,94,.18);}
+  .so-dot.off{background:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.15);}
   .so-nm{font-size:16px;font-weight:800;margin-top:4px;}
   .so-leave{font-size:11px;color:#C2353A;background:#FDECEC;border-radius:999px;padding:1px 8px;font-weight:700;margin-left:4px;vertical-align:2px;}
   .so-role{font-size:11.5px;color:var(--muted);margin-top:1px;}
@@ -380,7 +380,7 @@
     .so-sub{margin-bottom:14px;}
     .so-grid{grid-template-columns:1fr;gap:8px;}
     .so-body{display:grid;grid-template-columns:52px 1fr auto;grid-template-areas:"av nm bo" "av pr bo" "av th th";gap:2px 10px;justify-items:start;text-align:left;padding:12px;}
-    .so-avw{grid-area:av;margin:0;align-self:center;} .so-avw > img,.so-avw > div{width:50px !important;height:50px !important;font-size:19px !important;} .so-dot{width:12px;height:12px;right:0;top:0;}
+    .so-avw{grid-area:av;margin:0;align-self:center;} .so-avw > img,.so-avw > div{width:50px !important;height:50px !important;font-size:19px !important;} .so-dot{right:12px;top:13px;width:9px;height:9px;}
     .so-nm{grid-area:nm;font-size:15px;margin:0;} .so-role,.so-need,.so-profit,.so-rank{display:none;}
     .so-bonus{grid-area:bo;margin:0;font-size:16px;text-align:right;align-self:start;padding-top:14px;} .so-bonus small{display:none;}
     .so-prog{grid-area:pr;margin:2px 0 0;} .so-segs span{width:16px;}
@@ -389,7 +389,7 @@
     .so-foot{position:absolute;right:10px;bottom:10px;border:0;margin:0;}
     .so-ch{border-radius:999px;background:#EAF0FF;padding:5px 11px;font-size:12px;}
   }
-  .so-rk2{display:none;position:absolute;right:12px;top:9px;font-size:11.5px;font-weight:800;color:#B9BFCD;font-variant-numeric:tabular-nums;} .so-card.top .so-rk2{color:#B7791F;}
+  .so-rk2{display:none;position:absolute;right:28px;top:9px;font-size:11.5px;font-weight:800;color:#B9BFCD;font-variant-numeric:tabular-nums;} .so-card.top .so-rk2{color:#B7791F;}
   .icon-btn{background:transparent;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:4px 6px;border-radius:6px;}
   .icon-btn:hover{background:#EEF1F8;color:var(--ink);}
   .edited-note{font-size:11px;color:var(--muted);}
@@ -1447,7 +1447,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-31-01';
+const APP_BUILD = '2026-10-31-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1608,6 +1608,7 @@ function canEditProgressRow(){
 let unsubs = [];
 function subscribeAll(){
   let personalSubsInitialized = false;
+  soStartPresence();
   unsubs.push(onSnapshot(doc(db,'appdata','companyPublic'), snap=>{
     const d = snap.data();
     APP.data.companyPublic = d || {systemName:'',systemSubtitle:'',logoDataUrl:''};
@@ -1914,7 +1915,7 @@ function subscribeAll(){
     if(APP.role !== prevRole) renderRoot(); else render();
   }));
 }
-function unsubscribeAll(){ unsubs.forEach(u=>u()); unsubs=[]; }
+function unsubscribeAll(){ soStopPresence(); unsubs.forEach(u=>u()); unsubs=[]; }
 
 function saveCompany(){ return setDoc(doc(db,'appdata','company'), {info:APP.data.company, assets:APP.data.assets, liabilities:APP.data.liabilities}); }
 function saveCompanyPublic(data){ return setDoc(doc(db,'appdata','companyPublic'), data, {merge:true}); }
@@ -5448,6 +5449,34 @@ function soSyncBonusBoard(){
     setDoc(doc(db,'appdata','bonusBoard'), { month:nowMonthKey, totals:clean, _at:new Date().toISOString() }).catch(()=>{});
   }, 1500);
 }
+/* ---- 上線狀態（2026-10-31）：開著系統的人每 90 秒回報一次，超過 200 秒沒回報＝未上線（紅燈）；關分頁時馬上標未上線 ---- */
+const SO_BEAT = 90000, SO_ALIVE = 200000;
+let soBeatTimer = null, soDotTimer = null;
+function soBeat(online){
+  if(!APP.user) return;
+  setDoc(doc(db,'presence', APP.user.uid), { at:new Date().toISOString(), online:online!==false }).catch(()=>{});
+}
+function soStartPresence(){
+  soBeat(true); clearInterval(soBeatTimer); soBeatTimer = setInterval(()=>soBeat(true), SO_BEAT);
+  unsubs.push(onSnapshot(collection(db,'presence'), snap=>{
+    APP.presence = {}; snap.docs.forEach(d=>{ APP.presence[d.id] = d.data(); });
+    if(APP.view==='staffOverview') render();
+  }, ()=>{}));
+  // 開著業務總覽時每 30 秒重算一次（有人超過時間沒回報就變紅）
+  clearInterval(soDotTimer); soDotTimer = setInterval(()=>{ if(APP.view==='staffOverview' && APP.user) render(); }, 30000);
+}
+function soStopPresence(){ clearInterval(soBeatTimer); clearInterval(soDotTimer); soBeatTimer = soDotTimer = null; }
+window.addEventListener('pagehide', ()=>soBeat(false));
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && APP.user) soBeat(true); });
+function soPresence(uid){
+  if(APP.user && uid===APP.user.uid) return { online:true, seen:'' };
+  const p = (APP.presence||{})[uid]; if(!p || !p.at) return { online:false, seen:'' };
+  const ago = Date.now() - new Date(p.at).getTime();
+  const online = p.online!==false && ago < SO_ALIVE;
+  const min = Math.floor(ago / 60000);
+  const seen = min < 1 ? '剛剛' : min < 60 ? min + ' 分鐘前' : min < 1440 ? Math.floor(min/60) + ' 小時前' : Math.floor(min/1440) + ' 天前';
+  return { online, seen };
+}
 const SO_CHAT_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>';
 function staffOverviewHTML(){
   const viewerIsCore = isCore();
@@ -5464,16 +5493,16 @@ function staffOverviewHTML(){
     return { u, name, disp:displayNameFor(u.id, name), bonus:Number(bonusMap[name])||0, done, guar, wait, profit,
       leave:APP.data.attendance.some(a=>a.staffName===name && a.date===today),
       unread:(APP.data.directMessages||[]).filter(m=>m.senderUid===u.id && m.recipientUid===APP.user.uid && !m.read).length,
-      role:u.role==='staffAdmin' ? '行政' : '業務' };
+      role:u.role==='staffAdmin' ? '行政' : '業務', ...soPresence(u.id) };
   }).sort((a, b)=>b.bonus - a.bonus || b.done - a.done || plZh.compare(a.name, b.name));
   const n = (v, money) => `<bdi data-so-n="${Math.round(v)}"${money ? ' data-so-m' : ''}>${money ? money_(v) : Math.round(v)}</bdi>`;
   function money_(v){ return money(v); }
   const card = (p, i) => {
     const t = soTierInfo(p.bonus), on = Math.round(t.pct / 20), z = v => v ? '' : ' z';
     return `<div class="so-card${viewerIsCore ? ' click' : ''}${i===0 && p.bonus>0 ? ' top' : ''}" style="animation-delay:${i*0.05}s"${viewerIsCore ? ` data-action="enter-staff-room" data-name="${escAttr(p.name)}" data-uid="${escAttr(p.u.id)}"` : ''}>
-      <span class="so-rank${i<3 ? ' m' : ''}">${String(i+1).padStart(2,'0')}</span><span class="so-rk2">No.${i+1}</span>
+      <span class="so-dot${p.online ? '' : ' off'}" title="${p.online ? '線上中' : '未上線' + (p.seen ? '（最後上線 ' + p.seen + '）' : '')}"></span><span class="so-rank${i<3 ? ' m' : ''}">${String(i+1).padStart(2,'0')}</span><span class="so-rk2">No.${i+1}</span>
       <div class="so-body">
-        <div class="so-avw${t.cur ? ' so-f-'+t.cur.key : ''}">${avatarHtml(p.u.id, p.disp, 78)}<span class="so-dot${p.leave ? ' off' : ''}" title="${p.leave ? '今天請假' : '今天有上班'}"></span></div>
+        <div class="so-avw${t.cur ? ' so-f-'+t.cur.key : ''}">${avatarHtml(p.u.id, p.disp, 78)}</div>
         <div class="so-nm">${escHtml(p.disp)}${p.leave ? '<span class="so-leave">請假</span>' : ''}</div>
         <div class="so-role">${p.role}</div>
         <div class="so-bonus">${n(p.bonus, true)}<small>本月累計獎金</small></div>
