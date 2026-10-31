@@ -332,12 +332,9 @@
   .so-rank.m{color:var(--ink);} .so-card.top .so-rank{color:#B7791F;}
   .so-body{padding:22px 18px 16px;display:grid;justify-items:center;text-align:center;}
   .so-avw{position:relative;margin-bottom:12px;}
-  .so-avw::before{content:"";position:absolute;inset:-7px;border-radius:50%;pointer-events:none;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));}
-  .so-f-bronze::before{background:conic-gradient(#B45309,#F59E0B,#92400E,#D97706,#B45309);}
-  .so-f-silver::before{background:conic-gradient(#94A3B8,#F1F5F9,#64748B,#E2E8F0,#94A3B8);}
-  .so-f-gold::before{background:conic-gradient(#EAB308,#FEF08A,#CA8A04,#FDE047,#EAB308);filter:drop-shadow(0 0 4px rgba(234,179,8,.5));}
-  .so-f-diamond::before{inset:-8px;background:conic-gradient(#38BDF8,#E0F2FE,#818CF8,#22D3EE,#F0ABFC,#38BDF8);filter:drop-shadow(0 0 6px rgba(56,189,248,.7));animation:soSpin 6s linear infinite;}
-  @keyframes soSpin{to{transform:rotate(360deg);}}
+  /* 牌位頭像外框（2026-10-31）：圖片 512 規格、頭像直徑＝外框 62.5%，所以外框＝頭像的 160%，疊在上面、點擊穿透 */
+  .so-fr{position:absolute;left:50%;top:50%;width:160%;height:160%;transform:translate(-50%,-50%);pointer-events:none;user-select:none;}
+  .so-avw.has-fr{margin:12px 0 26px;}
   .so-dot{position:absolute;right:14px;top:14px;width:10px;height:10px;border-radius:50%;background:#22C55E;box-shadow:0 0 0 3px rgba(34,197,94,.18);}
   .so-dot.off{background:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.15);}
   .so-nm{font-size:16px;font-weight:800;margin-top:4px;}
@@ -379,12 +376,12 @@
     .so-tiles{grid-template-columns:1fr 1fr 1fr;gap:8px;} .so-tile{padding:9px 10px;} .so-tile.wide{grid-column:1/-1;} .so-tile b{font-size:17px;} .so-tile b::before{height:15px;}
     .so-sub{margin-bottom:14px;}
     .so-grid{grid-template-columns:1fr;gap:8px;}
-    .so-body{display:grid;grid-template-columns:52px 1fr auto;grid-template-areas:"av nm bo" "av pr bo" "av th th";gap:2px 10px;justify-items:start;text-align:left;padding:12px;}
-    .so-avw{grid-area:av;margin:0;align-self:center;} .so-avw > img,.so-avw > div{width:50px !important;height:50px !important;font-size:19px !important;} .so-dot{right:12px;top:13px;width:9px;height:9px;}
+    .so-body{display:grid;grid-template-columns:68px 1fr auto;grid-template-areas:"av nm bo" "av pr bo" "av th th";gap:2px 10px;justify-items:start;text-align:left;padding:12px;}
+    .so-avw{grid-area:av;margin:0;align-self:center;} .so-avw > img:not(.so-fr),.so-avw > div{width:50px !important;height:50px !important;font-size:19px !important;} .so-avw.has-fr{margin:0;} .so-avw{justify-self:center;} .so-dot{right:12px;top:13px;width:9px;height:9px;}
     .so-nm{grid-area:nm;font-size:15px;margin:0;} .so-role,.so-need,.so-profit,.so-rank{display:none;}
     .so-bonus{grid-area:bo;margin:0;font-size:16px;text-align:right;align-self:start;padding-top:14px;} .so-bonus small{display:none;}
     .so-prog{grid-area:pr;margin:2px 0 0;} .so-segs span{width:16px;}
-    .so-three{grid-area:th;margin:6px 0 0;display:flex;gap:12px;width:auto;} .so-three span{background:none;padding:0;flex-direction:row;gap:3px;font-size:11.5px;align-items:baseline;} .so-three b{font-size:13px;}
+    .so-three{grid-area:th;margin:6px 0 0;display:flex;gap:9px;width:auto;padding-right:84px;} .so-three span{background:none;padding:0;flex-direction:row;gap:2px;font-size:11px;align-items:baseline;white-space:nowrap;} .so-three b{font-size:13px;}
     .so-rk2{display:block !important;}
     .so-foot{position:absolute;right:10px;bottom:10px;border:0;margin:0;}
     .so-ch{border-radius:999px;background:#EAF0FF;padding:5px 11px;font-size:12px;}
@@ -1447,7 +1444,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-31-04';
+const APP_BUILD = '2026-10-31-05';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1553,7 +1550,7 @@ const APP = {
     personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[], directMessages:[], customerFollowups:[], valuationCases:[], bankLoanCases:[],
     optionColors:{ plan:{}, status:{}, dealProduct:{}, contactStatus:{} },
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
-      rankBronze:50000, rankSilver:100000, rankGold:200000, rankDiamond:400000,
+      rankBronze:0, rankSilver:0, rankGold:0, rankPlatinum:0, rankDiamond:0, rankMaster:0, rankGrandmaster:0, rankLegend:0,
       planOptions:['醫美','JET','電腦','裕富','維力','21','亞太','二線、商品'],
       staffOptions:['煌','全','熙','傑','秉','耿','琪','曾','希'] }
   }
@@ -2979,10 +2976,14 @@ function settingsHTML(){
         <div class="card-head-row"><h3>業績牌位門檻</h3><span class="hint">依「本月累計獎金」判定（每月 1 號重新算），業務總覽的頭像外框會依牌位變化，卡片上的進度條＝離下一級還差多少</span></div>
         <form id="rank-settings-form">
           <div class="grid grid-2">
-            <label class="field"><span>🥉 銅牌門檻（本月累計獎金達）</span><input type="number" name="rankBronze" value="${cs.rankBronze||0}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>🥈 銀牌門檻</span><input type="number" name="rankSilver" value="${cs.rankSilver||0}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>🥇 金牌門檻</span><input type="number" name="rankGold" value="${cs.rankGold||0}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>💎 鑽石門檻</span><input type="number" name="rankDiamond" value="${cs.rankDiamond||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>01 青銅（本月累計獎金達）</span><input type="number" min="0" name="rankBronze" value="${cs.rankBronze||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>02 白銀（本月累計獎金達）</span><input type="number" min="0" name="rankSilver" value="${cs.rankSilver||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>03 黃金（本月累計獎金達）</span><input type="number" min="0" name="rankGold" value="${cs.rankGold||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>04 白金（本月累計獎金達）</span><input type="number" min="0" name="rankPlatinum" value="${cs.rankPlatinum||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>05 鑽石（本月累計獎金達）</span><input type="number" min="0" name="rankDiamond" value="${cs.rankDiamond||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>06 大師（本月累計獎金達）</span><input type="number" min="0" name="rankMaster" value="${cs.rankMaster||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>07 宗師（本月累計獎金達）</span><input type="number" min="0" name="rankGrandmaster" value="${cs.rankGrandmaster||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>08 傳說（本月累計獎金達）</span><input type="number" min="0" name="rankLegend" value="${cs.rankLegend||0}" ${isAdmin()?'':'disabled'}/></label>
           </div>
           ${isAdmin()?`<div class="modal-actions" style="justify-content:flex-start;"><button type="submit" class="btn primary">儲存</button></div>`:''}
         </form>
@@ -5413,7 +5414,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape' && APP.fuDlg){ APP
    - 本月撥款看這個月；對保中、等撥款不分月份（月底對保可能下個月才撥款）
    - 進入頁面那一次：卡片依序浮上、數字從 0 跳到實際數字 */
 const SO_TIERS = () => { const cs = APP.data.caseSettings || {};
-  return [['bronze', cs.rankBronze], ['silver', cs.rankSilver], ['gold', cs.rankGold], ['diamond', cs.rankDiamond]]
+  return [['01-bronze', cs.rankBronze], ['02-silver', cs.rankSilver], ['03-gold', cs.rankGold], ['04-platinum', cs.rankPlatinum], ['05-diamond', cs.rankDiamond], ['06-master', cs.rankMaster], ['07-grandmaster', cs.rankGrandmaster], ['08-legend', cs.rankLegend]]
     .map(([k, v])=>({ key:k, th:Number(v)||0 })).filter(t=>t.th > 0).sort((a, b)=>a.th - b.th); };
 function soTierInfo(v){
   const ts = SO_TIERS(); let k = -1;
@@ -5502,7 +5503,7 @@ function staffOverviewHTML(){
     return `<div class="so-card${viewerIsCore ? ' click' : ''}${i===0 && p.bonus>0 ? ' top' : ''}" style="animation-delay:${i*0.05}s"${viewerIsCore ? ` data-action="enter-staff-room" data-name="${escAttr(p.name)}" data-uid="${escAttr(p.u.id)}"` : ''}>
       <span class="so-dot${p.online ? '' : ' off'}" title="${p.online ? '線上中' : '未上線' + (p.seen ? '（最後上線 ' + p.seen + '）' : '')}"></span><span class="so-rank${i<3 ? ' m' : ''}">${String(i+1).padStart(2,'0')}</span><span class="so-rk2">No.${i+1}</span>
       <div class="so-body">
-        <div class="so-avw">${avatarHtml(p.u.id, p.disp, 78)}</div>
+        <div class="so-avw${t.cur ? ' has-fr' : ''}">${avatarHtml(p.u.id, p.disp, 78)}${t.cur ? `<img class="so-fr" src="frames/frame-${t.cur.key}.v1.webp" alt="" draggable="false" onerror="this.remove()">` : ''}</div>
         <div class="so-nm">${escHtml(p.disp)}${p.leave ? '<span class="so-leave">請假</span>' : ''}</div>
         <div class="so-role">${p.role}</div>
         <div class="so-bonus">${n(p.bonus, true)}<small>本月累計獎金</small></div>
@@ -12636,7 +12637,11 @@ document.addEventListener('submit', (e)=>{
       rankBronze: Number(fd.get('rankBronze'))||0,
       rankSilver: Number(fd.get('rankSilver'))||0,
       rankGold: Number(fd.get('rankGold'))||0,
+      rankPlatinum: Number(fd.get('rankPlatinum'))||0,
       rankDiamond: Number(fd.get('rankDiamond'))||0,
+      rankMaster: Number(fd.get('rankMaster'))||0,
+      rankGrandmaster: Number(fd.get('rankGrandmaster'))||0,
+      rankLegend: Number(fd.get('rankLegend'))||0,
     };
     saveCaseSettings(); return;
   }
