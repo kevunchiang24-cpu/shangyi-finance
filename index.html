@@ -319,6 +319,77 @@
     .cs-sptop .btn{flex:1;justify-content:center;}
     .cs-sptop .cs-mstep{width:100%;justify-content:space-between;} .cs-sptop .cs-mstep select{flex:1;text-align:center;} .cs-sptop .cs-sp{display:none;} .cs-sptop .btn{white-space:nowrap;}
   }
+  /* ===== 業務總覽（2026-10-31 改版）===== */
+  .so-lay{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:22px;align-items:start;}
+  .so-sub{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #E6E9F0;margin:-6px 0 22px;}
+  .so-sub .t{font-size:13.5px;font-weight:700;padding:10px 2px;border-bottom:2px solid #4F7CF7;}
+  .so-sub .s{font-size:12.5px;color:var(--muted);} .so-sub .s b{color:var(--ink);}
+  .so-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;}
+  .so-card{background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(40,50,90,.06);display:flex;flex-direction:column;position:relative;transition:box-shadow .15s,transform .15s;}
+  .so-card.click{cursor:pointer;} .so-card.click:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(40,50,90,.1);}
+  .so-card.top{box-shadow:0 0 0 2px #F5C542,0 12px 26px rgba(234,179,8,.15);}
+  .so-rank{position:absolute;top:14px;left:16px;font-size:13px;font-weight:800;color:#B9BFCD;font-variant-numeric:tabular-nums;}
+  .so-rank.m{color:var(--ink);} .so-card.top .so-rank{color:#B7791F;}
+  .so-body{padding:22px 18px 16px;display:grid;justify-items:center;text-align:center;}
+  .so-avw{position:relative;margin-bottom:12px;}
+  .so-avw::before{content:"";position:absolute;inset:-7px;border-radius:50%;pointer-events:none;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));}
+  .so-f-bronze::before{background:conic-gradient(#B45309,#F59E0B,#92400E,#D97706,#B45309);}
+  .so-f-silver::before{background:conic-gradient(#94A3B8,#F1F5F9,#64748B,#E2E8F0,#94A3B8);}
+  .so-f-gold::before{background:conic-gradient(#EAB308,#FEF08A,#CA8A04,#FDE047,#EAB308);filter:drop-shadow(0 0 4px rgba(234,179,8,.5));}
+  .so-f-diamond::before{inset:-8px;background:conic-gradient(#38BDF8,#E0F2FE,#818CF8,#22D3EE,#F0ABFC,#38BDF8);filter:drop-shadow(0 0 6px rgba(56,189,248,.7));animation:soSpin 6s linear infinite;}
+  @keyframes soSpin{to{transform:rotate(360deg);}}
+  .so-dot{position:absolute;right:2px;top:4px;width:14px;height:14px;border-radius:50%;border:3px solid #fff;background:#22C55E;}
+  .so-dot.off{background:#EF4444;}
+  .so-nm{font-size:16px;font-weight:800;margin-top:4px;}
+  .so-leave{font-size:11px;color:#C2353A;background:#FDECEC;border-radius:999px;padding:1px 8px;font-weight:700;margin-left:4px;vertical-align:2px;}
+  .so-role{font-size:11.5px;color:var(--muted);margin-top:1px;}
+  .so-bonus{margin-top:6px;font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;}
+  .so-bonus small{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-top:1px;}
+  .so-prog{display:flex;align-items:center;gap:8px;margin-top:12px;}
+  .so-segs{display:flex;gap:4px;} .so-segs span{width:22px;height:4px;border-radius:9px;background:#E3E7F0;}
+  .so-segs span.on{background:#4F7CF7;}
+  .so-prog em{font-style:normal;font-size:12px;font-weight:700;min-width:34px;text-align:left;}
+  .so-need{font-size:11.5px;color:var(--muted);margin-top:5px;min-height:15px;} .so-need b{color:var(--ink);}
+  .so-three{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px;width:100%;}
+  .so-three span{background:#F6F7FB;border-radius:10px;padding:7px 4px 6px;font-size:11px;color:var(--muted);display:flex;flex-direction:column-reverse;align-items:center;gap:1px;}
+  .so-three b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1;}
+  .so-three .d b{color:#16A34A;} .so-three .g b{color:#D97706;} .so-three .w b{color:#7C3AED;} .so-three .z b{color:#CBD0DB;}
+  .so-profit{font-size:11.5px;color:var(--muted);margin-top:10px;width:100%;display:flex;justify-content:space-between;border-top:1px dashed #EDEFF4;padding-top:8px;} .so-profit b{color:var(--ink);}
+  .so-foot{border-top:1px solid #EDEFF4;margin-top:auto;}
+  .so-ch{width:100%;border:0;background:transparent;font-family:inherit;cursor:pointer;color:#4F7CF7;border-radius:0 0 14px 14px;padding:11px 8px;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:5px;}
+  .so-ch:hover{background:#EAF0FF;}
+  .so-ch i{background:var(--red);color:#fff;font-style:normal;font-size:10px;font-weight:800;border-radius:999px;min-width:17px;height:17px;display:inline-grid;place-items:center;padding:0 4px;}
+  .so-side{background:#fff;border-radius:14px;padding:20px 18px;box-shadow:0 6px 18px rgba(40,50,90,.05);position:sticky;top:16px;}
+  .so-side .cap{font-size:11px;letter-spacing:.12em;color:var(--muted);font-weight:700;}
+  .so-side h3{margin:0 0 14px;font-size:17px;}
+  .so-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .so-tile{background:#F6F7FB;border-radius:12px;padding:12px 14px 10px;min-width:0;}
+  .so-tile span{display:block;font-size:11px;letter-spacing:.06em;color:var(--muted);font-weight:700;margin-bottom:6px;}
+  .so-tile b{font-size:21px;font-weight:800;display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .so-tile b::before{content:"";width:3px;height:18px;border-radius:3px;background:var(--c);flex:none;}
+  .so-tile.wide{grid-column:1/-1;} .so-tile.sm b{font-size:16px;}
+  .so-empty{grid-column:1/-1;}
+  /* 打開頁面時的動畫（只在進入頁面那一次） */
+  .so-anim .so-card{animation:soIn .45s ease-out both;}
+  @keyframes soIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  .so-anim .so-segs span.on{animation:soSeg .35s ease-out both;}
+  @keyframes soSeg{from{background:#E3E7F0;transform:scaleX(.3);}to{transform:none;}}
+  @media (max-width:1100px){ .so-lay{grid-template-columns:1fr;} .so-side{position:static;order:-1;padding:0;background:none;box-shadow:none;} .so-side .cap,.so-side h3{display:none;} .so-tiles{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));} .so-tile{background:#fff;box-shadow:0 4px 12px rgba(40,50,90,.05);} .so-tile.wide{grid-column:auto;} }
+  @media (max-width:640px){
+    .so-tiles{grid-template-columns:1fr 1fr 1fr;gap:8px;} .so-tile{padding:9px 10px;} .so-tile.wide{grid-column:1/-1;} .so-tile b{font-size:17px;} .so-tile b::before{height:15px;}
+    .so-sub{margin-bottom:14px;}
+    .so-grid{grid-template-columns:1fr;gap:8px;}
+    .so-body{display:grid;grid-template-columns:52px 1fr auto;grid-template-areas:"av nm bo" "av pr bo" "av th th";gap:2px 10px;justify-items:start;text-align:left;padding:12px;}
+    .so-avw{grid-area:av;margin:0;align-self:center;} .so-avw > img,.so-avw > div{width:50px !important;height:50px !important;font-size:19px !important;} .so-dot{width:12px;height:12px;right:0;top:0;}
+    .so-nm{grid-area:nm;font-size:15px;margin:0;} .so-role,.so-need,.so-profit,.so-rank{display:none;}
+    .so-bonus{grid-area:bo;margin:0;font-size:16px;text-align:right;align-self:start;padding-top:14px;} .so-bonus small{display:none;}
+    .so-prog{grid-area:pr;margin:2px 0 0;} .so-segs span{width:16px;}
+    .so-three{grid-area:th;margin:6px 0 0;display:flex;gap:12px;width:auto;} .so-three span{background:none;padding:0;flex-direction:row;gap:3px;font-size:11.5px;align-items:baseline;} .so-three b{font-size:13px;}
+    .so-rk2{display:block !important;}
+    .so-foot{position:absolute;right:10px;bottom:10px;border:0;margin:0;}
+    .so-ch{border-radius:999px;background:#EAF0FF;padding:5px 11px;font-size:12px;}
+  }
+  .so-rk2{display:none;position:absolute;right:12px;top:9px;font-size:11.5px;font-weight:800;color:#B9BFCD;font-variant-numeric:tabular-nums;} .so-card.top .so-rk2{color:#B7791F;}
   .icon-btn{background:transparent;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:4px 6px;border-radius:6px;}
   .icon-btn:hover{background:#EEF1F8;color:var(--ink);}
   .edited-note{font-size:11px;color:var(--muted);}
@@ -1376,7 +1447,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-30-03';
+const APP_BUILD = '2026-10-31-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1478,7 +1549,7 @@ const APP = {
     company:{name:'',taxId:'',phone:'',address:'',systemName:'',systemSubtitle:'',logoDataUrl:''}, assets:[], liabilities:[],
     companyPublic:{systemName:'',systemSubtitle:'',logoDataUrl:''},
     categories: defaultCategories(), transactions:[], hr:{employees:[],collaborators:[],history:[]}, vendors:[],
-    progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[],
+    progressAd:[], progressChannel:[], casesAd:[], casesChannel:[], adSpend:[], staffBonusLedger:[], bonusBoard:null,
     personalProgress:[], attendance:[], calendar:[], xiaojiangInbox:[], announcements:[], socialAccounts:[], personalAccounts:[], fanPages:[], teamRoster:[], spareEmails:[], directMessages:[], customerFollowups:[], valuationCases:[], bankLoanCases:[],
     optionColors:{ plan:{}, status:{}, dealProduct:{}, contactStatus:{} },
     caseSettings:{ businessBonusRate:0.2, xiaojiangThreshold:30, xiaojiangRateBelow:0.05, xiaojiangRateAbove:0.1, fixedCost:180000, pilotBonusRate:0.05, xiaojiangName:'小江',
@@ -1651,13 +1722,21 @@ function subscribeAll(){
   unsubs.push(onSnapshot(doc(db,'appdata','casesAd'), snap=>{
     const d = snap.data();
     APP.data.casesAd = (d && d.list) || [];
+    SO_LOADED.casesAd = true; soSyncBonusBoard();
     render();
   }));
   unsubs.push(onSnapshot(doc(db,'appdata','casesChannel'), snap=>{
     const d = snap.data();
     APP.data.casesChannel = (d && d.list) || [];
+    SO_LOADED.casesChannel = true; soSyncBonusBoard();
     render();
   }));
+  // 業務總覽：每人本月獎金總額（大家都能讀，只有核心寫）
+  unsubs.push(onSnapshot(doc(db,'appdata','bonusBoard'), snap=>{
+    APP.data.bonusBoard = snap.exists() ? snap.data() : null;
+    SO_LOADED.board = true; soSyncBonusBoard();
+    if(APP.view==='staffOverview') render();
+  }, ()=>{ APP.data.bonusBoard = null; SO_LOADED.board = true; }));
   unsubs.push(onSnapshot(doc(db,'appdata','adSpend'), snap=>{
     const d = snap.data();
     APP.data.adSpend = (d && d.list) || [];
@@ -1725,6 +1804,7 @@ function subscribeAll(){
         }));
         unsubs.push(onSnapshot(collection(db,'staffBonusLedger'), snap2=>{
           APP.data.staffBonusLedger = snap2.docs.map(d=>({id:d.id, ...d.data()}));
+          SO_LOADED.ledger = true; soSyncBonusBoard();
           render();
         }));
         // 房屋土地估價：只有核心能讀，要等角色載入後（這裡）才訂閱，放在外層時 APP.role 還是 null 會永遠訂閱不到
@@ -2895,10 +2975,10 @@ function settingsHTML(){
         </div>
       </div>
       <div class="card" style="margin-top:16px;">
-        <div class="card-head-row"><h3>業績牌位門檻</h3><span class="hint">依「本月公司利潤貢獻」判定，業務總覽卡片會依牌位套用不同外框樣式</span></div>
+        <div class="card-head-row"><h3>業績牌位門檻</h3><span class="hint">依「本月累計獎金」判定（每月 1 號重新算），業務總覽的頭像外框會依牌位變化，卡片上的進度條＝離下一級還差多少</span></div>
         <form id="rank-settings-form">
           <div class="grid grid-2">
-            <label class="field"><span>🥉 銅牌門檻（公司利潤貢獻達）</span><input type="number" name="rankBronze" value="${cs.rankBronze||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>🥉 銅牌門檻（本月累計獎金達）</span><input type="number" name="rankBronze" value="${cs.rankBronze||0}" ${isAdmin()?'':'disabled'}/></label>
             <label class="field"><span>🥈 銀牌門檻</span><input type="number" name="rankSilver" value="${cs.rankSilver||0}" ${isAdmin()?'':'disabled'}/></label>
             <label class="field"><span>🥇 金牌門檻</span><input type="number" name="rankGold" value="${cs.rankGold||0}" ${isAdmin()?'':'disabled'}/></label>
             <label class="field"><span>💎 鑽石門檻</span><input type="number" name="rankDiamond" value="${cs.rankDiamond||0}" ${isAdmin()?'':'disabled'}/></label>
@@ -3345,6 +3425,7 @@ function render(){
   else { APP.view = isCore() ? 'dashboard' : 'personalDashboard'; main.innerHTML = isCore() ? dashboardHTML() : personalDashboardPageHTML(); }
   // 三個改版頁：畫好馬上把備註框長到該有的高度（在瀏覽器畫出來之前），畫面才不會先縮一下再彈回來
   if(APP.view==='customerFollowupOverview' || APP.view==='customerFollowupPersonal') fuAfterRender();
+  soAfterRender();
   if(APP.view==='personalLog') plAfterRender(); else if(APP.view==='progress') pgAfterRender(); else if(APP.view==='bankLoan') bkAfterRender(); else if(APP.view==='valuation') vaAfterRender(); lxSyncMSearch();
 }
 
@@ -5323,127 +5404,118 @@ document.addEventListener('input', e=>{
 });
 document.addEventListener('focusout', e=>{ if(e.target.id==='fu-q' && APP.fu) setTimeout(()=>{ if(document.activeElement && document.activeElement.id!=='fu-q') APP.fu._qPos = null; }, 0); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && APP.fuDlg){ APP.fuDlg = null; fuDlgRender(); } });
+/* ================= 業務總覽（2026-10-31 改版）=================
+   - 業務＋行政同一種卡片，照「本月累計獎金」排名（每月 1 號歸零）；小江不放在這裡（另外做）
+   - 獎金大家都看得到：業務／行政讀不到別人的獎金明細，改讀 appdata/bonusBoard（只有每人本月獎金總額），
+     這份由核心的畫面自動算好寫進去（獎金本來就是核心存案件時產生的）
+   - 牌位＝頭像外框，看本月獎金（設定 → 業績牌位門檻）；進度條＝離下一級還差多少
+   - 本月撥款看這個月；對保中、等撥款不分月份（月底對保可能下個月才撥款）
+   - 進入頁面那一次：卡片依序浮上、數字從 0 跳到實際數字 */
+const SO_TIERS = () => { const cs = APP.data.caseSettings || {};
+  return [['bronze', cs.rankBronze], ['silver', cs.rankSilver], ['gold', cs.rankGold], ['diamond', cs.rankDiamond]]
+    .map(([k, v])=>({ key:k, th:Number(v)||0 })).filter(t=>t.th > 0).sort((a, b)=>a.th - b.th); };
+function soTierInfo(v){
+  const ts = SO_TIERS(); let k = -1;
+  ts.forEach((t, i)=>{ if(v >= t.th) k = i; });
+  const cur = k >= 0 ? ts[k] : null, nx = ts[k + 1] || null, base = cur ? cur.th : 0;
+  const pct = nx ? Math.max(0, Math.min(100, Math.floor((v - base) / (nx.th - base) * 100))) : (ts.length ? 100 : 0);
+  return { cur, nx, pct, need: nx ? nx.th - v : 0, any: ts.length > 0 };
+}
+// 核心直接從獎金明細算；業務／行政讀 bonusBoard（不是這個月的就當 0，每月 1 號歸零）
+function soMonthBonusMap(){
+  if(isCore()){
+    const map = {};
+    getCleanBonusLedger().forEach(e=>{
+      if(!e.staffName || monthKey(e.date)!==nowMonthKey) return;
+      map[e.staffName] = (map[e.staffName]||0) + (Number(e.businessBonus)||0) + (Number(e.xiaojiangBonus)||0);
+    });
+    return map;
+  }
+  const b = APP.data.bonusBoard;
+  return (b && b.month===nowMonthKey && b.totals) ? b.totals : {};
+}
+// 核心：資料都到齊後，把每人本月獎金總額寫進 bonusBoard（有變才寫）
+const SO_LOADED = { ledger:false, casesAd:false, casesChannel:false, board:false };
+let soSyncTimer = null;
+function soSyncBonusBoard(){
+  if(!isCore() || !SO_LOADED.ledger || !SO_LOADED.casesAd || !SO_LOADED.casesChannel || !SO_LOADED.board) return;
+  clearTimeout(soSyncTimer);
+  soSyncTimer = setTimeout(()=>{
+    const totals = soMonthBonusMap(), cur = APP.data.bonusBoard || {};
+    const norm = o => JSON.stringify(Object.keys(o||{}).sort().map(k=>[k, Math.round(Number(o[k])||0)]).filter(x=>x[1]!==0));
+    if(cur.month===nowMonthKey && norm(cur.totals)===norm(totals)) return;
+    const clean = {}; Object.keys(totals).forEach(k=>{ const v = Math.round(Number(totals[k])||0); if(v) clean[k] = v; });
+    setDoc(doc(db,'appdata','bonusBoard'), { month:nowMonthKey, totals:clean, _at:new Date().toISOString() }).catch(()=>{});
+  }, 1500);
+}
+const SO_CHAT_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>';
 function staffOverviewHTML(){
   const viewerIsCore = isCore();
-  const names = Array.from(new Set(APP.users.filter(u=>u.staffName).map(u=>u.staffName))).sort();
   const today = todayStr();
-  const cards = names.map(name=>{
-    const u = APP.users.find(x=>x.staffName===name);
-    const ad = APP.data.progressAd.filter(c=>c.staff===name);
-    const ch = APP.data.progressChannel.filter(c=>c.staff===name);
-    const all = [...ad, ...ch];
-    const pending = all.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
+  const bonusMap = soMonthBonusMap();
+  const seen = new Set();
+  const people = APP.users.filter(u=>u.staffName && !u.isXiaojiang && !seen.has(u.staffName) && seen.add(u.staffName)).map(u=>{
+    const name = u.staffName;
+    const all = [...APP.data.progressAd.filter(c=>c.staff===name), ...APP.data.progressChannel.filter(c=>c.staff===name)];
     const done = all.filter(c=>STATUS_DONE.includes(c.status) && monthKey(c.disbursedDate || c.date)===nowMonthKey).length;
-    const needDocsCount = all.filter(c=>c.status==='補資料').length;
-    const guarantorCheckCount = all.filter(c=>c.status==='對保').length;
-    const waitingDisbursementCount = all.filter(c=>c.status==='等撥款').length;
-    const roleLabel = u.role==='staffAdmin' ? '行政' : '業務';
-    const onLeaveToday = APP.data.attendance.some(a=>a.staffName===name && a.date===today);
-    const disp = displayNameFor(u.id, name);
-
-    const adThisMonth = APP.data.casesAd.filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey);
-    const chThisMonth = APP.data.casesChannel.filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey);
-    const profitContribution = sum(adThisMonth.map(c=>({amount:c.companyProfit}))) + sum(chThisMonth.map(c=>({amount:c.companyProfit})));
-    const rankTier = computeRankTier(profitContribution);
-
-    const mutedTextColor = rankTier ? rankTier.mutedColor : 'var(--muted)';
-    const financeBlockHtml = viewerIsCore ? (function(){
-      const bonusThisMonth = sum(getCleanBonusLedger().filter(e=>e.staffName===name && monthKey(e.date)===nowMonthKey)
-        .map(e=>({amount:(Number(e.businessBonus)||0)+(Number(e.xiaojiangBonus)||0)})));
-      const prospectCount = APP.data.personalProgress.filter(c=>c.staffName===name && monthKey(c.date)===nowMonthKey).length;
-      return `<div style="border-top:1px solid ${rankTier?rankTier.border+'55':'var(--border)'};padding-top:10px;">
-        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:${mutedTextColor};">本月利潤貢獻</div><div class="val" style="width:auto;font-weight:700;color:${rankTier?rankTier.titleColor:'var(--ink)'};">${money(profitContribution)}</div></div>
-        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:${mutedTextColor};">本月獎金累計</div><div class="val" style="width:auto;font-weight:700;color:var(--green);">${money(bonusThisMonth)}</div></div>
-        <div class="cat-row" style="padding:4px 0;"><div class="name" style="width:auto;flex:1;font-size:12.5px;color:${mutedTextColor};">開發中客戶</div><div class="val" style="width:auto;font-weight:700;color:${rankTier?rankTier.titleColor:'var(--ink)'};">${prospectCount} 位</div></div>
-      </div>`;
-    })() : '';
-
-    const cardStyleAttr = rankTier
-      ? `border:2px solid ${rankTier.border};background:${rankTier.cardBg};${viewerIsCore?'cursor:pointer;':''}`
-      : (viewerIsCore?`cursor:pointer;`:``);
-
-    const dmUnread = (APP.data.directMessages||[]).filter(m=>m.senderUid===u.id && m.recipientUid===APP.user.uid && !m.read).length;
-
-    return `<div class="card${rankTier&&rankTier.cssClass?' '+rankTier.cssClass:''}"${cardStyleAttr?` style="${cardStyleAttr}"`:''}${viewerIsCore?` data-action="enter-staff-room" data-name="${escAttr(name)}" data-uid="${escAttr(u.id)}"`:''}>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          ${avatarHtml(u.id, disp, 40)}
-          <div>
-            <h3 style="margin:0;line-height:1.2;${rankTier?`color:${rankTier.titleColor};`:''}">${escHtml(disp)}</h3>
-            ${disp!==name?`<div style="font-size:11px;color:${mutedTextColor};">系統名稱：${escHtml(name)}</div>`:''}
-          </div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          ${rankTier?`<span style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;background:${rankTier.border};color:#fff;font-size:11px;font-weight:700;">${rankTier.icon} ${rankTier.label}</span>`:''}
-          ${onLeaveToday?`<span class="badge expense">今日請假</span>`:''}
-          <span class="badge pending">${roleLabel}</span>
-          <button type="button" class="icon-btn" style="position:relative;padding:5px 7px;" data-action="open-chat-thread" data-peer="${u.id}" title="跟${escHtml(disp)}聊天">💬${dmUnread>0?`<span style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;">${dmUnread>9?'9+':dmUnread}</span>`:''}</button>
-        </div>
+    const guar = all.filter(c=>c.status==='對保').length;
+    const wait = all.filter(c=>c.status==='等撥款').length;
+    const profit = viewerIsCore ? sum([...APP.data.casesAd, ...APP.data.casesChannel].filter(c=>c.staff===name && monthKey(c.date)===nowMonthKey).map(c=>({amount:c.companyProfit}))) : 0;
+    return { u, name, disp:displayNameFor(u.id, name), bonus:Number(bonusMap[name])||0, done, guar, wait, profit,
+      leave:APP.data.attendance.some(a=>a.staffName===name && a.date===today),
+      unread:(APP.data.directMessages||[]).filter(m=>m.senderUid===u.id && m.recipientUid===APP.user.uid && !m.read).length,
+      role:u.role==='staffAdmin' ? '行政' : '業務' };
+  }).sort((a, b)=>b.bonus - a.bonus || b.done - a.done || plZh.compare(a.name, b.name));
+  const n = (v, money) => `<bdi data-so-n="${Math.round(v)}"${money ? ' data-so-m' : ''}>${money ? money_(v) : Math.round(v)}</bdi>`;
+  function money_(v){ return money(v); }
+  const card = (p, i) => {
+    const t = soTierInfo(p.bonus), on = Math.round(t.pct / 20), z = v => v ? '' : ' z';
+    return `<div class="so-card${viewerIsCore ? ' click' : ''}${i===0 && p.bonus>0 ? ' top' : ''}" style="animation-delay:${i*0.05}s"${viewerIsCore ? ` data-action="enter-staff-room" data-name="${escAttr(p.name)}" data-uid="${escAttr(p.u.id)}"` : ''}>
+      <span class="so-rank${i<3 ? ' m' : ''}">${String(i+1).padStart(2,'0')}</span><span class="so-rk2">No.${i+1}</span>
+      <div class="so-body">
+        <div class="so-avw${t.cur ? ' so-f-'+t.cur.key : ''}">${avatarHtml(p.u.id, p.disp, 78)}<span class="so-dot${p.leave ? ' off' : ''}" title="${p.leave ? '今天請假' : '今天有上班'}"></span></div>
+        <div class="so-nm">${escHtml(p.disp)}${p.leave ? '<span class="so-leave">請假</span>' : ''}</div>
+        <div class="so-role">${p.role}</div>
+        <div class="so-bonus">${n(p.bonus, true)}<small>本月累計獎金</small></div>
+        ${t.any ? `<div class="so-prog"><span class="so-segs">${[0,1,2,3,4].map(k=>`<span class="${k<on ? 'on' : ''}" style="animation-delay:${0.25 + i*0.05 + k*0.12}s"></span>`).join('')}</span><em>${n(t.pct)}%</em></div>
+        <div class="so-need">${t.nx ? `離下一級還差 <b>${n(t.need, true)}</b>` : '已達最高等級'}</div>` : ''}
+        <div class="so-three"><span class="d${z(p.done)}">本月撥款<b>${n(p.done)}</b></span><span class="g${z(p.guar)}">對保中<b>${n(p.guar)}</b></span><span class="w${z(p.wait)}">等撥款<b>${n(p.wait)}</b></span></div>
+        ${viewerIsCore ? `<div class="so-profit"><span>本月利潤</span><b>${n(p.profit, true)}</b></div>` : ''}
       </div>
-      <div style="border:1.5px solid #DC2626;background:rgba(255,255,255,.5);border-radius:12px;padding:8px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:12px;color:#DC2626;font-weight:700;">撥款完成</div>
-        <div style="font-size:26px;font-weight:800;color:#DC2626;line-height:1;">${done}<span style="font-size:13px;font-weight:600;margin-left:3px;">件</span></div>
-      </div>
-      <div style="border:1.5px solid var(--amber);background:rgba(255,255,255,.5);border-radius:12px;padding:8px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:12px;color:var(--amber);font-weight:700;">對保中</div>
-        <div style="font-size:26px;font-weight:800;color:var(--amber);line-height:1;">${guarantorCheckCount}<span style="font-size:13px;font-weight:600;margin-left:3px;">件</span></div>
-      </div>
-      <div class="grid grid-3" style="gap:6px;margin-bottom:10px;">
-        <div style="border:1px solid ${rankTier?rankTier.border+'55':'var(--border)'};background:rgba(255,255,255,.4);border-radius:8px;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
-          <div class="stat-label" style="font-size:10px;color:${mutedTextColor};">處理中</div>
-          <div class="stat-value blue" style="font-size:12.5px;">${pending}</div>
-        </div>
-        <div style="border:1px solid ${rankTier?rankTier.border+'55':'var(--border)'};background:rgba(255,255,255,.4);border-radius:8px;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
-          <div class="stat-label" style="font-size:10px;color:${mutedTextColor};">補資料中</div>
-          <div class="stat-value" style="font-size:12.5px;color:var(--amber);">${needDocsCount}</div>
-        </div>
-        <div style="border:1px solid ${rankTier?rankTier.border+'55':'var(--border)'};background:rgba(255,255,255,.4);border-radius:8px;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;">
-          <div class="stat-label" style="font-size:10px;color:${mutedTextColor};">等撥款</div>
-          <div class="stat-value" style="font-size:12.5px;color:#7c3aed;">${waitingDisbursementCount}</div>
-        </div>
-      </div>
-      ${financeBlockHtml}
+      <div class="so-foot"><button type="button" class="so-ch" data-action="open-chat-thread" data-peer="${escAttr(p.u.id)}" title="跟${escAttr(p.disp)}聊天">${SO_CHAT_SVG} 聊天${p.unread ? `<i>${p.unread>9 ? '9+' : p.unread}</i>` : ''}</button></div>
     </div>`;
-  }).join('');
-
-  const xjUser = APP.users.find(u=>u.isXiaojiang);
-  const xjName = APP.data.caseSettings.xiaojiangName || '小江';
-  const isXjViewer = !!(xjUser && APP.user && APP.user.uid===xjUser.id);
-  const unreadCount = viewerIsCore ? (APP.data.xiaojiangInbox||[]).filter(m=>!m.senderIsXiaojiang && !m.readByXiaojiang).length : 0;
-  const xjCard = xjUser ? `<div class="card hogwarts-card" style="color:#fff;border:none;">
-      <div class="hogwarts-smoke"></div>
-      <div class="hogwarts-glow-wash"></div>
-      <div class="hogwarts-aurora-ribbon"></div>
-      <div class="hogwarts-orb-glow"></div>
-      <div class="hogwarts-stars">
-        <span class="hogwarts-star" style="top:12%;left:18%;animation-delay:0s;"></span>
-        <span class="hogwarts-star" style="top:8%;left:68%;animation-delay:.6s;"></span>
-        <span class="hogwarts-star" style="top:20%;left:82%;animation-delay:1.3s;"></span>
-        <span class="hogwarts-star" style="top:6%;left:38%;animation-delay:1.9s;"></span>
-        <span class="hogwarts-star" style="top:16%;left:55%;animation-delay:.3s;"></span>
-        <span class="hogwarts-star" style="top:24%;left:10%;animation-delay:2.2s;"></span>
-        <span class="hogwarts-star" style="top:10%;left:92%;animation-delay:1.1s;"></span>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-        <div style="border-radius:50%;box-shadow:0 0 14px rgba(139,92,246,.5);">${avatarHtml(xjUser.id, displayNameFor(xjUser.id, xjName), 40)}</div>
-        <div>
-          <h3 style="margin:0;color:#F3EEFF;">${escHtml(displayNameFor(xjUser.id, xjName))} 的房間</h3>
-          <div style="font-size:11px;color:rgba(216,196,255,.7);">ॐ संचय पत्राय नमः । संरक्षणाय स्वाहा ॥</div>
-        </div>
-      </div>
-      <p style="font-size:12.5px;color:rgba(243,238,255,.85);line-height:1.7;margin-bottom:0;">व्यापार-प्रशासन-प्रेषितानि गुह्य-कार्याणि अस्मिन् रहस्य-कक्षे गुप्तानि सन्ति । परन्तु सावधानम्! अत्र मायाबन्धः स्थापितः । चतुर्विंशति-होरासु पूर्णासु, मन्त्रः स्वयमेव सक्रियः भवति, सर्वं च निश्चिह्नं विलीयते ॥${unreadCount>0?` <b style="color:#fff;">（${unreadCount}）</b>`:''}</p>
-      <div class="hogwarts-btn-wrap" style="display:flex;flex-direction:column;gap:8px;align-items:center;">
-        ${isXjViewer
-          ? `<button type="button" class="hogwarts-btn-lg" data-action="nav" data-view="xiaojiangInbox">進入霍格華茲</button>`
-          : `<button type="button" class="hogwarts-btn-lg" data-action="open-xj-own-thread">跟${escHtml(xjName)}聊天</button>`}
-        ${(viewerIsCore && !isXjViewer) ? `<button type="button" data-action="nav" data-view="xiaojiangInbox" style="background:none;border:none;color:rgba(216,196,255,.8);font-size:11.5px;text-decoration:underline;cursor:pointer;">查看完整信箱</button>` : ''}
-      </div>
-    </div>` : '';
-
+  };
+  const tot = k => people.reduce((a, p)=>a + p[k], 0);
+  const tiles = `<div class="so-tile wide" style="--c:#F5C542"><span>本月獎金合計</span><b>${n(tot('bonus'), true)}</b></div>
+    <div class="so-tile" style="--c:#16A34A"><span>本月撥款</span><b>${n(tot('done'))}</b></div>
+    <div class="so-tile" style="--c:#D97706"><span>對保中</span><b>${n(tot('guar'))}</b></div>
+    <div class="so-tile" style="--c:#7C3AED"><span>等撥款</span><b>${n(tot('wait'))}</b></div>
+    ${viewerIsCore ? `<div class="so-tile wide" style="--c:#4F7CF7"><span>本月利潤</span><b>${n(tot('profit'), true)}</b></div>` : ''}`;
+  const anim = !APP._soShown;
   return `
-    <div class="page-header"><div><h1 class="page-title">業務總覽</h1><p class="page-sub">${viewerIsCore?'點選任一位業務／行政，直接進入他的房間查看與編輯':'這裡是全公司的業務／行政名單，只能查看，點「進入霍格華茲」可以傳資料給小江'}</p></div></div>
-    <div class="grid grid-3">${xjCard}${cards || `<div class="table-wrap" style="grid-column:1/-1;"><div class="empty">目前還沒有任何業務／行政設定對應姓名，請先到「帳號管理」設定</div></div>`}</div>
-  `;
+    <div class="page-header"><div><h1 class="page-title">業務總覽</h1><p class="page-sub">依本月累計獎金排名（每月 1 號重新算）${viewerIsCore ? '・點卡片進入他的房間' : ''}</p></div></div>
+    <div class="so-lay${anim ? ' so-anim' : ''}" id="so-root">
+      <div>
+        <div class="so-sub"><span class="t">全部 ${people.length} 位</span><span class="s">排序：<b>本月累計獎金</b></span></div>
+        <div class="so-grid">${people.map(card).join('') || `<div class="table-wrap so-empty"><div class="empty">目前還沒有任何業務／行政設定對應姓名，請先到「帳號管理」設定</div></div>`}</div>
+      </div>
+      <aside class="so-side"><div class="cap">全公司</div><h3>本月總計</h3><div class="so-tiles">${tiles}</div></aside>
+    </div>`;
+}
+// 畫好之後：第一次進入頁面才跳數字；離開頁面再回來會再跳一次
+function soAfterRender(){
+  if(APP.view!=='staffOverview'){ APP._soShown = false; return; }
+  if(APP._soShown) return;
+  APP._soShown = true;
+  const els = [...document.querySelectorAll('#so-root [data-so-n]')]; if(!els.length) return;
+  const t0 = performance.now(), D = 1200;
+  els.forEach(el=>{ el.textContent = el.hasAttribute('data-so-m') ? money(0) : '0'; });
+  const step = now => {
+    const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3);
+    els.forEach(el=>{ if(!el.isConnected) return; const v = Math.round(Number(el.dataset.soN) * e); el.textContent = el.hasAttribute('data-so-m') ? money(v) : String(v); });
+    if(k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
 }
 
 /* ================= CASES (業務案件) ================= */
