@@ -1459,7 +1459,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-02-01';
+const APP_BUILD = '2026-11-02-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2988,17 +2988,17 @@ function settingsHTML(){
         </div>
       </div>
       <div class="card" style="margin-top:16px;">
-        <div class="card-head-row"><h3>業績牌位門檻</h3><span class="hint">依「本月累計獎金」判定（每月 1 號重新算），業務總覽的頭像外框會依牌位變化，卡片上的進度條＝離下一級還差多少</span></div>
+        <div class="card-head-row"><h3>業績牌位門檻</h3><span class="hint">依「本月實收業績」（業務獎金＋小江／煌獎金＋公司利潤，扣掉通路實拿）判定（每月 1 號重新算），業務總覽的頭像外框會依牌位變化，卡片上的進度條＝離下一級還差多少</span></div>
         <form id="rank-settings-form">
           <div class="grid grid-2">
-            <label class="field"><span>01 青銅（本月累計獎金達）</span><input type="number" min="0" name="rankBronze" value="${cs.rankBronze||0}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>02 白銀（本月累計獎金達）</span><input type="number" min="0" name="rankSilver" value="${cs.rankSilver||0}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>03 黃金（本月累計獎金達）</span><input type="number" min="0" name="rankGold" value="${cs.rankGold||0}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>04 白金（本月累計獎金達）</span><input type="number" min="0" name="rankPlatinum" value="${cs.rankPlatinum||0}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>05 鑽石（本月累計獎金達）</span><input type="number" min="0" name="rankDiamond" value="${cs.rankDiamond||0}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>06 大師（本月累計獎金達）</span><input type="number" min="0" name="rankMaster" value="${cs.rankMaster||0}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>07 宗師（本月累計獎金達）</span><input type="number" min="0" name="rankGrandmaster" value="${cs.rankGrandmaster||0}" ${isAdmin()?'':'disabled'}/></label>
-            <label class="field"><span>08 傳說（本月累計獎金達）</span><input type="number" min="0" name="rankLegend" value="${cs.rankLegend||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>01 青銅（本月實收業績達）</span><input type="number" min="0" name="rankBronze" value="${cs.rankBronze||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>02 白銀（本月實收業績達）</span><input type="number" min="0" name="rankSilver" value="${cs.rankSilver||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>03 黃金（本月實收業績達）</span><input type="number" min="0" name="rankGold" value="${cs.rankGold||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>04 白金（本月實收業績達）</span><input type="number" min="0" name="rankPlatinum" value="${cs.rankPlatinum||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>05 鑽石（本月實收業績達）</span><input type="number" min="0" name="rankDiamond" value="${cs.rankDiamond||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>06 大師（本月實收業績達）</span><input type="number" min="0" name="rankMaster" value="${cs.rankMaster||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>07 宗師（本月實收業績達）</span><input type="number" min="0" name="rankGrandmaster" value="${cs.rankGrandmaster||0}" ${isAdmin()?'':'disabled'}/></label>
+            <label class="field"><span>08 傳說（本月實收業績達）</span><input type="number" min="0" name="rankLegend" value="${cs.rankLegend||0}" ${isAdmin()?'':'disabled'}/></label>
           </div>
           ${isAdmin()?`<div class="modal-actions" style="justify-content:flex-start;"><button type="submit" class="btn primary">儲存</button></div>`:''}
         </form>
@@ -5422,7 +5422,7 @@ document.addEventListener('input', e=>{
 document.addEventListener('focusout', e=>{ if(e.target.id==='fu-q' && APP.fu) setTimeout(()=>{ if(document.activeElement && document.activeElement.id!=='fu-q') APP.fu._qPos = null; }, 0); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && APP.fuDlg){ APP.fuDlg = null; fuDlgRender(); } });
 /* ================= 業務總覽（2026-10-31 改版）=================
-   - 業務＋行政同一種卡片，照「本月累計獎金」排名（每月 1 號歸零）；小江不放在這裡（另外做）
+   - 業務＋行政同一種卡片，照「本月實收業績」排名（每月 1 號歸零，2026-11-02 前是累計獎金）；小江不放在這裡（另外做）
    - 獎金大家都看得到：業務／行政讀不到別人的獎金明細，改讀 appdata/bonusBoard（只有每人本月獎金總額），
      這份由核心的畫面自動算好寫進去（獎金本來就是核心存案件時產生的）
    - 牌位＝頭像外框，看本月獎金（設定 → 業績牌位門檻）；進度條＝離下一級還差多少
@@ -5438,18 +5438,20 @@ function soTierInfo(v){
   const pct = nx ? Math.max(0, Math.min(100, Math.floor((v - base) / (nx.th - base) * 100))) : (ts.length ? 100 : 0);
   return { cur, nx, pct, need: nx ? nx.th - v : 0, any: ts.length > 0 };
 }
-// 核心直接從獎金明細算；業務／行政讀 bonusBoard（不是這個月的就當 0，每月 1 號歸零）
+/* 本月實收業績（2026-11-02 起取代「本月累計獎金」）：照案件日期、算在案件的業務名下
+   廣告線＝業務獎金＋小江獎金＋公司利潤；通路線＝業務獎金＋煌獎金＋公司利潤（扣掉通路實拿）
+   核心直接從獲利報表算；業務／行政讀 bonusBoard（kind 不是 revenue 或不是這個月的就當 0） */
 function soMonthBonusMap(){
   if(isCore()){
-    const map = {};
-    getCleanBonusLedger().forEach(e=>{
-      if(!e.staffName || monthKey(e.date)!==nowMonthKey) return;
-      map[e.staffName] = (map[e.staffName]||0) + (Number(e.businessBonus)||0) + (Number(e.xiaojiangBonus)||0);
-    });
+    const map = {}, add = (name, v)=>{ if(name) map[name] = (map[name]||0) + v; };
+    APP.data.casesAd.forEach(c=>{ if(monthKey(c.date)!==nowMonthKey) return;
+      add(c.staff, (Number(c.businessBonus)||0) + (Number(c.xiaojiangBonus)||0) + (Number(c.companyProfit)||0)); });
+    APP.data.casesChannel.forEach(c=>{ if(monthKey(c.date)!==nowMonthKey) return;
+      add(c.staff, channelCaseBusinessBonus(c) + channelCaseHuangBonus(c) + (Number(c.companyProfit)||0)); });
     return map;
   }
   const b = APP.data.bonusBoard;
-  return (b && b.month===nowMonthKey && b.totals) ? b.totals : {};
+  return (b && b.kind==='revenue' && b.month===nowMonthKey && b.totals) ? b.totals : {};
 }
 // 核心：資料都到齊後，把每人本月獎金總額寫進 bonusBoard（有變才寫）
 const SO_LOADED = { ledger:false, casesAd:false, casesChannel:false, board:false };
@@ -5460,9 +5462,9 @@ function soSyncBonusBoard(){
   soSyncTimer = setTimeout(()=>{
     const totals = soMonthBonusMap(), cur = APP.data.bonusBoard || {};
     const norm = o => JSON.stringify(Object.keys(o||{}).sort().map(k=>[k, Math.round(Number(o[k])||0)]).filter(x=>x[1]!==0));
-    if(cur.month===nowMonthKey && norm(cur.totals)===norm(totals)) return;
+    if(cur.kind==='revenue' && cur.month===nowMonthKey && norm(cur.totals)===norm(totals)) return;
     const clean = {}; Object.keys(totals).forEach(k=>{ const v = Math.round(Number(totals[k])||0); if(v) clean[k] = v; });
-    setDoc(doc(db,'appdata','bonusBoard'), { month:nowMonthKey, totals:clean, _at:new Date().toISOString() }).catch(()=>{});
+    setDoc(doc(db,'appdata','bonusBoard'), { kind:'revenue', month:nowMonthKey, totals:clean, _at:new Date().toISOString() }).catch(()=>{});
   }, 1500);
 }
 /* ---- 上線狀態（2026-10-31）：開著系統的人每 90 秒回報一次，超過 200 秒沒回報＝未上線（紅燈）；關分頁時馬上標未上線 ---- */
@@ -5521,7 +5523,7 @@ function staffOverviewHTML(){
         <div class="so-avw${t.cur ? ' has-fr' : ''}">${avatarHtml(p.u.id, p.disp, 78)}${t.cur ? `<img class="so-fr" src="frames/frame-${t.cur.key}.v1.webp" alt="" draggable="false" onerror="this.remove()">` : ''}</div>
         <div class="so-nm">${escHtml(p.disp)}${p.leave ? '<span class="so-leave">請假</span>' : ''}</div>
         <div class="so-role">${p.role}</div>
-        <div class="so-bonus">${n(p.bonus, true)}<small>本月累計獎金</small></div>
+        <div class="so-bonus">${n(p.bonus, true)}<small>本月實收業績</small></div>
         ${t.any ? `<div class="so-prog"><span class="so-segs">${[0,1,2,3,4].map(k=>`<span class="${k<on ? 'on' : ''}" style="animation-delay:${0.25 + i*0.05 + k*0.12}s"></span>`).join('')}</span><em>${n(t.pct)}%</em></div>
         <div class="so-need">${t.nx ? `離下一級還差 <b>${n(t.need, true)}</b>` : '已達最高等級'}</div>` : ''}
         <div class="so-three"><span class="d${z(p.done)}">本月撥款<b>${n(p.done)}</b></span><span class="g${z(p.guar)}">對保中<b>${n(p.guar)}</b></span><span class="w${z(p.wait)}">等撥款<b>${n(p.wait)}</b></span></div>
@@ -5531,17 +5533,17 @@ function staffOverviewHTML(){
     </div>`;
   };
   const tot = k => people.reduce((a, p)=>a + p[k], 0);
-  const tiles = `${viewerIsCore ? `<div class="so-tile wide" style="--c:#F5C542"><span>本月獎金合計</span><b>${n(tot('bonus'), true)}</b></div>` : ''}
+  const tiles = `${viewerIsCore ? `<div class="so-tile wide" style="--c:#F5C542"><span>本月實收業績合計</span><b>${n(tot('bonus'), true)}</b></div>` : ''}
     <div class="so-tile" style="--c:#16A34A"><span>本月撥款</span><b>${n(tot('done'))}</b></div>
     <div class="so-tile" style="--c:#D97706"><span>對保中</span><b>${n(tot('guar'))}</b></div>
     <div class="so-tile" style="--c:#7C3AED"><span>等撥款</span><b>${n(tot('wait'))}</b></div>
     ${viewerIsCore ? `<div class="so-tile wide" style="--c:#4F7CF7"><span>本月利潤</span><b>${n(tot('profit'), true)}</b></div>` : ''}`;
   const anim = !APP._soShown;
   return `
-    <div class="page-header"><div><h1 class="page-title">業務總覽</h1><p class="page-sub">依本月累計獎金排名（每月 1 號重新算）${viewerIsCore ? '・點卡片進入他的房間' : ''}</p></div></div>
+    <div class="page-header"><div><h1 class="page-title">業務總覽</h1><p class="page-sub">依本月實收業績排名（每月 1 號重新算）${viewerIsCore ? '・點卡片進入他的房間' : ''}</p></div></div>
     <div class="so-lay${anim ? ' so-anim' : ''}" id="so-root">
       <div>
-        <div class="so-sub"><span class="t">全部 ${people.length} 位</span><span class="s">排序：<b>本月累計獎金</b></span></div>
+        <div class="so-sub"><span class="t">全部 ${people.length} 位</span><span class="s">排序：<b>本月實收業績</b></span></div>
         <div class="so-grid">${people.map(card).join('') || `<div class="table-wrap so-empty"><div class="empty">目前還沒有任何業務／行政設定對應姓名，請先到「帳號管理」設定</div></div>`}</div>
       </div>
       <aside class="so-side"><div class="cap">全公司</div><h3>本月總計</h3><div class="so-tiles">${tiles}</div></aside>
