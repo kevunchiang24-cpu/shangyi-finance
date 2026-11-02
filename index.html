@@ -306,6 +306,21 @@
   .cs-yr td{background:#F7F8FC;color:var(--muted);font-weight:700;font-size:12.5px;padding:6px 12px;}
   .cs-more{justify-self:center;border:1px solid var(--border);background:#fff;border-radius:99px;padding:8px 18px;color:var(--navy,#2F5BEA);font-weight:700;cursor:pointer;font-size:13.5px;font-family:inherit;}
   .cs-more:hover{background:#EAF0FF;}
+  .cs-loss{border-bottom:1px solid #F0F2F7;padding:7px 0;}
+  .cs-loss .hd{display:flex;justify-content:space-between;gap:12px;font-size:14.5px;align-items:baseline;}
+  .cs-loss .hd span{color:var(--muted);} .cs-loss .hd b{color:var(--red);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .cs-loss .hd button{border:0;background:none;color:var(--navy);font-weight:600;font-size:12.5px;cursor:pointer;padding:0 0 0 6px;font-family:inherit;}
+  .cs-loss .ls{margin:6px 0 2px;background:#FFF6F6;border:1px solid #F8DADA;border-radius:9px;padding:4px 10px;}
+  .cs-loss .li{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:6px 0;font-size:13px;border-bottom:1px dashed #F1D5D5;}
+  .cs-loss .li:last-of-type{border-bottom:0;}
+  .cs-loss .li .d{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px;}
+  .cs-loss .li .w b{font-weight:700;} .cs-loss .li .w small{display:block;color:var(--muted);font-size:12px;}
+  .cs-loss .li .a{color:var(--red);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .cs-loss .li .x{display:flex;gap:2px;opacity:.6;} .cs-loss .li:hover .x{opacity:1;}
+  .cs-loss .li .x button{border:0;background:none;cursor:pointer;color:var(--muted);font-size:12px;padding:3px 6px;border-radius:6px;font-family:inherit;} .cs-loss .li .x button:hover{background:#fff;color:var(--ink);}
+  .cs-loss .add{display:inline-flex;align-items:center;gap:4px;border:1px dashed #E6A3A3;background:#fff;color:#C0392B;border-radius:8px;padding:5px 10px;font-weight:600;font-size:12.5px;cursor:pointer;margin:6px 0 4px;font-family:inherit;}
+  .cs-loss .add:hover{background:#FFF0F0;}
+  .cs-loss .empty{color:var(--muted);font-size:12.5px;padding:2px 0;}
   @media (max-width:760px){
     .cs-root .page-header{padding-right:0;}
     .cs-root .table-wrap:has(+ .cs-cards){display:none;}
@@ -1444,7 +1459,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-10-31-06';
+const APP_BUILD = '2026-11-02-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -8516,7 +8531,7 @@ function exportCasesYear(year){
     日期:c.date, 客戶:c.customer, 方案:c.plan, 業務:c.staff, 來源:c.source, 通路名稱:c.referrer, 扣除成本後:c.afterCost, 業務獎金:channelCaseBusinessBonus(c), 通路實拿:channelCaseChannelTake(c), 煌獎金:channelCaseHuangBonus(c), 公司利潤:c.companyProfit, 備註:c.note
   }));
   const rowsSpend = APP.data.adSpend.filter(a=>a.month && a.month.startsWith(year)).map(a=>({
-    月份:a.month, 投放金額:a.spend, 私訊數:a.messages, 送件數:a.submitted, 核准數:a.approved, 備註:a.note
+    月份:a.month, 投放金額:a.spend, 客戶賠錢:adLossTotal(a), 客戶賠錢明細:(a.losses||[]).map(x=>`${x.date} ${x.customer} ${x.amount}${x.reason?'（'+x.reason+'）':''}`).join('；'), 私訊數:a.messages, 送件數:a.submitted, 核准數:a.approved, 備註:a.note
   }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsAd.length?rowsAd:[{提示:'該年度無資料'}]), '廣告線獲利');
@@ -9822,7 +9837,10 @@ function computeFixedCost(mk){
   return sum(list);
 }
 /* ---- 公司月淨利模型：跟廣告支出報表用同一套公式，讓總覽的「當月結餘」跟獲利報表的「全公司最終淨利」永遠是同一個數字，
-   不會再各自算出不一樣的結果。公式：(廣告案件利潤－固定成本－廣告投放金額－投手獎金) + 通路案件利潤 ---- */
+   不會再各自算出不一樣的結果。公式：(廣告案件利潤－固定成本－廣告投放金額－客戶賠錢－投手獎金) + 通路案件利潤 ---- */
+/* 廣告線額外支出「客戶賠錢」（2026-11-02 使用者要求加）：一筆一筆記在該月 adSpend 紀錄的 losses，
+   在投手月獎金之前扣（投手 5% 跟著變少）。沒有 losses 的月份＝0，舊月份數字不變。 */
+function adLossTotal(rec){ return rec && Array.isArray(rec.losses) ? rec.losses.reduce((t,x)=>t + (Number(x.amount)||0), 0) : 0; }
 function computeCompanyFinalNet(mk){
   const cs = APP.data.caseSettings;
   const adCasesInMonth = APP.data.casesAd.filter(c=>monthKey(c.date)===mk);
@@ -9831,8 +9849,9 @@ function computeCompanyFinalNet(mk){
   const chProfit = sum(chCasesInMonth.map(c=>({amount:c.companyProfit})));
   const adSpendRec = APP.data.adSpend.find(a=>a.month===mk);
   const spend = adSpendRec ? Number(adSpendRec.spend||0) : 0;
+  const loss = adLossTotal(adSpendRec);
   const fixedCostThisMonth = computeFixedCost(mk);
-  const adTotalNet = adRevenue - fixedCostThisMonth - spend;
+  const adTotalNet = adRevenue - fixedCostThisMonth - spend - loss;
   const pilotBonus = Math.max(0, adTotalNet) * cs.pilotBonusRate;
   const adFinalNet = adTotalNet - pilotBonus;
   return adFinalNet + chProfit;
@@ -9888,21 +9907,47 @@ function csSpendCalc(a){
   const adNetBeforeFixed = adRevenue - spend;
   const roi = spend===0 ? 0 : (adNetBeforeFixed - spend) / spend;
   const fixedCostThisMonth = computeFixedCost(a.month);
-  const adTotalNet = adRevenue - fixedCostThisMonth - spend;
+  const loss = adLossTotal(a);
+  const adTotalNet = adRevenue - fixedCostThisMonth - spend - loss;
   const pilotBonus = Math.max(0, adTotalNet) * cs.pilotBonusRate;
   const adFinalNet = adTotalNet - pilotBonus;
   const companyFinalNet = computeCompanyFinalNet(a.month);
   const cpc = a.messages ? (spend/Number(a.messages)) : 0;
   const cpa = a.approved ? (spend/Number(a.approved)) : 0;
   const approveRate = a.submitted ? (Number(a.approved||0)/Number(a.submitted)) : 0;
-  return { adRevenue, chProfit, spend, roi, fixedCostThisMonth, adTotalNet, pilotBonus, adFinalNet, companyFinalNet, cpc, cpa, approveRate };
+  return { adRevenue, chProfit, spend, loss, roi, fixedCostThisMonth, adTotalNet, pilotBonus, adFinalNet, companyFinalNet, cpc, cpa, approveRate };
+}
+/* 客戶賠錢：廣告線「扣 廣告投放金額」下面那一行＋可展開的明細 */
+function csLossHTML(a, v, editable){
+  const L = (Array.isArray(a.losses) ? a.losses : []).slice().sort((x,y)=>String(x.date||'').localeCompare(String(y.date||'')));
+  const open = APP.csLossOpen !== false;
+  const rows = L.map(x=>`<div class="li"><span class="d">${escHtml(String(x.date||'').slice(5).replace('-','/'))}</span><span class="w"><b>${escHtml(x.customer||'—')}</b>${x.reason ? `<small>${escHtml(x.reason)}</small>` : ''}</span><span class="a">－${money(x.amount)}</span>${editable ? `<span class="x"><button type="button" data-action="edit-adloss" data-id="${escAttr(a.id)}" data-lid="${escAttr(x.id)}">修改</button><button type="button" data-action="delete-adloss" data-id="${escAttr(a.id)}" data-lid="${escAttr(x.id)}">刪除</button></span>` : '<span></span>'}</div>`).join('');
+  const show = L.length ? open : editable;
+  return `<div class="cs-loss"><div class="hd"><span>扣 客戶賠錢${L.length ? `（${L.length} 筆）<button type="button" data-cs-losstg>${open ? '收起 ▴' : '明細 ▾'}</button>` : ''}</span><b data-sp="loss">${v.loss ? '－'+money(v.loss) : '—'}</b></div>${show ? `<div class="ls">${rows || '<div class="empty">這個月沒有客戶賠錢</div>'}${editable ? `<button type="button" class="add" data-action="open-adloss-modal" data-id="${escAttr(a.id)}">＋ 記一筆客戶賠錢</button>` : ''}</div>` : ''}</div>`;
+}
+function openAdLossModal(rec, item){
+  const x = item || { date: todayStr().slice(0,7)===rec.month ? todayStr() : rec.month+'-01', amount:'', customer:'', reason:'' };
+  openModal(item ? '修改客戶賠錢' : '記一筆客戶賠錢', `
+    <p style="margin:0 0 12px;font-size:12.5px;color:var(--muted);line-height:1.6;">記在 ${escHtml(rec.month)} 的廣告線，會從廣告總淨利扣掉，投手月獎金跟著重算。</p>
+    <label class="field"><span>日期</span><input type="date" name="date" value="${escAttr(x.date)}" required/></label>
+    <label class="field"><span>金額</span><input type="number" name="amount" min="1" value="${escAttr(x.amount)}" required/></label>
+    <label class="field"><span>客戶</span><input type="text" name="customer" value="${escAttr(x.customer)}" required/></label>
+    <label class="field"><span>原因</span><textarea name="reason">${escHtml(x.reason||'')}</textarea></label>
+  `, 'adloss-form', (data)=>{
+    const v = { date:data.date, amount:Number(data.amount)||0, customer:String(data.customer||'').trim(), reason:String(data.reason||'').trim() };
+    if(!Array.isArray(rec.losses)) rec.losses = [];
+    if(item) Object.assign(item, v); else rec.losses.push({ id:uid(), ...v });
+    Object.assign(rec, stamp({}));
+    APP.csLossOpen = true;
+    saveAdSpend();
+  });
 }
 function adSpendView(){
   const editable = canEdit();
   const cs = APP.data.caseSettings;
   const list = APP.data.adSpend.slice().sort((x,y)=>String(y.month||'').localeCompare(String(x.month||'')));
   const rate = (cs.pilotBonusRate*100).toFixed(0);
-  const hint = `房租＋固定人事成本，由廣告線全額吸收，<b>自動抓收支明細裡當月「房租水電」＋「薪資支出」的實際加總</b>；廣告投手月獎金 ＝（廣告線案件利潤加總 − 固定成本 − 廣告投放金額）× ${rate}%，於每月 5 號發放，此區塊公式固定不開放手動調整。`;
+  const hint = `房租＋固定人事成本，由廣告線全額吸收，<b>自動抓收支明細裡當月「房租水電」＋「薪資支出」的實際加總</b>；<b>客戶賠錢</b>是廣告線的額外支出，一筆一筆記，從廣告總淨利扣掉；廣告投手月獎金 ＝（廣告線案件利潤加總 − 固定成本 − 廣告投放金額 − 客戶賠錢）× ${rate}%，於每月 5 號發放，此區塊公式固定不開放手動調整。`;
   const addBtn = editable ? `<button class="btn primary" data-action="open-adspend-modal">＋ 新增月份資料</button>` : '';
   if(list.length===0) return `<div class="cs-sptop"><span class="cs-sp"></span>${addBtn}</div><details class="cs-hint"><summary>公式怎麼算</summary><p>${hint}</p></details><div class="table-wrap"><div class="empty">尚無資料</div></div>`;
   let i = list.findIndex(a=>a.id===APP.csSpendId); if(i<0) i = 0;
@@ -9924,7 +9969,7 @@ function adSpendView(){
       <span class="cs-sp"></span>${editable ? `<button class="btn ghost" data-action="edit-adspend" data-id="${a.id}">編輯這個月</button>` : ''}${addBtn}</div>
     <div class="cs-hero"><div class="cs-big"><span class="k">${label(a.month)}・全公司最終淨利</span><b data-sp="companyFinalNet" class="${cls(v.companyFinalNet)}">${money(v.companyFinalNet)}</b>${diff('companyFinalNet')}</div>
       <div class="cs-mini"><div><span>廣告線最終淨利</span><b class="${cls(v.adFinalNet)}">${money(v.adFinalNet)}</b>${diff('adFinalNet')}</div><div><span>通路線案件利潤</span><b>${money(v.chProfit)}</b>${diff('chProfit')}</div><div><span>投放金額</span><b data-sp="spend">${money(a.spend)}</b>${diff('spend', true)}</div></div></div>
-    <div class="cs-paybar"><span class="k">${mlab(a.month)}投手月獎金・要發</span><b>${money(v.pilotBonus)}</b><span class="c">每月 5 號發放・（廣告線案件利潤 − 固定成本 − 投放金額）× ${rate}%</span></div>
+    <div class="cs-paybar"><span class="k">${mlab(a.month)}投手月獎金・要發</span><b>${money(v.pilotBonus)}</b><span class="c">每月 5 號發放・（廣告線案件利潤 − 固定成本 − 投放金額 − 客戶賠錢）× ${rate}%</span></div>
     <div class="cs-spgrid">
       <section class="cs-panel"><h2>淨利怎麼來的</h2>
         <div class="cs-lines">
@@ -9932,11 +9977,12 @@ function adSpendView(){
           ${ln('案件利潤', v.adRevenue, '', 'adRevenue')}
           ${ln('扣 固定成本（房租水電＋薪資）', v.fixedCostThisMonth, 'm', 'fixedCost', '－')}
           ${ln('扣 廣告投放金額', v.spend, 'm', 'spend2', '－')}
+          ${csLossHTML(a, v, editable)}
           ${ln('廣告總淨利', v.adTotalNet, 'sub', 'adTotalNet')}
           ${ln(`扣 投手月獎金（${rate}%，5 號發）`, v.pilotBonus, 'm', 'pilotBonus', '－')}
           ${ln('廣告線最終淨利', v.adFinalNet, 'res', 'adFinalNet')}
           </div></div>
-          <div class="cs-line ch"><h3>通路線<small>${money(v.chProfit)}</small></h3><div class="in"><div class="none">通路線沒有固定成本、投放、投手獎金要扣</div>${ln('通路線案件利潤', v.chProfit, 'res', 'chProfit')}</div></div>
+          <div class="cs-line ch"><h3>通路線<small>${money(v.chProfit)}</small></h3><div class="in"><div class="none">通路線沒有固定成本、投放、投手獎金、客戶賠錢要扣</div>${ln('通路線案件利潤', v.chProfit, 'res', 'chProfit')}</div></div>
         </div>
         <div class="cs-grp cs-tot"><div class="cs-eq"><span class="a">廣告線 ${money(v.adFinalNet)}</span> ＋ <span class="c">通路線 ${money(v.chProfit)}</span></div><div class="cs-rl big"><span>全公司最終淨利</span><b class="${cls(v.companyFinalNet)}">${money(v.companyFinalNet)}</b></div></div>
         <details class="cs-hint in"><summary>公式怎麼算</summary><p>${hint}</p></details>
@@ -9952,10 +9998,10 @@ function adSpendView(){
         </div>
       </section>
     </div>
-    <section class="cs-panel"><h2>歷月比較</h2><div class="table-wrap cs-hist"><table><thead><tr><th>月份</th><th>投放金額</th><th>核准數</th><th>投手月獎金</th><th>廣告線最終淨利</th><th>全公司最終淨利</th>${editable?'<th></th>':''}</tr></thead>
+    <section class="cs-panel"><h2>歷月比較</h2><div class="table-wrap cs-hist"><table><thead><tr><th>月份</th><th>投放金額</th><th>核准數</th><th>客戶賠錢</th><th>投手月獎金</th><th>廣告線最終淨利</th><th>全公司最終淨利</th>${editable?'<th></th>':''}</tr></thead>
       <tbody>${hist.map((x,j)=>{ const w = csSpendCalc(x), y = ym(x.month).y;
-        const yr = j===0 || ym(hist[j-1].month).y!==y ? `<tr class="cs-yr"><td colspan="${editable?7:6}">${escHtml(y)} 年</td></tr>` : '';
-        return `${yr}<tr class="${x.id===a.id?'on':''}" data-cs-spm="${escAttr(x.id)}" tabindex="0"><td><b>${mlab(x.month)}</b></td><td>${money(x.spend)}</td><td>${x.approved||'—'}</td><td>${money(w.pilotBonus)}</td><td class="${cls(w.adFinalNet)}">${money(w.adFinalNet)}</td><td class="${cls(w.companyFinalNet)}" style="font-weight:700;">${money(w.companyFinalNet)}</td>
+        const yr = j===0 || ym(hist[j-1].month).y!==y ? `<tr class="cs-yr"><td colspan="${editable?8:7}">${escHtml(y)} 年</td></tr>` : '';
+        return `${yr}<tr class="${x.id===a.id?'on':''}" data-cs-spm="${escAttr(x.id)}" tabindex="0"><td><b>${mlab(x.month)}</b></td><td>${money(x.spend)}</td><td>${x.approved||'—'}</td><td class="${w.loss?'amount-neg':''}">${w.loss ? '－'+money(w.loss) : '—'}</td><td>${money(w.pilotBonus)}</td><td class="${cls(w.adFinalNet)}">${money(w.adFinalNet)}</td><td class="${cls(w.companyFinalNet)}" style="font-weight:700;">${money(w.companyFinalNet)}</td>
         ${editable?`<td><div class="row-actions"><button class="icon-btn" data-action="edit-adspend" data-id="${x.id}">編輯</button><button class="icon-btn" data-action="delete-adspend" data-id="${x.id}">刪除</button></div></td>`:''}</tr>`; }).join('')}</tbody></table></div>
       ${list.length>6 ? `<button type="button" class="cs-more" data-cs-spall>${showAll ? '只看最近 6 個月' : `看全部 ${list.length} 個月`}</button>` : ''}</section>`;
 }
@@ -9976,6 +10022,7 @@ document.addEventListener('click', e=>{
 });
 document.addEventListener('change', e=>{ if(e.target.id==='cs-spsel'){ APP.csSpendId = e.target.value; render(); } });
 document.addEventListener('click', e=>{ if(e.target.closest('[data-cs-spall]')){ APP.csSpendAll = !APP.csSpendAll; render(); } });
+document.addEventListener('click', e=>{ if(e.target.closest('[data-cs-losstg]')){ APP.csLossOpen = !(APP.csLossOpen !== false); render(); } });
 document.addEventListener('keydown', e=>{ const m = e.target.closest && e.target.closest('tr[data-cs-spm]'); if(m && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); APP.csSpendId = m.dataset.csSpm; render(); } });
 
 /* ---------------- Modal system ---------------- */
@@ -11071,12 +11118,13 @@ function buildFinanceContext(){
     const chProfit = sum(chCasesInMonth.map(c=>({amount:c.companyProfit})));
     const spend = Number(a.spend||0);
     const fixedCostThisMonth = computeFixedCost(a.month);
-    const adTotalNet = adRevenue - fixedCostThisMonth - spend;
+    const loss = adLossTotal(a);
+    const adTotalNet = adRevenue - fixedCostThisMonth - spend - loss;
     const roi = spend===0?0:((adRevenue-spend)-spend)/spend;
     const cpc = a.messages? spend/Number(a.messages) : 0;
     const cpa = a.approved? spend/Number(a.approved) : 0;
     const approveRate = a.submitted? Number(a.approved||0)/Number(a.submitted) : 0;
-    return `${a.month}：投放金額 ${money(spend)}，私訊數 ${a.messages||0}，送件數 ${a.submitted||0}，核准數 ${a.approved||0}，核准率 ${(approveRate*100).toFixed(1)}%，CPC ${cpc?money(cpc):'—'}，CPA ${cpa?money(cpa):'—'}，ROI ${(roi*100).toFixed(1)}%，廣告線案件利潤 ${money(adRevenue)}，固定成本(房租+薪資) ${money(fixedCostThisMonth)}，廣告總淨利 ${money(adTotalNet)}，通路線利潤 ${money(chProfit)}`;
+    return `${a.month}：投放金額 ${money(spend)}，私訊數 ${a.messages||0}，送件數 ${a.submitted||0}，核准數 ${a.approved||0}，核准率 ${(approveRate*100).toFixed(1)}%，CPC ${cpc?money(cpc):'—'}，CPA ${cpa?money(cpa):'—'}，ROI ${(roi*100).toFixed(1)}%，廣告線案件利潤 ${money(adRevenue)}，固定成本(房租+薪資) ${money(fixedCostThisMonth)}${loss ? `，客戶賠錢 ${money(loss)}` : ''}，廣告總淨利 ${money(adTotalNet)}，通路線利潤 ${money(chProfit)}`;
   }).join('\n');
 
   return `公司：${APP.data.company.name || '（未設定）'}
@@ -11824,6 +11872,14 @@ document.addEventListener('click', (e)=>{
     if(action==='post-channel-case'){ postChannelCaseToTransactions(el.dataset.id); return; }
     if(action==='open-adspend-modal'){ openAdSpendModal(null); return; }
     if(action==='edit-adspend'){ const a = APP.data.adSpend.find(x=>x.id===el.dataset.id); if(a) openAdSpendModal(a); return; }
+    if(action==='open-adloss-modal'){ const a = APP.data.adSpend.find(x=>x.id===el.dataset.id); if(a) openAdLossModal(a, null); return; }
+    if(action==='edit-adloss'){ const a = APP.data.adSpend.find(x=>x.id===el.dataset.id), it = a && (a.losses||[]).find(x=>x.id===el.dataset.lid); if(it) openAdLossModal(a, it); return; }
+    if(action==='delete-adloss'){
+      const a = APP.data.adSpend.find(x=>x.id===el.dataset.id), it = a && (a.losses||[]).find(x=>x.id===el.dataset.lid); if(!it) return;
+      openConfirm(`確定要刪除「${it.customer||''}」這筆客戶賠錢（${money(it.amount)}）嗎？`, ()=>{
+        a.losses = a.losses.filter(x=>x.id!==it.id); Object.assign(a, stamp({})); saveAdSpend(); render();
+      }); return;
+    }
     if(action==='delete-adspend'){
       openConfirm('確定要刪除這筆月份資料嗎？', ()=>{
         APP.data.adSpend = APP.data.adSpend.filter(x=>x.id!==el.dataset.id); saveAdSpend();
@@ -12662,7 +12718,7 @@ document.addEventListener('submit', (e)=>{
     renderRoot();
     return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form','mark-followup-form','upload-cert-form','edit-attendance-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','adloss-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form','mark-followup-form','upload-cert-form','edit-attendance-form'].includes(e.target.id)){
     e.preventDefault();
     try{
       const fd = new FormData(e.target);
