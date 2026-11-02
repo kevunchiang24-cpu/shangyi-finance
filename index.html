@@ -371,7 +371,41 @@
   .so-ch{width:100%;border:0;background:transparent;font-family:inherit;cursor:pointer;color:#4F7CF7;border-radius:0 0 14px 14px;padding:11px 8px;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:5px;}
   .so-ch:hover{background:#EAF0FF;}
   .so-ch i{background:var(--red);color:#fff;font-style:normal;font-size:10px;font-weight:800;border-radius:999px;min-width:17px;height:17px;display:inline-grid;place-items:center;padding:0 4px;}
-  .so-side{background:#fff;border-radius:14px;padding:20px 18px;box-shadow:0 6px 18px rgba(40,50,90,.05);position:sticky;top:16px;}
+  .so-sidecol{display:grid;gap:14px;align-content:start;position:sticky;top:16px;margin-top:var(--so-top,58px);}
+  .so-side{background:#fff;border-radius:14px;padding:20px 18px;box-shadow:0 6px 18px rgba(40,50,90,.05);}
+  /* 小江卡片（2026-11-02，紫晶極光卡牌，素材 frames/xj-card.v2.webp）：業務點＝跟他聊天，小江自己點＝到個人空間 */
+  .so-xj{position:relative;width:100%;aspect-ratio:2/3;cursor:pointer;isolation:isolate;filter:drop-shadow(0 10px 22px rgba(90,40,170,.35));transition:transform .2s,filter .2s;}
+  .so-xj:hover{transform:translateY(-3px);filter:drop-shadow(0 16px 30px rgba(120,50,220,.5));}
+  .so-xj:focus-visible{outline:3px solid #C9A2FF;outline-offset:3px;}
+  .so-xjskyimg{position:absolute;inset:8.5% 8.5% 9.2%;width:83%;height:82.3%;object-fit:cover;z-index:1;border-radius:9% / 6%;pointer-events:none;user-select:none;}
+  .so-xjbg{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;user-select:none;}
+  .so-xjsky{position:absolute;inset:9% 9% 10%;overflow:hidden;z-index:2;border-radius:9% / 6%;mix-blend-mode:screen;pointer-events:none;}
+  .so-xjsky .au{position:absolute;width:175%;height:80%;left:-36%;top:-13%;opacity:.3;filter:blur(22px);border-radius:50%;background:repeating-linear-gradient(106deg,transparent 0%,#8b2cff20 6%,#b249ff95 11%,#63fff799 15%,transparent 22%,transparent 31%);transform:rotate(-23deg);animation:soXjFlow 13s ease-in-out infinite alternate;}
+  .so-xjsky .au.b{top:40%;left:-20%;opacity:.2;animation-duration:19s;animation-direction:alternate-reverse;}
+  .so-xjsky .sp i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;box-shadow:0 0 6px 2px #cfa6ff;animation:soXjTw var(--d) ease-in-out infinite;animation-delay:var(--w);}
+  .so-xjsky .sp i.b{width:3px;height:3px;box-shadow:0 0 9px 3px #b44cff;}
+  .so-xjshine{position:absolute;inset:0;z-index:4;pointer-events:none;-webkit-mask:url(frames/xj-frame.v1.webp) center/100% 100% no-repeat;mask:url(frames/xj-frame.v1.webp) center/100% 100% no-repeat;background:linear-gradient(110deg,transparent 30%,#fff0 44%,#ffd3ff38 50%,#fff0 56%,transparent 70%);background-size:250% 100%;animation:soXjSweep 9s ease-in-out infinite;mix-blend-mode:screen;}
+  .so-xjgem{position:absolute;z-index:4;width:16%;height:8%;left:42%;filter:blur(12px);border-radius:50%;background:#bd46ff80;animation:soXjPulse 3.6s ease-in-out infinite;pointer-events:none;}
+  .so-xjgem.t{top:0;} .so-xjgem.bt{bottom:0;animation-delay:1.8s;}
+  .so-xjin{position:absolute;inset:14% 15% 15%;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#F7EEFF;}
+  .so-xjin .so-dot{right:-2px;top:2px;box-shadow:0 0 0 3px rgba(255,255,255,.22);}
+  .so-xjav{position:relative;display:flex;margin:22px 0 14px;border-radius:50%;box-shadow:0 0 22px rgba(190,110,255,.55);}
+  .so-xjavfr{position:absolute;left:50%;top:50%;width:165%;height:165%;transform:translate(-50%,-50%);pointer-events:none;user-select:none;filter:drop-shadow(0 0 6px rgba(190,110,255,.5));}
+  .so-xjav > *{border-radius:50%;}
+  .so-xjnm{margin-top:10px;font-size:21px;font-weight:800;letter-spacing:.18em;padding-left:.18em;color:#F6DFA4;text-shadow:0 0 12px rgba(170,90,255,.8),0 1px 2px rgba(0,0,0,.6);}
+  .so-xjsub{margin-top:4px;font-size:12.5px;letter-spacing:.04em;font-family:'Nirmala UI','Kohinoor Devanagari','Noto Sans Devanagari',sans-serif;color:#DCCBF5;text-shadow:0 1px 2px rgba(0,0,0,.6);}
+  .so-xjb{margin-top:16px;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:800;color:#FBEBC4;background:rgba(40,12,80,.55);border:1px solid rgba(240,200,120,.75);box-shadow:inset 0 0 12px rgba(180,90,255,.35);backdrop-filter:blur(2px);transition:background .2s;}
+  .so-xj:hover .so-xjb{background:rgba(80,30,150,.7);}
+  .so-xjb em{font-style:normal;}
+  .so-xjnm{position:relative;}
+  .so-xjedit{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:6px;width:24px;height:24px;border-radius:50%;border:1px solid rgba(240,200,120,.6);background:rgba(40,12,80,.6);color:#F6DFA4;display:grid;place-items:center;cursor:pointer;padding:0;}
+  .so-xjedit:hover{background:rgba(90,35,160,.8);} .so-xjb svg{width:15px;height:15px;}
+  .so-xjb i{background:var(--red);color:#fff;font-style:normal;font-size:10px;font-weight:800;border-radius:999px;min-width:17px;height:17px;display:inline-grid;place-items:center;padding:0 4px;}
+  @keyframes soXjFlow{0%{transform:translate(-9%,-4%) rotate(-25deg) scale(1);opacity:.15;}50%{opacity:.42;}100%{transform:translate(13%,10%) rotate(-12deg) scale(1.18);opacity:.32;}}
+  @keyframes soXjTw{0%,100%{opacity:.12;transform:scale(.4);}50%{opacity:1;transform:scale(1.8);}}
+  @keyframes soXjPulse{0%,100%{opacity:.3;transform:scale(.7);}50%{opacity:.8;transform:scale(1.2);}}
+  @keyframes soXjSweep{0%,26%{background-position:130% 0;}65%,100%{background-position:-130% 0;}}
+  @media (prefers-reduced-motion:reduce){ .so-xj *{animation:none !important;} }
   .so-side .cap{font-size:11px;letter-spacing:.12em;color:var(--muted);font-weight:700;}
   .so-side h3{margin:0 0 14px;font-size:17px;}
   .so-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -386,7 +420,7 @@
   @keyframes soIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
   .so-anim .so-segs span.on{animation:soSeg .35s ease-out both;}
   @keyframes soSeg{from{background:#E3E7F0;transform:scaleX(.3);}to{transform:none;}}
-  @media (max-width:1100px){ .so-lay{grid-template-columns:1fr;} .so-side{position:static;order:-1;padding:0;background:none;box-shadow:none;} .so-side .cap,.so-side h3{display:none;} .so-tiles{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));} .so-tile{background:#fff;box-shadow:0 4px 12px rgba(40,50,90,.05);} .so-tile.wide{grid-column:auto;} }
+  @media (max-width:1100px){ .so-lay{grid-template-columns:1fr;} .so-sidecol{position:static;order:-1;margin-top:0;} .so-side{padding:0;background:none;box-shadow:none;} .so-xj{width:min(240px,64vw);justify-self:center;} .so-side .cap,.so-side h3{display:none;} .so-tiles{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));} .so-tile{background:#fff;box-shadow:0 4px 12px rgba(40,50,90,.05);} .so-tile.wide{grid-column:auto;} }
   @media (max-width:640px){
     .so-tiles{grid-template-columns:1fr 1fr 1fr;gap:8px;} .so-tile{padding:9px 10px;} .so-tile.wide{grid-column:1/-1;} .so-tile b{font-size:17px;} .so-tile b::before{height:15px;}
     .so-sub{margin-bottom:14px;}
@@ -1468,7 +1502,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-02-04';
+const APP_BUILD = '2026-11-02-05';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5582,6 +5616,24 @@ function staffOverviewHTML(){
     <div class="so-tile" style="--c:#D97706"><span>對保中</span><b>${n(tot('guar'))}</b></div>
     <div class="so-tile" style="--c:#7C3AED"><span>等撥款</span><b>${n(tot('wait'))}</b></div>
     ${viewerIsCore ? `<div class="so-tile wide" style="--c:#4F7CF7"><span>本月利潤</span><b>${n(tot('profit'), true)}</b></div>` : ''}`;
+  const xj = APP.users.find(u=>u.isXiaojiang), meXj = !!(xj && xj.id===APP.user.uid);
+  const xjCard = !xj ? '' : (()=>{ const nm = displayNameFor(xj.id, (APP.data.caseSettings||{}).xiaojiangName || '小江'), pr = soPresence(xj.id);
+    const unread = meXj ? 0 : (APP.data.directMessages||[]).filter(m=>m.senderUid===xj.id && m.recipientUid===APP.user.uid && !m.read).length;
+    const act = meXj ? `data-action="nav" data-view="xiaojiangDashboard"` : `data-action="open-chat-thread" data-peer="${escAttr(xj.id)}"`;
+    let seed = 7; const rnd = ()=>(seed = (seed * 16807) % 2147483647) / 2147483647;
+    const sparks = Array.from({length:34}, (_, k)=>`<i class="${k%9===0 ? 'b' : ''}" style="left:${(rnd()*100).toFixed(1)}%;top:${(rnd()*100).toFixed(1)}%;--d:${(1.8+rnd()*4.6).toFixed(2)}s;--w:${(-rnd()*7).toFixed(2)}s"></i>`).join('');
+    return `<div class="so-xj" ${act} role="button" tabindex="0" aria-label="${meXj ? '到我的個人空間' : '跟' + escAttr(nm) + '聊天'}">
+      <img class="so-xjskyimg" src="frames/xj-sky.v1.webp" alt="" draggable="false">
+      <div class="so-xjsky"><span class="au"></span><span class="au b"></span><div class="sp">${sparks}</div></div>
+      <img class="so-xjbg" src="frames/xj-frame.v1.webp" alt="" draggable="false"><span class="so-xjshine"></span><span class="so-xjgem t"></span><span class="so-xjgem bt"></span>
+      <div class="so-xjin">
+        <span class="so-dot${pr.online ? '' : ' off'}" title="${pr.online ? '線上中' : '未上線' + (pr.seen ? '（最後上線 ' + pr.seen + '）' : '')}"></span>
+        <div class="so-xjav">${avatarHtml(xj.id, nm, 84)}<img class="so-xjavfr" src="frames/xj-avatar.v1.webp" alt="" draggable="false"></div>
+        <div class="so-xjnm">${escHtml(nm)}${meXj ? `<button type="button" class="so-xjedit" data-action="edit-xj-name" title="改名字" aria-label="改名字"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>` : ''}</div>
+        <div class="so-xjsub" lang="sa" title="有事直接找我">किमपि अस्ति चेत् मां वद</div>
+        <span class="so-xjb">${meXj ? '我的個人空間 <em>→</em>' : `${SO_CHAT_SVG} 聊天${unread ? `<i>${unread>9 ? '9+' : unread}</i>` : ''}`}</span>
+      </div>
+    </div>`; })();
   const anim = !APP._soShown;
   return `
     <div class="page-header"><div><h1 class="page-title">業務總覽</h1><p class="page-sub">依本月實收業績排名（每月 1 號重新算）${viewerIsCore ? '・點卡片進入他的房間' : ''}</p></div></div>
@@ -5590,7 +5642,7 @@ function staffOverviewHTML(){
         <div class="so-sub"><span class="t">全部 ${people.length} 位</span><span class="s">排序：<b>本月實收業績</b></span></div>
         <div class="so-grid">${people.map(card).join('') || `<div class="table-wrap so-empty"><div class="empty">目前還沒有任何業務／行政設定對應姓名，請先到「帳號管理」設定</div></div>`}</div>
       </div>
-      <aside class="so-side"><div class="cap">全公司</div><h3>本月總計</h3><div class="so-tiles">${tiles}</div></aside>
+      <div class="so-sidecol"><aside class="so-side"><div class="cap">全公司</div><h3>本月總計</h3><div class="so-tiles">${tiles}</div></aside>${xjCard}</div>
     </div>`;
 }
 // 畫好之後：第一次進入頁面才跳數字；離開頁面再回來會再跳一次
@@ -11918,6 +11970,13 @@ document.addEventListener('click', (e)=>{
     if(action==='post-channel-case'){ postChannelCaseToTransactions(el.dataset.id); return; }
     if(action==='open-adspend-modal'){ openAdSpendModal(null); return; }
     if(action==='edit-adspend'){ const a = APP.data.adSpend.find(x=>x.id===el.dataset.id); if(a) openAdSpendModal(a); return; }
+    if(action==='edit-xj-name'){
+      const pub = APP.publicProfiles[APP.user.uid] || {};
+      openModal('改名字', `<label class="field"><span>卡片上顯示的名字</span><input type="text" name="displayName" maxlength="12" value="${escAttr(pub.displayName||'')}" placeholder="留空＝顯示「${escAttr((APP.data.caseSettings||{}).xiaojiangName||'小江')}」"/></label><p style="margin:0;font-size:12px;color:var(--muted);">只改顯示的名字，獎金、資料歸屬都不受影響。</p>`, 'xjname-form', (data)=>{
+        const v = String(data.displayName||'').trim(); APP.publicProfiles[APP.user.uid] = { ...(APP.publicProfiles[APP.user.uid]||{}), displayName:v };
+        savePublicProfile(APP.user.uid, { displayName:v }); closeModal(); render();
+      }); return;
+    }
     if(action==='open-adloss-modal'){ const a = APP.data.adSpend.find(x=>x.id===el.dataset.id); if(a) openAdLossModal(a, null); return; }
     if(action==='edit-adloss'){ const a = APP.data.adSpend.find(x=>x.id===el.dataset.id), it = a && (a.losses||[]).find(x=>x.id===el.dataset.lid); if(it) openAdLossModal(a, it); return; }
     if(action==='delete-adloss'){
@@ -12764,7 +12823,7 @@ document.addEventListener('submit', (e)=>{
     renderRoot();
     return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','adloss-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form','mark-followup-form','upload-cert-form','edit-attendance-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','adloss-form','xjname-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form','mark-followup-form','upload-cert-form','edit-attendance-form'].includes(e.target.id)){
     e.preventDefault();
     try{
       const fd = new FormData(e.target);
