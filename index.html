@@ -390,7 +390,7 @@
   .so-xjin{position:absolute;inset:14% 15% 15%;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#F7EEFF;}
   .so-xjin .so-dot{right:-2px;top:2px;box-shadow:0 0 0 3px rgba(255,255,255,.22);}
   .so-xjav{position:relative;display:flex;margin:22px 0 14px;border-radius:50%;box-shadow:0 0 22px rgba(190,110,255,.55);}
-  .so-xjavfr{position:absolute;left:50%;top:50%;width:165%;height:165%;transform:translate(-50%,-50%);pointer-events:none;user-select:none;filter:drop-shadow(0 0 6px rgba(190,110,255,.5));}
+  .so-xjavfr{position:absolute;left:50%;top:50%;width:147%;height:147%;transform:translate(-50%,-50%);pointer-events:none;user-select:none;filter:drop-shadow(0 0 6px rgba(190,110,255,.5));}
   .so-xjav > *{border-radius:50%;}
   .so-xjnm{margin-top:10px;font-size:21px;font-weight:800;letter-spacing:.18em;padding-left:.18em;color:#F6DFA4;text-shadow:0 0 12px rgba(170,90,255,.8),0 1px 2px rgba(0,0,0,.6);}
   .so-xjsub{margin-top:4px;font-size:12.5px;letter-spacing:.04em;font-family:'Nirmala UI','Kohinoor Devanagari','Noto Sans Devanagari',sans-serif;color:#DCCBF5;text-shadow:0 1px 2px rgba(0,0,0,.6);}
@@ -1502,7 +1502,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-02-05';
+const APP_BUILD = '2026-11-02-06';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5628,7 +5628,7 @@ function staffOverviewHTML(){
       <img class="so-xjbg" src="frames/xj-frame.v1.webp" alt="" draggable="false"><span class="so-xjshine"></span><span class="so-xjgem t"></span><span class="so-xjgem bt"></span>
       <div class="so-xjin">
         <span class="so-dot${pr.online ? '' : ' off'}" title="${pr.online ? '線上中' : '未上線' + (pr.seen ? '（最後上線 ' + pr.seen + '）' : '')}"></span>
-        <div class="so-xjav">${avatarHtml(xj.id, nm, 84)}<img class="so-xjavfr" src="frames/xj-avatar.v1.webp" alt="" draggable="false"></div>
+        <div class="so-xjav">${avatarHtml(xj.id, nm, 84)}<img class="so-xjavfr" src="frames/xj-avatar.v2.webp" alt="" draggable="false"></div>
         <div class="so-xjnm">${escHtml(nm)}${meXj ? `<button type="button" class="so-xjedit" data-action="edit-xj-name" title="改名字" aria-label="改名字"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>` : ''}</div>
         <div class="so-xjsub" lang="sa" title="有事直接找我">किमपि अस्ति चेत् मां वद</div>
         <span class="so-xjb">${meXj ? '我的個人空間 <em>→</em>' : `${SO_CHAT_SVG} 聊天${unread ? `<i>${unread>9 ? '9+' : unread}</i>` : ''}`}</span>
