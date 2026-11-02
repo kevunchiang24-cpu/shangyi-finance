@@ -623,6 +623,15 @@
   .cr-lbh small{font-size:12px;color:#B8C0D4;}
   .cr-lbb{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;border-radius:9px;height:38px;padding:0 12px;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;flex:none;font-family:inherit;}
   .cr-lbb svg{width:16px;height:16px;}
+  .cr-lbb.pri{background:#fff;color:#1F2433;border-color:#fff;}
+  .cr-all{display:inline-flex;align-items:center;gap:6px;margin-top:4px;border:1px solid #C9D6FB;background:#F2F6FF;color:var(--navy);border-radius:99px;height:32px;padding:0 13px 0 10px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .cr-all svg{width:14px;height:14px;} .cr-all:hover{background:#E4ECFF;} .cr-all[disabled]{cursor:default;opacity:.85;}
+  .cr-all.done{border-color:#B7E3C6;background:#EDFAF2;color:#15803D;}
+  .cr-lbb.cr-all{margin:0;height:38px;border-radius:9px;}
+  .cr-strip{display:flex;gap:6px;justify-content:center;padding:8px 10px 0;overflow-x:auto;flex:none;}
+  .cr-strip button{border:2px solid transparent;padding:0;background:none;border-radius:7px;overflow:hidden;cursor:pointer;opacity:.5;flex:none;}
+  .cr-strip button.on{opacity:1;border-color:#fff;}
+  .cr-strip img{width:52px;height:52px;object-fit:cover;display:block;}
   .cr-lbm{flex:1;min-height:0;position:relative;display:grid;place-items:center;overflow:auto;}
   .cr-lbm img{max-width:92%;max-height:100%;object-fit:contain;cursor:zoom-in;}
   .cr-lbm.zoom{place-items:start;}
@@ -1459,7 +1468,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-02-02';
+const APP_BUILD = '2026-11-02-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -4867,7 +4876,9 @@ function crAttHTML(atts, msgId){
     return `<button type="button" class="cr-im${up?' up':''}" ${a.url ? `data-cr-view="${escAttr(msgId)}:${atts.indexOf(a)}"` : ''} aria-label="放大看 ${escAttr(a.name||'圖片')}"><img src="${escAttr(a.url || a.previewUrl || '')}" alt="${escAttr(a.name||'')}" loading="lazy">${j===3 && ims.length>4 ? `<span class="cr-more4">+${ims.length-4}</span>` : ''}${up ? `<span class="cr-prog"><i style="width:${a.prog}%"></i></span>` : ''}</button>`; }).join('')}</div>` : '';
   const f = fs.map(a=>{ const [c, t] = crExt(a.name), up = a.prog!=null && a.prog<100;
     return `<div class="cr-fc"><span class="cr-ext ${c}">${t}</span><div><b title="${escAttr(a.name||'')}">${escHtml(a.name||'檔案')}</b><small>${up ? `上傳中 ${a.prog}%` : crKB(a.size)}</small></div>${a.url ? `<button type="button" class="cr-dl" data-cr-dl="${escAttr(a.url)}" data-cr-name="${escAttr(a.name||'檔案')}">${CR_DL}下載</button>` : ''}</div>`; }).join('');
-  return g + f;
+  const done = atts.filter(a=>a.url).length;
+  const all = atts.length > 1 && done === atts.length ? `<button type="button" class="cr-all" data-cr-all="${escAttr(msgId)}">${CR_DL}<span>全部下載（${atts.length}）</span></button>` : '';
+  return g + f + all;
 }
 function crMsgsHTML(peer){
   const me = APP.user.uid, t = crThread(peer);
@@ -5026,12 +5037,14 @@ function crImgs(){ const out = []; crThread(APP.chatRoomActivePeer).forEach(m=>(
 function crWho(uidv){ if(uidv===APP.user.uid) return '你'; const u = APP.users.find(x=>x.id===uidv); return u ? crName(u) : ''; }
 function crOverlay(id, html){ let o = document.getElementById(id); if(!html){ if(o) o.remove(); return null; } if(!o){ o = document.createElement('div'); o.id = id; document.body.appendChild(o); } o.innerHTML = html; return o; }
 function crLbRender(){
-  const L = CR.lb, list = crImgs(); if(!L || !list.length){ CR.lb = null; crOverlay('cr-lb', ''); return; }
+  const L = CR.lb, list = L && L.mid ? crImgs().filter(x=>x.mid===L.mid) : crImgs(); if(!L || !list.length){ CR.lb = null; crOverlay('cr-lb', ''); return; }
   L.i = (L.i + list.length) % list.length; const a = list[L.i];
+  const grpAll = L.mid && list.length > 1 ? `<button type="button" class="cr-lbb pri cr-all" data-cr-all="${escAttr(L.mid)}" data-cr-imgonly="1">${CR_DL}<span>這組全部下載（${list.length}）</span></button>` : '';
+  const strip = L.mid && list.length > 1 ? `<div class="cr-strip">${list.map((x, k)=>`<button type="button" class="${k===L.i?'on':''}" data-cr-lbpick="${k}" aria-label="第 ${k+1} 張"><img src="${escAttr(x.url)}" alt="" loading="lazy"></button>`).join('')}</div>` : '';
   const o = crOverlay('cr-lb', `<div class="cr-lb" role="dialog" aria-modal="true" aria-label="看圖片"><div class="cr-lbh"><div><b>${escHtml(a.name||'圖片')}</b><small>${escHtml(crWho(a.who))}・${crDay(a.at)} ${crHM(a.at)}${a.size ? '・' + crKB(a.size) : ''}</small></div>
-    <button type="button" class="cr-lbb" data-cr-dl="${escAttr(a.url)}" data-cr-name="${escAttr(a.name||'圖片.jpg')}">${CR_DL}下載</button><button type="button" class="cr-lbb" data-cr-lbclose aria-label="關閉">✕</button></div>
+    ${grpAll}<button type="button" class="cr-lbb" data-cr-dl="${escAttr(a.url)}" data-cr-name="${escAttr(a.name||'圖片.jpg')}">${CR_DL}${grpAll ? '下載這張' : '下載'}</button><button type="button" class="cr-lbb" data-cr-lbclose aria-label="關閉">✕</button></div>
     <div class="cr-lbm${L.zoom?' zoom':''}"><img src="${escAttr(a.url)}" alt="${escAttr(a.name||'')}" data-cr-zoom>${list.length>1 ? '<button type="button" class="cr-nav p" data-cr-lbgo="-1" aria-label="上一張">‹</button><button type="button" class="cr-nav n" data-cr-lbgo="1" aria-label="下一張">›</button>' : ''}</div>
-    <div class="cr-lbf">${L.i+1} / ${list.length}${crIsM() ? '' : '　← → 切換・點圖片放大・Esc 關閉'}</div></div>`);
+    ${strip}<div class="cr-lbf">${L.i+1} / ${list.length}${crIsM() ? '' : '　← → 切換・點圖片放大・Esc 關閉'}</div></div>`);
   document.body.classList.add('pa-lock');
   return o;
 }
@@ -5047,6 +5060,38 @@ function crGalRender(){
 function crGalClose(){ crOverlay('cr-gal', ''); if(!CR.lb) document.body.classList.remove('pa-lock'); }
 function crSheet(open){
   crOverlay('cr-sheet', open ? `<div class="cr-sheetbg" data-cr-sheetbg><div class="cr-sheet"><button type="button" data-cr-pick="camera"><span>📷</span>拍照</button><button type="button" data-cr-pick="photo"><span>🖼</span>從相簿選照片</button><button type="button" data-cr-pick="file"><span>📄</span>選檔案（PDF、Excel…）</button><button type="button" class="cancel" data-cr-sheetbg>取消</button></div></div>` : '');
+}
+/* 全部下載（2026-11-02，像 LINE）：電腦打包成一個 ZIP（檔名＝對方＋日期＋數量）；手機跳出分享選單，可以一次「儲存到照片」；
+   都不支援就一個一個下載。JSZip 按下去才載入 */
+let crZipLib = null;
+function crLoadZip(){ return crZipLib || (crZipLib = new Promise((ok, no)=>{ if(window.JSZip) return ok(window.JSZip); const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; sc.onload = ()=>ok(window.JSZip); sc.onerror = ()=>{ crZipLib = null; no(new Error('JSZip')); }; document.head.appendChild(sc); })); }
+async function crDownloadAll(btn){
+  if(btn.disabled) return;
+  const m = (APP.data.directMessages||[]).find(x=>x.id===btn.dataset.crAll); if(!m) return;
+  const list = (m.attachments||[]).filter(a=>a.url && (!btn.dataset.crImgonly || crIsImg(a))); if(!list.length) return;
+  const lab = btn.querySelector('span'), orig = lab.textContent, prog = k => { lab.textContent = `準備中 ${k}/${list.length}`; };
+  btn.disabled = true; prog(0);
+  const peerU = APP.users.find(u=>u.id===(m.senderUid===APP.user.uid ? m.recipientUid : m.senderUid)), who = peerU ? crName(peerU) : '聊天室';
+  const day = String(m._at||'').slice(0,10) || todayStr();
+  const names = {}, fname = a => { let n = a.name || (crIsImg(a) ? '圖片.jpg' : '檔案'); if(names[n]){ const k = names[n]++; n = n.replace(/(\.[^.]+)?$/, `(${k})$1`); } else names[n] = 1; return n; };
+  try{
+    const files = []; for(let k = 0; k < list.length; k++){ const r = await fetch(list[k].url); if(!r.ok) throw new Error(r.status); const b = await r.blob(); files.push(new File([b], fname(list[k]), { type: b.type || list[k].type || '' })); prog(k + 1); }
+    if(crIsM() && navigator.canShare && navigator.canShare({ files })){
+      try{ await navigator.share({ files }); }catch(err){ if(err && err.name==='AbortError'){ btn.disabled = false; lab.textContent = orig; return; } throw err; }
+    } else {
+      lab.textContent = '打包中…';
+      const JSZip = await crLoadZip(), zip = new JSZip(); files.forEach(f=>zip.file(f.name, f));
+      const z = await zip.generateAsync({ type:'blob' }), a = document.createElement('a');
+      a.href = URL.createObjectURL(z); a.download = `聊天室_${who}_${day}_${files.length}個檔案.zip`.replace(/[\\/:*?"<>|]/g, '');
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 8000);
+    }
+    btn.classList.add('done'); lab.textContent = `已下載（${list.length}）`;
+  }catch(err){
+    console.error('全部下載失敗，改成一個一個下載', err);
+    for(const a of list){ await crDownload(a.url, a.name); await new Promise(r=>setTimeout(r, 400)); }
+    lab.textContent = orig;
+  }
+  setTimeout(()=>{ btn.disabled = false; btn.classList.remove('done'); lab.textContent = orig; }, 3000);
 }
 // 下載：盡量用原本的檔名存；瀏覽器擋住時改成另開分頁
 async function crDownload(url, name){
@@ -5078,7 +5123,9 @@ document.addEventListener('click', (e)=>{
   if(menu && !menu.hidden && !t.closest('#cr-menu')){ menu.hidden = true; }
   if(t.closest('[data-cr-gal]')){ if(menu) menu.hidden = true; crGalRender(); return; }
   if(t.closest('[data-cr-galclose]') || t.matches('[data-cr-galbg]')){ crGalClose(); return; }
-  const vw = t.closest('[data-cr-view]'); if(vw){ const [mid, j] = vw.dataset.crView.split(':'); const i = crImgs().findIndex(a=>a.mid===mid && String(a.j)===j); CR.lb = { i: Math.max(0, i), zoom:false }; crLbRender(); return; }
+  const vw = t.closest('[data-cr-view]'); if(vw){ const [mid, j] = vw.dataset.crView.split(':'); const i = crImgs().filter(a=>a.mid===mid).findIndex(a=>String(a.j)===j); CR.lb = { i: Math.max(0, i), mid, zoom:false }; crLbRender(); return; }
+  const lpk = t.closest('[data-cr-lbpick]'); if(lpk && CR.lb){ CR.lb.i = +lpk.dataset.crLbpick; CR.lb.zoom = false; crLbRender(); return; }
+  const al = t.closest('[data-cr-all]'); if(al){ crDownloadAll(al); return; }
   const lo = t.closest('[data-cr-lbopen]'); if(lo){ CR.lb = { i: +lo.dataset.crLbopen, zoom:false }; crLbRender(); return; }
   const go = t.closest('[data-cr-lbgo]'); if(go && CR.lb){ CR.lb.i += Number(go.dataset.crLbgo); CR.lb.zoom = false; crLbRender(); return; }
   if(t.closest('[data-cr-zoom]') && CR.lb){ CR.lb.zoom = !CR.lb.zoom; crLbRender(); return; }
