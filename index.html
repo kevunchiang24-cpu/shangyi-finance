@@ -1633,6 +1633,38 @@
     .xjs-pipe{grid-template-columns:repeat(2,1fr);}
     .xjs-mapf{height:calc(100vh - 200px);}
   }
+
+  /* ===== 2026-11-03-02 毛玻璃＋北極光夜空背景 ===== */
+  body.xjs-on{background:#050A18;}
+  body.xjs-on #main{background:
+      radial-gradient(1.2px 1.2px at 30px 40px,rgba(255,255,255,.55),transparent 60%),
+      radial-gradient(1px 1px at 140px 120px,rgba(255,255,255,.4),transparent 60%),
+      radial-gradient(1.4px 1.4px at 210px 60px,rgba(200,230,255,.5),transparent 60%),
+      radial-gradient(1px 1px at 90px 200px,rgba(255,255,255,.35),transparent 60%),
+      radial-gradient(55% 38% at 12% 0%,rgba(46,230,190,.30),transparent 70%),
+      radial-gradient(45% 40% at 88% 6%,rgba(150,95,255,.36),transparent 72%),
+      radial-gradient(40% 30% at 55% 18%,rgba(60,140,255,.16),transparent 70%),
+      radial-gradient(70% 45% at 50% 108%,rgba(35,110,255,.26),transparent 72%),
+      linear-gradient(180deg,#06122A 0%,#0A0E26 55%,#060816 100%);
+    background-size:240px 240px,240px 240px,240px 240px,240px 240px,100% 100%,100% 100%,100% 100%,100% 100%,100% 100%;
+    background-attachment:fixed;}
+  .xjs{--cd:rgba(255,255,255,.08);--cd2:rgba(255,255,255,.07);--bd:rgba(255,255,255,.12);--mut:rgba(226,232,255,.66);--acc:#A98BFF;}
+  .xjs-cd,.xjs-tn{background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);box-shadow:0 10px 40px rgba(0,0,12,.35),inset 0 1px 0 rgba(255,255,255,.16);}
+  .xjs-cd{border-radius:24px;}
+  .xjs-cd.bad{border-color:rgba(255,110,140,.5);box-shadow:0 10px 40px rgba(0,0,12,.35),inset 0 0 0 1px rgba(255,110,140,.3),inset 0 1px 0 rgba(255,255,255,.16);}
+  .xjs-tl,.xjs-kpi,.xjs-al,.xjs-pipe div,.xjs-ac span,.xjs-onl span,.xjs-cal div:not(.wd):not(.em),.xjs-btn,.xjs-sel,.xjs-ib{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);}
+  .xjs-kpi{border-radius:18px;} .xjs-kpi:hover,.xjs-btn:hover,.xjs-ib:hover{background:rgba(255,255,255,.13);}
+  .xjs-kpi .ci{box-shadow:0 6px 18px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.35);}
+  .xjs-tn button.on{background:rgba(255,255,255,.92);color:#1E1748;box-shadow:0 6px 20px rgba(169,139,255,.45);}
+  .xjs-tn button:hover{background:rgba(255,255,255,.1);}
+  .xjs-btn.on{background:rgba(255,255,255,.92);color:#1E1748;}
+  .xjs-drw{background:rgba(12,16,40,.72);backdrop-filter:blur(26px) saturate(140%);-webkit-backdrop-filter:blur(26px) saturate(140%);border-left:1px solid rgba(255,255,255,.16);border-radius:24px 0 0 24px;}
+  .xjs-msk{background:rgba(5,8,25,.35);backdrop-filter:blur(3px);}
+  .xjs-tip{background:rgba(169,139,255,.88);backdrop-filter:blur(8px);}
+  .xjs-chips span{background:rgba(255,255,255,.09);} .xjs-chips .h{background:rgba(255,90,120,.22);color:#FFC2CF;} .xjs-chips .m{background:rgba(255,200,90,.18);color:#FFE1A3;}
+  .xjs-fb,.xjs-lr .bb{background:rgba(255,255,255,.1);}
+  .xjs-mapf{border:1px solid rgba(255,255,255,.16);border-radius:24px;}
+  .xjs-hdr .xjs-av .av,.xjs-hdr .xjs-av img{box-shadow:0 0 0 2px rgba(255,255,255,.5),0 8px 24px rgba(169,139,255,.45);}
 </style>
 </head>
 <body>
@@ -1654,7 +1686,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-03-01';
+const APP_BUILD = '2026-11-03-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -3755,13 +3787,13 @@ function xjsAlertHTML(G, n){
   return (n ? G.slice(0, n) : G).map(g => `<div class="xjs-al ${g.lv}"><span class="lv">${XJS_LV[g.lv]}</span><div><b>${g.p ? escHtml(g.p.disp) : g.t}</b>${g.items ? `<div class="xjs-chips">${g.items.map(i => `<span class="${i.lv}">${escHtml(i.c)}</span>`).join('')}</div>` : `<small>${g.s}</small>`}</div>${g.p ? `<button type="button" class="xjs-btn" data-action="xjs-who" data-uid="${escAttr(g.p.uid)}">看他</button>` : ''}</div>`).join('') || '<div class="xjs-empty">目前沒有需要注意的事</div>';
 }
 function xjsRing(pct, col, label, R){ R = R || 17; const L = 2 * Math.PI * R, sz = R * 2 + 10;
-  return `<svg viewBox="0 0 ${sz} ${sz}" width="${sz}" height="${sz}"><circle cx="${sz / 2}" cy="${sz / 2}" r="${R}" fill="none" stroke="#232B42" stroke-width="5"/><circle cx="${sz / 2}" cy="${sz / 2}" r="${R}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${Math.max(0, pct) * L} ${L}" transform="rotate(-90 ${sz / 2} ${sz / 2})"/><text x="${sz / 2}" y="${sz / 2 + 3.5}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#F2F4FA">${label}</text></svg>`; }
+  return `<svg viewBox="0 0 ${sz} ${sz}" width="${sz}" height="${sz}"><circle cx="${sz / 2}" cy="${sz / 2}" r="${R}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="5"/><circle cx="${sz / 2}" cy="${sz / 2}" r="${R}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${Math.max(0, pct) * L} ${L}" transform="rotate(-90 ${sz / 2} ${sz / 2})"/><text x="${sz / 2}" y="${sz / 2 + 3.5}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#F2F4FA">${label}</text></svg>`; }
 function xjsGauge(score){
   const lbl = score >= 85 ? ['良好', '#2BD46B'] : score >= 60 ? ['注意', '#FFB547'] : ['危險', '#FF4D6D'];
   const R = 80, cx = 100, cy = 96, a0 = Math.PI * .8, a1 = Math.PI * 2.2, at = a0 + (a1 - a0) * score / 100, pt = a => [cx + R * Math.cos(a), cy + R * Math.sin(a)];
   const arc = (f, t) => { const [x0, y0] = pt(f), [x1, y1] = pt(t); return `M${x0} ${y0}A${R} ${R} 0 ${t - f > Math.PI ? 1 : 0} 1 ${x1} ${y1}`; }, [kx, ky] = pt(at);
   return `<svg viewBox="0 0 200 170" style="width:100%;max-width:250px;display:block;margin:0 auto"><defs><linearGradient id="xjsgg" x1="0" x2="1"><stop offset="0" stop-color="#FF8A3D"/><stop offset="1" stop-color="#FF4D6D"/></linearGradient></defs>
-    <path d="${arc(a0, a1)}" stroke="#232B42" stroke-width="22" fill="none" stroke-linecap="round"/>${score ? `<path d="${arc(a0, at)}" stroke="url(#xjsgg)" stroke-width="22" fill="none" stroke-linecap="round"/>` : ''}
+    <path d="${arc(a0, a1)}" stroke="rgba(255,255,255,.14)" stroke-width="22" fill="none" stroke-linecap="round"/>${score ? `<path d="${arc(a0, at)}" stroke="url(#xjsgg)" stroke-width="22" fill="none" stroke-linecap="round"/>` : ''}
     <rect x="${kx - 9}" y="${ky - 9}" width="18" height="18" rx="4" fill="#fff" transform="rotate(${at * 180 / Math.PI + 90} ${kx} ${ky})"/>
     <text x="100" y="78" text-anchor="middle" font-size="11" fill="#8A93AE">分數</text><text x="100" y="112" text-anchor="middle" font-size="38" font-weight="800" fill="#F2F4FA">${score}</text>
     <text x="34" y="165" font-size="11" fill="#C9CFE0">0</text><text x="156" y="165" font-size="11" fill="#C9CFE0">100</text></svg><div class="xjs-pill" style="background:${lbl[1]}">${lbl[0]}</div>`;
@@ -3773,7 +3805,7 @@ function xjsArea(n){
   const W = 720, H = 240, P = 40, mx = Math.max(5, ...days.map(x => x.v)) * 1.2, x = i => P + i * (W - P - 10) / (n - 1), y = v => H - 28 - v / mx * (H - 48);
   const path = days.map((p, i) => `${i ? 'L' : 'M'}${x(i)} ${y(p.v)}`).join(''), step = Math.ceil(n / 8);
   let s = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block" data-xjs-area="${escAttr(JSON.stringify(days))}"><defs><linearGradient id="xjsag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9B5CFF" stop-opacity=".45"/><stop offset="1" stop-color="#9B5CFF" stop-opacity="0"/></linearGradient></defs>`;
-  [0, .25, .5, .75, 1].forEach(t => { const yy = H - 28 - t * (H - 48); s += `<line x1="${P}" x2="${W - 10}" y1="${yy}" y2="${yy}" stroke="#232B42" stroke-dasharray="3 5"/><text x="${P - 8}" y="${yy + 4}" font-size="11" fill="#8A93AE" text-anchor="end">${Math.round(mx * t)}</text>`; });
+  [0, .25, .5, .75, 1].forEach(t => { const yy = H - 28 - t * (H - 48); s += `<line x1="${P}" x2="${W - 10}" y1="${yy}" y2="${yy}" stroke="rgba(255,255,255,.14)" stroke-dasharray="3 5"/><text x="${P - 8}" y="${yy + 4}" font-size="11" fill="#8A93AE" text-anchor="end">${Math.round(mx * t)}</text>`; });
   days.forEach((p, i) => { if((i % step === 0 && n - 1 - i >= step / 2) || i === n - 1) s += `<text x="${x(i)}" y="${H - 8}" font-size="11" fill="#8A93AE" text-anchor="middle">${+p.s.slice(5, 7)}/${+p.s.slice(8)}</text>`; });
   s += `<path d="${path}L${x(n - 1)} ${H - 28}L${x(0)} ${H - 28}Z" fill="url(#xjsag)"/><path d="${path}" fill="none" stroke="#B07CFF" stroke-width="2.4" stroke-linejoin="round"/>`;
   s += `<line class="xjs-al-l" x1="0" x2="0" y1="20" y2="${H - 28}" stroke="#B07CFF" stroke-dasharray="4 4" opacity="0"/><circle class="xjs-al-c" r="7" fill="#fff" stroke="#9B5CFF" stroke-width="3" opacity="0"/></svg>`;
@@ -3829,7 +3861,7 @@ function xiaojiangDashboardView(){
       <div class="xjs-cd xjs-gauge" data-action="xjs-tab" data-t="sys" style="cursor:pointer"><div class="xjs-ch"><h3>系統健康分數</h3></div>${xjsGauge(iss.score)}<div class="xjs-k" style="margin-top:10px">${iss.hi} 個高嚴重 · ${iss.mid} 個中嚴重問題</div></div></div>
     <div class="xjs-row2">
       <div class="xjs-cd" style="position:relative"><div class="xjs-ch"><h3>團隊每天登記客人</h3><div class="xjs-seg">${[30, 14].map(n => `<button type="button" class="xjs-btn${st.range === n ? ' on' : ''}" data-action="xjs-range" data-n="${n}">近 ${n} 天</button>`).join('')}</div></div><div>${xjsArea(st.range)}</div><div class="xjs-tip" id="xjs-tip"></div></div>
-      <div class="xjs-cd"><div class="xjs-ch"><h3>進行中案件</h3><span class="sub">哪個階段</span></div><div class="xjs-dn"><ul>${XJS_STAGE.map((k, i) => `<li><i style="background:${C[i]}"></i>${k}<b>${tot[i]}</b></li>`).join('')}</ul><svg viewBox="0 0 160 160" style="width:150px;flex:none"><circle cx="80" cy="80" r="${R}" fill="none" stroke="#232B42" stroke-width="18"/>${rings}<text x="80" y="74" text-anchor="middle" font-size="11" fill="#8A93AE">合計</text><text x="80" y="98" text-anchor="middle" font-size="24" font-weight="800" fill="#F2F4FA">${tot.reduce((a, b) => a + b, 0)} 件</text></svg></div></div></div>
+      <div class="xjs-cd"><div class="xjs-ch"><h3>進行中案件</h3><span class="sub">哪個階段</span></div><div class="xjs-dn"><ul>${XJS_STAGE.map((k, i) => `<li><i style="background:${C[i]}"></i>${k}<b>${tot[i]}</b></li>`).join('')}</ul><svg viewBox="0 0 160 160" style="width:150px;flex:none"><circle cx="80" cy="80" r="${R}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="18"/>${rings}<text x="80" y="74" text-anchor="middle" font-size="11" fill="#8A93AE">合計</text><text x="80" y="98" text-anchor="middle" font-size="24" font-weight="800" fill="#F2F4FA">${tot.reduce((a, b) => a + b, 0)} 件</text></svg></div></div></div>
     <div class="xjs-row2">
       <div class="xjs-cd"><div class="xjs-ch"><h3>需要你注意</h3><button type="button" class="xjs-btn" data-action="xjs-tab" data-t="team">看業務管理 →</button></div>${xjsAlertHTML(G, 4)}</div>
       <div class="xjs-cd"><div class="xjs-ch"><h3>每一位業務</h3><span class="sub">圓環＝今天登記 ÷ 平常</span></div>${ppl}</div></div>`;
@@ -3887,7 +3919,7 @@ function xiaojiangDashboardView(){
     let trend = '<div class="xjs-empty">還沒有廣告資料</div>';
     if(six.length >= 2){ const W = 560, H = 220, P = 40, mx = Math.max(1, ...six.map(a => Math.max(a.spend, a.rev))) * 1.1, mc = Math.max(1, ...six.map(a => a.cpa)) * 1.2, x = i => P + i * (W - P * 2) / (six.length - 1), y = v => H - 26 - v / mx * (H - 46), y2 = v => H - 26 - v / mc * (H - 46);
       const line = (k, f) => six.map((a, i) => `${i ? 'L' : 'M'}${x(i)} ${f(a[k])}`).join('');
-      trend = `<svg viewBox="0 0 ${W} ${H}">` + [0, .5, 1].map(t => { const yy = H - 26 - t * (H - 46); return `<line x1="${P}" x2="${W - P}" y1="${yy}" y2="${yy}" stroke="#232B42" stroke-dasharray="3 5"/><text x="${P - 6}" y="${yy + 4}" font-size="10" fill="#8A93AE" text-anchor="end">${Math.round(mx * t / 1000)}k</text>`; }).join('')
+      trend = `<svg viewBox="0 0 ${W} ${H}">` + [0, .5, 1].map(t => { const yy = H - 26 - t * (H - 46); return `<line x1="${P}" x2="${W - P}" y1="${yy}" y2="${yy}" stroke="rgba(255,255,255,.14)" stroke-dasharray="3 5"/><text x="${P - 6}" y="${yy + 4}" font-size="10" fill="#8A93AE" text-anchor="end">${Math.round(mx * t / 1000)}k</text>`; }).join('')
         + six.map((a, i) => `<text x="${x(i)}" y="${H - 8}" font-size="11" fill="#8A93AE" text-anchor="middle">${+a.mk.slice(5)}月${a.mk === nowMonthKey ? '（到今天）' : ''}</text>`).join('')
         + `<path d="${line('spend', y)}" fill="none" stroke="#FF8A3D" stroke-width="2.4"/><path d="${line('rev', y)}" fill="none" stroke="#2BD46B" stroke-width="2.4"/><path d="${line('cpa', y2)}" fill="none" stroke="#9B5CFF" stroke-width="2" stroke-dasharray="4 4"/>`
         + six.map((a, i) => `<circle cx="${x(i)}" cy="${y(a.spend)}" r="3.5" fill="#FF8A3D"/><circle cx="${x(i)}" cy="${y(a.rev)}" r="3.5" fill="#2BD46B"/>`).join('') + '</svg>'; }
