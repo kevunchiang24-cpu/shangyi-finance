@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>系統地圖 DEMO v4</title>
+<style>
+  :root{--bg:#1C1C1E;--card:#2A2A2D;--bd:#46464B;--ink:#F2F2F4;--mut:#8D8D94;--g:#2BD46B;--gd:#1FA557;--red:#FF5D5D;--yel:#F5C542;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Segoe UI','Microsoft JhengHei','PingFang TC',sans-serif;overflow:hidden;}
+  #map{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;user-select:none;cursor:grab;}
+  #map.drag{cursor:grabbing;}
+  text{font-family:inherit;}
+  /* 卡片 */
+  .cd{cursor:pointer;transition:opacity .25s;}
+  .cd rect.bg{fill:var(--card);stroke:var(--bd);stroke-width:1.5;transition:stroke .2s;}
+  .cd.big rect.bg{fill:#303034;stroke:#5A5A60;stroke-width:1.7;}
+  .cd .cap{fill:#A3A3AB;letter-spacing:.02em;}
+  .cd .tt{font-weight:700;fill:var(--ink);}
+  .cd .pt{fill:var(--card);stroke:var(--bd);stroke-width:1.5;transition:fill .2s,stroke .2s;}
+  .cd:hover rect.bg{stroke:#77777E;}
+  /* 有問題：整張卡片紅色，會一明一暗閃爍 */
+  .cd.bad rect.bg{fill:#4A1C20;stroke:#FF5D5D;stroke-width:2;animation:alarm 1.6s ease-in-out infinite;}
+  .cd.bad .cap{fill:#FFB3B3;}
+  .cd.bad .tt{fill:#fff;}
+  .cd.bad .ub{fill:rgba(255,255,255,.15);} .cd.bad .uf{fill:#FFB3B3;}
+  @keyframes alarm{0%,100%{fill:#3A171A;filter:drop-shadow(0 0 0 rgba(255,93,93,0));}50%{fill:#7A2328;filter:drop-shadow(0 0 12px rgba(255,93,93,.85));}}
+  @media (prefers-reduced-motion:reduce){ .cd.bad rect.bg{animation:none;fill:#5A1E22;} }
+  .cd.rare{opacity:.5;}
+  .cd.on rect.bg{stroke:var(--g);stroke-width:2;}
+  .cd.on .pt{stroke:var(--g);fill:var(--g);}
+  .cd.onbad rect.bg{stroke:#FF5D5D;stroke-width:2.4;}
+  .cd.sel rect.bg{stroke:#fff;stroke-width:2.2;}
+  .ub{fill:#3A3A3F;} .uf{fill:var(--g);opacity:.75;}
+  .chip{font-size:9.5px;font-weight:700;}
+  .bandh{font-size:24px;font-weight:800;fill:#F2F2F4;letter-spacing:.04em;}
+  .bands{font-size:14px;fill:#9A9AA2;}
+  .ch rect{fill:#2A2A2D;stroke:#4A4A50;stroke-width:1.2;}
+  .ch text{font-size:15px;font-weight:700;fill:#ECECF0;}
+  .ch .num{font-size:11px;font-weight:800;}
+  .grp{font-size:11.5px;fill:#8A8A92;letter-spacing:.06em;}
+  .grp.bad{fill:#E07070;}
+  /* 線：點點虛線＋流動 */
+  .ln{fill:none;stroke:#5E5E64;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:0 7;animation:flow 1.6s linear infinite;transition:stroke .2s,opacity .2s;}
+  @keyframes flow{to{stroke-dashoffset:-14;}}
+  .e.bad .ln{stroke:#9C4A4A;}
+  /* 平常：所有路線都畫，細細淡淡的實線，上面一直有白色光點在跑（像交通網） */
+  svg:not(.focus) .e .ln{stroke:#3C3C42;stroke-width:1.3;stroke-dasharray:none;animation:none;}
+  svg:not(.focus) .e.bad .ln{stroke:#5A3434;}
+  svg.hov .e:not(.hv){opacity:.25;}
+  svg.hov .e.hv .ln{stroke:#B5B5BC;stroke-width:1.6;}
+  .e.hv .tag{display:inline;}
+  svg.focus .e:not(.on){display:none;}
+  .tag{display:none;}
+  .tag rect{fill:#4A4A50;} .tag text{font-size:11px;fill:#fff;font-weight:600;}
+  svg.focus .cd:not(.on):not(.onbad):not(.sel){opacity:.22;}
+
+  svg.focus .e.on .ln{opacity:1;stroke:var(--g);}
+  svg.focus .e.on.up .ln{stroke:#BDBDC3;}
+  svg.focus .e.on.bad .ln{stroke:var(--red);}
+  svg.focus .e.on .tag{display:inline;}
+  .e.on .tag rect{fill:var(--gd);} .e.on.up .tag rect{fill:#55555C;} .e.on.bad .tag rect{fill:#C93C3C;}
+  .stp circle{fill:var(--g);} .stp.bad circle{fill:var(--red);} .stp text{font-size:11px;font-weight:800;fill:#10301C;} .stp.bad text{fill:#fff;}
+  /* 介面 */
+  .bar{position:fixed;left:14px;right:14px;top:14px;height:52px;background:#2A2A2D;border-radius:10px;display:flex;align-items:center;gap:14px;padding:0 10px 0 14px;z-index:5;}
+  .bar .back{width:30px;height:30px;display:grid;place-items:center;color:#D8D8DC;}
+  .bar h1{margin:0;font-size:14px;font-weight:700;white-space:nowrap;}
+  .bar .runs{font-size:13px;color:var(--mut);white-space:nowrap;}
+  .srch{height:32px;width:190px;background:#1F1F21;border:1px solid #3A3A3F;border-radius:8px;color:var(--ink);font:inherit;font-size:12.5px;padding:0 10px;}
+  .srch:focus{outline:none;border-color:#77777E;}
+  .seg{margin-left:auto;display:flex;gap:2px;background:#1F1F21;padding:4px;border-radius:9px;overflow-x:auto;scrollbar-width:none;}
+  .seg::-webkit-scrollbar{display:none;}
+  .seg button{font:inherit;font-size:12.5px;color:#BDBDC3;background:none;border:none;border-radius:6px;padding:6px 11px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+  .seg button i{width:6px;height:6px;border-radius:50%;background:var(--g);}
+  .seg button i.bad{background:var(--red);}
+  .seg button:hover{color:#fff;}
+  .seg button.on{background:#fff;color:#111;font-weight:700;}
+  .ver{font-size:12.5px;color:#D8D8DC;white-space:nowrap;padding:0 4px;}
+  .blk{position:fixed;left:14px;bottom:14px;width:320px;background:#2A2A2D;border-radius:10px;z-index:5;overflow:hidden;}
+  .blk .hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  .blk .hd svg{transition:transform .2s;}
+  .blk.open .hd svg{transform:rotate(180deg);}
+  .blk .bd{display:none;padding:0 16px 12px;max-height:56vh;overflow:auto;}
+  .blk.open .bd{display:block;}
+  .blk .sh{font-size:10.5px;color:var(--mut);letter-spacing:.12em;margin:10px 0 4px;}
+  .blk li{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:8px 0;border-top:1px solid #38383C;font-size:12.5px;line-height:1.45;cursor:pointer;list-style:none;}
+  .blk ul{margin:0;padding:0;}
+  .blk li:hover b{color:var(--g);}
+  .blk .lv{font-size:10px;font-weight:800;border-radius:4px;text-align:center;height:18px;line-height:18px;margin-top:1px;}
+  .lv.h{background:#C93C3C;color:#fff;} .lv.m{background:#7A5A1A;color:#FFD98A;} .lv.l{background:#46464B;color:#C9C9CE;}
+  .blk small{display:block;color:var(--mut);font-size:11.5px;}
+  .blk .rr{grid-template-columns:1fr auto;}
+  .blk .rr span:last-child{color:var(--mut);font-size:12px;}
+  .det{position:fixed;right:14px;top:80px;width:320px;background:#2A2A2D;border-radius:10px;padding:16px;z-index:5;display:none;max-height:calc(100% - 100px);overflow:auto;}
+  .det.show{display:block;}
+  .det .x{position:absolute;right:10px;top:10px;width:26px;height:26px;border:none;border-radius:6px;background:#38383C;color:#ddd;cursor:pointer;font-size:14px;}
+  .det .cp{font-size:10px;color:var(--mut);letter-spacing:.14em;}
+  .det h2{margin:4px 0 4px;font-size:17px;display:flex;align-items:center;gap:8px;}
+  .det h2 i{width:8px;height:8px;border-radius:50%;}
+  .det .meta{font-size:12px;color:var(--mut);margin-bottom:10px;line-height:1.5;}
+  .det p{font-size:12.5px;line-height:1.6;margin:0 0 10px;color:#D8D8DC;}
+  .pb{margin-bottom:10px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.55;}
+  .pb b{display:block;margin-bottom:2px;}
+  .pb.bad{background:rgba(255,93,93,.1);border:1px solid rgba(255,93,93,.45);}
+  .pb.lock{background:rgba(255,255,255,.04);border:1px solid #46464B;}
+  .pb.rare{background:rgba(255,255,255,.04);border:1px dashed #55555C;color:#BDBDC3;}
+  .rel .h{font-size:10.5px;color:var(--mut);letter-spacing:.12em;margin:12px 0 4px;display:flex;justify-content:space-between;}
+  .rel a{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:6px 8px;border-radius:6px;color:var(--ink);cursor:pointer;}
+  .rel a:hover{background:#38383C;}
+  .rel a small{color:var(--mut);}
+  .rel a.bad{color:#FF8A8A;}
+  .step{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:#2A2A2D;border:1.5px solid var(--g);border-radius:10px;padding:10px 12px 10px 16px;display:none;align-items:center;gap:12px;z-index:6;max-width:calc(100% - 700px);min-width:380px;}
+  .step.bad{border-color:var(--red);}
+  .step.show{display:flex;}
+  .step .t{font-size:13.5px;line-height:1.45;flex:1;}
+  .step .t small{display:block;font-size:10.5px;color:var(--g);letter-spacing:.12em;font-weight:700;}
+  .step.bad .t small{color:var(--red);}
+  .step button{font:inherit;font-size:12px;color:#ddd;background:#38383C;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;white-space:nowrap;}
+  .hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);font-size:12.5px;color:#8D8D94;background:#2A2A2D;border-radius:99px;padding:8px 16px;z-index:4;transition:opacity .3s;pointer-events:none;}
+  body.busy .hint{opacity:0;}
+  .zm{position:fixed;right:14px;bottom:14px;z-index:5;font:inherit;font-size:12.5px;color:#ddd;background:#2A2A2D;border:none;border-radius:8px;padding:9px 14px;cursor:pointer;}
+  @media (max-width:900px){
+    .bar{flex-wrap:wrap;height:auto;padding:8px 10px;gap:8px;}
+    .bar .runs,.ver,.back{display:none;}
+    .srch{flex:1;width:auto;}
+    .seg{margin-left:0;width:100%;}
+    .blk{right:14px;width:auto;}
+    .det{left:14px;right:14px;width:auto;top:auto;bottom:70px;max-height:50vh;}
+    .step{left:14px;right:14px;transform:none;max-width:none;min-width:0;bottom:70px;}
+    .zm{bottom:70px;}
+  }
+</style>
+</head>
+<body>
+<svg id="map" preserveAspectRatio="xMidYMid meet"></svg>
+<div class="bar">
+  <div class="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></div>
+  <h1>系統地圖</h1><span class="runs" id="runs"></span>
+  <input class="srch" id="q" placeholder="找頁面、資料、自動化…">
+  <div class="seg" id="seg"></div>
+  <span class="ver">11/03 盤點</span>
+</div>
+<div class="det" id="det"></div>
+<div class="step" id="step"><div class="t" id="stT"></div><button id="stP">上一步</button><button id="stN">下一步</button></div>
+<div class="blk" id="blk"><div class="hd" id="blkH"><span id="blkT"></span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 15l6-6 6 6"/></svg></div><div class="bd" id="blkB"></div></div>
+<div class="hint" id="hint">滑鼠移到卡片上只看它的路線；點一下看完整路線與說明</div>
+<button class="zm" id="fit">看全部</button>
+<script>
+const TODAY = '2026-11-03';
+// st：ok 正常／bad 有問題／rare 很少用；last：最後使用日（null＝只顯示的頁面，無法從資料判斷）
+const N = [
+  // 使用的人
+  { id:'core', col:0, g:'', t:'核心', m:'小江、老闆', k:'person', d:'看得到全部頁面，可以進入每位業務的「房間」。' },
+  { id:'xj', col:0, t:'小江', m:'核心之一', k:'person', d:'另外有我的個人空間、霍格華茲信箱、社群帳號庫。' },
+  { id:'admin', col:0, t:'行政', m:'1 人', k:'person', d:'跟業務同一套選單，負責維護進度追蹤。' },
+  { id:'sales', col:0, t:'業務', m:'約 6–8 人', k:'person', d:'只看得到自己的客人、進度、關懷、獎金。' },
+  { id:'huang', col:0, t:'煌', m:'業務之一', k:'person', d:'多一個「社群帳號庫」。' },
+  // 操作的頁面
+  { id:'pp', col:1, g:'業務日常', t:'我的客人紀錄', n:1398, last:'2026-11-03', d:'業務每天登記客人，全系統最常用（近 30 天 487 筆、8 人在用）。可以貼 LINE 對話讓 AI 幫忙填。', who:'業務看自己的；核心看全部' },
+  { id:'prog', col:1, g:'業務日常', t:'進度追蹤', n:518, last:'2026-11-03', d:'廣告 189 筆＋通路 329 筆。狀態改成「對保」會自動推播。', who:'行政維護、業務查看' },
+  { id:'care', col:1, g:'業務日常', t:'客戶關懷追蹤', n:169, last:'2026-11-03', d:'看板三欄：超過時間／今天／這 7 天。', who:'業務各自的客人' },
+  { id:'loan', col:1, g:'業務日常', t:'銀行信貸', n:43, last:'2026-11-03', d:'信貸案件，多在週末輸入。', who:'核心' },
+  { id:'val', col:1, g:'業務日常', t:'房屋土地估價', n:562, last:'2026-11-03', d:'shangyiloan 登記（大部分是 Excel 匯入）。填了方案會推播到 LINE。', who:'核心' },
+  { id:'profit', col:1, g:'財務', t:'獲利報表', n:160, last:'2026-11-02', lock:'計算規則與公式千萬不能動，只能改畫面。', d:'存一筆案件＝同時算出公司利潤和業務獎金。廣告 62＋通路 98；廣告支出、客戶賠錢也在這裡。', who:'只有核心' },
+  { id:'txn', col:1, g:'財務', t:'收支明細', n:178, last:'2026-11-02', d:'公司收支，多為事後補登。', who:'核心' },
+  { id:'chat', col:1, g:'溝通', t:'聊天室', n:213, last:'2026-11-03', d:'所有人互相聊天，可傳照片檔案、多張可以全部下載。', who:'所有人' },
+  { id:'att', col:1, g:'個人', t:'出勤請假', n:30, last:'2026-10-30', d:'業務總覽的「請假」標籤從這裡來。', who:'所有人' },
+  { id:'cal', col:1, g:'個人', t:'行事曆', n:6, last:'2026-10-27', st:'rare', d:'總共只有 6 筆、2 個人用過。', who:'所有人' },
+  { id:'social', col:1, g:'個人', t:'社群帳號庫', n:20, last:'2026-10-12', st:'rare', d:'小江的帳號庫最後一次改是 10/12；煌的只有 1 筆（9/08）。', who:'小江、煌' },
+  { id:'set', col:1, g:'管理', t:'設定', n:null, last:'2026-11-02', d:'案件分潤參數、8 個牌位門檻、各種選項。', who:'只有核心', st:'bad', p:'8 個牌位門檻還是舊數字，要照「本月實收業績」重填，外框才會對。', fix:'設定 → 案件分潤參數 → 業績牌位門檻，填 8 個數字（由小到大）。', sev:'m' },
+  { id:'acct', col:1, g:'管理', t:'帳號管理', n:10, last:'2026-08-21', d:'開帳號、設身分。最後一次新增帳號是 8/21（沒有新同事就不會動，正常）。', who:'只有核心' },
+  { id:'hr', col:1, g:'管理', t:'人事管理', n:0, last:null, st:'rare', never:1, d:'從來沒有資料（8/19 建立後就沒動過）。員工分頁其實是帳號資料，跟帳號管理重複。', who:'只有核心', p:'跟帳號管理重複，可以合併或拿掉。', sev:'l' },
+  // 資料與外部服務
+  { id:'ai', col:2, g:'外部服務', t:'AI 幫我填', m:'Claude', k:'ext', d:'放在 Cloudflare、用 Claude。貼上 LINE 對話，AI 邊讀邊把欄位填好。改程式要你自己到 Cloudflare 後台貼。' },
+  { id:'d_pp', col:2, g:'資料', t:'客人紀錄資料', m:'personalProgress', k:'data', d:'業務登記的每一位客人。' },
+  { id:'d_prog', col:2, g:'資料', t:'進度資料', m:'progress 廣告／通路', k:'data', d:'案件進度與狀態。' },
+  { id:'d_fu', col:2, g:'資料', t:'關懷名單', m:'customerFollowups', k:'data', d:'每位客人下次該聯絡的時間、負責人。', st:'bad', p:'32% 的客人負責人是「通路夥伴」，通路夥伴沒有帳號。', sev:'h' },
+  { id:'d_loan', col:2, g:'資料', t:'信貸資料', m:'bankLoanCases', k:'data' },
+  { id:'d_val', col:2, g:'資料', t:'估價資料', m:'valuationCases', k:'data' },
+  { id:'d_case', col:2, g:'資料', t:'案件與分潤', m:'casesAd／casesChannel', k:'data', lock:'由獲利報表規則產生。', d:'每一筆案件的利潤、分潤、廣告支出、客戶賠錢。' },
+  { id:'d_bonus', col:2, g:'資料', t:'獎金帳', m:'staffBonusLedger', k:'data', lock:'金額由獲利報表規則產生，不能直接改。' },
+  { id:'d_txn', col:2, g:'資料', t:'收支資料', m:'transactions', k:'data' },
+  { id:'d_dm', col:2, g:'資料', t:'聊天訊息', m:'directMessages', k:'data' },
+  { id:'d_file', col:2, g:'資料', t:'檔案空間', m:'Storage', k:'data', d:'聊天室的照片與檔案；讀取許可只開給系統網址。' },
+  { id:'d_att', col:2, g:'資料', t:'出勤資料', m:'attendanceRecords', k:'data' },
+  { id:'d_social', col:2, g:'資料', t:'社群帳號資料', m:'socialAccounts', k:'data' },
+  { id:'d_set', col:2, g:'資料', t:'分潤參數', m:'caseSettings', k:'data' },
+  { id:'d_users', col:2, g:'資料', t:'帳號與上線狀態', m:'users／presence', k:'data' },
+  // 看的頁面
+  { id:'v_my', col:3, g:'看的頁面', t:'個人儀表板', last:null, d:'業務看自己的獎金、客人數。只顯示，看不出最後使用時間（之後可以加瀏覽紀錄）。' },
+  { id:'v_daily', col:3, g:'看的頁面', t:'每日獎金', last:null, d:'今天要發的獎金，沒發會閃紅點；在這裡勾「已發放」。', lock:'金額不能改，只能勾發放。' },
+  { id:'v_so', col:3, g:'看的頁面', t:'業務總覽', last:null, d:'本月實收業績排名、8 階牌位外框、上線燈號、請假標籤、小江卡片。', st:'bad', p:'牌位外框依「設定」的門檻，門檻還沒重填，外框會不準。', sev:'m' },
+  { id:'v_dash', col:3, g:'看的頁面', t:'總覽', last:null, d:'公司整體數字。' },
+  { id:'v_rep', col:3, g:'看的頁面', t:'財報', last:null, d:'財務報表。' },
+  // 自動化
+  { id:'f_chat', col:3, g:'自動化 · 即時', t:'聊天通知', m:'新訊息時', k:'fn' },
+  { id:'f_dui', col:3, g:'自動化 · 即時', t:'對保推播', m:'改成對保時', k:'fn', d:'廣告、通路各一支；只在「變成對保」那一刻推播一次。' },
+  { id:'f_val', col:3, g:'自動化 · 即時', t:'估價推播', m:'填了方案時', k:'fn', d:'方案有改才推播；Excel 匯入不推播。已升級 Node 22。' },
+  { id:'f_lq', col:3, g:'自動化 · 即時', t:'LINE 查詢', m:'有人打 @姓名', k:'fn', d:'在 LINE 打「@姓名」，回覆那個人的估價資料。已升級 Node 22。' },
+  { id:'f_care', col:3, g:'自動化 · 每天', t:'關懷提醒', m:'09:00', k:'fn', st:'bad', d:'告訴每位負責人今天該聯絡幾位客人；每週一份週報給核心。', p:'負責人是通路夥伴的客人（32%）每天沒人收到提醒；核心只在週報看到數量。', fix:'派發給對應業務，或讓提醒改送給負責這條通路的業務。', sev:'h' },
+  { id:'f_social', col:3, g:'自動化 · 每天', t:'社群帳號檢查', m:'10:00', k:'fn', d:'帳號太久沒登入、養號天數到了 → 提醒小江。' },
+  { id:'f_dui12', col:3, g:'自動化 · 每天', t:'對保追蹤', m:'12:00', k:'fn', st:'bad', d:'對保第 1、2 天提醒業務和核心。', p:'業務欄位是通路夥伴名字的案件直接跳過，不會提醒任何人。', fix:'跟關懷提醒一起處理：找不到帳號時改送給核心或負責的業務。', sev:'h' },
+  { id:'f_daily', col:3, g:'自動化 · 每天', t:'未登記提醒', m:'平日 16:00', k:'fn', d:'今天還沒登記客人的業務會收到提醒。' },
+  { id:'f_unpaid', col:3, g:'自動化 · 每天', t:'未發獎金提醒', m:'18:00', k:'fn', d:'還沒發的獎金提醒核心。' },
+  // 傳送管道
+  { id:'notice', col:4, g:'傳送', t:'通知中心', m:'系統提醒＋公告', k:'ch', d:'排程程式先寫一則「通知」，再由通知推播送到手機。人發的公告也走這裡（人發的公告目前 0 則）。不能拿掉，拿掉所有提醒都會斷。' },
+  { id:'push', col:4, g:'傳送', t:'手機推播', m:'FCM', k:'ch' },
+  { id:'line', col:4, g:'傳送', t:'LINE', m:'官方帳號', k:'ch' },
+  // 收到的人
+  { id:'m_sales', col:5, g:'收到的人', t:'業務手機', k:'person' },
+  { id:'m_core', col:5, g:'收到的人', t:'核心手機', k:'person' },
+  { id:'m_xj', col:5, g:'收到的人', t:'小江手機', k:'person' },
+  { id:'line4', col:5, g:'收到的人', t:'LINE 4 個對象', k:'person' },
+  { id:'partner', col:5, g:'收到的人', t:'通路夥伴', m:'沒有帳號', k:'person', st:'bad', d:'通路合作對象，沒有系統帳號，收不到任何提醒。', sev:'h' },
+];
+// 連線：[從, 到, 說明, bad]
+const L = [
+  ['core','val','登記估價'], ['core','loan','輸入信貸'], ['core','profit','存案件'], ['core','txn','補登收支'], ['core','set','調參數'], ['core','acct','開帳號'], ['core','hr','（沒在用）'], ['core','chat','聊天'],
+  ['xj','social','管理帳號'], ['huang','social','管理帳號'],
+  ['admin','prog','更新狀態'], ['admin','chat','聊天'], ['admin','att','請假'],
+  ['sales','pp','登記客人'], ['sales','prog','查看進度'], ['sales','care','關懷客人'], ['sales','chat','聊天'], ['sales','att','請假'], ['sales','cal','排行程'],
+  ['pp','ai','貼對話自動填'], ['prog','ai','貼對話自動填'], ['loan','ai','貼對話自動填'], ['val','ai','貼對話自動填'],
+  ['pp','d_pp','存檔'], ['prog','d_prog','存檔'], ['care','d_fu','存檔'], ['loan','d_loan','存檔'], ['val','d_val','存檔'],
+  ['profit','d_case','算出利潤'], ['profit','d_bonus','自動產生獎金'], ['txn','d_txn','存檔'], ['chat','d_dm','存訊息'], ['chat','d_file','存照片檔案'], 
+  ['att','d_att','存檔'], ['social','d_social','存檔'], ['set','d_set','存參數'], ['acct','d_users','存帳號'],
+  ['d_pp','v_my','客人數'], ['d_bonus','v_my','我的獎金'], ['d_bonus','v_daily','要發的獎金'], ['d_case','v_so','本月實收業績'], ['d_set','v_so','牌位門檻'], ['d_att','v_so','請假標籤'], ['d_users','v_so','上線燈號'],
+  ['d_case','v_dash','公司數字'], ['d_txn','v_dash','公司數字'], ['d_case','v_rep','財報'], ['d_txn','v_rep','財報'],
+  ['d_dm','f_chat','新訊息'], ['d_prog','f_dui','變成對保'], ['d_val','f_val','填了方案'], ['d_val','f_lq','查估價'],
+  ['d_fu','f_care','今天該聯絡誰'], ['d_prog','f_dui12','對保中的案件'], ['d_pp','f_daily','今天有沒有登記'], ['d_case','f_unpaid','還沒發的獎金'], ['d_social','f_social','帳號狀況'],
+  ['f_chat','push','送出'], ['f_dui','push','送出'], ['f_val','line','推播估價'], ['f_lq','line','回覆查詢'],
+  ['f_care','notice','寫提醒＋週報'], ['f_social','notice','寫提醒'], ['f_dui12','notice','寫提醒'], ['f_daily','notice','寫提醒'], ['f_unpaid','notice','寫提醒'],
+  ['notice','push','送到手機'],
+  ['push','m_sales','業務收到'], ['push','m_core','核心收到'], ['push','m_xj','小江收到'], ['line','line4','4 個對象收到'],
+  ['f_care','partner','送不到',1], ['f_dui12','partner','跳過，送不到',1],
+];
+// 流程：每一步＝一組連線＋說明
+const FLOWS = [
+  { name:'業務登記客人', steps:[[['sales','pp'],'業務打開「我的客人紀錄」新增一位客人'],[['pp','ai'],'可以貼 LINE 對話，讓 AI 把欄位填好'],[['pp','d_pp'],'存檔，核心那邊馬上看得到'],[['d_pp','f_daily'],'平日 16:00 檢查每位業務今天有沒有登記'],[['f_daily','notice'],['notice','push'],['push','m_sales'],'還沒登記的業務收到提醒']] },
+  { name:'進度變對保', bad:1, steps:[[['admin','prog'],'行政在「進度追蹤」更新案件'],[['prog','d_prog'],'狀態存檔'],[['d_prog','f_dui'],['f_dui','push'],['push','m_sales'],'狀態變成「對保」→ 負責業務馬上收到推播'],[['d_prog','f_dui12'],['f_dui12','notice'],['notice','push'],['push','m_core'],'對保第 1、2 天中午，再提醒業務和核心'],[['f_dui12','partner'],'業務是通路夥伴名字的案件，直接跳過，沒人收到',1]] },
+  { name:'客戶關懷提醒', bad:1, steps:[[['sales','care'],'業務在「客戶關懷追蹤」處理客人'],[['care','d_fu'],'下次聯絡時間存進關懷名單'],[['d_fu','f_care'],'每天 9:00 找出今天該聯絡的客人'],[['f_care','notice'],['notice','push'],['push','m_sales'],'負責業務收到「今天有幾位該聯絡」'],[['f_care','partner'],'負責人是通路夥伴的 32%，每天沒人收到',1],[['push','m_core'],'每週週報告訴核心：通路夥伴還有幾位沒派發']] },
+  { name:'估價與 LINE', steps:[[['core','val'],'shangyiloan 登記估價（大部分是 Excel 匯入）'],[['val','d_val'],'存成估價資料'],[['d_val','f_val'],['f_val','line'],['line','line4'],'填了方案 → 推播到 LINE 的 4 個對象（匯入的不推播）'],[['d_val','f_lq'],['f_lq','line'],'有人在 LINE 打「@姓名」→ 回覆那個人的估價資料']] },
+  { name:'存案件到排名', bad:1, steps:[[['core','profit'],'核心在「獲利報表」存一筆案件'],[['profit','d_case'],['profit','d_bonus'],'依規則同時算出利潤和業務獎金（規則不能動）'],[['d_case','v_so'],'業務總覽加總本月實收業績、重新排名'],[['d_set','v_so'],'牌位外框照設定的 8 個門檻（門檻還沒重填）',1],[['d_bonus','v_daily'],'每日獎金顯示要發的獎金'],[['d_case','f_unpaid'],['f_unpaid','notice'],['notice','push'],['push','m_core'],'每天 18:00，還沒發的獎金提醒核心']] },
+  { name:'聊天傳檔', steps:[[['sales','chat'],'在聊天室傳訊息或照片'],[['chat','d_dm'],['chat','d_file'],'訊息存進資料庫、照片存到檔案空間'],[['d_dm','f_chat'],['f_chat','push'],['push','m_sales'],'對方手機收到通知']] },
+  { name:'小江帳號檢查', steps:[[['xj','social'],'小江管理社群帳號'],[['d_social','f_social'],['f_social','notice'],['notice','push'],['push','m_xj'],'每天 10:00 檢查帳號健康，有狀況提醒小江']] },
+];
+const ISS = [
+  { id:'f_care', sev:'h', t:'通路夥伴的客人沒人收到關懷提醒', s:'32% 的關懷名單，每天提醒送不到人' },
+  { id:'f_dui12', sev:'h', t:'對保追蹤也跳過通路夥伴的案件', s:'第 1、2 天的提醒不會送給任何人' },
+  { id:'NODE', sev:'m', t:'後端 9 支程式還是舊版 Node', s:'只有估價推播、LINE 查詢已升級；停止支援後無法修改' },
+  { id:'set', sev:'m', t:'8 個牌位門檻要重填', s:'改照本月實收業績，業務總覽外框才準' },
+  { id:'hr', sev:'l', t:'人事管理從沒用過', s:'跟帳號管理重複，可以合併或拿掉' },
+  { id:'TEST', sev:'l', t:'測試工具放在暫存資料夾', s:'可能被系統清掉，應該搬到正式位置' },
+];
+const OLDNODE = ['f_chat','f_dui','f_care','f_social','f_dui12','f_daily','f_unpaid','notice'];
+
+
+/* ============ 精簡：只有一個頁面在寫的資料，併進那個頁面（不另外畫方塊） ============ */
+{ const FOLD = { d_pp:'pp', d_prog:'prog', d_fu:'care', d_loan:'loan', d_val:'val', d_txn:'txn', d_dm:'chat', d_file:'chat', d_inbox:'inbox', d_att:'att', d_social:'social' };
+  const nm = id => (N.find(n => n.id === id) || {}).t;
+  // 資料的問題搬到頁面上
+  Object.entries(FOLD).forEach(([d, pg]) => { const dn = N.find(n => n.id === d), pn = N.find(n => n.id === pg); if(!dn || !pn) return;
+    pn.store = (pn.store ? pn.store + '、' : '') + dn.t;
+    if(dn.p && !pn.p){ pn.p = dn.p; pn.sev = dn.sev; pn.st = 'bad'; } });
+  const map = id => FOLD[id] || id;
+  const L2 = [];
+  L.forEach(([f, t, lab, bad]) => { if(FOLD[t] && FOLD[t] === f) return; const a = map(f), b = map(t); if(a === b) return;
+    if(!L2.some(x => x[0] === a && x[1] === b)) L2.push([a, b, lab, bad]); });
+  L.length = 0; L2.forEach(x => L.push(x));
+  for(let i = N.length - 1; i >= 0; i--) if(FOLD[N[i].id]) N.splice(i, 1);
+  FLOWS.forEach(f => { const out = [];
+    f.steps.forEach(st => { const bad = st[st.length - 1] === 1, txt = st.find(x => typeof x === 'string');
+      const edges = st.filter(x => Array.isArray(x)).map(([a, b]) => [map(a), map(b)]).filter(([a, b]) => a !== b);
+      if(!edges.length){ if(out.length){ const prev = out[out.length - 1], k = prev.findIndex(x => typeof x === 'string'); prev[k] += '；' + txt; } return; }
+      out.push([...edges, txt, ...(bad ? [1] : [])]); });
+    f.steps = out; });
+}
+/* ============ 圖示 ============ */
+const G = {
+  person:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-4 3-6.2 7-6.2s7 2.2 7 6.2"/>',
+  users:'<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c0-3.4 2.4-5.4 5.5-5.4s5.5 2 5.5 5.4"/><circle cx="16.5" cy="8" r="2.5"/><path d="M15.5 13.7c3 0 5 1.8 5 4.8"/>',
+  page:'<path d="M7 3h7l4 4v14H7z M14 3v4h4 M9.5 12h6 M9.5 15.5h6"/>',
+  view:'<path d="M4 20V4 M4 20h16 M8 16v-5 M12 16V8 M16 16v-7"/>',
+  db:'<ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6 M5 12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6"/>',
+  spark:'<path d="M11 3l1.8 5.2L18 10l-5.2 1.8L11 17l-1.8-5.2L4 10l5.2-1.8z"/>',
+  bolt:'<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>',
+  clock:'<circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/>',
+  bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z M10 20.5h4"/>',
+  push:'<circle cx="12" cy="12" r="2"/><path d="M8.2 8.2a5.4 5.4 0 0 0 0 7.6 M15.8 8.2a5.4 5.4 0 0 1 0 7.6"/>',
+  bubble:'<path d="M4 11c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5-3.6 6.5-8 6.5c-.8 0-1.6-.1-2.3-.3L6 19.5l.8-3.2C5 15 4 13.2 4 11z"/>',
+  phone:'<path d="M8 3h8v18H8z M11 18h2"/>',
+  x:'<path d="M7 7l10 10 M17 7L7 17"/>',
+};
+const ICO = n => n.id === 'partner' ? ['#E04848','x'] : n.col === 0 ? ['#4F6BFF', n.id === 'core' ? 'users' : 'person'] : n.col === 5 ? (n.id === 'line4' ? ['#06C755','bubble'] : ['#6E6E75','phone'])
+  : n.k === 'data' ? ['#B65BE0','db'] : n.k === 'ext' ? ['#10A37F','spark'] : n.k === 'fn' ? (/^\d|平日/.test(n.m || '') ? ['#7B61FF','clock'] : ['#7B61FF','bolt'])
+  : n.k === 'ch' ? (n.id === 'line' ? ['#06C755','bubble'] : n.id === 'push' ? ['#E8507A','push'] : ['#E8507A','bell']) : n.col === 3 ? ['#5AAFD8','view'] : ['#F08A24','page'];
+const CAPT = n => n.col === 0 ? '使用的人' : n.col === 5 ? '收到的人' : n.k === 'data' ? '資料' : n.k === 'ext' ? '外部服務 · ' + (n.m || '') : n.k === 'fn' ? '自動化 · ' + (n.m || '') : n.k === 'ch' ? '傳送' + (n.m ? ' · ' + n.m : '') : n.col === 3 ? '看的頁面' : '頁面';
+
+/* ============ 排版 ============ */
+const daysAgo = s => s ? Math.round((new Date(TODAY) - new Date(s)) / 864e5) : null;
+const agoTxt = s => { const d = daysAgo(s); return d === null ? '' : d === 0 ? '今天' : d === 1 ? '昨天' : d + ' 天前'; };
+const TIER = { pp:'xl', prog:'xl', val:'xl', profit:'l', care:'l', chat:'l', txn:'l', loan:'l', v_so:'l', v_daily:'l', cal:'s', social:'s', hr:'s' };
+const TH = { xl:70, l:60, m:52, s:44 }, TF = { xl:18, l:15.5, m:14, s:12.5 }, SF = { xl:12.5, l:12, m:11.5, s:11 };
+const U30 = { pp:487, prog:204, care:127, loan:43, val:35, profit:68, txn:78, chat:160, att:12, cal:2, social:1, acct:0, hr:0 };
+// 兩區：上＝通知與自動化，下＝報表與排名
+const LX = [20, 300, 700, 1100, 1400], LW = [160, 220, 230, 200, 180];
+const BAND = { A:{ name:'通知與自動化', cols:['使用的人', '操作的頁面', '自動化', '傳送', '收到的人'] }, B:{ name:'報表與排名', cols:['', '操作的頁面', '共用資料', '看的頁面', ''] } };
+const PAGES_B = ['profit', 'txn', 'set', 'acct', 'hr'];
+N.forEach(n => {
+  if(n.col === 0){ n.band = 'A'; n.lc = 0; }
+  else if(n.col === 1){ n.band = PAGES_B.includes(n.id) ? 'B' : 'A'; n.lc = 1; }
+  else if(n.k === 'data'){ n.band = 'B'; n.lc = 2; }
+  else if(n.k === 'ext' || n.k === 'fn'){ n.band = 'A'; n.lc = 2; }
+  else if(n.col === 3){ n.band = 'B'; n.lc = 3; }
+  else if(n.col === 4){ n.band = 'A'; n.lc = 3; }
+  else { n.band = 'A'; n.lc = 4; }
+});
+const byId = Object.fromEntries(N.map(n => [n.id, n]));
+const BANDY = {};
+function stack(band, y0){
+  let bottom = y0;
+  for(let c = 0; c < 5; c++){
+    let y = y0 + 124, lastG = null;
+    N.filter(n => n.band === band && n.lc === c).forEach(n => {
+      const g = n.k === 'data' ? '' : n.g;
+      if(g && g !== lastG){ y += lastG === null ? 0 : 24; n.gh = y; y += 22; lastG = g; } else n.gh = null;
+      n.tier = TIER[n.id] || 'm'; n.x = LX[c]; n.w = LW[c]; n.y = y; n.h = TH[n.tier]; y += n.h + 26;
+    });
+    bottom = Math.max(bottom, y);
+  }
+  return bottom;
+}
+BANDY.A = 0; let aEnd = stack('A', 0);
+// 同一群組裡照「連到的卡片」的平均高度重新排順序，畫出來的線比較不會交叉
+{ const gi = n => (n.g || '') ;
+  for(let pass = 0; pass < 2; pass++){
+    N.forEach(n => { const nb = L.filter(([f, t]) => t === n.id || f === n.id).map(([f, t]) => byId[f === n.id ? t : f]).filter(m => m && m.band === n.band && m.lc !== n.lc && m.lc !== 0);
+      n.ord = nb.length ? nb.reduce((a, m) => a + m.y, 0) / nb.length : n.y; });
+    const key = n => [n.band, n.lc, N.indexOf(N.find(m => m.band === n.band && m.lc === n.lc && gi(m) === gi(n)))];
+    const orig = new Map(N.map((n, i) => [n, i]));
+    N.sort((a, b) => { const ka = key(a), kb = key(b); return ka[0] < kb[0] ? -1 : ka[0] > kb[0] ? 1 : ka[1] - kb[1] || ka[2] - kb[2] || (a.lc === 0 ? orig.get(a) - orig.get(b) : a.ord - b.ord); });
+    aEnd = stack('A', 0); } }
+// 傳送、收到的人：對齊自動化的中段
+{ const fy = byId.f_chat.y; [3, 4].forEach(c => { const ns = N.filter(n => n.band === 'A' && n.lc === c), off = fy - ns[0].y + (c === 4 ? 10 : 50); ns.forEach(n => { n.y += off; if(n.gh != null) n.gh += off; }); }); }
+BANDY.B = Math.max(aEnd, ...N.filter(n => n.band === 'A').map(n => n.y + n.h)) + 90; stack('B', BANDY.B);
+{ for(let pass = 0; pass < 2; pass++){ N.forEach(n => { if(n.band !== 'B') return; const nb = L.filter(([f, t]) => t === n.id || f === n.id).map(([f, t]) => byId[f === n.id ? t : f]).filter(m => m && m.band === 'B' && m.lc !== n.lc); n.ord = nb.length ? nb.reduce((a, m) => a + m.y, 0) / nb.length : n.y; });
+  const A = N.filter(n => n.band === 'A'), B = N.filter(n => n.band === 'B'); B.sort((a, b) => a.lc - b.lc || (a.lc === 1 ? 0 : a.ord - b.ord)); N.length = 0; A.concat(B).forEach(n => N.push(n)); stack('B', BANDY.B); } }
+const W = 1600, H = Math.max(...N.map(n => n.y + n.h)) + 40;
+
+const svg = document.getElementById('map'), NS = 'http://www.w3.org/2000/svg';
+const el = (t, a = {}, p) => { const e = document.createElementNS(NS, t); for(const k in a) if(a[k] != null) e.setAttribute(k, a[k]); if(p) p.appendChild(e); return e; };
+const tx = (s, a, p) => { const e = el('text', a, p); e.textContent = s; return e; };
+const tw = (s, fs) => [...s].reduce((w, ch) => w + (/[\x00-\x7F]/.test(ch) ? fs * .56 : fs), 0);
+svg.innerHTML = `<defs>
+  <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#2B2B2F"/></pattern>
+  <radialGradient id="cmG"><stop offset="0" stop-color="#FFFDE8"/><stop offset=".35" stop-color="#FFE45C"/><stop offset=".7" stop-color="#F5C400" stop-opacity=".5"/><stop offset="1" stop-color="#F5C400" stop-opacity="0"/></radialGradient>
+  <radialGradient id="wG"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".45" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <filter id="cmF" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>`;
+el('rect', { x:-3000, y:-3000, width:W + 6000, height:H + 6000, fill:'url(#dots)' }, svg);
+const gE = el('g', {}, svg), gN = el('g', {}, svg), gS = el('g', {}, svg), gC = el('g', {}, svg);
+// 區塊標題（大字＋一句說明）＋欄位標籤（編號膠囊，中間有箭頭表示方向）
+const BSUB = { A:'頁面一有動作，自動化就把通知送出去', B:'存一筆案件，報表與排名跟著更新' }, BCOL = { A:'#2BD46B', B:'#5AAFD8' };
+['A', 'B'].forEach(b => { const y = BANDY[b];
+  if(b === 'B') el('line', { x1:LX[0], y1:y - 34, x2:LX[4] + LW[4], y2:y - 34, stroke:'#34343A', 'stroke-width':1 }, gN);
+  el('rect', { x:LX[0], y:y, width:5, height:28, rx:2.5, fill:BCOL[b] }, gN);
+  tx(BAND[b].name, { x:LX[0] + 16, y:y + 23, class:'bandh' }, gN);
+  tx(BSUB[b], { x:LX[0] + 16, y:y + 46, class:'bands' }, gN);
+  let k = 0, prevEnd = null;
+  BAND[b].cols.forEach((c, i) => { if(!c) return; k++;
+    const w = tw(c, 15) + 52, g = el('g', { class:'ch', transform:`translate(${LX[i]},${y + 64})` }, gN);
+    el('rect', { width:w, height:34, rx:17 }, g);
+    el('circle', { cx:17, cy:17, r:11, fill:BCOL[b] }, g); tx(String(k), { x:17, y:21.5, 'text-anchor':'middle', class:'num', fill:'#141414' }, g);
+    tx(c, { x:36, y:22.5 }, g);
+    if(prevEnd != null){ const ay = y + 81; el('path', { d:`M${prevEnd + 10} ${ay}H${LX[i] - 12}`, stroke:'#4A4A50', 'stroke-width':1.3, fill:'none' }, gN); el('path', { d:`M${LX[i] - 12} ${ay}l-6 -3.5v7z`, fill:'#4A4A50' }, gN); }
+    prevEnd = LX[i] + w;
+    if(b === 'A' && i === 2){ const t = OLDNODE.filter(x => x !== 'notice').length + ' 支舊版 Node', w2 = tw(t, 11) + 18, g2 = el('g', { transform:`translate(${LX[i] + w + 8},${y + 72})` }, gN); el('rect', { width:w2, height:18, rx:4, fill:'rgba(255,93,93,.18)' }, g2); tx(t, { x:w2 / 2, y:13, 'text-anchor':'middle', 'font-size':11, 'font-weight':700, fill:'#FF8A8A' }, g2); prevEnd += w2 + 8; }
+  }); });
+N.forEach(n => { if(n.gh != null) tx(n.g, { x:n.x, y:n.gh + 12, class:'grp' }, gN); });
+
+const stOf = n => n.st || 'ok';
+N.forEach(n => {
+  const big = n.tier === 'xl' || n.tier === 'l', bad = stOf(n) === 'bad' || OLDNODE.includes(n.id) && false;
+  const g = el('g', { class:`cd${big ? ' big' : ''}${stOf(n) === 'bad' ? ' bad' : ''}${stOf(n) === 'rare' ? ' rare' : ''}`, 'data-id':n.id, transform:`translate(${n.x},${n.y})` }, gN); n.el = g;
+  el('rect', { width:n.w, height:n.h, rx:9, class:'bg' }, g);
+  const [ic, gl] = ICO(n), is = n.tier === 'xl' ? 26 : n.tier === 's' ? 18 : 22, p = 12;
+  el('rect', { x:p, y:(n.h - is) / 2 - (U30[n.id] != null ? 2 : 0), width:is, height:is, rx:is / 4.5, fill:ic }, g);
+  el('g', { transform:`translate(${p + is * .14},${(n.h - is) / 2 - (U30[n.id] != null ? 2 : 0) + is * .14}) scale(${is * .72 / 24})`, fill:'none', stroke:'#fff', 'stroke-width':2.2, 'stroke-linecap':'round', 'stroke-linejoin':'round' }, g).innerHTML = G[gl];
+  const tx0 = p + is + 10, mid = n.h / 2 - (U30[n.id] != null ? 2 : 0);
+  // 副標只放有用的資訊；類型看圖示顏色
+  const parts = [];
+  if(n.n != null) parts.push(n.n.toLocaleString() + ' 筆');
+  if(n.last) parts.push(agoTxt(n.last) + '用過'); else if(n.never) parts.push('從沒用過'); else if(n.last === null && (n.col === 1 || n.col === 3) && !n.k) parts.push('只顯示');
+  if(!parts.length && n.m && n.k !== 'data') parts.push(n.m);
+  if(!parts.length && n.k === 'data') parts.push('共用資料');
+  const cap = parts.join(' · ');
+  const tf = TF[n.tier], sf = SF[n.tier], blk = cap ? tf + 5 + sf : tf, top = mid - blk / 2;
+  tx(n.t, { x:tx0, y:top + tf * .86, class:'tt', 'font-size':tf }, g);
+  if(cap) tx(cap, { x:tx0, y:top + tf + 5 + sf * .86, class:'cap', 'font-size':sf }, g);
+  // 有問題：右上角紅色小標
+  const pc = n.p ? 1 : 0;
+  if(pc){ const lbl = '問題', w = tw(lbl, 9.5) + 12; el('rect', { x:n.w - w - 8, y:7, width:w, height:16, rx:4, fill:'rgba(255,255,255,.18)' }, g); tx(lbl, { x:n.w - 8 - w / 2, y:18.5, class:'chip', fill:'#FFFFFF', 'text-anchor':'middle' }, g); }
+  if(n.lock) el('g', { transform:`translate(${n.w - (pc ? 80 : 24)},8) scale(.62)`, fill:'none', stroke:'#8D8D94', 'stroke-width':2.2, 'stroke-linecap':'round' }, g).innerHTML = '<path d="M7 11V8a5 5 0 0 1 10 0v3 M5 11h14v10H5z"/>';
+  if(U30[n.id] != null){ const bw = n.w - tx0 - 14, v = U30[n.id] ? Math.log10(U30[n.id] + 1) / Math.log10(488) : 0; el('rect', { x:tx0, y:n.h - 9, width:bw, height:3, rx:1.5, class:'ub' }, g); if(v) el('rect', { x:tx0, y:n.h - 9, width:Math.max(4, bw * v), height:3, rx:1.5, class:'uf' }, g); }
+  el('circle', { cx:0, cy:n.h / 2, r:4.5, class:'pt' }, g); el('circle', { cx:n.w, cy:n.h / 2, r:4.5, class:'pt' }, g);
+});
+// 連線
+const E = L.map(([f, t, lab, bad]) => {
+  const a = byId[f], b = byId[t]; let d;
+  // 直角路線（有稜有角）：橫 → 直 → 橫；同一欄或往回的線從右邊繞
+  const x1 = a.x + a.w, y1 = a.y + a.h / 2, y2 = b.y + b.h / 2;
+  if(b.x <= x1 + 10){ const xo = Math.max(x1, b.x + b.w) + 26; d = `M${x1} ${y1}H${xo}V${y2}H${b.x + b.w}`; }
+  else if(Math.abs(y1 - y2) < 1) d = `M${x1} ${y1}H${b.x}`;
+  else { const sp = ((L.indexOf(L.find(x => x[0] === f && x[1] === t)) % 5) - 2) * 7, mx = Math.round((x1 + b.x) / 2 + sp); d = `M${x1} ${y1}H${mx}V${y2}H${b.x}`; }
+  const pe = a.col === 0;
+  const g = el('g', { class:'e' + (bad ? ' bad' : '') + (pe ? ' pe' : '') }, gE);
+  const p = el('path', { class:'ln', d }, g), Lp = p.getTotalLength(), m = p.getPointAtLength(Lp / 2);
+  // 線太短（例如傳送 → 收到的人）就不放標籤，避免疊在一起
+  if(b.x - (a.x + a.w) > 60 && Lp > 110){ const tg = el('g', { class:'tag', transform:`translate(${m.x},${m.y})` }, g), w = tw(lab, 11) + 14;
+  el('rect', { x:-w / 2, y:-10, width:w, height:20, rx:4 }, tg); tx(lab, { y:4, 'text-anchor':'middle' }, tg); }
+  const cm = el('g', { opacity:0 }, gC);
+  const tail = [], halo = el('circle', { r:6, fill:'url(#wG)' }, cm), head = el('circle', { r:2.2, fill:'#FFFFFF', filter:'url(#cmF)' }, cm);
+  return { f, t, lab, bad:!!bad, el:g, path:p, L:Lp, cm, tail, halo, head, auto:!pe && a.col >= 2 && !bad, ph:Math.random() * 30000 };
+});
+const eOf = (f, t) => E.find(e => e.f === f && e.t === t);
+// 滑鼠移到卡片上：只畫它直接相連的線
+gN.addEventListener('pointerover', ev => { const c = ev.target.closest('.cd[data-id]'); if(!c || svg.classList.contains('focus')) return; const id = c.dataset.id; svg.classList.add('hov'); E.forEach(e => e.el.classList.toggle('hv', e.f === id || e.t === id)); });
+gN.addEventListener('pointerout', ev => { if(ev.target.closest('.cd[data-id]')){ svg.classList.remove('hov'); E.forEach(e => e.el.classList.remove('hv')); } });
+
+/* ============ 影響範圍 ============ */
+function reach(id, dir){ const seen = new Set(), q = [id]; while(q.length){ const x = q.shift(); E.forEach(e => { const [a, b] = dir > 0 ? [e.f, e.t] : [e.t, e.f]; if(a === x && !seen.has(b)){ seen.add(b); q.push(b); } }); } seen.delete(id); return seen; }
+function clearHL(){ anim = null; svg.classList.remove('focus'); N.forEach(n => n.el.classList.remove('on', 'onbad', 'sel')); E.forEach(e => e.el.classList.remove('on', 'up')); gS.innerHTML = ''; }
+const lit = id => byId[id].el.classList.add(stOf(byId[id]) === 'bad' ? 'onbad' : 'on');
+let sel = null, flow = null, step = 0, tmr = null, anim = null;
+const det = document.getElementById('det');
+function pick(id){
+  stopFlow(); clearHL(); sel = id; const n = byId[id], up = reach(id, -1), down = reach(id, 1);
+  svg.classList.add('focus'); n.el.classList.add('sel'); [...up, ...down].forEach(lit);
+  E.forEach(e => { const inDown = (e.f === id || down.has(e.f)) && down.has(e.t), inUp = (e.t === id || up.has(e.t)) && up.has(e.f);
+    if(inDown) e.el.classList.add('on'); else if(inUp) e.el.classList.add('on', 'up'); });
+  anim = { list:E.filter(e => e.el.classList.contains('on') && !e.el.classList.contains('up')), t0:performance.now(), loop:1 };
+  detail(n, up, down);
+}
+const TYPE = n => n.col === 0 ? '使用的人' : n.col === 5 ? '收到的人' : n.k === 'data' ? '資料' : n.k === 'ext' ? '外部服務' : n.k === 'fn' ? '自動化（後端程式）' : n.k === 'ch' ? '傳送管道' : n.col === 3 ? '看的頁面' : '操作的頁面';
+function rel(set, title, id){
+  if(!set.size) return '';
+  const row = x => { const m = byId[x], e = E.find(e => (e.f === id && e.t === x) || (e.t === id && e.f === x)); return `<a data-go="${x}" class="${stOf(m) === 'bad' ? 'bad' : ''}"><span>${m.t}</span><small>${e ? e.lab : '間接'}</small></a>`; };
+  const arr = [...set].sort((a, b) => (E.some(e => (e.f === id && e.t === b) || (e.t === id && e.f === b)) ? 1 : 0) - (E.some(e => (e.f === id && e.t === a) || (e.t === id && e.f === a)) ? 1 : 0));
+  return `<div class="rel"><div class="h"><span>${title}</span><span>${set.size}</span></div>${arr.map(row).join('')}</div>`;
+}
+function detail(n, up, down){
+  const s = stOf(n), dc = s === 'bad' ? '#FF5D5D' : s === 'rare' ? '#6E6E75' : '#2BD46B', old = OLDNODE.includes(n.id);
+  const usage = n.n != null || n.last ? `${n.n != null ? n.n.toLocaleString() + ' 筆 · ' : ''}最後使用 ${n.last ? n.last.slice(5).replace('-', '/') + '（' + agoTxt(n.last) + '）' : '—'}` : n.never ? '從來沒有資料' : (n.last === null && (n.col === 1 || n.col === 3) && !n.k) ? '只顯示的頁面，看不出最後使用時間' : (n.m || '');
+  det.innerHTML = `<button class="x" id="dx">✕</button><div class="cp">${TYPE(n)}</div><h2><i style="background:${dc}"></i>${n.t}</h2><div class="meta">${usage}${n.who ? '<br>' + n.who : ''}</div>
+    ${n.d ? `<p>${n.d}</p>` : ''}${n.store ? `<p style="color:#8D8D94">資料存在：${n.store}</p>` : ''}
+    ${n.p ? `<div class="pb bad"><b>${n.sev === 'h' ? '嚴重問題' : '問題'}</b>${n.p}${n.fix ? '<br><span style="color:#B9B9BF">建議：' + n.fix + '</span>' : ''}</div>` : ''}
+    ${old ? `<div class="pb bad"><b>舊版 Node</b>這支後端程式還沒升級，停止支援後就不能再修改。</div>` : ''}
+    ${n.lock ? `<div class="pb lock"><b>規則不能動</b>${n.lock}</div>` : ''}
+    ${s === 'rare' && !n.p ? `<div class="pb rare"><b>很少用</b>${n.last ? '最後使用 ' + agoTxt(n.last) + '。' : ''}可以考慮是否保留。</div>` : ''}
+    ${rel(up, '資料從哪裡來', n.id)}${rel(down, '會影響到誰', n.id)}`;
+  det.classList.add('show'); document.getElementById('dx').onclick = () => { sel = null; clearHL(); det.classList.remove('show'); anim = null; };
+}
+document.addEventListener('click', ev => { const a = ev.target.closest('[data-go]'); if(a){ pick(a.dataset.go); fly(byId[a.dataset.go]); } });
+
+/* ============ 流程 ============ */
+const seg = document.getElementById('seg'), stE = document.getElementById('step'), stT = document.getElementById('stT');
+seg.innerHTML = `<button class="on" data-fl="-1">全部</button>` + FLOWS.map((f, i) => `<button data-fl="${i}"><i class="${f.bad ? 'bad' : ''}"></i>${f.name}</button>`).join('');
+seg.onclick = ev => { const b = ev.target.closest('[data-fl]'); if(!b) return; const i = +b.dataset.fl; if(i < 0){ stopFlow(); clearHL(); det.classList.remove('show'); fit(); } else startFlow(i); };
+function startFlow(i){ clearHL(); sel = null; det.classList.remove('show'); flow = FLOWS[i]; step = 0; seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.fl === i)); svg.classList.add('focus'); stE.classList.add('show'); showFlow(); fitTo(flow); }
+function stopFlow(){ flow = null; clearTimeout(tmr); stE.classList.remove('show'); seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.fl === '-1')); }
+function showFlow(){
+  N.forEach(n => n.el.classList.remove('on', 'onbad')); E.forEach(e => e.el.classList.remove('on')); gS.innerHTML = '';
+  const numbered = {};
+  flow.steps.forEach((s, k) => { if(k > step) return; const bad = s[s.length - 1] === 1, edges = s.filter(x => Array.isArray(x));
+    edges.forEach(([f, t]) => { const e = eOf(f, t); if(e) e.el.classList.add('on'); lit(f); if(bad) byId[t].el.classList.add('onbad'); else lit(t); });
+    const last = edges[edges.length - 1][1]; (numbered[last] = numbered[last] || []).push({ k:k + 1, bad }); });
+  Object.entries(numbered).forEach(([id, ks]) => { const n = byId[id]; ks.forEach((o, j) => { const g = el('g', { class:'stp' + (o.bad ? ' bad' : ''), transform:`translate(${n.x + n.w - 4 - j * 20},${n.y - 4})` }, gS); el('circle', { r:9.5 }, g); tx(String(o.k), { y:4, 'text-anchor':'middle' }, g); }); });
+  const cur = flow.steps[step], bad = cur[cur.length - 1] === 1;
+  anim = { list:cur.filter(x => Array.isArray(x)).map(([f, t]) => eOf(f, t)).filter(Boolean), t0:performance.now() };
+  stT.innerHTML = `<small>${flow.name} · STEP ${step + 1} / ${flow.steps.length}</small>${cur.find(x => typeof x === 'string')}`;
+  stE.classList.toggle('bad', bad);
+  clearTimeout(tmr); tmr = setTimeout(() => { if(!flow) return; step = step < flow.steps.length - 1 ? step + 1 : 0; showFlow(); }, 2200 * Math.max(1, anim.list.length) + 1600);
+}
+document.getElementById('stP').onclick = () => { if(flow && step > 0){ step--; showFlow(); } };
+document.getElementById('stN').onclick = () => { if(flow && step < flow.steps.length - 1){ step++; showFlow(); } };
+
+/* ============ 光點（小、黃、慢） ============ */
+const put = (c, e, s) => { const p = e.path.getPointAtLength(Math.max(0, Math.min(e.L, s))); c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); };
+(function loop(t){
+  document.body.classList.toggle('busy', svg.classList.contains('focus'));
+  const active = anim && anim.list.length ? new Set(anim.list) : null;
+  E.forEach(e => {
+    let s = -1;
+    if(active){ if(active.has(e)){ if(anim.loop){ const cyc = e.L / .09 + 1200; const u = ((t - anim.t0 + e.ph % 2000) % cyc) / (e.L / .09); if(u <= 1) s = u * e.L; }
+        else { const per = 2200, i = anim.list.indexOf(e), u = (t - anim.t0 - i * per) / per; if(u >= 0 && u <= 1) s = u * e.L; } } }
+    else if(!flow && !svg.classList.contains('focus')){ const sp = .045 + (e.ph % 997) / 997 * .05, cyc = e.L + 140 + (e.ph % 400); s = (t * sp + e.ph) % cyc; if(s > e.L) s = -1; if(svg.classList.contains('hov') && !e.el.classList.contains('hv')) s = -1; }
+    if(s >= 0 && svg.classList.contains('focus') && !e.el.classList.contains('on')) s = -1;
+    if(s < 0){ e.cm.setAttribute('opacity', 0); return; }
+    e.cm.setAttribute('opacity', 1); put(e.head, e, s); put(e.halo, e, s);
+  });
+  requestAnimationFrame(loop);
+})(0);
+
+/* ============ 待處理／很少用（左下角面板） ============ */
+const rare = N.filter(n => stOf(n) === 'rare').sort((a, b) => (daysAgo(b.last) ?? 999) - (daysAgo(a.last) ?? 999));
+const blk = document.getElementById('blk');
+document.getElementById('blkT').textContent = `待處理 · ${ISS.length}　很少用 · ${rare.length}`;
+document.getElementById('runs').textContent = `${N.filter(n => n.col === 1 || (n.col === 3 && !n.k)).length} 個頁面 · ${N.filter(n => n.k === 'fn').length} 個自動化`;
+document.getElementById('blkH').onclick = () => blk.classList.toggle('open');
+document.getElementById('blkB').innerHTML = `<div class="sh">待處理</div><ul>${ISS.map(x => `<li data-is="${x.id}"><span class="lv ${x.sev}">${{ h:'高', m:'中', l:'低' }[x.sev]}</span><div><b>${x.t}</b><small>${x.s}</small></div></li>`).join('')}</ul>
+  <div class="sh">很少用（最後使用）</div><ul>${rare.map(n => `<li class="rr" data-go="${n.id}"><span>${n.t}</span><span>${n.never ? '從沒用過' : agoTxt(n.last)}</span></li>`).join('')}</ul>`;
+document.getElementById('blkB').addEventListener('click', ev => { const li = ev.target.closest('[data-is]'); if(!li) return; const id = li.dataset.is;
+  if(id === 'NODE'){ stopFlow(); clearHL(); svg.classList.add('focus'); OLDNODE.forEach(x => byId[x].el.classList.add('onbad'));
+    det.innerHTML = `<button class="x" id="dx">✕</button><div class="cp">待處理 · 中</div><h2><i style="background:#FF5D5D"></i>後端 9 支還是舊版 Node</h2><p>這些自動化程式還沒升級到 Node 22。現在都能正常運作，但 Google 停止支援舊版後，就不能再修改或重新部署。</p><div class="pb lock"><b>已升級</b>估價推播、LINE 查詢</div><p>建議：找一天一起升級並重新部署，不影響畫面。</p>`;
+    det.classList.add('show'); document.getElementById('dx').onclick = () => { clearHL(); det.classList.remove('show'); }; fitTo(null, OLDNODE); return; }
+  if(id === 'TEST'){ det.innerHTML = `<button class="x" id="dx">✕</button><div class="cp">待處理 · 低</div><h2>測試工具放在暫存資料夾</h2><p>上線前跑完整頁面測試的工具放在暫存資料夾，可能被系統清掉。這是開發用的，不在地圖上。</p><p>建議：搬到固定位置。</p>`; det.classList.add('show'); document.getElementById('dx').onclick = () => det.classList.remove('show'); return; }
+  pick(id); fly(byId[id]); });
+// 搜尋
+document.getElementById('q').oninput = ev => { const v = ev.target.value.trim(); stopFlow(); clearHL(); det.classList.remove('show'); if(!v) return;
+  svg.classList.add('focus'); N.forEach(n => { if((n.t + (n.m || '') + (n.d || '')).includes(v)) lit(n.id); }); };
+
+/* ============ 縮放／拖曳 ============ */
+let vb = { x:0, y:0, w:W, h:H };
+const setVB = () => svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+const mob = () => innerWidth <= 900;
+let firstFit = true;
+function fit(){ const r = svg.getBoundingClientRect(), top = mob() ? 120 : 76;
+  if(!r.width || !r.height) return;
+  if(!mob() && firstFit){ firstFit = false; const aBot = Math.max(...N.filter(n => n.band === 'A').map(n => n.y + n.h)) + 30, s = Math.max((W + 20) / (r.width - 20), aBot / (r.height - top - 60)); vb = { w:r.width * s, h:r.height * s }; vb.x = W / 2 - vb.w / 2; vb.y = -top * s - 6; setVB(); return; }
+  if(mob()){ const s = 600 / r.width; vb = { x:0, y:20 - top * s, w:600, h:r.height * s }; setVB(); return; }
+  const s = Math.max((W + 20) / (r.width - 20), (H + 10) / (r.height - top - 70)); vb = { w:r.width * s, h:r.height * s }; vb.x = W / 2 - vb.w / 2; vb.y = -top * s + 10; setVB(); }
+function animTo(to){ const f = { ...vb }, t0 = performance.now(); (function st(now){ const p = Math.min(1, (now - t0) / 550), e = 1 - Math.pow(1 - p, 3); vb = { x:f.x + (to.x - f.x) * e, y:f.y + (to.y - f.y) * e, w:f.w + (to.w - f.w) * e, h:f.h + (to.h - f.h) * e }; setVB(); if(p < 1) requestAnimationFrame(st); })(t0); }
+function fitTo(fl, ids){
+  const set = ids ? ids.map(i => byId[i]) : [...new Set(fl.steps.flatMap(s => s.filter(x => Array.isArray(x)).flat()))].map(i => byId[i]);
+  const x0 = Math.min(...set.map(n => n.x)) - 40, x1 = Math.max(...set.map(n => n.x + n.w)) + 40, y0 = Math.min(...set.map(n => n.y)) - 50, y1 = Math.max(...set.map(n => n.y + n.h)) + 50;
+  const r = svg.getBoundingClientRect(), top = mob() ? 120 : 76, s = Math.max((x1 - x0) / r.width, (y1 - y0) / (r.height - top - 90), W / r.width * .6);
+  animTo({ w:r.width * s, h:r.height * s, x:(x0 + x1) / 2 - r.width * s / 2, y:y0 - top * s });
+}
+function fly(n){ if(n.x < vb.x || n.x + n.w > vb.x + vb.w || n.y < vb.y + 60 || n.y + n.h > vb.y + vb.h - 60) animTo({ ...vb, x:n.x + n.w / 2 - vb.w / 2, y:n.y - vb.h / 3 }); }
+const toW = (cx, cy) => { const p = svg.createSVGPoint(); p.x = cx; p.y = cy; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+function zoomAt(cx, cy, f){ const w = toW(cx, cy); const nw = Math.min(W * 2.5, Math.max(300, vb.w * f)); const k = nw / vb.w; vb.x = w.x - (w.x - vb.x) * k; vb.y = w.y - (w.y - vb.y) * k; vb.w = nw; vb.h *= k; setVB(); }
+svg.addEventListener('wheel', ev => { ev.preventDefault(); zoomAt(ev.clientX, ev.clientY, Math.exp(ev.deltaY * .0015)); }, { passive:false });
+const ptr = new Map(); let moved = 0, last = null, pinch = 0;
+svg.addEventListener('pointerdown', ev => { svg.setPointerCapture(ev.pointerId); ptr.set(ev.pointerId, [ev.clientX, ev.clientY]); moved = 0; last = [ev.clientX, ev.clientY]; if(ptr.size === 2){ const [a, b] = [...ptr.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); } svg.classList.add('drag'); });
+svg.addEventListener('pointermove', ev => { if(!ptr.has(ev.pointerId)) return; ptr.set(ev.pointerId, [ev.clientX, ev.clientY]);
+  if(ptr.size === 2){ const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if(pinch) zoomAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, pinch / d); pinch = d; moved += 10; return; }
+  const k = 1 / svg.getScreenCTM().a; vb.x -= (ev.clientX - last[0]) * k; vb.y -= (ev.clientY - last[1]) * k; moved += Math.abs(ev.clientX - last[0]) + Math.abs(ev.clientY - last[1]); last = [ev.clientX, ev.clientY]; setVB(); });
+const up = ev => { ptr.delete(ev.pointerId); if(ptr.size < 2) pinch = 0; if(ptr.size === 1) last = [...ptr.values()][0]; if(!ptr.size) svg.classList.remove('drag'); };
+svg.addEventListener('pointerup', ev => { const click = moved < 6 && ptr.size === 1; up(ev); if(!click) return;
+  const hit = document.elementsFromPoint(ev.clientX, ev.clientY).map(x => x.closest && x.closest('.cd[data-id]')).find(Boolean);
+  if(hit) pick(hit.dataset.id); else if(sel){ sel = null; clearHL(); det.classList.remove('show'); anim = null; } });
+svg.addEventListener('pointercancel', up);
+document.getElementById('fit').onclick = fit;
+addEventListener('resize', () => { firstFit = true; fit(); }); fit();
+</script>
+</body>
+</html>

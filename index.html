@@ -1481,6 +1481,158 @@
     th, td{padding:9px 8px;}
     .login-box{padding:28px 22px;}
   }
+
+  /* ===== 小江個人空間（2026-11-03 改版：深色儀表板；系統狀態／業務管理／廣告績效／系統地圖／我的獎金）===== */
+  body.xjs-on{background:#0A0E1A;}
+  body.xjs-on #main{max-width:none;background:#0A0E1A;color:#F2F4FA;}
+  .xjs{--bg:#0A0E1A;--cd:#141A2B;--cd2:#1B2236;--bd:#232B42;--ink:#F2F4FA;--mut:#8A93AE;--acc:#9B5CFF;--g:#2BD46B;--red:#FF4D6D;--yel:#FFB547;max-width:1440px;margin:0 auto;color:var(--ink);}
+  .xjs *{box-sizing:border-box;}
+  .xjs-hdr{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;padding-right:58px;} /* 右上角留給系統的通知鈴鐺 */
+  .xjs-av{position:relative;flex:none;cursor:pointer;}
+  .xjs-av .cam{position:absolute;right:-3px;bottom:-3px;width:20px;height:20px;border-radius:50%;background:var(--acc);display:grid;place-items:center;box-shadow:0 0 0 2px var(--bg);}
+  .xjs-hdr h1{margin:0;font-size:19px;color:var(--ink);}
+  .xjs-hdr p{margin:2px 0 0;font-size:12.5px;color:var(--mut);}
+  .xjs-tn{margin-left:auto;display:flex;gap:4px;background:var(--cd);padding:5px;border-radius:99px;overflow-x:auto;scrollbar-width:none;}
+  .xjs-tn::-webkit-scrollbar{display:none;}
+  .xjs-tn button{display:flex;align-items:center;gap:8px;font:inherit;font-size:13.5px;color:#D5DAE8;background:none;border:none;border-radius:99px;padding:9px 16px;cursor:pointer;white-space:nowrap;}
+  .xjs-tn button svg{width:16px;height:16px;}
+  .xjs-tn button:hover{background:#1A2033;}
+  .xjs-tn button.on{background:var(--acc);color:#fff;font-weight:700;box-shadow:0 6px 18px rgba(155,92,255,.35);}
+  .xjs-tn i{width:8px;height:8px;border-radius:50%;}
+  .xjs-ib{width:44px;height:44px;border-radius:50%;background:var(--cd2);display:grid;place-items:center;border:none;color:#D5DAE8;cursor:pointer;flex:none;}
+  .xjs-ib:hover{background:#262E47;}
+  .xjs-g{display:grid;gap:18px;}
+  .xjs-g2{grid-template-columns:1fr 1fr;}
+  .xjs-g3{grid-template-columns:1.15fr 1fr 1fr;}
+  .xjs-g4{grid-template-columns:repeat(4,1fr);}
+  .xjs-row2{display:grid;grid-template-columns:1fr 330px;gap:18px;margin-bottom:18px;}
+  .xjs-cd{background:var(--cd);border-radius:18px;padding:20px 22px;min-width:0;}
+  .xjs-cd.bad{box-shadow:inset 0 0 0 1.5px rgba(255,77,109,.45);}
+  .xjs-ch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  .xjs-ch h3{margin:0;font-size:16px;color:var(--ink);display:flex;align-items:center;gap:8px;}
+  .xjs-ch .sub{font-size:12px;color:var(--mut);}
+  .xjs-btn{font:inherit;font-size:12.5px;color:#D8D8DC;background:var(--cd2);border:none;border-radius:99px;padding:7px 14px;cursor:pointer;white-space:nowrap;}
+  .xjs-btn:hover{background:#262E47;}
+  .xjs-btn.on{background:#fff;color:#111;font-weight:700;}
+  .xjs-seg{display:flex;gap:4px;}
+  .xjs-sel{font:inherit;font-size:12.5px;background:var(--cd2);color:var(--ink);border:1px solid #2A3350;border-radius:99px;padding:6px 12px;}
+  .xjs-k{font-size:12px;color:var(--mut);}
+  .xjs-tl{background:var(--cd2);border-radius:14px;padding:12px 14px;min-width:0;}
+  .xjs-tl .v{font-size:21px;font-weight:800;margin-top:4px;color:var(--ink);}
+  .xjs-tl .d{font-size:11.5px;color:var(--mut);margin-top:3px;}
+  .xjs-kp{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+  .xjs-kpi{background:var(--cd2);border-radius:16px;padding:16px;cursor:pointer;min-width:0;}
+  .xjs-kpi:hover{background:#212943;}
+  .xjs-kpi .ci{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;margin-bottom:18px;}
+  .xjs-kpi .ci svg{width:22px;height:22px;}
+  .xjs-kpi .v{font-size:28px;font-weight:800;line-height:1;color:var(--ink);}
+  .xjs-kpi .k{margin-top:8px;font-size:13px;color:#C9CFE0;}
+  .xjs-kpi .sm{font-size:11.5px;color:var(--mut);margin-top:4px;}
+  .xjs-warn{color:#FF8A9E !important;}
+  .xjs-gauge{text-align:center;}
+  .xjs-pill{display:inline-block;margin-top:8px;padding:7px 20px;border-radius:99px;font-weight:700;font-size:13px;color:#14101F;}
+  .xjs-tip{position:absolute;pointer-events:none;background:var(--acc);color:#fff;border-radius:10px;padding:7px 11px;font-size:12px;line-height:1.4;transform:translate(-50%,-110%);white-space:nowrap;box-shadow:0 6px 18px rgba(155,92,255,.4);display:none;z-index:3;}
+  .xjs-tip b{display:block;font-size:11px;font-weight:600;opacity:.85;}
+  .xjs-dn{display:flex;align-items:center;gap:18px;}
+  .xjs-dn ul{list-style:none;margin:0;padding:0;font-size:13px;display:flex;flex-direction:column;gap:12px;}
+  .xjs-dn li{display:flex;align-items:center;gap:10px;}
+  .xjs-dn li i{width:10px;height:10px;border-radius:50%;}
+  .xjs-dn li b{margin-left:auto;padding-left:12px;}
+  .xjs-pp{display:grid;grid-template-columns:44px 1fr 46px;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--bd);cursor:pointer;}
+  .xjs-pp:first-child{border-top:none;}
+  .xjs-pp .pk{font-size:11px;color:var(--mut);}
+  .xjs-pp .pn{font-size:14.5px;font-weight:700;}
+  .xjs-pp:hover .pn{color:#C9A8FF;}
+  .xjs-al{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;margin-bottom:8px;font-size:13px;background:var(--cd2);}
+  .xjs-al .lv{font-size:10.5px;font-weight:800;border-radius:4px;text-align:center;height:18px;line-height:18px;}
+  .xjs-al.h .lv{background:#C93C3C;color:#fff;} .xjs-al.m .lv{background:#7A5A1A;color:#FFD98A;} .xjs-al.l .lv{background:#46464B;color:#C9C9CE;}
+  .xjs-al small{display:block;color:var(--mut);font-size:11.5px;}
+  .xjs-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
+  .xjs-chips span{font-size:11.5px;border-radius:5px;padding:2px 7px;background:#2A3149;color:#D8D8DC;}
+  .xjs-chips .h{background:rgba(255,93,93,.18);color:#FF9A9A;} .xjs-chips .m{background:rgba(245,197,66,.14);color:#F5C542;}
+  .xjs-rows{display:flex;flex-direction:column;}
+  .xjs-r{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:9px 2px;border-top:1px solid var(--bd);font-size:13px;}
+  .xjs-r:first-child{border-top:none;}
+  .xjs-r small{display:block;font-size:11.5px;color:var(--mut);}
+  .xjs-r .rr{font-size:12px;color:var(--mut);text-align:right;white-space:nowrap;}
+  .xjs-dot{width:9px;height:9px;border-radius:50%;justify-self:center;}
+  .xjs-dot.ok{background:var(--g);box-shadow:0 0 8px var(--g);}
+  .xjs-dot.bad{background:var(--red);box-shadow:0 0 8px var(--red);animation:xjsBlink 1.4s ease-in-out infinite;}
+  .xjs-dot.mid{background:var(--yel);}
+  .xjs-dot.wait{background:#55607A;}
+  @keyframes xjsBlink{50%{opacity:.35;}}
+  .xjs-tag{font-size:10.5px;font-weight:700;border-radius:4px;padding:2px 6px;white-space:nowrap;}
+  .xjs-tag.bad{background:rgba(255,93,93,.16);color:#FF8A8A;} .xjs-tag.ok{background:rgba(43,212,107,.14);color:#6BE29A;} .xjs-tag.gray{background:#2A3149;color:#BDBDC3;}
+  .xjs-fun{display:flex;flex-direction:column;gap:8px;}
+  .xjs-fr{display:grid;grid-template-columns:64px 1fr 120px;align-items:center;gap:10px;font-size:13px;}
+  .xjs-fb{height:26px;border-radius:6px;background:var(--bd);position:relative;overflow:hidden;}
+  .xjs-fb i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,#7B3FE4,#B07CFF);}
+  .xjs-fb span{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-weight:800;font-size:12.5px;color:#fff;}
+  .xjs-fr .cv{font-size:12px;color:var(--mut);text-align:right;}
+  .xjs-pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .xjs-pipe div{background:var(--cd2);border-radius:10px;padding:10px;text-align:center;font-size:12px;color:var(--mut);}
+  .xjs-pipe b{display:block;font-size:22px;color:var(--ink);margin-bottom:2px;}
+  .xjs-ac{display:flex;gap:8px;flex-wrap:wrap;}
+  .xjs-ac span{font-size:12.5px;background:var(--cd2);border-radius:8px;padding:8px 12px;}
+  .xjs-ac b{font-size:16px;margin-left:6px;}
+  .xjs-onl{display:flex;gap:6px;flex-wrap:wrap;}
+  .xjs-onl span{font-size:12px;background:var(--cd2);border-radius:99px;padding:5px 10px 5px 8px;display:flex;align-items:center;gap:6px;}
+  .xjs-onl span::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--g);box-shadow:0 0 6px var(--g);}
+  .xjs-note{font-size:12px;color:var(--mut);line-height:1.6;margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--cd2);border:1px dashed #2F3856;}
+  .xjs-lg{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:8px;flex-wrap:wrap;}
+  .xjs-lg i{display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+  .xjs-lr{display:grid;grid-template-columns:64px 1fr 96px;gap:10px;align-items:center;font-size:12.5px;padding:6px 0;}
+  .xjs-lr .bb{height:18px;border-radius:5px;background:var(--bd);position:relative;overflow:hidden;}
+  .xjs-lr .bb i{position:absolute;left:0;top:0;bottom:0;background:#4A5370;border-radius:5px;}
+  .xjs-lr .bb em{position:absolute;left:0;top:0;bottom:0;background:var(--acc);border-radius:5px;}
+  .xjs-lr .bb span{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:#fff;white-space:nowrap;}
+  .xjs-tw{overflow-x:auto;}
+  .xjs-tb{width:100%;border-collapse:collapse;font-size:13px;min-width:980px;color:var(--ink);}
+  .xjs-tb th{text-align:left;font-size:11.5px;color:var(--mut);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--bd);cursor:pointer;white-space:nowrap;user-select:none;background:none;}
+  .xjs-tb th:hover{color:#fff;}
+  .xjs-tb th.s::after{content:' ▾';} .xjs-tb th.s.asc::after{content:' ▴';}
+  .xjs-tb td{padding:10px;border-bottom:1px solid #1E253A;white-space:nowrap;}
+  .xjs-tb tr,.xjs-tb tr:nth-child(even),.xjs-tb tr:nth-child(odd){background:transparent !important;}
+  .xjs-tb td,.xjs-tb th{background:transparent !important;color:var(--ink);}
+  .xjs-tb th{color:var(--mut);}
+  .xjs-tb tr.r{cursor:pointer;} .xjs-tb tr.r:hover td{background:var(--cd2);}
+  .xjs-tb .nm{display:flex;align-items:center;gap:8px;font-weight:700;}
+  .xjs-tb .nm i{width:8px;height:8px;border-radius:50%;}
+  .xjs-pip{display:inline-flex;gap:3px;}
+  .xjs-pip span{font-size:11px;border-radius:4px;padding:2px 6px;background:var(--bd);color:#D8D8DC;}
+  .xjs-pip span.hot{background:rgba(245,197,66,.18);color:#F5C542;}
+  .xjs-b7{display:inline-flex;align-items:flex-end;gap:2px;height:20px;vertical-align:middle;}
+  .xjs-b7 b{width:5px;border-radius:1.5px;background:var(--acc);}
+  .xjs-b7 b.z{background:#3A4260;height:2px !important;}
+  .xjs-b30{display:flex;align-items:flex-end;gap:3px;height:70px;border-bottom:1px solid var(--bd);}
+  .xjs-b30 b{flex:1;background:var(--acc);border-radius:2px 2px 0 0;min-height:2px;}
+  .xjs-b30 b.z{background:#3A4260;} .xjs-b30 b.we{opacity:.35;}
+  .xjs-drw{position:fixed;top:0;right:0;bottom:0;width:440px;max-width:100%;background:#121829;z-index:900;overflow:auto;padding:18px 20px 40px;box-shadow:-12px 0 30px rgba(0,0,0,.45);color:var(--ink);}
+  .xjs-msk{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:899;}
+  .xjs-drw h2{margin:2px 0 0;font-size:22px;color:var(--ink);}
+  .xjs-ds{margin-bottom:16px;}
+  .xjs-ds h4{margin:0 0 8px;font-size:12px;color:var(--mut);font-weight:600;letter-spacing:.06em;}
+  .xjs-mapf{width:100%;height:calc(100vh - 150px);min-height:560px;border:none;border-radius:18px;background:#1C1C1E;display:block;}
+  .xjs-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .xjs-cal div{background:var(--cd2);border-radius:8px;min-height:54px;padding:6px;font-size:11px;color:var(--mut);}
+  .xjs-cal div b{display:block;font-size:12.5px;color:#C9A8FF;margin-top:6px;}
+  .xjs-cal div.td{outline:1.5px solid var(--acc);}
+  .xjs-cal .wd{background:none;min-height:0;text-align:center;padding:0 0 4px;}
+  .xjs-cal .em{background:none;}
+  .xjs-chart svg{width:100%;height:auto;display:block;}
+  .xjs-empty{font-size:13px;color:var(--mut);padding:14px 0;}
+  @media (max-width:1000px){
+    body.xjs-on #main{padding:14px 10px 60px;}
+    .xjs-g2,.xjs-g3,.xjs-g4,.xjs-row2{grid-template-columns:1fr;}
+    .xjs-kp{grid-template-columns:repeat(2,1fr);}
+    .xjs-hdr{gap:10px;} .xjs-hdr .tx{flex:1 1 0;min-width:0;} .xjs-hdr h1{font-size:17px;}
+    .xjs-tn{order:5;width:100%;margin-left:0;} .xjs-tn button{padding:8px 12px;font-size:13px;}
+    .xjs-cd .xjs-g4{grid-template-columns:1fr 1fr;}
+    .xjs-drw .xjs-g2{grid-template-columns:1fr 1fr;} .xjs-drw .xjs-pipe{grid-template-columns:repeat(4,1fr);}
+    .xjs-fr{grid-template-columns:52px 1fr 92px;}
+    .xjs-pipe{grid-template-columns:repeat(2,1fr);}
+    .xjs-mapf{height:calc(100vh - 200px);}
+  }
 </style>
 </head>
 <body>
@@ -1502,7 +1654,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-02-06';
+const APP_BUILD = '2026-11-03-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1893,45 +2045,7 @@ function subscribeAll(){
           snap2.docs.forEach(d=>{ APP.staffProfiles[d.id] = d.data(); });
           render();
         }));
-        let xjCoreFirstSnapshot = true;
-        unsubs.push(onSnapshot(collection(db,'xiaojiangInbox'), snap2=>{
-          const all = snap2.docs.map(d=>({id:d.id, ...d.data()}));
-          const cutoff = Date.now() - 60*60*1000;
-          if(!xjCoreFirstSnapshot){
-            const meIsXj = (APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang;
-            const xjName2 = APP.data.caseSettings.xiaojiangName || '小江';
-            snap2.docChanges().forEach(ch=>{
-              if(ch.type==='added'){
-                const m = ch.doc.data();
-                if(meIsXj && !m.senderIsXiaojiang){
-                  flashBellNotification(`💬 ${escHtml(m.threadName||m.senderName||'有人')}：${(m.message||'（附件）').slice(0,30)}`, ()=>{
-                    APP.view='xiaojiangInbox'; APP.xjActiveThread = m.threadUid; render();
-                    (APP.data.xiaojiangInbox||[]).filter(x=>x.threadUid===m.threadUid && !x.senderIsXiaojiang && !x.readByXiaojiang)
-                      .forEach(x=>{ updateDoc(doc(db,'xiaojiangInbox', x.id), {readByXiaojiang:true}).catch(()=>{}); });
-                  });
-                } else if(!meIsXj && m.senderIsXiaojiang && m.threadUid===APP.user.uid){
-                  flashBellNotification(`💬 ${xjName2}回覆了你：${(m.message||'（附件）').slice(0,30)}`, ()=>{
-                    APP.view='xiaojiangInbox'; APP.xjActiveThread = APP.user.uid; render();
-                  });
-                }
-              }
-            });
-          }
-          xjCoreFirstSnapshot = false;
-          all.forEach(r=>{
-            const t = r._at ? new Date(r._at).getTime() : 0;
-            if(t && t < cutoff){
-              deleteXiaojiangUpload(r.id);
-              (r.attachments||[]).forEach(a=>{ if(a.url) deleteObject(ref(storage, a.url)).catch(()=>{}); });
-              if(r.replyFileUrl) deleteObject(ref(storage, r.replyFileUrl)).catch(()=>{});
-            }
-          });
-          APP.data.xiaojiangInbox = all.filter(r=>{
-            const t = r._at ? new Date(r._at).getTime() : 0;
-            return !t || t >= cutoff;
-          }).sort((a,b)=>(a._at||'').localeCompare(b._at||''));
-          render();
-        }));
+        // 霍格華茲信箱 2026-11-03 拿掉：不再讀 xiaojiangInbox
       } else {
         const myName = me ? (me.staffName || '') : '';
         unsubs.push(onSnapshot(query(collection(db,'staffBonusLedger'), where('staffName','==',myName)), snap2=>{
@@ -1943,28 +2057,7 @@ function subscribeAll(){
           APP.staffProfiles[APP.user.uid] = snap2.exists() ? snap2.data() : {};
           render();
         }));
-        let xjFirstSnapshot = true;
-        unsubs.push(onSnapshot(query(collection(db,'xiaojiangInbox'), where('threadUid','==',APP.user.uid)), snap2=>{
-          const cutoff = Date.now() - 60*60*1000;
-          if(!xjFirstSnapshot){
-            snap2.docChanges().forEach(ch=>{
-              if(ch.type==='added'){
-                const m = ch.doc.data();
-                if(m.senderIsXiaojiang){
-                  const xjName2 = APP.data.caseSettings.xiaojiangName || '小江';
-                  flashBellNotification(`💬 ${xjName2}回覆了你：${(m.message||'（附件）').slice(0,30)}`, ()=>{
-                    APP.view='xiaojiangInbox'; APP.xjActiveThread = APP.user.uid; render();
-                  });
-                }
-              }
-            });
-          }
-          xjFirstSnapshot = false;
-          APP.data.xiaojiangInbox = snap2.docs.map(d=>({id:d.id, ...d.data()}))
-            .filter(r=>{ const t = r._at ? new Date(r._at).getTime() : 0; return !t || t >= cutoff; })
-            .sort((a,b)=>(a._at||'').localeCompare(b._at||''));
-          render();
-        }));
+        // 霍格華茲信箱 2026-11-03 拿掉：不再讀 xiaojiangInbox
       }
     }
     if(APP.role !== prevRole) renderRoot(); else render();
@@ -3447,6 +3540,9 @@ function render(){
   updateNotifBell();
   const main = document.getElementById('main');
   if(!main) return;
+  document.body.classList.toggle('xjs-on', APP.view==='xiaojiangDashboard');
+  // 小江個人空間開著系統地圖時不重畫（不然地圖會一直重新載入）
+  if(APP.view==='xiaojiangDashboard' && APP.xjs && APP.xjs.tab==='map' && main.querySelector('.xjs-mapf')) return;
   if(APP.view==='personalLog' && plShouldDefer()) return; // 正在個人業務進度紀錄打字時先不重畫，離開欄位再補畫
   if(APP.view==='progress' && pgShouldDefer()) return; // 正在進度追蹤打字時也一樣
   if(APP.view==='bankLoan' && bkShouldDefer()) return; // 銀行信貸也一樣
@@ -3459,7 +3555,7 @@ function render(){
   main.classList.toggle('cr-full', APP.view==='chatRoom');
   const roomOk = isStaffAny() || (isCore() && APP.viewingStaff);
   if(APP.view==='dashboard' && isCore()) main.innerHTML = dashboardHTML();
-  else if(APP.view==='xiaojiangDashboard' && isCore()) main.innerHTML = xiaojiangDashboardView();
+  else if(APP.view==='xiaojiangDashboard' && isCore()){ main.innerHTML = xiaojiangDashboardView(); xjsAfterRender(); }
   else if(APP.view==='socialAccounts' && (isMeXiaojiang() || isMeHuang())) main.innerHTML = socialAccountsHTML();
   else if(APP.view==='transactions' && isCore()) main.innerHTML = transactionsHTML();
   else if(APP.view==='reports' && isCore()) main.innerHTML = reportsHTML();
@@ -3474,7 +3570,7 @@ function render(){
   else if(APP.view==='staffOverview' && (isCore() || isStaffAny())) main.innerHTML = staffOverviewHTML();
   else if(APP.view==='customerFollowupOverview' && (isCore() || isStaffAdmin())) main.innerHTML = customerFollowupOverviewHTML();
   else if(APP.view==='customerFollowupPersonal' && (isCore() || isStaffAny())) main.innerHTML = customerFollowupPersonalView();
-  else if(APP.view==='xiaojiangInbox' && (isCore() || isStaffAny())) main.innerHTML = xiaojiangInboxView();
+  else if(APP.view==='xiaojiangInbox'){ APP.view = isCore() ? ((APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang ? 'xiaojiangDashboard' : 'dashboard') : 'personalDashboard'; render(); return; } // 霍格華茲信箱 2026-11-03 拿掉，舊連結（推播、通知）導回首頁
   else if(APP.view==='chatRoom' && (isCore() || isStaffAny())) chatRender(main);
   else if(APP.view==='progress') main.innerHTML = progressHTML();
   else if(APP.view==='personalLog' && roomOk) main.innerHTML = personalLogPageHTML();
@@ -3550,8 +3646,89 @@ function profileEditCardHtml(){
       </div>
     </div>`;
 }
-/* ---- 小江專屬個人空間（只有 isXiaojiang=true 的核心帳號看得到這個頁面）---- */
-function xiaojiangDashboardView(){
+/* ---- 小江專屬個人空間（只有 isXiaojiang=true 的核心帳號看得到這個頁面）
+   2026-11-03 改版：深色儀表板，右上分頁＝總覽／業務管理／系統狀態／廣告績效／系統地圖／我的獎金。拿掉霍格華茲信箱。
+   獎金、淨利都照原本的式子，這頁只顯示，不改任何規則。投手獎金跟廣告支出報表一致：先扣客戶賠錢（2026-11-02 使用者要求的規則）。 ---- */
+const XJS_STAGE = ['審核中', '對保', '等撥款', '本月撥款'];
+const XJS_SCHED = [ // 後端排程（照 shangyi-push/functions/index.js）
+  { n:'關懷提醒', at:9 * 60, node:0, note:'今天該聯絡的客人 → 負責人；每週週報給核心' }, { n:'社群帳號檢查', at:10 * 60, node:0, note:'帳號太久沒登入 → 提醒你' },
+  { n:'對保追蹤', at:12 * 60, node:0, note:'對保第 1、2 天提醒業務和核心' }, { n:'未登記提醒', at:16 * 60, wd:1, node:0, note:'平日還沒登記客人的業務 → 提醒' },
+  { n:'未發獎金提醒', at:18 * 60, node:0, note:'還沒發的獎金 → 提醒核心' },
+  { n:'聊天通知', live:'新訊息時', node:0 }, { n:'對保推播', live:'狀態改成對保時', node:0 }, { n:'通知推播', live:'有新通知時', node:0 },
+  { n:'估價推播', live:'估價填了方案時', node:1 }, { n:'LINE 查詢', live:'有人打 @姓名', node:1 },
+];
+function xjsState(){ if(!APP.xjs) APP.xjs = { tab:'home', sort:'rev', asc:false, who:null, range:30, month:nowMonthKey }; return APP.xjs; }
+function xjsAgo(iso){ if(!iso) return '—'; const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000); return m < 1 ? '剛剛' : m < 60 ? m + ' 分鐘前' : m < 1440 ? Math.floor(m / 60) + ' 小時前' : Math.floor(m / 1440) + ' 天前'; }
+function xjsDayOff(n){ return fuAddDays(n); }
+/* 業務一個人一列的數字 */
+function xjsPeople(){
+  const today = todayStr(), names = fuStaffNames(), bonusMap = soMonthBonusMap(), seen = new Set();
+  const d7 = [6, 5, 4, 3, 2, 1, 0].map(k => xjsDayOff(-k)), d14 = Array.from({ length:14 }, (_, k) => xjsDayOff(-k));
+  const isWe = s => { const d = new Date(s + 'T00:00:00').getDay(); return d === 0 || d === 6; };
+  const stage = c => STATUS_DONE.includes(c.status) ? 3 : STATUS_CLOSED.includes(c.status) ? -1 : c.status === '對保' ? 1 : c.status === '等撥款' ? 2 : 0;
+  const people = APP.users.filter(u => u.role === 'staffSales' && u.staffName && !u.isXiaojiang && !seen.has(u.staffName) && seen.add(u.staffName)).map(u => {
+    const name = u.staffName, pp = APP.data.personalProgress.filter(r => r.staffUid === u.id || (!r.staffUid && r.staffName === name));
+    const byDay = {}; pp.forEach(r => { if(r.date) byDay[r.date] = (byDay[r.date] || 0) + 1; });
+    const wd14 = d14.filter(s => !isWe(s)), avg = wd14.length ? wd14.reduce((a, s) => a + (byDay[s] || 0), 0) / wd14.length : 0;
+    const prog = [...APP.data.progressAd, ...APP.data.progressChannel].filter(c => c.staff === name);
+    const pipe = [0, 0, 0, 0]; let stuck = 0;
+    prog.forEach(c => { const s = stage(c); if(s < 0) return; if(s === 3){ if(monthKey(c.disbursedDate || c.date) === nowMonthKey) pipe[3]++; return; } pipe[s]++;
+      const t = c._at ? new Date(c._at).getTime() : (c.date ? new Date(c.date + 'T00:00:00').getTime() : 0); if(t && Date.now() - t > 5 * 864e5) stuck++; });
+    const fus = (APP.data.customerFollowups || []).filter(f => fuOwner(f, names) === name);
+    const leads = pp.filter(r => monthKey(r.date) === nowMonthKey && (!r.source || r.source === '公司')).length;
+    const adCases = APP.data.casesAd.filter(c => c.staff === name && monthKey(c.date) === nowMonthKey).length;
+    const deals = adCases + APP.data.casesChannel.filter(c => c.staff === name && monthKey(c.date) === nowMonthKey).length;
+    return { u, uid:u.id, name, disp:displayNameFor(u.id, name), today:byDay[today] || 0, d7:d7.map(s => byDay[s] || 0), byDay, avg,
+      pipe, active:pipe[0] + pipe[1] + pipe[2], stuck, over:fus.filter(f => fuBucket(f) === 'od').length, due:fus.filter(f => fuBucket(f) === 'td').length,
+      leads, adCases, conv:leads ? adCases / leads : null, deals, rev:Number(bonusMap[name]) || 0,
+      leave:APP.data.attendance.some(a => a.staffName === name && a.date === today), ...soPresence(u.id) };
+  });
+  people.forEach(p => p.w7 = p.d7.reduce((a, b) => a + b, 0));
+  people.slice().sort((a, b) => b.rev - a.rev).forEach((p, i) => p.rank = i + 1);
+  return people;
+}
+/* 需要注意：自動找出來，一個人一列 */
+function xjsAlerts(people){
+  const now = new Date(), hm = now.getHours() * 60 + now.getMinutes(), weekday = ![0, 6].includes(now.getDay());
+  const totL = people.reduce((a, p) => a + p.leads, 0), totC = people.reduce((a, p) => a + p.adCases, 0), teamConv = totL ? totC / totL : 0;
+  const G = [];
+  people.forEach(p => { const it = [];
+    if(!p.leave && weekday && hm >= 12 * 60 && p.today === 0) it.push({ lv:'h', c:'今天沒登記' });
+    if(p.over >= 5) it.push({ lv:'h', c:`${p.over} 位關懷超時` }); else if(p.over >= 3) it.push({ lv:'m', c:`${p.over} 位關懷超時` });
+    if(p.stuck) it.push({ lv:'m', c:`${p.stuck} 件超過 5 天沒動` });
+    if(p.leads >= 10 && p.conv != null && teamConv && p.conv < teamConv / 2) it.push({ lv:'m', c:'廣告轉換偏低' });
+    if(p.leave) it.push({ lv:'l', c:'今天請假' + (p.due ? `（${p.due} 位今天該聯絡）` : '') });
+    if(it.length) G.push({ p, items:it, lv:it.some(x => x.lv === 'h') ? 'h' : it.some(x => x.lv === 'm') ? 'm' : 'l' }); });
+  const names = fuStaffNames(), un = (APP.data.customerFollowups || []).filter(f => fuIsPartner(f, names) && !f.assignee && fuBucket(f) !== 'done').length;
+  if(un) G.push({ lv:'h', t:`通路夥伴名下有 ${un} 位客人還沒派發`, s:'這些客人沒人收到關懷提醒' });
+  return G.sort((a, b) => 'hml'.indexOf(a.lv) - 'hml'.indexOf(b.lv) || (b.items ? b.items.length : 0) - (a.items ? a.items.length : 0));
+}
+/* 系統狀態：問題清單＋健康分數 */
+function xjsIssues(){
+  const names = fuStaffNames(), now = new Date(), hm = now.getHours() * 60 + now.getMinutes(), weekday = ![0, 6].includes(now.getDay());
+  const L = [];
+  const un = (APP.data.customerFollowups || []).filter(f => fuIsPartner(f, names) && !f.assignee && fuBucket(f) !== 'done').length;
+  if(un) L.push({ lv:'h', t:'通路夥伴的客人沒人收到關懷提醒', s:`還有 ${un} 位客人沒派發給業務` });
+  const pg = [...APP.data.progressAd, ...APP.data.progressChannel].filter(c => c.status === '對保' && c.staff && !names.has(c.staff)).length;
+  if(pg) L.push({ lv:'h', t:'對保追蹤跳過通路夥伴的案件', s:`${pg} 件對保中的案子不會提醒任何人` });
+  if(weekday && hm >= 12 * 60 && !APP.data.personalProgress.some(r => r.date === todayStr())) L.push({ lv:'h', t:'今天還沒有任何客人紀錄', s:'中午過後全公司都沒登記，可能有人卡住或系統異常' });
+  L.push({ lv:'m', t:'後端 9 支程式還是舊版 Node', s:'現在能跑，停止支援後就不能再修改' });
+  L.push({ lv:'m', t:'8 個牌位門檻要照實收業績重填', s:'設定 → 案件分潤參數 → 業績牌位門檻' });
+  const hi = L.filter(x => x.lv === 'h').length, mid = L.filter(x => x.lv === 'm').length;
+  return { L, hi, mid, score:Math.max(0, 100 - hi * 12 - mid * 4) };
+}
+/* 廣告：某個月的數字（式子跟廣告支出報表一樣） */
+function xjsAdMonth(mk){
+  const rec = APP.data.adSpend.find(a => a.month === mk), cases = APP.data.casesAd.filter(c => monthKey(c.date) === mk);
+  const spend = rec ? Number(rec.spend || 0) : 0, msg = rec ? Number(rec.messages || 0) : 0, sub = rec ? Number(rec.submitted || 0) : 0, ok = rec ? Number(rec.approved || 0) : 0;
+  const loss = adLossTotal(rec), rev = sum(cases.map(c => ({ amount:c.companyProfit }))), fixed = computeFixedCost(mk);
+  const net = rev - fixed - spend - loss;
+  return { mk, has:!!rec, spend, msg, sub, ok, loss, rev, cases:cases.length, fixed, net, pilot:Math.max(0, net) * APP.data.caseSettings.pilotBonusRate,
+    cpc:msg ? spend / msg : 0, cpa:ok ? spend / ok : 0, rate:sub ? ok / sub : 0, back:spend ? rev / spend : 0 };
+}
+function xjsPrevMonth(mk){ const [y, m] = mk.split('-').map(Number), d = new Date(y, m - 2, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+/* 我的獎金（照原本的式子） */
+function xjsBonus(){
   const xjName = APP.data.caseSettings.xiaojiangName || '小江';
   const todayStr_ = todayStr();
   const todayAdCases = APP.data.casesAd.filter(c=>c.date===todayStr_);
@@ -3565,50 +3742,193 @@ function xiaojiangDashboardView(){
     const adThisMonth = APP.data.casesAd.filter(c=>monthKey(c.date)===nowMonthKey);
     const adRevenue = sum(adThisMonth.map(c=>({amount:c.companyProfit})));
     const fixedCostThisMonth = computeFixedCost(nowMonthKey);
-    const adTotalNet = adRevenue - fixedCostThisMonth - Number(thisMonthAdSpend.spend||0);
+    const adTotalNet = adRevenue - fixedCostThisMonth - Number(thisMonthAdSpend.spend||0) - adLossTotal(thisMonthAdSpend);
     pilotBonusThisMonth = Math.max(0, adTotalNet) * APP.data.caseSettings.pilotBonusRate;
   }
-  const unreadCount = (APP.data.xiaojiangInbox||[]).filter(m=>!m.senderIsXiaojiang && !m.readByXiaojiang).length;
   const xjEntryAmount = e => (Number(e.xiaojiangBonus)||0) + (Number(e.specialFee)||0);
-  const allXjLedgerEntries = getCleanBonusLedger().filter(e=>e.staffName===xjName);
-  const allXjEntries = allXjLedgerEntries.map(e=>({date:e.date, customer:e.customer, amount:xjEntryAmount(e)}));
-
-  return `
-    <div class="page-header"><div><h1 class="page-title">🌙 我的個人空間</h1><p class="page-sub">${escHtml(xjName)}自己的獎金與資料，其他核心成員看不到這個頁面</p></div></div>
-    ${profileEditCardHtml()}
-    <div class="card aurora-card" style="margin-bottom:20px;color:#fff;border:none;">
-      <div style="font-size:13px;opacity:.9;">🌌 ${escHtml(xjName)}的個人獎金</div>
-      <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;align-items:flex-end;">
-        <div><div style="font-size:11.5px;opacity:.85;">今日拆成</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(todayXjBonus)}</div></div>
-        <div><div style="font-size:11.5px;opacity:.85;">本月拆成累計</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthXjTiered)}</div></div>
-        <div><div style="font-size:11.5px;opacity:.85;">本月投手獎金（5號發放）</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(pilotBonusThisMonth)}</div></div>
-        <div><div style="font-size:11.5px;opacity:.85;">本月${whIcon(13)}</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthWizardFee)}</div></div>
-        <div><div style="font-size:11.5px;opacity:.85;">本月合計</div><div style="font-size:24px;font-weight:800;text-shadow:0 0 12px rgba(255,255,255,.4);">${money(monthXjTiered+pilotBonusThisMonth+monthWizardFee)}</div></div>
-      </div>
-    </div>
-    <div class="card-head-row"><h3 style="font-size:15px;">本月獎金明細</h3></div>
-    <div style="margin-bottom:20px;">
-      ${allXjEntries.length===0?`<div class="table-wrap"><div class="empty">尚無獎金紀錄</div></div>`:bonusCalendarGrid(allXjEntries, 'xjDash')}
-    </div>
-    <div class="card" style="cursor:pointer;" data-action="nav" data-view="xiaojiangInbox">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <h3 style="margin:0 0 4px;">✨ 霍格華茲信箱</h3>
-          <p style="margin:0;color:var(--muted);font-size:12.5px;">業務／行政傳來的特殊處理檔案，${unreadCount>0?`目前有 ${unreadCount} 筆`:'目前沒有新資料'}</p>
-        </div>
-        <span style="font-size:20px;color:var(--muted);">→</span>
-      </div>
-    </div>
-    <div class="card" style="cursor:pointer;margin-top:14px;" data-action="nav" data-view="socialAccounts">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <h3 style="margin:0 0 4px;">🔐 社群帳號庫</h3>
-          <p style="margin:0;color:var(--muted);font-size:12.5px;">廣告帳號、養號進度與登入資訊，只有你自己看得到，連核心都看不到</p>
-        </div>
-        <span style="font-size:20px;color:var(--muted);">→</span>
-      </div>
-    </div>
-  `;
+  const entries = getCleanBonusLedger().filter(e=>e.staffName===xjName).map(e=>({date:e.date, amount:xjEntryAmount(e)}));
+  return { today:todayXjBonus, tier:monthXjTiered, pilot:pilotBonusThisMonth, special:monthWizardFee, total:monthXjTiered + pilotBonusThisMonth + monthWizardFee, entries };
+}
+const xjsIcon = (bg, d) => `<span class="ci" style="background:${bg}"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg></span>`;
+const XJS_LV = { h:'高', m:'中', l:'低' };
+function xjsAlertHTML(G, n){
+  return (n ? G.slice(0, n) : G).map(g => `<div class="xjs-al ${g.lv}"><span class="lv">${XJS_LV[g.lv]}</span><div><b>${g.p ? escHtml(g.p.disp) : g.t}</b>${g.items ? `<div class="xjs-chips">${g.items.map(i => `<span class="${i.lv}">${escHtml(i.c)}</span>`).join('')}</div>` : `<small>${g.s}</small>`}</div>${g.p ? `<button type="button" class="xjs-btn" data-action="xjs-who" data-uid="${escAttr(g.p.uid)}">看他</button>` : ''}</div>`).join('') || '<div class="xjs-empty">目前沒有需要注意的事</div>';
+}
+function xjsRing(pct, col, label, R){ R = R || 17; const L = 2 * Math.PI * R, sz = R * 2 + 10;
+  return `<svg viewBox="0 0 ${sz} ${sz}" width="${sz}" height="${sz}"><circle cx="${sz / 2}" cy="${sz / 2}" r="${R}" fill="none" stroke="#232B42" stroke-width="5"/><circle cx="${sz / 2}" cy="${sz / 2}" r="${R}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${Math.max(0, pct) * L} ${L}" transform="rotate(-90 ${sz / 2} ${sz / 2})"/><text x="${sz / 2}" y="${sz / 2 + 3.5}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#F2F4FA">${label}</text></svg>`; }
+function xjsGauge(score){
+  const lbl = score >= 85 ? ['良好', '#2BD46B'] : score >= 60 ? ['注意', '#FFB547'] : ['危險', '#FF4D6D'];
+  const R = 80, cx = 100, cy = 96, a0 = Math.PI * .8, a1 = Math.PI * 2.2, at = a0 + (a1 - a0) * score / 100, pt = a => [cx + R * Math.cos(a), cy + R * Math.sin(a)];
+  const arc = (f, t) => { const [x0, y0] = pt(f), [x1, y1] = pt(t); return `M${x0} ${y0}A${R} ${R} 0 ${t - f > Math.PI ? 1 : 0} 1 ${x1} ${y1}`; }, [kx, ky] = pt(at);
+  return `<svg viewBox="0 0 200 170" style="width:100%;max-width:250px;display:block;margin:0 auto"><defs><linearGradient id="xjsgg" x1="0" x2="1"><stop offset="0" stop-color="#FF8A3D"/><stop offset="1" stop-color="#FF4D6D"/></linearGradient></defs>
+    <path d="${arc(a0, a1)}" stroke="#232B42" stroke-width="22" fill="none" stroke-linecap="round"/>${score ? `<path d="${arc(a0, at)}" stroke="url(#xjsgg)" stroke-width="22" fill="none" stroke-linecap="round"/>` : ''}
+    <rect x="${kx - 9}" y="${ky - 9}" width="18" height="18" rx="4" fill="#fff" transform="rotate(${at * 180 / Math.PI + 90} ${kx} ${ky})"/>
+    <text x="100" y="78" text-anchor="middle" font-size="11" fill="#8A93AE">分數</text><text x="100" y="112" text-anchor="middle" font-size="38" font-weight="800" fill="#F2F4FA">${score}</text>
+    <text x="34" y="165" font-size="11" fill="#C9CFE0">0</text><text x="156" y="165" font-size="11" fill="#C9CFE0">100</text></svg><div class="xjs-pill" style="background:${lbl[1]}">${lbl[0]}</div>`;
+}
+/* 團隊每天登記客人（面積圖），滑過顯示 */
+function xjsArea(n){
+  const byDay = {}; APP.data.personalProgress.forEach(r => { if(r.date) byDay[r.date] = (byDay[r.date] || 0) + 1; });
+  const days = Array.from({ length:n }, (_, i) => { const s = xjsDayOff(i - n + 1); return { s, v:byDay[s] || 0 }; });
+  const W = 720, H = 240, P = 40, mx = Math.max(5, ...days.map(x => x.v)) * 1.2, x = i => P + i * (W - P - 10) / (n - 1), y = v => H - 28 - v / mx * (H - 48);
+  const path = days.map((p, i) => `${i ? 'L' : 'M'}${x(i)} ${y(p.v)}`).join(''), step = Math.ceil(n / 8);
+  let s = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block" data-xjs-area="${escAttr(JSON.stringify(days))}"><defs><linearGradient id="xjsag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9B5CFF" stop-opacity=".45"/><stop offset="1" stop-color="#9B5CFF" stop-opacity="0"/></linearGradient></defs>`;
+  [0, .25, .5, .75, 1].forEach(t => { const yy = H - 28 - t * (H - 48); s += `<line x1="${P}" x2="${W - 10}" y1="${yy}" y2="${yy}" stroke="#232B42" stroke-dasharray="3 5"/><text x="${P - 8}" y="${yy + 4}" font-size="11" fill="#8A93AE" text-anchor="end">${Math.round(mx * t)}</text>`; });
+  days.forEach((p, i) => { if((i % step === 0 && n - 1 - i >= step / 2) || i === n - 1) s += `<text x="${x(i)}" y="${H - 8}" font-size="11" fill="#8A93AE" text-anchor="middle">${+p.s.slice(5, 7)}/${+p.s.slice(8)}</text>`; });
+  s += `<path d="${path}L${x(n - 1)} ${H - 28}L${x(0)} ${H - 28}Z" fill="url(#xjsag)"/><path d="${path}" fill="none" stroke="#B07CFF" stroke-width="2.4" stroke-linejoin="round"/>`;
+  s += `<line class="xjs-al-l" x1="0" x2="0" y1="20" y2="${H - 28}" stroke="#B07CFF" stroke-dasharray="4 4" opacity="0"/><circle class="xjs-al-c" r="7" fill="#fff" stroke="#9B5CFF" stroke-width="3" opacity="0"/></svg>`;
+  return s;
+}
+function xjsAfterRender(){
+  const sv = document.querySelector('[data-xjs-area]'); if(!sv) return;
+  const days = JSON.parse(sv.dataset.xjsArea), n = days.length, W = 720, H = 240, P = 40, mx = Math.max(5, ...days.map(x => x.v)) * 1.2;
+  const x = i => P + i * (W - P - 10) / (n - 1), y = v => H - 28 - v / mx * (H - 48), tip = document.getElementById('xjs-tip'), box = sv.parentElement;
+  const hide = () => { tip.style.display = 'none'; sv.querySelector('.xjs-al-l').setAttribute('opacity', 0); sv.querySelector('.xjs-al-c').setAttribute('opacity', 0); };
+  sv.addEventListener('pointermove', ev => { const r = sv.getBoundingClientRect(), k = (ev.clientX - r.left) / r.width * W, i = Math.max(0, Math.min(n - 1, Math.round((k - P) / ((W - P - 10) / (n - 1))))), p = days[i];
+    const l = sv.querySelector('.xjs-al-l'), c = sv.querySelector('.xjs-al-c'); l.setAttribute('x1', x(i)); l.setAttribute('x2', x(i)); l.setAttribute('opacity', 1); c.setAttribute('cx', x(i)); c.setAttribute('cy', y(p.v)); c.setAttribute('opacity', 1);
+    const br = box.getBoundingClientRect(), cr = tip.parentElement.getBoundingClientRect(), d = new Date(p.s + 'T00:00:00');
+    tip.style.display = 'block'; tip.style.left = (br.left - cr.left + x(i) / W * br.width) + 'px'; tip.style.top = (br.top - cr.top + y(p.v) / H * br.height - 8) + 'px';
+    tip.innerHTML = `<b>${d.getMonth() + 1}/${d.getDate()}（${'日一二三四五六'[d.getDay()]}）</b>新增客人 ${p.v} 位`; });
+  sv.addEventListener('pointerleave', hide);
+  const ms = document.getElementById('xjs-month'); if(ms) ms.onchange = () => { xjsState().month = ms.value; render(); };
+}
+const XJS_TABS = [['home', '總覽', '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>'],
+  ['team', '業務管理', '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c0-3.4 2.4-5.4 5.5-5.4s5.5 2 5.5 5.4"/><circle cx="16.5" cy="8" r="2.5"/><path d="M15.5 13.7c3 0 5 1.8 5 4.8"/>'],
+  ['sys', '系統狀態', '<path d="M3 12h4l3-8 4 16 3-8h4"/>'], ['ads', '廣告績效', '<path d="M4 10v4h3l8 4.5v-13L7 10z M18 9.5a3.5 3.5 0 0 1 0 5"/>'],
+  ['map', '系統地圖', '<path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z M9 4v13.5 M15 6.5V20"/>'], ['bonus', '我的獎金', '<circle cx="12" cy="12" r="8"/><path d="M12 7.5v9"/>']];
+function xiaojiangDashboardView(){
+  const st = xjsState(), meUid = APP.user.uid, xjName = APP.data.caseSettings.xiaojiangName || '小江';
+  const disp = displayNameFor(meUid, xjName), now = new Date();
+  const people = xjsPeople(), G = xjsAlerts(people), iss = xjsIssues(), B = xjsBonus();
+  const workers = people.filter(p => !p.leave), logged = workers.filter(p => p.today > 0).length;
+  const tsum = k => people.reduce((a, p) => a + p[k], 0);
+  const adNow = xjsAdMonth(nowMonthKey);
+  const teamDot = G.some(g => g.lv !== 'l') ? (G.some(g => g.lv === 'h') ? '#FF4D6D' : '#FFB547') : '';
+  const tabs = XJS_TABS.map(([t, l, d]) => `<button type="button" class="${st.tab === t ? 'on' : ''}" data-action="xjs-tab" data-t="${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${d}</svg>${l}${t === 'team' && teamDot ? `<i style="background:${teamDot}"></i>` : ''}${t === 'sys' && iss.hi ? '<i style="background:#FF4D6D"></i>' : ''}</button>`).join('');
+  const hdr = `<div class="xjs-hdr">
+    <label class="xjs-av" title="換頭像">${avatarHtml(meUid, disp, 48)}<span class="cam"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span><input type="file" accept="image/*" class="avatar-upload-input" data-uid="${meUid}" style="display:none;"/></label>
+    <div class="tx"><h1>歡迎回來，${escHtml(disp)}</h1><p>今天 ${now.getMonth() + 1}/${now.getDate()} · 只有你自己看得到這一頁</p></div>
+    <nav class="xjs-tn">${tabs}</nav>
+    <button type="button" class="xjs-ib" title="社群帳號庫" data-action="nav" data-view="socialAccounts"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button></div>`;
+  let body = '';
+  if(st.tab === 'home'){
+    const K = [['team', '#E8507A', '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c0-3.4 2.4-5.4 5.5-5.4s5.5 2 5.5 5.4"/><path d="M16 11l2 2 4-4"/>', `${logged}/${workers.length}`, '今天有登記', workers.length - logged ? `還有 ${workers.length - logged} 人沒登記` : '大家都登記了', workers.length - logged],
+      ['team', '#9B5CFF', '<path d="M12 7v5l3 2"/><circle cx="12" cy="12" r="8"/>', String(tsum('over')), '關懷超過時間', '位客人', tsum('over')],
+      ['team', '#F0456F', '<path d="M4 6h16M4 12h10M4 18h6"/>', String(tsum('active')), '進行中案件', `其中 ${tsum('stuck')} 件超過 5 天沒動`, 0],
+      ['ads', '#3B6BFF', '<path d="M4 10v4h3l8 4.5v-13L7 10z"/>', adNow.cpa ? money(adNow.cpa) : '—', '每件核准成本', adNow.has ? '本月投放 ' + money(adNow.spend) : '本月還沒填廣告資料', 0],
+      ['bonus', '#1FA9C9', '<circle cx="12" cy="12" r="8"/><path d="M12 7.5v9"/>', money(B.total), '我的本月獎金', '今日拆成 ' + money(B.today), 0]];
+    const kpis = K.map(([t, bg, d, v, k, sm, w]) => `<div class="xjs-kpi" data-action="xjs-tab" data-t="${t}">${xjsIcon(bg, d)}<div class="v${w ? ' xjs-warn' : ''}" style="font-size:${v.length > 8 ? 19 : v.length > 6 ? 22 : 28}px">${v}</div><div class="k">${k}</div><div class="sm">${sm}</div></div>`).join('');
+    const tot = [0, 1, 2, 3].map(i => people.reduce((a, p) => a + p.pipe[i], 0)), all = tot.reduce((a, b) => a + b, 0) || 1, C = ['#9B5CFF', '#F0456F', '#3B6BFF', '#1FA9C9'], R = 62, Lc = 2 * Math.PI * R;
+    let off = 0; const rings = tot.map((v, i) => { if(!v) return ''; const len = Math.max(1, v / all * Lc - 6), e = `<circle cx="80" cy="80" r="${R}" fill="none" stroke="${C[i]}" stroke-width="18" stroke-linecap="round" stroke-dasharray="${len} ${Lc}" stroke-dashoffset="${-off}" transform="rotate(-90 80 80)"/>`; off += v / all * Lc; return e; }).join('');
+    const ppl = people.slice().sort((a, b) => a.rank - b.rank).map(p => { const pct = p.avg ? Math.min(1, p.today / p.avg) : (p.today ? 1 : 0), col = p.leave ? '#55607A' : pct >= .8 ? '#2BD46B' : pct > 0 ? '#FFB547' : '#FF4D6D';
+      return `<div class="xjs-pp" data-action="xjs-who" data-uid="${escAttr(p.uid)}">${avatarHtml(p.uid, p.disp, 44)}<div><div class="pk">${p.leave ? '今天請假' : '本月 #' + p.rank + ' · ' + money(p.rev)}</div><div class="pn">${escHtml(p.disp)}</div></div>${xjsRing(pct, col, p.leave ? '假' : String(p.today))}</div>`; }).join('') || '<div class="xjs-empty">還沒有業務帳號</div>';
+    body = `<div class="xjs-row2">
+      <div class="xjs-cd"><div class="xjs-ch"><h3>今天的狀況</h3></div><div class="xjs-kp">${kpis}</div>
+        <div class="xjs-ch" style="margin:18px 0 10px"><h3 style="font-size:14px;color:#C9CFE0">本月廣告</h3><button type="button" class="xjs-btn" data-action="xjs-tab" data-t="ads">看廣告績效 →</button></div>
+        <div class="xjs-g xjs-g4" style="gap:10px">${[['投放金額', money(adNow.spend)], ['私訊', adNow.msg + ' 則'], ['核准', adNow.ok + ' 件' + (adNow.sub ? ' · ' + (adNow.rate * 100).toFixed(0) + '%' : '')], ['廣告案件利潤', money(adNow.rev)]].map(([k, v]) => `<div class="xjs-tl" style="padding:10px 14px"><div class="xjs-k">${k}</div><div class="v" style="font-size:17px">${v}</div></div>`).join('')}</div></div>
+      <div class="xjs-cd xjs-gauge" data-action="xjs-tab" data-t="sys" style="cursor:pointer"><div class="xjs-ch"><h3>系統健康分數</h3></div>${xjsGauge(iss.score)}<div class="xjs-k" style="margin-top:10px">${iss.hi} 個高嚴重 · ${iss.mid} 個中嚴重問題</div></div></div>
+    <div class="xjs-row2">
+      <div class="xjs-cd" style="position:relative"><div class="xjs-ch"><h3>團隊每天登記客人</h3><div class="xjs-seg">${[30, 14].map(n => `<button type="button" class="xjs-btn${st.range === n ? ' on' : ''}" data-action="xjs-range" data-n="${n}">近 ${n} 天</button>`).join('')}</div></div><div>${xjsArea(st.range)}</div><div class="xjs-tip" id="xjs-tip"></div></div>
+      <div class="xjs-cd"><div class="xjs-ch"><h3>進行中案件</h3><span class="sub">哪個階段</span></div><div class="xjs-dn"><ul>${XJS_STAGE.map((k, i) => `<li><i style="background:${C[i]}"></i>${k}<b>${tot[i]}</b></li>`).join('')}</ul><svg viewBox="0 0 160 160" style="width:150px;flex:none"><circle cx="80" cy="80" r="${R}" fill="none" stroke="#232B42" stroke-width="18"/>${rings}<text x="80" y="74" text-anchor="middle" font-size="11" fill="#8A93AE">合計</text><text x="80" y="98" text-anchor="middle" font-size="24" font-weight="800" fill="#F2F4FA">${tot.reduce((a, b) => a + b, 0)} 件</text></svg></div></div></div>
+    <div class="xjs-row2">
+      <div class="xjs-cd"><div class="xjs-ch"><h3>需要你注意</h3><button type="button" class="xjs-btn" data-action="xjs-tab" data-t="team">看業務管理 →</button></div>${xjsAlertHTML(G, 4)}</div>
+      <div class="xjs-cd"><div class="xjs-ch"><h3>每一位業務</h3><span class="sub">圓環＝今天登記 ÷ 平常</span></div>${ppl}</div></div>`;
+  } else if(st.tab === 'team'){
+    const TT = [['今天有登記', `${logged} / ${workers.length} 人`, logged < workers.length], ['今天新增客人', tsum('today') + ' 位'], ['今天該聯絡', tsum('due') + ' 位'], ['關懷超過時間', tsum('over') + ' 位', tsum('over') > 0], ['進行中案件', tsum('active') + ' 件'], ['本月實收業績', money(tsum('rev'))]];
+    const Lp = people.filter(p => p.leads).sort((a, b) => b.conv - a.conv), mxl = Math.max(1, ...Lp.map(p => p.leads)), totL = tsum('leads'), totC = tsum('adCases'), teamConv = totL ? totC / totL : 0;
+    const COLS = [['disp', '業務'], ['online', '狀態'], ['today', '今天登記'], ['w7', '近 7 天'], ['due', '今天該聯絡'], ['over', '關懷超時'], ['active', '進行中案件'], ['stuck', '超過 5 天沒動'], ['conv', '廣告轉換'], ['deals', '本月成案'], ['rev', '實收業績'], ['rank', '排名']];
+    const list = people.slice().sort((a, b) => { const va = a[st.sort] ?? -1, vb = b[st.sort] ?? -1; return (typeof va === 'string' ? va.localeCompare(vb) : (va === vb ? 0 : va > vb ? 1 : -1)) * (st.asc ? 1 : -1); });
+    const mx7 = Math.max(1, ...people.flatMap(p => p.d7));
+    body = `<div class="xjs-cd" style="margin-bottom:18px"><div class="xjs-ch"><h3>團隊今天</h3><span class="sub">${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}</span></div><div class="xjs-g" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">${TT.map(([k, v, w]) => `<div class="xjs-tl"><div class="xjs-k">${k}</div><div class="v${w ? ' xjs-warn' : ''}" style="font-size:19px">${v}</div></div>`).join('')}</div></div>
+      <div class="xjs-g xjs-g2" style="margin-bottom:18px">
+        <div class="xjs-cd"><div class="xjs-ch"><h3>需要你注意</h3><span class="sub">照嚴重程度</span></div>${xjsAlertHTML(G)}</div>
+        <div class="xjs-cd"><div class="xjs-ch"><h3>廣告名單分給誰、誰轉得好</h3><span class="sub">本月 · 來源＝公司的客人</span></div>${Lp.map(p => `<div class="xjs-lr"><span>${escHtml(p.disp)}</span><div class="bb"><i style="width:${p.leads / mxl * 100}%"></i><em style="width:${p.adCases / mxl * 100}%"></em><span>${p.leads} 位 → ${p.adCases} 件</span></div><span style="text-align:right" class="${teamConv && p.conv < teamConv / 2 ? 'xjs-warn' : ''}">轉換 ${(p.conv * 100).toFixed(0)}%</span></div>`).join('') || '<div class="xjs-empty">本月還沒有公司名單</div>'}
+          <div class="xjs-lg"><span><i style="background:#4A5370"></i>收到的公司名單</span><span><i style="background:#9B5CFF"></i>成案（廣告線）</span>${totL ? `<span>團隊平均 ${(teamConv * 100).toFixed(0)}%</span>` : ''}</div></div></div>
+      <div class="xjs-cd"><div class="xjs-ch"><h3>每一位業務</h3><span class="sub">點一列看詳細 · 點欄位名稱排序</span></div><div class="xjs-tw"><table class="xjs-tb"><tr>${COLS.map(([k, t]) => `<th data-action="xjs-sort" data-k="${k}" class="${st.sort === k ? 's' + (st.asc ? ' asc' : '') : ''}">${t}</th>`).join('')}</tr>
+        ${list.map(p => `<tr class="r" data-action="xjs-who" data-uid="${escAttr(p.uid)}"><td><div class="nm"><i style="background:${p.online ? '#2BD46B' : '#55607A'}"></i>${escHtml(p.disp)}</div></td>
+          <td>${p.leave ? '<span class="xjs-tag gray">請假</span>' : p.online ? '<span class="xjs-tag ok">在線</span>' : `<span class="xjs-k">${p.seen || '—'}</span>`}</td>
+          <td class="${!p.leave && !p.today ? 'xjs-warn' : ''}">${p.today}</td>
+          <td><span class="xjs-b7">${p.d7.map(v => `<b class="${v ? '' : 'z'}" style="height:${v / mx7 * 20}px"></b>`).join('')}</span> <span class="xjs-k">${p.w7}</span></td>
+          <td>${p.due}</td><td class="${p.over >= 5 ? 'xjs-warn' : ''}">${p.over}</td>
+          <td><span class="xjs-pip">${[0, 1, 2].map(i => `<span class="${i === 1 && p.pipe[i] ? 'hot' : ''}" title="${XJS_STAGE[i]}">${XJS_STAGE[i].slice(0, 2)} ${p.pipe[i]}</span>`).join('')}</span></td>
+          <td class="${p.stuck ? 'xjs-warn' : ''}">${p.stuck || '—'}</td>
+          <td class="${p.conv != null && teamConv && p.conv < teamConv / 2 ? 'xjs-warn' : ''}">${p.conv == null ? '—' : (p.conv * 100).toFixed(0) + '%'}</td>
+          <td>${p.deals}</td><td>${money(p.rev)}</td><td>#${p.rank}</td></tr>`).join('')}</table></div></div>`;
+  } else if(st.tab === 'sys'){
+    const now2 = new Date(), hm = now2.getHours() * 60 + now2.getMinutes(), we = [0, 6].includes(now2.getDay());
+    const sched = h => { if(h.at == null) return `<div class="xjs-r"><span class="xjs-dot ok"></span><div>${h.n}<small>${h.node ? '已升級 Node 22' : '舊版 Node'}</small></div><span class="rr">${h.live}</span></div>`;
+      const passed = hm >= h.at && !(h.wd && we), hh = String(h.at / 60).padStart(2, '0') + ':00';
+      return `<div class="xjs-r"><span class="xjs-dot ${passed ? 'ok' : 'wait'}"></span><div>${h.n}<small>${h.note} · ${h.node ? '已升級 Node 22' : '舊版 Node'}</small></div><span class="rr">${h.wd ? '平日 ' : '每天 '}${hh}${passed ? '（今天已過）' : ''}</span></div>`; };
+    const lastOf = list => list.reduce((m, r) => (r._at || '') > m ? r._at : m, '');
+    const today = todayStr(), casesAll = [...APP.data.casesAd, ...APP.data.casesChannel];
+    const FR = [['我的客人紀錄', APP.data.personalProgress.filter(r => r.date === today).length + ' 筆', lastOf(APP.data.personalProgress)],
+      ['進度追蹤', [...APP.data.progressAd, ...APP.data.progressChannel].filter(r => (r._at || '').slice(0, 10) === today).length + ' 筆有更新', lastOf([...APP.data.progressAd, ...APP.data.progressChannel])],
+      ['客戶關懷', (APP.data.customerFollowups || []).filter(r => (r._at || '').slice(0, 10) === today).length + ' 筆有更新', lastOf(APP.data.customerFollowups || [])],
+      ['房屋土地估價', (APP.data.valuationCases || []).filter(r => (r._at || '').slice(0, 10) === today).length + ' 筆有更新', lastOf(APP.data.valuationCases || [])],
+      ['銀行信貸', (APP.data.bankLoanCases || []).filter(r => (r._at || '').slice(0, 10) === today).length + ' 筆有更新', lastOf(APP.data.bankLoanCases || [])],
+      ['獲利報表', casesAll.filter(c => c.date === today).length + ' 筆今天的案件', lastOf(casesAll)]];
+    const online = APP.users.filter(u => u.id !== meUid && soPresence(u.id).online).map(u => displayNameFor(u.id, u.staffName || u.email || ''));
+    body = `<div class="xjs-g" style="grid-template-columns:1fr 1.6fr;margin-bottom:18px">
+      <div class="xjs-cd${iss.hi ? ' bad' : ''}"><div class="xjs-ch"><h3>問題</h3><span class="sub">分數 ${iss.score}</span></div>${iss.L.map(x => `<div class="xjs-al ${x.lv}"><span class="lv">${XJS_LV[x.lv]}</span><div><b>${x.t}</b><small>${x.s}</small></div></div>`).join('')}</div>
+      <div class="xjs-cd"><div class="xjs-ch"><h3>後端自動化</h3><span class="sub">11 支 · 2 支已升級 Node 22</span></div><div class="xjs-g xjs-g2" style="gap:0 24px"><div class="xjs-rows">${XJS_SCHED.slice(0, 5).map(sched).join('')}</div><div class="xjs-rows">${XJS_SCHED.slice(5).map(sched).join('')}</div></div>
+        <div class="xjs-note">這裡先列出每支程式「什麼時候會跑」。要看到「今天真的有跑、幾點跑完」，需要改後端程式讓它每次跑完留一筆紀錄，可以跟升級 Node 22 一起做。</div></div></div>
+    <div class="xjs-g xjs-g2">
+      <div class="xjs-cd"><div class="xjs-ch"><h3>今天的資料有沒有進來</h3><span class="sub">都沒進來＝可能有人卡住或系統異常</span></div><div class="xjs-rows">${FR.map(([n, a, at]) => `<div class="xjs-r"><span class="xjs-dot ${(at || '').slice(0, 10) === today ? 'ok' : 'wait'}"></span><div>${n}<small>今天 ${a}</small></div><span class="rr">最後 ${xjsAgo(at)}</span></div>`).join('')}</div></div>
+      <div class="xjs-cd"><div class="xjs-ch"><h3>現在在線上</h3><span class="sub">${online.length} 人</span></div><div class="xjs-onl">${online.map(n => `<span>${escHtml(n)}</span>`).join('') || '<div class="xjs-empty">目前沒有其他人在線上</div>'}</div></div></div>`;
+  } else if(st.tab === 'ads'){
+    const months = Array.from(new Set([nowMonthKey, ...APP.data.adSpend.map(a => a.month).filter(Boolean)])).sort().reverse();
+    if(!months.includes(st.month)) st.month = months[0];
+    const c = xjsAdMonth(st.month), p = xjsAdMonth(xjsPrevMonth(st.month)), isCur = st.month === nowMonthKey;
+    const T = [['投放金額', money(c.spend), money(p.spend)], ['私訊數', c.msg + ' 則', p.msg + ' 則'], ['每則私訊成本', c.cpc ? money(c.cpc) : '—', p.cpc ? money(p.cpc) : '—'], ['送件數', c.sub + ' 件', p.sub + ' 件'],
+      ['核准數', c.ok + ' 件', p.ok + ' 件'], ['核准率', c.sub ? (c.rate * 100).toFixed(1) + '%' : '—', p.sub ? (p.rate * 100).toFixed(1) + '%' : '—'], ['每件核准成本', c.cpa ? money(c.cpa) : '—', p.cpa ? money(p.cpa) : '—'], ['廣告案件利潤', money(c.rev), money(p.rev)],
+      ['客戶賠錢', money(c.loss), money(p.loss)], ['廣告淨利', money(c.net), money(p.net)], ['每投 1 元換回', c.back ? money(c.back) : '—', p.back ? money(p.back) : '—'], ['投手獎金', money(c.pilot), money(p.pilot)]];
+    const F = [['私訊', c.msg], ['送件', c.sub], ['核准', c.ok], ['成案', c.cases]], f0 = Math.max(1, c.msg);
+    const six = months.slice().reverse().slice(-6).map(xjsAdMonth);
+    let trend = '<div class="xjs-empty">還沒有廣告資料</div>';
+    if(six.length >= 2){ const W = 560, H = 220, P = 40, mx = Math.max(1, ...six.map(a => Math.max(a.spend, a.rev))) * 1.1, mc = Math.max(1, ...six.map(a => a.cpa)) * 1.2, x = i => P + i * (W - P * 2) / (six.length - 1), y = v => H - 26 - v / mx * (H - 46), y2 = v => H - 26 - v / mc * (H - 46);
+      const line = (k, f) => six.map((a, i) => `${i ? 'L' : 'M'}${x(i)} ${f(a[k])}`).join('');
+      trend = `<svg viewBox="0 0 ${W} ${H}">` + [0, .5, 1].map(t => { const yy = H - 26 - t * (H - 46); return `<line x1="${P}" x2="${W - P}" y1="${yy}" y2="${yy}" stroke="#232B42" stroke-dasharray="3 5"/><text x="${P - 6}" y="${yy + 4}" font-size="10" fill="#8A93AE" text-anchor="end">${Math.round(mx * t / 1000)}k</text>`; }).join('')
+        + six.map((a, i) => `<text x="${x(i)}" y="${H - 8}" font-size="11" fill="#8A93AE" text-anchor="middle">${+a.mk.slice(5)}月${a.mk === nowMonthKey ? '（到今天）' : ''}</text>`).join('')
+        + `<path d="${line('spend', y)}" fill="none" stroke="#FF8A3D" stroke-width="2.4"/><path d="${line('rev', y)}" fill="none" stroke="#2BD46B" stroke-width="2.4"/><path d="${line('cpa', y2)}" fill="none" stroke="#9B5CFF" stroke-width="2" stroke-dasharray="4 4"/>`
+        + six.map((a, i) => `<circle cx="${x(i)}" cy="${y(a.spend)}" r="3.5" fill="#FF8A3D"/><circle cx="${x(i)}" cy="${y(a.rev)}" r="3.5" fill="#2BD46B"/>`).join('') + '</svg>'; }
+    const adProg = APP.data.progressAd, pipe = [0, 0, 0, 0]; adProg.forEach(cc => { if(STATUS_CLOSED.includes(cc.status)) return; if(STATUS_DONE.includes(cc.status)){ if(monthKey(cc.disbursedDate || cc.date) === nowMonthKey) pipe[3]++; return; } pipe[cc.status === '對保' ? 1 : cc.status === '等撥款' ? 2 : 0]++; });
+    const accts = APP.data.socialAccounts || [], stale = accts.filter(a => a.lastLoginDate && (Date.now() - new Date(a.lastLoginDate + 'T00:00:00').getTime()) / 864e5 > 30 && a.status !== '已鎖帳');
+    body = `<div class="xjs-cd" style="margin-bottom:18px"><div class="xjs-ch"><h3>廣告投放績效</h3><select class="xjs-sel" id="xjs-month">${months.map(m => `<option value="${m}"${m === st.month ? ' selected' : ''}>${m.slice(0, 4)} 年 ${+m.slice(5)} 月${m === nowMonthKey ? '（到今天）' : ''}</option>`).join('')}</select></div>
+      ${c.has ? '' : `<div class="xjs-note" style="margin:0 0 12px">${isCur ? '這個月還沒在「獲利報表 → 廣告支出報表」填投放金額、私訊、送件、核准，下面只有廣告案件的數字。' : '這個月沒有廣告資料。'}</div>`}
+      <div class="xjs-g xjs-g4" style="gap:10px">${T.map(([k, v, pv]) => `<div class="xjs-tl"><div class="xjs-k">${k}</div><div class="v">${v}</div><div class="d">上個月 ${pv}</div></div>`).join('')}</div>
+      ${isCur && c.net < 0 ? '<div class="xjs-note">固定成本整月先扣，月初廣告淨利會是負的，月底才準。</div>' : ''}</div>
+    <div class="xjs-g xjs-g2" style="margin-bottom:18px">
+      <div class="xjs-cd"><div class="xjs-ch"><h3>從私訊到成案</h3><span class="sub">每一步留下多少</span></div><div class="xjs-fun">${F.map(([k, v], j) => `<div class="xjs-fr"><span>${k}</span><div class="xjs-fb"><i style="width:${Math.max(4, Math.min(100, v / f0 * 100))}%"></i><span>${v}</span></div><span class="cv">${j ? (F[j - 1][1] ? '上一步的 ' + (v / F[j - 1][1] * 100).toFixed(0) + '%' : '—') : (c.cpc ? '每則 ' + money(c.cpc) : '')}</span></div>`).join('')}</div><div class="xjs-lg"><span>成案＝獲利報表裡這個月的廣告線案件</span></div></div>
+      <div class="xjs-cd"><div class="xjs-ch"><h3>近 6 個月：花多少、賺多少</h3></div><div class="xjs-chart">${trend}</div><div class="xjs-lg"><span><i style="background:#FF8A3D"></i>投放金額</span><span><i style="background:#2BD46B"></i>廣告案件利潤</span><span><i style="background:#9B5CFF"></i>每件核准成本（右軸）</span></div></div></div>
+    <div class="xjs-g xjs-g2">
+      <div class="xjs-cd"><div class="xjs-ch"><h3>廣告線進度</h3><span class="sub">來自進度追蹤</span></div><div class="xjs-pipe">${XJS_STAGE.map((k, i) => `<div><b>${pipe[i]}</b>${k}</div>`).join('')}</div></div>
+      <div class="xjs-cd"><div class="xjs-ch"><h3>廣告帳號狀態</h3><button type="button" class="xjs-btn" data-action="nav" data-view="socialAccounts">打開帳號庫 →</button></div><div class="xjs-ac">${SOCIAL_ACCOUNT_STATUS_OPTIONS.map((k, i) => `<span style="border-left:3px solid ${['#FFB547', '#2BD46B', '#FF4D6D', '#8A93AE'][i]}">${k}<b>${accts.filter(a => a.status === k).length}</b></span>`).join('')}</div>
+        <div class="xjs-rows" style="margin-top:10px">${stale.map(a => `<div class="xjs-r"><span class="xjs-dot bad"></span><div>${escHtml(a.accountName || '未命名帳號')}<small>${Math.floor((Date.now() - new Date(a.lastLoginDate + 'T00:00:00').getTime()) / 864e5)} 天沒登入</small></div><span class="rr">${escHtml(a.status || '')}</span></div>`).join('') || '<div class="xjs-empty">沒有超過 30 天沒登入的帳號</div>'}</div></div></div>`;
+  } else if(st.tab === 'map'){
+    body = `<iframe class="xjs-mapf" src="system-map.v1.html" title="系統地圖"></iframe>`;
+  } else {
+    const y = now.getFullYear(), m = now.getMonth(), first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate(), byD = {};
+    B.entries.filter(e => monthKey(e.date) === nowMonthKey).forEach(e => { byD[e.date] = (byD[e.date] || 0) + e.amount; });
+    let cal = '日一二三四五六'.split('').map(d => `<div class="wd">${d}</div>`).join('') + '<div class="em"></div>'.repeat(first);
+    for(let d = 1; d <= days; d++){ const k = `${nowMonthKey}-${String(d).padStart(2, '0')}`; cal += `<div class="${d === now.getDate() ? 'td' : ''}">${d}${byD[k] ? `<b>${money(byD[k])}</b>` : ''}</div>`; }
+    body = `<div class="xjs-cd" style="margin-bottom:18px"><div class="xjs-ch"><h3>本月獎金</h3><span class="sub">金額照獲利報表的規則算，這裡只顯示</span></div><div class="xjs-g" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">${[['今日拆成', B.today], ['本月拆成累計', B.tier], ['本月投手獎金（5 號發放）', B.pilot], ['本月特殊處理', B.special], ['本月合計', B.total]].map(([k, v]) => `<div class="xjs-tl"><div class="xjs-k">${k}</div><div class="v"${k === '本月合計' ? ' style="color:#C9A8FF"' : ''}>${money(v)}</div></div>`).join('')}</div></div>
+      <div class="xjs-cd"><div class="xjs-ch"><h3>本月獎金明細</h3><span class="sub">每天拆成＋特殊處理</span></div><div class="xjs-cal">${cal}</div></div>`;
+  }
+  // 個人詳細（右側抽屜）
+  let drawer = '';
+  const who = st.who && people.find(p => p.uid === st.who);
+  if(who){
+    const g = G.find(x => x.p && x.p.uid === who.uid), days30 = Array.from({ length:30 }, (_, i) => { const s = xjsDayOff(i - 29), d = new Date(s + 'T00:00:00').getDay(); return { v:who.byDay[s] || 0, we:d === 0 || d === 6 }; }), mx = Math.max(1, ...days30.map(d => d.v));
+    drawer = `<div class="xjs-msk" data-action="xjs-close"></div><div class="xjs-drw"><div class="xjs-ch" style="align-items:flex-start"><div style="display:flex;gap:12px;align-items:center">${avatarHtml(who.uid, who.disp, 52)}<div><div class="xjs-k">業務 · ${who.leave ? '今天請假' : who.online ? '在線上' : '最後上線 ' + (who.seen || '—')}</div><h2>${escHtml(who.disp)}</h2></div></div><button type="button" class="xjs-btn" data-action="xjs-close">關閉</button></div>
+      <div class="xjs-ds"><div class="xjs-g xjs-g2" style="gap:8px">${[['本月實收業績', money(who.rev)], ['團隊排名', '#' + who.rank], ['本月成案', who.deals + ' 件'], ['今天登記', who.today + ' 位']].map(([k, v]) => `<div class="xjs-tl"><div class="xjs-k">${k}</div><div class="v" style="font-size:18px">${v}</div></div>`).join('')}</div></div>
+      ${g ? `<div class="xjs-ds"><h4>需要注意</h4><div class="xjs-chips">${g.items.map(i => `<span class="${i.lv}">${escHtml(i.c)}</span>`).join('')}</div></div>` : ''}
+      <div class="xjs-ds"><h4>近 30 天每天登記客人數</h4><div class="xjs-b30">${days30.map(d => `<b class="${d.v ? '' : 'z'} ${d.we ? 'we' : ''}" style="height:${d.v / mx * 100}%"></b>`).join('')}</div><div class="xjs-lg"><span>平日平均 ${who.avg.toFixed(1)} 位</span><span>淡色＝週末</span></div></div>
+      <div class="xjs-ds"><h4>手上的案子（進度追蹤）</h4><div class="xjs-pipe">${XJS_STAGE.map((k, i) => `<div><b>${who.pipe[i]}</b>${k}</div>`).join('')}</div>${who.stuck ? `<div class="xjs-note">${who.stuck} 件超過 5 天沒更新</div>` : ''}</div>
+      <div class="xjs-ds"><h4>客戶關懷</h4><div class="xjs-g xjs-g2" style="gap:8px"><div class="xjs-tl"><div class="xjs-k">今天該聯絡</div><div class="v" style="font-size:18px">${who.due} 位</div></div><div class="xjs-tl"><div class="xjs-k">超過時間</div><div class="v${who.over >= 5 ? ' xjs-warn' : ''}" style="font-size:18px">${who.over} 位</div></div></div></div>
+      ${who.leads ? `<div class="xjs-ds"><h4>廣告名單（本月）</h4><div class="xjs-fun">${[['收到', who.leads], ['成案', who.adCases]].map(([k, v]) => `<div class="xjs-fr"><span>${k}</span><div class="xjs-fb"><i style="width:${Math.max(4, v / who.leads * 100)}%"></i><span>${v}</span></div><span class="cv">${k === '成案' ? '轉換 ' + (who.conv * 100).toFixed(0) + '%' : '來源＝公司'}</span></div>`).join('')}</div></div>` : ''}
+      <button type="button" class="xjs-btn" style="width:100%;padding:11px" data-action="open-chat-thread" data-peer="${escAttr(who.uid)}">跟 ${escHtml(who.disp)} 聊天</button></div>`;
+  }
+  return `<div class="xjs">${hdr}${body}${drawer}</div>`;
 }
 const SOCIAL_ACCOUNT_STATUS_OPTIONS = ['養號中','使用中','已鎖帳','休息中'];
 const SOCIAL_ACCOUNT_PLATFORM_OPTIONS = ['Facebook','Instagram','LINE','其他'];
@@ -11970,6 +12290,11 @@ document.addEventListener('click', (e)=>{
     if(action==='post-channel-case'){ postChannelCaseToTransactions(el.dataset.id); return; }
     if(action==='open-adspend-modal'){ openAdSpendModal(null); return; }
     if(action==='edit-adspend'){ const a = APP.data.adSpend.find(x=>x.id===el.dataset.id); if(a) openAdSpendModal(a); return; }
+    if(action==='xjs-tab'){ const st = xjsState(); st.tab = el.dataset.t; st.who = null; render(); window.scrollTo(0, 0); return; }
+    if(action==='xjs-who'){ xjsState().who = el.dataset.uid; render(); return; }
+    if(action==='xjs-close'){ xjsState().who = null; render(); return; }
+    if(action==='xjs-sort'){ const st = xjsState(), k = el.dataset.k; if(st.sort===k) st.asc = !st.asc; else { st.sort = k; st.asc = k==='disp' || k==='rank'; } render(); return; }
+    if(action==='xjs-range'){ xjsState().range = +el.dataset.n; render(); return; }
     if(action==='edit-xj-name'){
       const pub = APP.publicProfiles[APP.user.uid] || {};
       openModal('改名字', `<label class="field"><span>卡片上顯示的名字</span><input type="text" name="displayName" maxlength="12" value="${escAttr(pub.displayName||'')}" placeholder="留空＝顯示「${escAttr((APP.data.caseSettings||{}).xiaojiangName||'小江')}」"/></label><p style="margin:0;font-size:12px;color:var(--muted);">只改顯示的名字，獎金、資料歸屬都不受影響。</p>`, 'xjname-form', (data)=>{
