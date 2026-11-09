@@ -65,6 +65,100 @@
   .valuation-nav-button{background:linear-gradient(135deg,#10B981,#0EA5A4);box-shadow:0 4px 14px rgba(16,185,129,.4);margin-top:8px;}
   .valuation-nav-button:hover{box-shadow:0 6px 18px rgba(16,185,129,.55);}
   .valuation-nav-button.is-active{outline:2px solid #fff;}
+  .dispatch-nav-button{background:linear-gradient(135deg,#F59E0B,#EA7A0C);box-shadow:0 4px 14px rgba(234,122,12,.38);margin-top:8px;}
+  .dispatch-nav-button:hover{box-shadow:0 6px 18px rgba(234,122,12,.5);}
+  .dispatch-nav-button.is-active{outline:2px solid #fff;}
+  /* 派單小幫手（2026-11-09） */
+  .dp .mut{color:var(--muted);}
+  .dp-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px;}
+  .dp-stat{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:grid;gap:2px;}
+  .dp-stat small{font-size:12.5px;color:var(--muted);}
+  .dp-stat b{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .dp-stat b.amber{color:#B45309;} .dp-stat b.red{color:#C2261C;} .dp-stat b.green{color:#15803D;}
+  .dp-rot{padding:16px 18px;margin-bottom:14px;}
+  .dp-roth{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .dp-roth b{font-size:15px;} .dp-roth small{color:var(--muted);font-size:12.5px;flex:1;min-width:200px;}
+  .dp-chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .dp-chip{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;background:#fff;}
+  .dp-chip i{font-style:normal;font-size:11.5px;font-weight:700;border-radius:99px;padding:1px 8px;background:#FEF3C7;color:#92400E;}
+  .dp-chip.next{border:1.5px solid var(--navy);background:#EEF2FE;color:var(--navy);font-weight:700;}
+  .dp-chip.next i{background:var(--navy);color:#fff;}
+  .dp-chip.off{border-style:dashed;color:var(--muted);text-decoration:line-through;}
+  .dp-chip.off i{background:#EEF1F7;color:var(--muted);text-decoration:none;}
+  .dp-rlist{display:grid;gap:6px;}
+  .dp-rrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border:1px solid var(--border);border-radius:10px;}
+  .dp-rn{width:22px;height:22px;border-radius:99px;background:#EEF1F7;font-size:12px;font-weight:700;display:grid;place-items:center;color:var(--muted);}
+  .dp-ract{margin-left:auto;display:flex;gap:6px;align-items:center;}
+  .dp-ib{width:32px;height:32px;border:1px solid var(--border);background:#fff;border-radius:8px;cursor:pointer;font-size:14px;color:var(--ink);}
+  .dp-ib:disabled{opacity:.35;cursor:default;}
+  .dp-add{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;} .dp-add small{color:var(--muted);}
+  .btn.dp-sm{padding:6px 12px;font-size:12.5px;}
+  .btn.dp-red{color:#C2261C;}
+  .dp-filters,.dp-st{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .dp-f{height:36px;padding:0 14px;border-radius:99px;border:1px solid var(--border);background:#fff;font-size:13.5px;cursor:pointer;color:var(--ink);font-family:inherit;display:inline-flex;align-items:center;gap:6px;}
+  .dp-f span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .dp-f.on{border:1.5px solid var(--navy);background:#EEF2FE;color:var(--navy);font-weight:700;}
+  .dp-f.on span{color:var(--navy);}
+  .dp-tblwrap{padding:0;overflow-x:auto;}
+  .dp-tbl{min-width:1040px;}
+  .dp-tbl th{text-align:left;font-weight:500;color:var(--muted);font-size:12.5px;padding:11px 12px;background:#F8F9FC;white-space:nowrap;}
+  .dp-tbl td{padding:11px 12px;border-top:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+  .dp-tbl tr.wait td{background:#FFFBEB;} .dp-tbl tr.late td{background:#FEF2F2;}
+  .dp-tbl td.num{font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .dp-tbl td.act{text-align:right;}
+  .dp-tbl small{display:block;font-size:11.5px;}
+  .dp-pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+  .dp-pill.wait{background:#FEF3C7;color:#92400E;} .dp-pill.late{background:#FEE2E2;color:#B42318;}
+  .dp-pill.ok{background:#DBEAFE;color:#1E40AF;} .dp-pill.mute{background:#EEF1F7;color:#475467;}
+  .dp-pill.void{background:#EEF1F7;color:var(--muted);text-decoration:line-through;} .dp-pill.done{background:#DCFCE7;color:#166534;}
+  .dp-w{font-size:13px;color:var(--muted);white-space:nowrap;} .dp-w.wait{color:#B45309;font-weight:700;} .dp-w.late{color:#C2261C;font-weight:700;} .dp-w.ok{color:var(--muted);}
+  .dp-dup{margin-left:6px;font-size:11.5px;font-weight:600;color:#6D28D9;background:#EDE9FE;border-radius:6px;padding:1px 6px;white-space:nowrap;}
+  .dp-empty{padding:28px;text-align:center;color:var(--muted);font-size:13.5px;} .dp-empty.sm{padding:14px;text-align:left;}
+  .dp-me{max-width:640px;}
+  .dp-acts{display:grid;gap:10px;}
+  .dp-acts > *{min-width:0;}
+  /* 電腦版：卡片並排、按鈕左右排（2026-11-09） */
+  @media (min-width:901px){
+    .dp-me{max-width:1320px;}
+    .dp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px;align-items:start;}
+    .dp-grid .dp-lead{margin:0;}
+    .dp-acts{grid-template-columns:1.35fr 1fr;}
+    .dp-acts .dp-tel{font-size:15px;white-space:nowrap;gap:6px;padding:0 8px;}
+    .dp-acts .dp-done{font-size:15px;white-space:nowrap;padding:0 8px;}
+    .dp-me .dp-list{max-width:760px;}
+  }
+  .dp-sec{font-size:15px;margin:18px 0 10px;display:flex;align-items:center;gap:8px;} .dp-sec span{font-size:12.5px;color:var(--muted);font-weight:600;}
+  .dp-lead{padding:16px;display:grid;gap:12px;margin-bottom:12px;}
+  .dp-lead.hot{border:1.5px solid #F2B05E;box-shadow:0 4px 16px rgba(217,119,6,.12);}
+  .dp-lead.late{border-color:#F3A29B;box-shadow:0 4px 16px rgba(194,38,28,.1);}
+  .dp-lh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;} .dp-lh small{color:var(--muted);font-size:12.5px;}
+  .dp-name{font-size:22px;font-weight:800;display:flex;align-items:center;flex-wrap:wrap;gap:2px;}
+  .dp-kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;font-size:14px;}
+  .dp-kv div{display:grid;gap:1px;min-width:0;} .dp-kv small{font-size:12px;color:var(--muted);} .dp-kv b,.dp-kv span{overflow-wrap:anywhere;}
+  .dp-tel{height:48px;border-radius:12px;background:var(--navy);color:#fff;font-size:16.5px;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;font-variant-numeric:tabular-nums;}
+  .dp-tel svg{width:18px;height:18px;}
+  .dp-done{height:48px;border-radius:12px;border:1.5px solid #15803D;background:#fff;color:#15803D;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .dp-done:disabled{opacity:.6;}
+  .dp-st{margin:6px 0 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+  .dp-st .dp-f{border-radius:10px;justify-content:center;height:42px;}
+  .dp-note{width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:14px;font-family:inherit;resize:vertical;background:#F7F8FB;color:var(--ink);}
+  .dp-note:focus{outline:none;border-color:#9FB4F5;background:#fff;}
+  .dp-conv{height:46px;border-radius:12px;border:0;background:#C2410C;color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .dp-conv:disabled{opacity:.6;}
+  .dp-list{padding:4px 16px;} .dp-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;} .dp-row + .dp-row{border-top:1px solid var(--border);}
+  .dp-row > div{display:grid;gap:2px;min-width:0;} .dp-row small{font-size:12px;}
+  @media (max-width:900px){
+    .dp-stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .dp-tblwrap{background:transparent;border:0;box-shadow:none;overflow:visible;}
+    .dp-tbl{min-width:0;} .dp-tbl thead{display:none;}
+    .dp-tbl,.dp-tbl tbody,.dp-tbl tr,.dp-tbl td{display:block;}
+    .dp-tbl tr{background:#fff;border:1px solid var(--border);border-radius:14px;padding:10px 14px;margin-bottom:10px;}
+    .dp-tbl tr.wait{background:#FFFBEB;} .dp-tbl tr.late{background:#FEF2F2;}
+    .dp-tbl tr td{background:transparent !important;border:0;padding:3px 0;display:flex;gap:10px;}
+    .dp-tbl td[data-l]::before{content:attr(data-l);color:var(--muted);font-size:12px;width:64px;flex:none;padding-top:1px;}
+    .dp-tbl td.act{justify-content:flex-end;padding-top:8px;}
+    .dp-tbl small{display:inline;}
+  }
   .val-longcell:hover{border-color:#94A3B8 !important;background:#F8FAFC;}
   .chat-nav-icon{font-size:19px;display:inline-flex;}
   .chat-nav-badge{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#EF4444;color:#fff;
@@ -1728,7 +1822,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-09-02';
+const APP_BUILD = '2026-11-10-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2069,6 +2163,17 @@ function subscribeAll(){
         isCore() ? collection(db,'personalProgress') : query(collection(db,'personalProgress'), where('staffUid','==',APP.user.uid)),
         snap2=>{ APP.data.personalProgress = snap2.docs.map(d=>({id:d.id, ...d.data()})); render(); }
       ));
+      // 派單小幫手：業務只能查派給自己的（權限規則會擋「抓全部再過濾」）；核心、小江、行政看全部
+      if(isCore() || isStaffAdmin() || (me && me.isXiaojiang) || (isStaffSales() && myStaffName())){
+        unsubs.push(onSnapshot(
+          isStaffSales() ? query(collection(db,'webLeads'), where('assignedStaff','==',myStaffName())) : collection(db,'webLeads'),
+          snap2=>{ APP.data.webLeads = snap2.docs.map(d=>({id:d.id, ...d.data()})); render(); },
+          err=>{ console.warn('派單小幫手讀取失敗', err && err.code); APP.data.webLeads = []; }
+        ));
+      }
+      if(isCore() || isStaffAny()){
+        unsubs.push(onSnapshot(doc(db,'appdata','webLeadRotation'), snap2=>{ APP.data.webLeadRotation = snap2.data() || null; if(APP.view==='dispatch') render(); }, ()=>{}));
+      }
       unsubs.push(onSnapshot(
         collection(db,'attendanceRecords'),
         snap2=>{ APP.data.attendance = snap2.docs.map(d=>({id:d.id, ...d.data()})); render(); }
@@ -2408,6 +2513,7 @@ const NAV_ICONS = {
   calendar:  '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16"/><path d="M8 3v4M16 3v4"/>',
   lock:      '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   back:      '<path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/>',
+  dispatch:  '<path d="M4 13h4l1.5 3h5l1.5-3h4"/><path d="M6 5h12l2 8v6H4v-6z"/><path d="M12 3v6M9.5 6.5 12 9l2.5-2.5"/>',
 };
 const navSvg = (k, cls) => `<svg class="${cls||'nav-svg'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICONS[k]||''}</svg>`;
 function shellHTML(){
@@ -2446,6 +2552,8 @@ function shellHTML(){
       <span class="chat-nav-icon">${navSvg('chat')}</span><span>聊天室</span>
       ${totalDmUnread>0?`<span class="chat-nav-badge">${totalDmUnread>9?'9+':totalDmUnread}</span>`:''}
     </div>
+    ${(core || staffAny) ? (()=>{ const n = dpNavCount(); return `<div class="chat-nav-button dispatch-nav-button${APP.view==='dispatch'?' is-active':''}" data-action="nav" data-view="dispatch" title="${n ? n + ' 筆待聯繫' : '派單小幫手'}">
+      <span class="chat-nav-icon">${navSvg('dispatch')}</span><span>派單小幫手</span>${n>0?`<span class="chat-nav-badge">${n>9?'9+':n}</span>`:''}</div>`; })() : ''}
     ${core ? `<div class="chat-nav-button valuation-nav-button${APP.view==='valuation'?' is-active':''}" data-action="nav" data-view="valuation"><span class="chat-nav-icon">${navSvg('valuation')}</span><span>房屋土地估價</span></div>` : ''}
     ${core ? `<div class="chat-nav-button valuation-nav-button${APP.view==='bankLoan'?' is-active':''}" data-action="nav" data-view="bankLoan"><span class="chat-nav-icon">${navSvg('bankLoan')}</span><span>銀行信貸</span></div>` : ''}
     <div class="nav-section-divider"></div>
@@ -3608,8 +3716,17 @@ function openAnnouncementModal(){
   });
 }
 function saveAnnouncement(rec){ return setDoc(doc(db,'announcements', rec.id), rec); }
+function dpSyncNav(){
+  const b = document.querySelector('#sidebar .dispatch-nav-button'); if(!b) return;
+  b.classList.toggle('is-active', APP.view==='dispatch');
+  const n = dpNavCount(); let s = b.querySelector('.chat-nav-badge');
+  if(!n){ if(s) s.remove(); b.title = '派單小幫手'; return; }
+  if(!s){ s = document.createElement('span'); s.className = 'chat-nav-badge'; b.appendChild(s); }
+  s.textContent = n > 9 ? '9+' : String(n); b.title = n + ' 筆待聯繫';
+}
 function render(){
   document.querySelectorAll('.nav-item').forEach(el=>{ el.classList.toggle('active', el.dataset.view===APP.view); });
+  dpSyncNav();
   updateDailyBonusPulse();
   updateNotifBell();
   const main = document.getElementById('main');
@@ -3623,7 +3740,8 @@ function render(){
   if(APP.view==='valuation' && vaShouldDefer()) return; // 房屋土地估價也一樣
   // 這三頁重畫時備註框會先縮回一行再長高，先撐住高度，頁面才不會被往上拉（在下面的列會跳動、選單被當成捲動而關掉）；畫完長高後就放開
   main.style.minHeight = ['personalLog','progress','bankLoan','valuation'].includes(APP.view) ? main.offsetHeight + 'px' : '';
-  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal','customerFollowupOverview'];
+  if(APP.view==='dispatch' && dpShouldDefer()) return; // 派單小幫手打備註時先不重畫
+  const staffOnlyViews = ['progress','personalLog','attendance','calendar','personalDashboard','staffOverview','optionColors','xiaojiangInbox','socialAccounts','chatRoom','customerFollowupPersonal','customerFollowupOverview','dispatch'];
   if(isStaffAny() && !staffOnlyViews.includes(APP.view)){ APP.view = 'personalDashboard'; }
   if(APP.view!=='chatRoom') crLeave(main);
   main.classList.toggle('cr-full', APP.view==='chatRoom');
@@ -3646,6 +3764,7 @@ function render(){
   else if(APP.view==='customerFollowupPersonal' && (isCore() || isStaffAny())) main.innerHTML = customerFollowupPersonalView();
   else if(APP.view==='xiaojiangInbox'){ APP.view = isCore() ? ((APP.users.find(u=>u.id===APP.user.uid)||{}).isXiaojiang ? 'xiaojiangDashboard' : 'dashboard') : 'personalDashboard'; render(); return; } // 霍格華茲信箱 2026-11-03 拿掉，舊連結（推播、通知）導回首頁
   else if(APP.view==='chatRoom' && (isCore() || isStaffAny())) chatRender(main);
+  else if(APP.view==='dispatch' && dpCan()) main.innerHTML = isStaffSales() ? dpStaffHTML() : dpCoreHTML();
   else if(APP.view==='progress') main.innerHTML = progressHTML();
   else if(APP.view==='personalLog' && roomOk) main.innerHTML = personalLogPageHTML();
   else if(APP.view==='attendance' && roomOk) main.innerHTML = attendancePageHTML();
@@ -3658,6 +3777,181 @@ function render(){
   soAfterRender();
   if(APP.view==='personalLog') plAfterRender(); else if(APP.view==='progress') pgAfterRender(); else if(APP.view==='bankLoan') bkAfterRender(); else if(APP.view==='valuation') vaAfterRender(); lxSyncMSearch();
 }
+
+/* ================= 派單小幫手（2026-11-09）：官網表單名單 =================
+   後端（submitWebLead）自動輪流派給業務 → 業務在這裡聯繫、改狀態、轉成案件；核心／行政看全部、改派；核心調整輪派順序。
+   計時只算週一到週五 9:00–17:00（台灣時間），跟後端 webLeads.js 同一套算法 */
+const DP_REMIND = 30;
+const DP_STATUSES = ['業務已回覆','客戶未回覆','死不回','無效名單'];
+const DP_PILL = { '業務未回覆':'wait', '業務已回覆':'ok', '客戶未回覆':'mute', '死不回':'mute', '無效名單':'void', '已轉案件':'done' };
+APP.dp = APP.dp || { filter:'待聯繫', editRot:false };
+const DP_H = 3600e3, DP_TW = 8 * DP_H;
+const dpTw = ms => { const t = new Date(ms + DP_TW); return { y:t.getUTCFullYear(), m:t.getUTCMonth(), d:t.getUTCDate(), h:t.getUTCHours(), min:t.getUTCMinutes(), wd:t.getUTCDay() }; };
+const dpAt = (y, m, d, h) => Date.UTC(y, m, d, h) - DP_TW;
+const dpWorkday = ms => { const w = dpTw(ms).wd; return w >= 1 && w <= 5; };
+const dpIsWork = ms => { const p = dpTw(ms); return dpWorkday(ms) && p.h >= 9 && p.h < 17; };
+function dpNextWork(ms){ if(dpIsWork(ms)) return ms; let p = dpTw(ms), c = p.h < 9 ? dpAt(p.y, p.m, p.d, 9) : dpAt(p.y, p.m, p.d + 1, 9); while(!dpWorkday(c)){ p = dpTw(c); c = dpAt(p.y, p.m, p.d + 1, 9); } return c; }
+function dpWorkMin(from, to){
+  if(!(to > from)) return 0; let t = 0, p = dpTw(from), day = dpAt(p.y, p.m, p.d, 0);
+  for(let i = 0; i < 400 && day < to; i++){ const q = dpTw(day + 12*DP_H); if(dpWorkday(day + 12*DP_H)){ const s = dpAt(q.y, q.m, q.d, 9), e = dpAt(q.y, q.m, q.d, 17); t += Math.max(0, Math.min(e, to) - Math.max(s, from)); } day = dpAt(q.y, q.m, q.d + 1, 0); }
+  return Math.floor(t / 60000);
+}
+const dpMs = v => !v ? 0 : typeof v.toMillis==='function' ? v.toMillis() : typeof v==='number' ? v : (Date.parse(v) || 0);
+const dpPending = l => l.status==='業務未回覆' && !l.firstContactAt;
+const dpStart = l => dpMs(l.slaStartAt) || dpMs(l.createdAt);
+const dpWait = l => dpWorkMin(dpStart(l), Date.now());
+const dpLate = l => dpPending(l) && dpWait(l) >= DP_REMIND;
+const dpPhone = p => /^09\d{8}$/.test(p||'') ? `${p.slice(0,4)}-${p.slice(4,7)}-${p.slice(7)}` : (p||'');
+const dpSrc = l => (l.source && l.source.utm_campaign) || '自然流量';
+function dpWhen(v){ const ms = dpMs(v); if(!ms) return '剛剛'; const d = new Date(ms), hm = d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false});
+  return d.toDateString()===new Date().toDateString() ? '今天 ' + hm : `${d.getMonth()+1}/${d.getDate()} ${hm}`; }
+const dpToday = l => new Date(dpMs(l.createdAt) || Date.now()).toDateString()===new Date().toDateString();
+const dpRot = () => { const r = APP.data.webLeadRotation || {}; return { order: Array.isArray(r.order) ? r.order : [], paused: Array.isArray(r.paused) ? r.paused : [], lastIndex: typeof r.lastIndex==='number' ? r.lastIndex : -1, lastAssigned: r.lastAssigned || '' }; };
+const dpSalesNames = () => [...new Set(APP.users.filter(u=>u.role==='staffSales' && u.staffName).map(u=>u.staffName))];
+function dpOnLeave(){
+  const now = Date.now(), p = dpTw(now), today = `${p.y}-${String(p.m+1).padStart(2,'0')}-${String(p.d).padStart(2,'0')}`, hm = `${String(p.h).padStart(2,'0')}:${String(p.min).padStart(2,'0')}`, out = new Set();
+  (APP.data.attendance||[]).forEach(a=>{ if(a.date!==today || !a.staffName) return; const hourly = a.startTime && a.endTime && a.hours!=null; if(!hourly || (hm >= a.startTime && hm < a.endTime)) out.add(a.staffName); });
+  return out;
+}
+function dpNext(){ const r = dpRot(), leave = dpOnLeave(); for(let i = 1; i <= r.order.length; i++){ const n = r.order[(r.lastIndex + i) % r.order.length]; if(!r.paused.includes(n) && !leave.has(n)) return n; } return ''; }
+// 側邊欄數字：業務＝自己待聯繫；核心／行政＝全部待聯繫
+function dpNavCount(){ const me = isStaffSales() ? myStaffName() : null; return (APP.data.webLeads||[]).filter(l=>dpPending(l) && (!me || l.assignedStaff===me)).length; }
+const dpCan = () => isCore() || isStaffAny();
+function dpPillHTML(s){ return `<span class="dp-pill ${DP_PILL[s]||'mute'}">${escHtml(s||'')}</span>`; }
+function dpWaitHTML(l){
+  if(l.firstContactAt){ const m = dpWorkMin(dpStart(l), dpMs(l.firstContactAt)); return `<span class="dp-w ok">${m < 1 ? '1 分鐘內' : m + ' 分鐘內'}聯繫</span>`; }
+  if(!dpPending(l)) return '<span class="dp-w">—</span>';
+  if(dpStart(l) > Date.now()) return '<span class="dp-w">上班後開始計時</span>';
+  const w = dpWait(l); return w >= DP_REMIND ? `<span class="dp-w late">超時 ${w} 分鐘${l.escalatedAt ? '・已通知核心' : ''}</span>` : `<span class="dp-w wait">等待 ${w} 分鐘</span>`;
+}
+function dpGroup(l){ if(l.status==='已轉案件') return '已轉案件'; if(l.status==='無效名單') return '無效'; if(dpPending(l)) return dpLate(l) ? '超時' : '待聯繫'; return '已聯繫'; }
+
+/* ---- 核心／行政：全部名單 ---- */
+function dpCoreHTML(){
+  const all = (APP.data.webLeads||[]).slice().sort((a,b)=>dpMs(b.createdAt)-dpMs(a.createdAt));
+  const recent = all.filter(l=>dpPending(l) || Date.now() - dpMs(l.createdAt) < 45*864e5);
+  const F = APP.dp.filter, inF = (l, f) => f==='全部' || (f==='待聯繫' ? dpPending(l) : dpGroup(l)===f);
+  const filters = ['全部','待聯繫','超時','已聯繫','已轉案件','無效'];
+  const rows = recent.filter(l=>inF(l, F));
+  const today = all.filter(dpToday);
+  const stat = (lab, n, cls) => `<div class="dp-stat"><small>${lab}</small><b class="${cls||''}">${n}</b></div>`;
+  const now = new Date(), wd = '日一二三四五六'[now.getDay()];
+  const tr = l => `<tr class="${dpLate(l) ? 'late' : dpPending(l) ? 'wait' : ''}">
+      <td data-l="送出時間" class="mut">${dpWhen(l.createdAt)}</td>
+      <td data-l="客戶"><b>${escHtml(l.name||'')}</b>${l.isDuplicate ? '<span class="dp-dup">重複名單</span>' : ''}</td>
+      <td data-l="手機" class="num">${escHtml(dpPhone(l.phone))}</td>
+      <td data-l="金額">${escHtml(l.amount||'')}</td>
+      <td data-l="聯絡時間">${escHtml(l.contactTime||'')}${l.wantLine ? '<small class="mut">・希望用 LINE</small>' : ''}</td>
+      <td data-l="LINE ID" class="mut">${escHtml(l.lineId||'—')}</td>
+      <td data-l="來源廣告" class="mut">${escHtml(dpSrc(l))}</td>
+      <td data-l="派給">${l.assignedStaff ? escHtml(l.assignedStaff) : '<span class="dp-w late">還沒派</span>'}</td>
+      <td data-l="狀態">${dpPillHTML(l.status)}</td>
+      <td data-l="首次聯繫">${dpWaitHTML(l)}</td>
+      <td class="act"><button type="button" class="btn ghost dp-sm" data-dp-reassign="${escAttr(l.id)}">${l.assignedStaff ? '改派' : '派給業務'}</button></td></tr>`;
+  return `<div class="dp">
+    <div class="page-header"><div><h1 class="page-title">派單小幫手</h1><p class="page-sub">官網表單名單・今天 ${now.getMonth()+1}/${now.getDate()}（${wd}）・計時只算週一到週五 9:00–17:00</p></div></div>
+    <div class="dp-stats">${stat('今日新名單', today.length)}${stat('待聯繫', all.filter(dpPending).length, 'amber')}${stat('超過 30 分鐘未聯繫', all.filter(dpLate).length, 'red')}${stat('今日已轉案件', today.filter(l=>l.status==='已轉案件').length, 'green')}</div>
+    ${dpRotHTML()}
+    <div class="dp-filters">${filters.map(f=>`<button type="button" class="dp-f${F===f?' on':''}" data-dp-filter="${f}">${f}<span>${recent.filter(l=>inF(l, f)).length}</span></button>`).join('')}</div>
+    <div class="card dp-tblwrap">${rows.length ? `<table class="dp-tbl"><thead><tr><th>送出時間</th><th>客戶</th><th>手機</th><th>金額</th><th>聯絡時間</th><th>LINE ID</th><th>來源廣告</th><th>派給</th><th>狀態</th><th>首次聯繫</th><th></th></tr></thead><tbody>${rows.map(tr).join('')}</tbody></table>`
+      : `<div class="dp-empty">${(APP.data.webLeads||[]).length ? '這個分類目前沒有名單' : '還沒有官網表單名單。客人在官網送出表單後，會自動出現在這裡。'}</div>`}</div>
+  </div>`;
+}
+function dpRotHTML(){
+  const r = dpRot(), leave = dpOnLeave(), next = dpNext(), edit = APP.dp.editRot && isCore();
+  const head = `<div class="dp-roth"><b>輪派順序</b><small>請假和暫停的業務自動跳過，下一筆名單會派給「下一位」</small>${isCore() ? `<button type="button" class="btn ghost dp-sm" data-dp-rotedit>${edit ? '完成' : '調整'}</button>` : ''}</div>`;
+  if(!r.order.length && !edit) return `<div class="card dp-rot">${head}<div class="dp-empty sm">還沒設定輪派順序，官網名單進來會先通知核心手動派。${isCore() ? '按「調整」把業務加進來。' : ''}</div></div>`;
+  if(!edit) return `<div class="card dp-rot">${head}<div class="dp-chips">${r.order.map(n=>{ const tag = r.paused.includes(n) ? '暫停' : leave.has(n) ? '請假' : n===next ? '下一位' : n===r.lastAssigned ? '剛派出' : '';
+      return `<span class="dp-chip${tag==='下一位' ? ' next' : (tag==='暫停' || tag==='請假') ? ' off' : ''}">${escHtml(n)}${tag ? `<i>${tag}</i>` : ''}</span>`; }).join('')}</div></div>`;
+  const others = dpSalesNames().filter(n=>!r.order.includes(n));
+  return `<div class="card dp-rot">${head}<div class="dp-rlist">${r.order.map((n, i)=>`<div class="dp-rrow"><span class="dp-rn">${i+1}</span><b>${escHtml(n)}</b>${leave.has(n) ? '<small class="mut">今天請假</small>' : ''}
+      <span class="dp-ract"><button type="button" class="dp-ib" data-dp-mv="${i}:-1" ${i===0?'disabled':''} aria-label="往前">↑</button><button type="button" class="dp-ib" data-dp-mv="${i}:1" ${i===r.order.length-1?'disabled':''} aria-label="往後">↓</button>
+      <button type="button" class="btn ghost dp-sm" data-dp-pause="${escAttr(n)}">${r.paused.includes(n) ? '恢復' : '暫停'}</button><button type="button" class="btn ghost dp-sm dp-red" data-dp-rm="${escAttr(n)}">移除</button></span></div>`).join('') || '<div class="dp-empty sm">還沒有業務</div>'}</div>
+    ${others.length ? `<div class="dp-add"><small>加入：</small>${others.map(n=>`<button type="button" class="btn ghost dp-sm" data-dp-add="${escAttr(n)}">＋ ${escHtml(n)}</button>`).join('')}</div>` : ''}</div>`;
+}
+function dpSaveRot(order, paused){
+  const r = dpRot(), li = r.lastAssigned ? order.indexOf(r.lastAssigned) : -1;
+  return setDoc(doc(db,'appdata','webLeadRotation'), { order, paused: paused.filter(n=>order.includes(n)), lastIndex: li, _by: APP.userEmail||'', _at: new Date().toISOString() }, { merge:true }).catch(err=>alert('輪派順序儲存失敗：' + (err && err.message || err)));
+}
+function dpOpenReassign(id){
+  const l = (APP.data.webLeads||[]).find(x=>x.id===id); if(!l) return;
+  const names = dpSalesNames(), leave = dpOnLeave();
+  openModal(l.assignedStaff ? '改派名單' : '派給業務', `<div class="confirm-text" style="margin-bottom:10px;">${escHtml(l.name||'')}・${escHtml(l.amount||'')}${l.assignedStaff ? `，目前派給 ${escHtml(l.assignedStaff)}` : ''}</div>
+    <label class="field"><span>派給</span><select name="staff" required><option value="">選一位業務</option>${names.filter(n=>n!==l.assignedStaff).map(n=>`<option value="${escAttr(n)}">${escHtml(n)}${leave.has(n) ? '（今天請假）' : ''}</option>`).join('')}</select></label>
+    <p class="mut" style="font-size:12.5px;margin:6px 0 0;">新的業務會收到通知，30 分鐘的計時重新開始。</p>`, 'dp-reassign-form', data=>{
+    if(!data.staff) return;
+    const now = Date.now();
+    updateDoc(doc(db,'webLeads', id), stamp({ assignedStaff:data.staff, assignMethod:'manual', slaStartAt:new Date(dpNextWork(now)).toISOString(), remindedAt:null, escalatedAt:null, notifyPending:false,
+      history:[...(l.history||[]), { at:new Date(now).toISOString(), action:'reassign', to:data.staff, by:myStaffName() || displayNameFor(APP.user.uid, APP.userEmail), how:'manual' }] }))
+      .catch(err=>alert('改派失敗：' + (err && err.message || err)));
+  });
+}
+
+/* ---- 業務：派給我的名單 ---- */
+function dpStaffHTML(){
+  const me = myStaffName(), mine = (APP.data.webLeads||[]).filter(l=>l.assignedStaff===me);
+  const pend = mine.filter(dpPending).sort((a,b)=>dpStart(a)-dpStart(b));
+  const open = mine.filter(l=>!dpPending(l) && ['業務已回覆','客戶未回覆'].includes(l.status)).sort((a,b)=>dpMs(b.createdAt)-dpMs(a.createdAt));
+  const done = mine.filter(l=>['已轉案件','無效名單','死不回'].includes(l.status) && Date.now() - dpMs(l.createdAt) < 30*864e5).sort((a,b)=>dpMs(b.createdAt)-dpMs(a.createdAt));
+  const info = l => `<div class="dp-kv"><div><small>金額</small><b>${escHtml(l.amount||'')}</b></div><div><small>方便聯絡</small><b>${escHtml(l.contactTime||'')}${l.wantLine ? '・希望用 LINE' : ''}</b></div>
+      <div><small>LINE</small><b>${escHtml(l.lineId||'—')}</b></div><div><small>來源</small><span>${escHtml(dpSrc(l))}</span></div></div>`;
+  const tel = l => `<a class="dp-tel" href="tel:${escAttr(l.phone||'')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>${escHtml(dpPhone(l.phone))}</a>`;
+  const dup = l => l.isDuplicate ? '<span class="dp-dup">重複名單</span>' : '';
+  const pendCard = l => { const w = dpWait(l), future = dpStart(l) > Date.now(), late = !future && w >= DP_REMIND;
+    const badge = future ? '<span class="dp-pill wait">上班後開始計時</span>' : late ? `<span class="dp-pill late">已超過 ${w} 分鐘</span>` : `<span class="dp-pill wait">新名單・剩 ${DP_REMIND - w} 分鐘</span>`;
+    return `<div class="card dp-lead hot${late?' late':''}"><div class="dp-lh">${badge}<small>${dpWhen(l.createdAt)}・官網表單</small></div>
+      <div class="dp-name">${escHtml(l.name||'')}${dup(l)}</div>${l.assignMethod==='duplicate' ? '<small class="mut">之前就是你的客人，系統自動派回給你</small>' : ''}${info(l)}
+      <div class="dp-acts">${tel(l)}<button type="button" class="dp-done" data-dp-contact="${escAttr(l.id)}">我已聯絡客人</button></div></div>`; };
+  const openCard = l => `<div class="card dp-lead"><div class="dp-lh">${dpPillHTML(l.status)}<small>${dpWhen(l.createdAt)}・${dpWaitHTML(l)}</small></div>
+      <div class="dp-name">${escHtml(l.name||'')}${dup(l)}</div>${info(l)}${tel(l)}
+      <div><small class="mut">目前狀況</small><div class="dp-st">${DP_STATUSES.map(s=>`<button type="button" class="dp-f${l.status===s?' on':''}" data-dp-status="${escAttr(l.id)}" data-s="${escAttr(s)}">${s}</button>`).join('')}</div></div>
+      <textarea class="dp-note" data-dp-note="${escAttr(l.id)}" rows="2" placeholder="備註（例如：下午再打一次）">${escHtml(l.staffNote||'')}</textarea>
+      <button type="button" class="dp-conv" data-dp-convert="${escAttr(l.id)}">客人有意願，轉成案件</button></div>`;
+  const doneRow = l => `<div class="dp-row"><div><b>${escHtml(l.name||'')}</b>${dup(l)}<small class="mut">${dpWhen(l.createdAt)}・${escHtml(l.amount||'')}${l.status==='已轉案件' ? '・已建立進度追蹤案件' : ''}</small></div>${dpPillHTML(l.status)}</div>`;
+  return `<div class="dp dp-me">
+    <div class="page-header"><div><h1 class="page-title">派單小幫手</h1><p class="page-sub">派給你的官網表單名單・新名單請在 30 分鐘內聯繫（只算上班時間）</p></div></div>
+    ${!me ? '<div class="card dp-empty">你的帳號還沒設定業務名字，請核心到帳號管理設定。</div>' : ''}
+    <h3 class="dp-sec">待聯繫 <span>${pend.length}</span></h3>${pend.length ? `<div class="dp-grid">${pend.map(pendCard).join('')}</div>` : '<div class="card dp-empty sm">目前沒有待聯繫的名單</div>'}
+    ${open.length ? `<h3 class="dp-sec">聯繫中 <span>${open.length}</span></h3><div class="dp-grid">${open.map(openCard).join('')}</div>` : ''}
+    ${done.length ? `<h3 class="dp-sec">最近完成 <span>${done.length}</span></h3><div class="card dp-list">${done.map(doneRow).join('')}</div>` : ''}
+  </div>`;
+}
+const dpUpd = (id, data) => updateDoc(doc(db,'webLeads', id), stamp(data)).catch(err=>alert('儲存失敗，請檢查網路後再試一次：' + (err && err.message || err)));
+async function dpConvert(id, btn){
+  const l = (APP.data.webLeads||[]).find(x=>x.id===id); if(!l || l.convertedCaseId) return;
+  btn.disabled = true; btn.textContent = '建立中…';
+  const note = ['官網表單', '希望金額 ' + (l.amount||''), '方便聯絡 ' + (l.contactTime||'') + (l.wantLine ? '（希望用 LINE）' : ''), l.lineId ? 'LINE ' + l.lineId : '', '廣告 ' + dpSrc(l), l.staffNote || ''].filter(Boolean).join('｜');
+  const rec = stamp({ id:uid(), date:todayStr(), customer:l.name||'', phone:l.phone||'', plan:'', staff:myStaffName(), status:STATUS_OPTIONS[0], note, fromWebLead:l.id });
+  try{
+    await saveProgressAdCase(rec);
+    await updateDoc(doc(db,'webLeads', id), stamp({ convertedCaseId:rec.id, status:'已轉案件' }));
+    plToast('已建立進度追蹤案件');
+  }catch(err){ alert('轉成案件失敗，請檢查網路後再試一次：' + (err && err.message || err)); btn.disabled = false; btn.textContent = '客人有意願，轉成案件'; }
+}
+document.addEventListener('click', e=>{
+  const t = e.target; if(!t.closest || APP.view!=='dispatch') return;
+  const f = t.closest('[data-dp-filter]'); if(f){ APP.dp.filter = f.dataset.dpFilter; render(); return; }
+  if(t.closest('[data-dp-rotedit]')){ APP.dp.editRot = !APP.dp.editRot; render(); return; }
+  const r = dpRot();
+  const mv = t.closest('[data-dp-mv]'); if(mv){ const [i, d] = mv.dataset.dpMv.split(':').map(Number), o = r.order.slice(), j = i + d; if(j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j], o[i]]; dpSaveRot(o, r.paused); return; }
+  const pz = t.closest('[data-dp-pause]'); if(pz){ const n = pz.dataset.dpPause; dpSaveRot(r.order, r.paused.includes(n) ? r.paused.filter(x=>x!==n) : [...r.paused, n]); return; }
+  const rm = t.closest('[data-dp-rm]'); if(rm){ dpSaveRot(r.order.filter(x=>x!==rm.dataset.dpRm), r.paused); return; }
+  const ad = t.closest('[data-dp-add]'); if(ad){ dpSaveRot([...r.order, ad.dataset.dpAdd], r.paused); return; }
+  const ra = t.closest('[data-dp-reassign]'); if(ra){ dpOpenReassign(ra.dataset.dpReassign); return; }
+  const ct = t.closest('[data-dp-contact]'); if(ct){ ct.disabled = true; dpUpd(ct.dataset.dpContact, { firstContactAt:new Date().toISOString(), contactedBy:myStaffName(), status:'業務已回覆' }); return; }
+  const st = t.closest('[data-dp-status]'); if(st){ dpUpd(st.dataset.dpStatus, { status:st.dataset.s }); return; }
+  const cv = t.closest('[data-dp-convert]'); if(cv){ dpConvert(cv.dataset.dpConvert, cv); return; }
+});
+// 備註：離開欄位才存；打字時不重畫
+const dpShouldDefer = () => { const a = document.activeElement; return !!(a && a.matches && a.matches('[data-dp-note]')); };
+document.addEventListener('focusout', e=>{
+  const t = e.target; if(!t.matches || !t.matches('[data-dp-note]')) return;
+  const l = (APP.data.webLeads||[]).find(x=>x.id===t.dataset.dpNote);
+  if(l && (l.staffNote||'')!==t.value) dpUpd(l.id, { staffNote:t.value });
+  setTimeout(()=>{ if(APP.view==='dispatch') render(); }, 0);
+});
+// 倒數每 30 秒更新一次
+setInterval(()=>{ if(APP.user && APP.view==='dispatch' && !dpShouldDefer() && document.getElementById('modal-overlay').style.display!=='flex') render(); }, 30000);
 
 /* ================= BUSINESS TOOLS (業務工具, for staffAdmin/staffSales) ================= */
 function roomBanner(){
@@ -13318,7 +13612,7 @@ document.addEventListener('submit', (e)=>{
     renderRoot();
     return;
   }
-  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','adloss-form','xjname-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form','mark-followup-form','upload-cert-form','edit-attendance-form'].includes(e.target.id)){
+  if(['asset-form','category-form','subcategory-form','employee-form','collab-form','history-form','vendor-form','case-option-form','adspend-form','adloss-form','xjname-form','export-year-form','personal-log-form','attendance-form','calendar-form','progress-ad-form','progress-channel-form','customer-detail-form','social-account-form','personal-account-form','fanpage-form','roster-form','spare-email-form','mark-followup-form','upload-cert-form','edit-attendance-form','dp-reassign-form'].includes(e.target.id)){
     e.preventDefault();
     try{
       const fd = new FormData(e.target);
