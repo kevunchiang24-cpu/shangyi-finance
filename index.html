@@ -602,8 +602,10 @@
   .cr-b a{color:inherit;text-decoration:underline;}
   .cr-b.att{background:transparent !important;padding:0;border-radius:0;}
   .cr-meta{font-size:11px;color:var(--muted);padding:0 4px;}
-  .cr-x{display:none;position:absolute;top:50%;right:calc(100% + 6px);transform:translateY(-50%);border:1px solid var(--border);background:#fff;border-radius:8px;font-size:12px;padding:3px 7px;cursor:pointer;color:#D92D20;white-space:nowrap;font-family:inherit;}
-  .cr-b:hover > .cr-x,.cr-b.held > .cr-x{display:block;}
+  /* 燒掉鈕（2026-11-09）：跟訊息之間的空隙接起來（::after），滑鼠離開後停留約半秒才淡出，不用搶時間 */
+  .cr-x{display:block;visibility:hidden;opacity:0;transition:opacity .15s ease .4s,visibility 0s linear .55s;position:absolute;top:50%;right:calc(100% + 6px);transform:translateY(-50%);border:1px solid var(--border);background:#fff;border-radius:8px;font-size:12px;padding:3px 7px;cursor:pointer;color:#D92D20;white-space:nowrap;font-family:inherit;}
+  .cr-x::after{content:"";position:absolute;top:-10px;bottom:-10px;left:100%;width:16px;}
+  .cr-b:hover > .cr-x,.cr-b.held > .cr-x,.cr-x:focus-visible{visibility:visible;opacity:1;transition:opacity .12s,visibility 0s;}
   .cr-ims{display:grid;gap:3px;border-radius:14px;overflow:hidden;width:250px;max-width:100%;}
   .cr-ims.n2,.cr-ims.n3,.cr-ims.n4{grid-template-columns:1fr 1fr;}
   .cr-ims.n3 .cr-im:first-child{grid-column:1/-1;aspect-ratio:2/1;}
@@ -655,6 +657,7 @@
   .cr-fw{position:absolute;top:50%;transform:translateY(-50%);left:calc(100% + 8px);width:32px;height:32px;border-radius:99px;border:1px solid var(--border);background:#fff;color:var(--muted);display:grid;place-items:center;cursor:pointer;padding:0;transition:color .12s,border-color .12s;}
   .cr-g.me .cr-fw{left:auto;right:calc(100% + 8px);}
   .cr-g.me .cr-b.att.hasfw > .cr-x{right:calc(100% + 48px);}
+  .cr-g.me .cr-b.att.hasfw > .cr-x::after{width:56px;}
   .cr-fw:hover{color:var(--navy);border-color:#C9D6FB;}
   .cr-fw svg{width:16px;height:16px;}
   .cr-fwd{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:4px;padding:2px 4px 0;}
@@ -737,8 +740,7 @@
     .cr-hint{display:none;}
     .cr-inbar{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));}
     .cr-ta{font-size:16px;}
-    .cr-b:hover > .cr-x{display:none;}
-    .cr-b.held > .cr-x{display:block;}
+    .cr-b:hover:not(.held) > .cr-x{visibility:hidden;opacity:0;transition:none;}
     .cr-galbg{padding:0;align-items:stretch;}
     .cr-gal{border-radius:0;width:100%;}
   }
@@ -1726,7 +1728,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-09-01';
+const APP_BUILD = '2026-11-09-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
