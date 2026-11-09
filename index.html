@@ -649,7 +649,47 @@
   .cr-send svg{width:19px;height:19px;}
   .cr-hint{font-size:11px;color:var(--muted);padding:0 16px 8px;background:#fff;}
   .cr-drop{position:absolute;inset:0;z-index:7;background:rgba(47,91,234,.1);border:3px dashed var(--navy);border-radius:12px;display:grid;place-items:center;color:var(--navy);font-size:18px;font-weight:800;pointer-events:none;}
-  #cr-lb,#cr-gal,#cr-sheet{--cr-ink:#1F2433;--cr-line:#E2E6EF;--cr-navy:#2F5BEA;}
+  #cr-lb,#cr-gal,#cr-sheet,#cr-fws{--cr-ink:#1F2433;--cr-line:#E2E6EF;--cr-navy:#2F5BEA;}
+  /* 轉傳（2026-11-09） */
+  .cr-b.att.hasfw{overflow:visible;}
+  .cr-fw{position:absolute;top:50%;transform:translateY(-50%);left:calc(100% + 8px);width:32px;height:32px;border-radius:99px;border:1px solid var(--border);background:#fff;color:var(--muted);display:grid;place-items:center;cursor:pointer;padding:0;transition:color .12s,border-color .12s;}
+  .cr-g.me .cr-fw{left:auto;right:calc(100% + 8px);}
+  .cr-g.me .cr-b.att.hasfw > .cr-x{right:calc(100% + 48px);}
+  .cr-fw:hover{color:var(--navy);border-color:#C9D6FB;}
+  .cr-fw svg{width:16px;height:16px;}
+  .cr-fwd{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:4px;padding:2px 4px 0;}
+  .cr-fwd svg{width:13px;height:13px;}
+  .cr-fsbg{position:fixed;inset:0;z-index:10005;background:rgba(18,26,48,.42);display:flex;align-items:center;justify-content:center;padding:24px;}
+  .cr-fs{background:#fff;color:var(--cr-ink);border-radius:16px;width:min(460px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;}
+  .cr-fsb{overflow-y:auto;padding:14px 16px;display:grid;gap:16px;}
+  .cr-fsl{display:flex;align-items:center;font-size:12.5px;color:#66708A;font-weight:600;margin-bottom:8px;letter-spacing:.02em;}
+  .cr-fsl button{margin-left:auto;border:0;background:none;color:var(--cr-navy);font-size:12.5px;font-weight:700;cursor:pointer;padding:0;font-family:inherit;}
+  .cr-fsp{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 2px;}
+  .cr-fsk{position:relative;flex:none;width:72px;height:72px;border-radius:10px;border:2px solid transparent;padding:0;background:#EEF1F7;cursor:pointer;overflow:hidden;display:grid;place-items:center;opacity:.4;}
+  .cr-fsk.on{border-color:var(--cr-navy);opacity:1;}
+  .cr-fsk.one{cursor:default;}
+  .cr-fsk img{width:100%;height:100%;object-fit:cover;}
+  .cr-fsk .cr-fsc{position:absolute;top:4px;right:4px;width:20px;height:20px;border:2px solid #fff;background:rgba(30,36,51,.35);}
+  .cr-fsk.on .cr-fsc{background:var(--cr-navy);border-color:#fff;}
+  .cr-fs1{align-self:center;min-width:0;display:grid;gap:2px;font-size:13px;}
+  .cr-fs1 b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cr-fs1 small{color:#66708A;font-size:11.5px;}
+  .cr-fsw{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;padding:8px 6px;border-radius:10px;cursor:pointer;text-align:left;color:var(--cr-ink);font-size:14.5px;font-family:inherit;}
+  .cr-fsw:hover{background:#F5F7FB;}
+  .cr-fsw span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cr-fsc{width:22px;height:22px;border-radius:99px;border:2px solid #CBD2E1;display:grid;place-items:center;flex:none;box-sizing:border-box;}
+  .cr-fsc svg{width:11px;height:11px;color:#fff;opacity:0;}
+  .cr-fsw.sel .cr-fsc{background:var(--cr-navy);border-color:var(--cr-navy);}
+  .cr-fsw.sel .cr-fsc svg,.cr-fsk.on .cr-fsc svg{opacity:1;}
+  .cr-fsn{width:100%;box-sizing:border-box;border:1px solid var(--cr-line);border-radius:12px;padding:9px 12px;font-size:14px;font-family:inherit;resize:none;background:#F7F8FB;color:var(--cr-ink);}
+  .cr-fsn:focus{outline:none;border-color:#9FB4F5;background:#fff;}
+  .cr-fsf{padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--cr-line);display:flex;gap:10px;align-items:center;}
+  .cr-fsf small{flex:1;min-width:0;font-size:12px;color:#66708A;}
+  .cr-fsgo{border:0;background:var(--cr-navy);color:#fff;border-radius:10px;height:42px;padding:0 20px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit;flex:none;}
+  .cr-fsgo:disabled{background:#C9D3F0;cursor:default;}
+  .cr-ftoast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1F2433;color:#fff;border-radius:12px;padding:11px 14px 11px 16px;font-size:13.5px;z-index:10006;display:flex;gap:12px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:calc(100% - 32px);box-sizing:border-box;}
+  .cr-ftoast button{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:5px 10px;font-weight:700;cursor:pointer;flex:none;font-family:inherit;}
+  @media (max-width:900px){ .cr-fsbg{padding:0;align-items:flex-end;} .cr-fs{width:100%;border-radius:18px 18px 0 0;max-height:88%;} }
   .cr-lb{position:fixed;inset:0;z-index:10003;background:rgba(10,12,20,.94);display:flex;flex-direction:column;color:#fff;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);}
   .cr-lbh{display:flex;align-items:center;gap:10px;padding:12px 14px;}
   .cr-lbh div{flex:1;min-width:0;display:grid;gap:1px;}
@@ -1686,7 +1726,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-03-02';
+const APP_BUILD = '2026-11-09-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2179,13 +2219,13 @@ function clearXiaojiangThread(threadUid){
   });
 }
 function saveXiaojiangUpload(rec){ return setDoc(doc(db,'xiaojiangInbox', rec.id), rec); }
-function sendDirectMessage(peerUid, peerName, message, attachments){
+function sendDirectMessage(peerUid, peerName, message, attachments, extra){
   const myName = displayNameFor(APP.user.uid, APP.userEmail);
   return addDoc(collection(db,'directMessages'), {
     participants: [APP.user.uid, peerUid].sort(),
     senderUid: APP.user.uid, senderName: myName,
     recipientUid: peerUid, recipientName: peerName,
-    message: message||'', attachments: attachments||[], read:false, _at: new Date().toISOString()
+    message: message||'', attachments: attachments||[], read:false, _at: new Date().toISOString(), ...(extra||{})
   });
 }
 /* ---- 聊天室檔案上傳（2026-10-29）：回報上傳進度；檔名記在 contentDisposition，下載時用原本的檔名（圖片在聊天室送出前可能已壓縮） ---- */
@@ -5221,7 +5261,7 @@ function xiaojiangChatView(threadUid, threadName){
    - 圖片在系統內放大看（左右切換整個對話的圖）；檔案卡顯示類型、大小、下載；「⋯」→ 圖片和檔案總覽 */
 const CR = { count:-1, newBelow:0, lastHtml:'', sending:[], lb:null, held:null, peer:null };
 // 離開聊天室時收掉看大圖、總覽、手機附件選單（render() 呼叫）
-function crLeave(main){ if(main && main.dataset.crKey){ delete main.dataset.crKey; } if(CR.lb) crLbClose(); if(document.getElementById('cr-gal')) crGalClose(); crSheet(false); }
+function crLeave(main){ if(main && main.dataset.crKey){ delete main.dataset.crKey; } if(CR.lb) crLbClose(); if(document.getElementById('cr-gal')) crGalClose(); crSheet(false); if(CR.fw && !CR.fw.busy) crFwClose(); }
 APP.chatDraft = APP.chatDraft || {};
 APP.chatFind = APP.chatFind || '';
 const crIsM = () => window.innerWidth <= 900;
@@ -5239,6 +5279,8 @@ const crLink = s => escHtml(s).replace(/https?:\/\/[^\s<]+/g, u=>`<a href="${u}"
 const crLast = m => !m ? '' : m.message || ((m.attachments||[]).some(crIsImg) ? '[圖片]' : (m.attachments||[]).length ? '[檔案] ' + (m.attachments[0].name||'') : '');
 const CR_DL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>';
 const CR_CLIP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l8-8"/></svg>';
+const CR_FW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5l6 6-6 6"/><path d="M20 11H10a6 6 0 0 0-6 6v2"/></svg>';
+const CR_CK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const CR_SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>';
 
 function crContactsHTML(){
@@ -5282,7 +5324,8 @@ function crMsgsHTML(peer){
     out += `<div class="cr-g${mine?' me':''}">${mine ? '' : avatarHtml(who, peerName, 30)}<div class="cr-col">
       ${grp.map(({m})=>{ const burn = mine ? `<button type="button" class="cr-x" data-action="burn-message" data-id="${escAttr(m.id)}">🔥 燒掉</button>` : '';
         return (m.message ? `<div class="cr-b${CR.held===m.id?' held':''}" data-cr-id="${escAttr(m.id)}">${crLink(m.message)}${burn}</div>` : '')
-          + ((m.attachments||[]).length ? `<div class="cr-b att${CR.held===m.id?' held':''}" data-cr-id="${escAttr(m.id)}">${crAttHTML(m.attachments, m.id)}${m.message ? '' : burn}</div>` : ''); }).join('')}
+          + (m.forwardedFrom && (m.attachments||[]).length ? `<div class="cr-fwd">${CR_FW}轉傳自 ${escHtml(m.forwardedFrom)}</div>` : '')
+          + ((m.attachments||[]).length ? `<div class="cr-b att hasfw${CR.held===m.id?' held':''}" data-cr-id="${escAttr(m.id)}">${crAttHTML(m.attachments, m.id)}${m.message ? '' : burn}${(m.attachments||[]).some(a=>a.url) ? `<button type="button" class="cr-fw" data-cr-fw="${escAttr(m.id)}" aria-label="轉傳" title="轉傳給其他同事">${CR_FW}</button>` : ''}</div>` : ''); }).join('')}
       <div class="cr-meta">${crHM(last.m._at)}${mine && grp.some(x=>x.k===lastMine) ? ` · ${t[lastMine].read ? '已讀' : '已送出'}` : ''}</div></div></div>`;
   }
   // 還在上傳的（送出後馬上顯示、跑進度；失敗可以重試）
@@ -5428,7 +5471,7 @@ function crLbRender(){
   const grpAll = L.mid && list.length > 1 ? `<button type="button" class="cr-lbb pri cr-all" data-cr-all="${escAttr(L.mid)}" data-cr-imgonly="1">${CR_DL}<span>這組全部下載（${list.length}）</span></button>` : '';
   const strip = L.mid && list.length > 1 ? `<div class="cr-strip">${list.map((x, k)=>`<button type="button" class="${k===L.i?'on':''}" data-cr-lbpick="${k}" aria-label="第 ${k+1} 張"><img src="${escAttr(x.url)}" alt="" loading="lazy"></button>`).join('')}</div>` : '';
   const o = crOverlay('cr-lb', `<div class="cr-lb" role="dialog" aria-modal="true" aria-label="看圖片"><div class="cr-lbh"><div><b>${escHtml(a.name||'圖片')}</b><small>${escHtml(crWho(a.who))}・${crDay(a.at)} ${crHM(a.at)}${a.size ? '・' + crKB(a.size) : ''}</small></div>
-    ${grpAll}<button type="button" class="cr-lbb" data-cr-dl="${escAttr(a.url)}" data-cr-name="${escAttr(a.name||'圖片.jpg')}">${CR_DL}${grpAll ? '下載這張' : '下載'}</button><button type="button" class="cr-lbb" data-cr-lbclose aria-label="關閉">✕</button></div>
+    ${grpAll}<button type="button" class="cr-lbb" data-cr-fw="${escAttr(a.mid)}" data-cr-fwone="${a.j}">${CR_FW}轉傳</button><button type="button" class="cr-lbb" data-cr-dl="${escAttr(a.url)}" data-cr-name="${escAttr(a.name||'圖片.jpg')}">${CR_DL}${grpAll ? '下載這張' : '下載'}</button><button type="button" class="cr-lbb" data-cr-lbclose aria-label="關閉">✕</button></div>
     <div class="cr-lbm${L.zoom?' zoom':''}"><img src="${escAttr(a.url)}" alt="${escAttr(a.name||'')}" data-cr-zoom>${list.length>1 ? '<button type="button" class="cr-nav p" data-cr-lbgo="-1" aria-label="上一張">‹</button><button type="button" class="cr-nav n" data-cr-lbgo="1" aria-label="下一張">›</button>' : ''}</div>
     ${strip}<div class="cr-lbf">${L.i+1} / ${list.length}${crIsM() ? '' : '　← → 切換・點圖片放大・Esc 關閉'}</div></div>`);
   document.body.classList.add('pa-lock');
@@ -5484,6 +5527,85 @@ async function crDownload(url, name){
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
   }catch(_){ window.open(url, '_blank', 'noopener'); }
 }
+/* ---- 轉傳圖片和檔案（2026-11-09）：選要轉的（多張可只挑幾張）、選要給誰（可多人）、可加一句話。
+   檔案會另存一份到新對話（不共用原本的檔案），原本對話被清空或燒掉，轉出去的也還在；圖片不會再壓縮 ---- */
+function crFwOpen(mid, only){
+  const m = (APP.data.directMessages||[]).find(x=>x.id===mid); if(!m) return;
+  const idx = (m.attachments||[]).map((a, i)=>a.url ? i : -1).filter(i=>i>=0); if(!idx.length) return;
+  CR.fw = { mid, idx, sel: new Set(only!=null && idx.includes(only) ? [only] : idx), to: new Set(), q:'', note:'', busy:false, k:0, n:0 };
+  if(CR.lb) crLbClose();
+  crFwRender();
+}
+function crFwClose(){ CR.fw = null; crOverlay('cr-fws', ''); if(!CR.lb && !document.getElementById('cr-gal')) document.body.classList.remove('pa-lock'); }
+function crFwPeople(){
+  const me = APP.user.uid, F = CR.fw, q = F.q.toLowerCase();
+  return APP.users.filter(u=>u.id!==me && u.role!=='pending' && u.id!==APP.chatRoomActivePeer)
+    .map(u=>{ const t = crThread(u.id); return { u, name: crName(u), at: t.length ? String(t[t.length-1]._at||'') : '' }; })
+    .filter(r=>!q || (r.name + ' ' + (r.u.staffName||'')).toLowerCase().includes(q))
+    .sort((a, b)=>b.at.localeCompare(a.at));
+}
+function crFwWhoHTML(){
+  const F = CR.fw, list = crFwPeople();
+  return list.length ? list.map(r=>`<button type="button" class="cr-fsw${F.to.has(r.u.id)?' sel':''}" data-cr-fwto="${escAttr(r.u.id)}" aria-pressed="${F.to.has(r.u.id)}">${avatarHtml(r.u.id, r.name, 36)}<span>${escHtml(r.name)}</span><i class="cr-fsc">${CR_CK}</i></button>`).join('')
+    : `<div class="cr-none" style="padding:8px 6px;font-size:13px;">${F.q ? '找不到這位同事' : '沒有其他同事可以轉傳'}</div>`;
+}
+function crFwFootHTML(){
+  const F = CR.fw, names = [...F.to].map(id=>{ const u = APP.users.find(x=>x.id===id); return u ? crName(u) : ''; });
+  const ok = F.sel.size && F.to.size && !F.busy;
+  return `<small>${F.busy ? `轉傳中 ${F.k} / ${F.n}，請不要關掉這個畫面` : F.to.size ? '傳給 ' + escHtml(names.join('、')) : '還沒選要傳給誰'}</small><button type="button" class="cr-fsgo" data-cr-fwgo ${ok?'':'disabled'}>${F.busy ? '轉傳中…' : F.to.size > 1 ? `轉傳給 ${F.to.size} 位` : '轉傳'}</button>`;
+}
+function crFwRender(){
+  const F = CR.fw; if(!F) return;
+  const m = (APP.data.directMessages||[]).find(x=>x.id===F.mid); if(!m){ crFwClose(); return; }
+  const atts = m.attachments||[], th = a => crIsImg(a) ? `<img src="${escAttr(a.url)}" alt="" loading="lazy">` : `<span class="cr-ext ${crExt(a.name)[0]}">${crExt(a.name)[1]}</span>`;
+  const picks = F.idx.length > 1
+    ? `<div><div class="cr-fsl">要轉傳的（已選 ${F.sel.size} / ${F.idx.length}）<button type="button" data-cr-fwall>${F.sel.size===F.idx.length ? '全部取消' : '全選'}</button></div>
+        <div class="cr-fsp">${F.idx.map(i=>`<button type="button" class="cr-fsk${F.sel.has(i)?' on':''}" data-cr-fwpk="${i}" aria-pressed="${F.sel.has(i)}" aria-label="${escAttr(atts[i].name||'')}">${th(atts[i])}<span class="cr-fsc">${CR_CK}</span></button>`).join('')}</div></div>`
+    : `<div><div class="cr-fsl">要轉傳的</div><div class="cr-fsp"><div class="cr-fsk on one">${th(atts[F.idx[0]])}</div><div class="cr-fs1"><b>${escHtml(atts[F.idx[0]].name||'檔案')}</b><small>${crKB(atts[F.idx[0]].size)}</small></div></div></div>`;
+  crOverlay('cr-fws', `<div class="cr-fsbg" data-cr-fwbg><div class="cr-fs" role="dialog" aria-modal="true" aria-label="轉傳">
+    <div class="cr-galh"><b>轉傳</b><button type="button" class="cr-morebtn" data-cr-fwclose aria-label="關閉">✕</button></div>
+    <div class="cr-fsb">${picks}
+      <div><div class="cr-fsl">傳給${F.to.size ? `（${F.to.size} 位）` : ''}</div>
+        <input type="search" class="cr-find" id="cr-fw-find" placeholder="搜尋同事" value="${escAttr(F.q)}" autocomplete="off" aria-label="搜尋同事" style="margin-bottom:6px;">
+        <div id="cr-fw-who">${crFwWhoHTML()}</div></div>
+      <div><div class="cr-fsl">加一句話（可以不填）</div><textarea class="cr-fsn" id="cr-fw-note" rows="2" placeholder="例如：這是客人補的資料，幫我看一下">${escHtml(F.note)}</textarea></div>
+    </div>
+    <div class="cr-fsf" id="cr-fw-foot">${crFwFootHTML()}</div></div></div>`);
+  document.body.classList.add('pa-lock');
+}
+function crFwRefresh(){ const w = document.getElementById('cr-fw-who'), f = document.getElementById('cr-fw-foot'); if(w) w.innerHTML = crFwWhoHTML(); if(f) f.innerHTML = crFwFootHTML(); const l = document.querySelector('#cr-fws .cr-fsb > div:nth-child(2) .cr-fsl'); if(l) l.textContent = '傳給' + (CR.fw.to.size ? `（${CR.fw.to.size} 位）` : ''); }
+async function crFwSend(){
+  const F = CR.fw; if(!F || F.busy || !F.sel.size || !F.to.size) return;
+  const m = (APP.data.directMessages||[]).find(x=>x.id===F.mid); if(!m) return;
+  const atts = [...F.sel].sort((a, b)=>a-b).map(i=>m.attachments[i]), targets = [...F.to], note = F.note.trim();
+  const from = m.forwardedFrom || (m.senderUid!==APP.user.uid ? (m.senderName || crWho(m.senderUid)) : '');
+  F.busy = true; F.k = 0; F.n = atts.length * targets.length; crFwRefresh();
+  try{
+    const blobs = [];
+    for(const a of atts){ const r = await fetch(a.url); if(!r.ok) throw new Error('讀不到檔案（' + r.status + '）'); const b = await r.blob(); blobs.push(new File([b], a.name || '檔案', { type: a.type || b.type || 'application/octet-stream' })); }
+    for(const id of targets){
+      const u = APP.users.find(x=>x.id===id), name = u ? crName(u) : '';
+      const copied = [];
+      for(let i = 0; i < blobs.length; i++){ copied.push(await uploadChatFile(id, blobs[i], null, atts[i].name || blobs[i].name)); F.k++; crFwRefresh(); }
+      if(note) await sendDirectMessage(id, name, note);
+      await sendDirectMessage(id, name, '', copied, from ? { forwardedFrom: from } : {});
+    }
+    const names = targets.map(id=>{ const u = APP.users.find(x=>x.id===id); return u ? crName(u) : ''; });
+    crFwClose();
+    crFwToast(`已轉傳 ${atts.length} 個給 ${names.join('、')}`, targets[0]);
+  }catch(err){
+    console.error('轉傳失敗', err);
+    if(CR.fw){ CR.fw.busy = false; crFwRefresh(); }
+    plToast('轉傳失敗，請檢查網路後再按一次轉傳' + (F.k ? `（已經傳出 ${F.k} 個，再傳可能會重複）` : ''));
+  }
+}
+let crFwToastT = 0;
+function crFwToast(msg, peer){
+  document.querySelectorAll('.cr-ftoast').forEach(x=>x.remove());
+  const el = document.createElement('div'); el.className = 'cr-ftoast'; el.setAttribute('role', 'status');
+  el.innerHTML = `<span>${escHtml(msg)}</span>${peer ? `<button type="button" data-action="open-chat-thread" data-peer="${escAttr(peer)}">去看</button>` : ''}`;
+  document.body.appendChild(el); clearTimeout(crFwToastT); crFwToastT = setTimeout(()=>el.remove(), 5000);
+}
 // 手機：對話占滿螢幕，鍵盤打開時跟著可見區域縮小（輸入框不會被蓋住）
 function crFit(){
   const sp = document.getElementById('chat-split'); if(!sp) return;
@@ -5506,6 +5628,17 @@ document.addEventListener('click', (e)=>{
   if(menu && !menu.hidden && !t.closest('#cr-menu')){ menu.hidden = true; }
   if(t.closest('[data-cr-gal]')){ if(menu) menu.hidden = true; crGalRender(); return; }
   if(t.closest('[data-cr-galclose]') || t.matches('[data-cr-galbg]')){ crGalClose(); return; }
+  if(t.closest('.cr-ftoast [data-action]')){ document.querySelectorAll('.cr-ftoast').forEach(x=>x.remove()); }
+  const fw = t.closest('[data-cr-fw]'); if(fw){ crFwOpen(fw.dataset.crFw, fw.dataset.crFwone!=null ? Number(fw.dataset.crFwone) : null); return; }
+  if(CR.fw){
+    if(t.closest('[data-cr-fwclose]') || t.matches('[data-cr-fwbg]')){ if(!CR.fw.busy) crFwClose(); return; }
+    if(CR.fw.busy) return;
+    const fp = t.closest('[data-cr-fwpk]'); if(fp){ const i = Number(fp.dataset.crFwpk); CR.fw.sel.has(i) ? CR.fw.sel.delete(i) : CR.fw.sel.add(i); crFwRender(); return; }
+    if(t.closest('[data-cr-fwall]')){ CR.fw.sel = CR.fw.sel.size===CR.fw.idx.length ? new Set() : new Set(CR.fw.idx); crFwRender(); return; }
+    const ft = t.closest('[data-cr-fwto]'); if(ft){ const id = ft.dataset.crFwto; CR.fw.to.has(id) ? CR.fw.to.delete(id) : CR.fw.to.add(id); crFwRefresh(); return; }
+    if(t.closest('[data-cr-fwgo]')){ crFwSend(); return; }
+    if(t.closest('#cr-fws')) return;
+  }
   const vw = t.closest('[data-cr-view]'); if(vw){ const [mid, j] = vw.dataset.crView.split(':'); const i = crImgs().filter(a=>a.mid===mid).findIndex(a=>String(a.j)===j); CR.lb = { i: Math.max(0, i), mid, zoom:false }; crLbRender(); return; }
   const lpk = t.closest('[data-cr-lbpick]'); if(lpk && CR.lb){ CR.lb.i = +lpk.dataset.crLbpick; CR.lb.zoom = false; crLbRender(); return; }
   const al = t.closest('[data-cr-all]'); if(al){ crDownloadAll(al); return; }
@@ -5523,6 +5656,8 @@ document.addEventListener('input', (e)=>{
   const t = e.target;
   if(t.id==='chat-thread-input'){ APP.chatDraft[APP.chatRoomActivePeer] = t.value; crGrow(t); crSendState(); }
   else if(t.id==='chat-find'){ APP.chatFind = t.value; const b = document.getElementById('chat-contacts'); if(b) b.innerHTML = crContactsHTML(); }
+  else if(t.id==='cr-fw-find' && CR.fw){ CR.fw.q = t.value.trim(); crFwRefresh(); }
+  else if(t.id==='cr-fw-note' && CR.fw){ CR.fw.note = t.value; }
 });
 document.addEventListener('change', (e)=>{
   const t = e.target;
@@ -5531,6 +5666,7 @@ document.addEventListener('change', (e)=>{
 });
 document.addEventListener('keydown', (e)=>{
   if(e.target && e.target.id==='chat-thread-input' && e.key==='Enter' && !e.shiftKey && !e.isComposing && e.keyCode!==229 && !crIsM()){ e.preventDefault(); crSend(); return; }
+  if(CR.fw){ if(e.key==='Escape' && !CR.fw.busy) crFwClose(); return; }
   if(CR.lb){ if(e.key==='Escape') crLbClose(); else if(e.key==='ArrowLeft' || e.key==='ArrowRight'){ CR.lb.i += e.key==='ArrowLeft' ? -1 : 1; CR.lb.zoom = false; crLbRender(); } return; }
   if(e.key==='Escape'){ if(document.getElementById('cr-gal')) crGalClose(); else if(document.getElementById('cr-sheet')) crSheet(false); }
 });
