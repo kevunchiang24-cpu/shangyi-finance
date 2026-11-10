@@ -105,7 +105,8 @@
   .dp-tbl td{padding:11px 12px;border-top:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
   .dp-tbl tr.wait td{background:#FFFBEB;} .dp-tbl tr.late td{background:#FEF2F2;}
   .dp-tbl td.num{font-variant-numeric:tabular-nums;white-space:nowrap;}
-  .dp-tbl td.act{text-align:right;}
+  .dp-tbl td.act{text-align:right;white-space:nowrap;}
+  .dp-tbl td.act .btn + .btn{margin-left:6px;}
   .dp-tbl small{display:block;font-size:11.5px;}
   .dp-pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12.5px;font-weight:700;white-space:nowrap;}
   .dp-pill.wait{background:#FEF3C7;color:#92400E;} .dp-pill.late{background:#FEE2E2;color:#B42318;}
@@ -1822,7 +1823,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-10-01';
+const APP_BUILD = '2026-11-10-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -3836,6 +3837,7 @@ function dpCoreHTML(){
   const today = all.filter(dpToday);
   const stat = (lab, n, cls) => `<div class="dp-stat"><small>${lab}</small><b class="${cls||''}">${n}</b></div>`;
   const now = new Date(), wd = '日一二三四五六'[now.getDay()];
+  const canDel = isMeXiaojiang(); // 刪除名單：只有小江（2026-11-10），資料庫規則同步限制
   const tr = l => `<tr class="${dpLate(l) ? 'late' : dpPending(l) ? 'wait' : ''}">
       <td data-l="送出時間" class="mut">${dpWhen(l.createdAt)}</td>
       <td data-l="客戶"><b>${escHtml(l.name||'')}</b>${l.isDuplicate ? '<span class="dp-dup">重複名單</span>' : ''}</td>
@@ -3847,7 +3849,7 @@ function dpCoreHTML(){
       <td data-l="派給">${l.assignedStaff ? escHtml(l.assignedStaff) : '<span class="dp-w late">還沒派</span>'}</td>
       <td data-l="狀態">${dpPillHTML(l.status)}</td>
       <td data-l="首次聯繫">${dpWaitHTML(l)}</td>
-      <td class="act"><button type="button" class="btn ghost dp-sm" data-dp-reassign="${escAttr(l.id)}">${l.assignedStaff ? '改派' : '派給業務'}</button></td></tr>`;
+      <td class="act"><button type="button" class="btn ghost dp-sm" data-dp-reassign="${escAttr(l.id)}">${l.assignedStaff ? '改派' : '派給業務'}</button>${canDel ? `<button type="button" class="btn ghost dp-sm dp-red" data-dp-del="${escAttr(l.id)}">刪除</button>` : ''}</td></tr>`;
   return `<div class="dp">
     <div class="page-header"><div><h1 class="page-title">派單小幫手</h1><p class="page-sub">官網表單名單・今天 ${now.getMonth()+1}/${now.getDate()}（${wd}）・計時只算週一到週五 9:00–17:00</p></div></div>
     <div class="dp-stats">${stat('今日新名單', today.length)}${stat('待聯繫', all.filter(dpPending).length, 'amber')}${stat('超過 30 分鐘未聯繫', all.filter(dpLate).length, 'red')}${stat('今日已轉案件', today.filter(l=>l.status==='已轉案件').length, 'green')}</div>
@@ -3938,6 +3940,9 @@ document.addEventListener('click', e=>{
   const rm = t.closest('[data-dp-rm]'); if(rm){ dpSaveRot(r.order.filter(x=>x!==rm.dataset.dpRm), r.paused); return; }
   const ad = t.closest('[data-dp-add]'); if(ad){ dpSaveRot([...r.order, ad.dataset.dpAdd], r.paused); return; }
   const ra = t.closest('[data-dp-reassign]'); if(ra){ dpOpenReassign(ra.dataset.dpReassign); return; }
+  const dl = t.closest('[data-dp-del]'); if(dl && isMeXiaojiang()){ const id = dl.dataset.dpDel, l = (APP.data.webLeads||[]).find(x=>x.id===id); if(!l) return;
+    openConfirm(`確定要刪除「${l.name||''}」這筆名單嗎？刪除後無法復原。${l.convertedCaseId ? '（已轉成的案件不會被刪掉）' : ''}`, ()=>deleteDoc(doc(db,'webLeads', id)).catch(err=>alert('刪除失敗：' + (err && err.message || err))));
+    return; }
   const ct = t.closest('[data-dp-contact]'); if(ct){ ct.disabled = true; dpUpd(ct.dataset.dpContact, { firstContactAt:new Date().toISOString(), contactedBy:myStaffName(), status:'業務已回覆' }); return; }
   const st = t.closest('[data-dp-status]'); if(st){ dpUpd(st.dataset.dpStatus, { status:st.dataset.s }); return; }
   const cv = t.closest('[data-dp-convert]'); if(cv){ dpConvert(cv.dataset.dpConvert, cv); return; }
