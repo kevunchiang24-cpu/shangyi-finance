@@ -1823,7 +1823,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-10-02';
+const APP_BUILD = '2026-11-10-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -4278,7 +4278,7 @@ function xiaojiangDashboardView(){
       <div class="xjs-cd"><div class="xjs-ch"><h3>廣告帳號狀態</h3><button type="button" class="xjs-btn" data-action="nav" data-view="socialAccounts">打開帳號庫 →</button></div><div class="xjs-ac">${SOCIAL_ACCOUNT_STATUS_OPTIONS.map((k, i) => `<span style="border-left:3px solid ${['#FFB547', '#2BD46B', '#FF4D6D', '#8A93AE'][i]}">${k}<b>${accts.filter(a => a.status === k).length}</b></span>`).join('')}</div>
         <div class="xjs-rows" style="margin-top:10px">${stale.map(a => `<div class="xjs-r"><span class="xjs-dot bad"></span><div>${escHtml(a.accountName || '未命名帳號')}<small>${Math.floor((Date.now() - new Date(a.lastLoginDate + 'T00:00:00').getTime()) / 864e5)} 天沒登入</small></div><span class="rr">${escHtml(a.status || '')}</span></div>`).join('') || '<div class="xjs-empty">沒有超過 30 天沒登入的帳號</div>'}</div></div></div>`;
   } else if(st.tab === 'map'){
-    body = `<iframe class="xjs-mapf" src="system-map.v1.html" title="系統地圖"></iframe>`;
+    body = `<iframe class="xjs-mapf" src="system-map.v2.html" title="系統地圖"></iframe>`;
   } else {
     const y = now.getFullYear(), m = now.getMonth(), first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate(), byD = {};
     B.entries.filter(e => monthKey(e.date) === nowMonthKey).forEach(e => { byD[e.date] = (byD[e.date] || 0) + e.amount; });
