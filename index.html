@@ -1823,7 +1823,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-10-03';
+const APP_BUILD = '2026-11-11-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -3908,8 +3908,8 @@ function dpStaffHTML(){
       <div class="dp-name">${escHtml(l.name||'')}${dup(l)}</div>${info(l)}${tel(l)}
       <div><small class="mut">目前狀況</small><div class="dp-st">${DP_STATUSES.map(s=>`<button type="button" class="dp-f${l.status===s?' on':''}" data-dp-status="${escAttr(l.id)}" data-s="${escAttr(s)}">${s}</button>`).join('')}</div></div>
       <textarea class="dp-note" data-dp-note="${escAttr(l.id)}" rows="2" placeholder="備註（例如：下午再打一次）">${escHtml(l.staffNote||'')}</textarea>
-      <button type="button" class="dp-conv" data-dp-convert="${escAttr(l.id)}">客人有意願，轉成案件</button></div>`;
-  const doneRow = l => `<div class="dp-row"><div><b>${escHtml(l.name||'')}</b>${dup(l)}<small class="mut">${dpWhen(l.createdAt)}・${escHtml(l.amount||'')}${l.status==='已轉案件' ? '・已建立進度追蹤案件' : ''}</small></div>${dpPillHTML(l.status)}</div>`;
+      <button type="button" class="dp-conv" data-dp-convert="${escAttr(l.id)}">客人有意願，加到我的客人紀錄</button></div>`;
+  const doneRow = l => `<div class="dp-row"><div><b>${escHtml(l.name||'')}</b>${dup(l)}<small class="mut">${dpWhen(l.createdAt)}・${escHtml(l.amount||'')}</small></div>${l.status==='已轉案件' ? `<span class="dp-pill done">${/^pl_/.test(l.convertedCaseId||'') ? '已加到我的客人紀錄' : '已轉案件'}</span>` : dpPillHTML(l.status)}</div>`;
   return `<div class="dp dp-me">
     <div class="page-header"><div><h1 class="page-title">派單小幫手</h1><p class="page-sub">派給你的官網表單名單・新名單請在 30 分鐘內聯繫（只算上班時間）</p></div></div>
     ${!me ? '<div class="card dp-empty">你的帳號還沒設定業務名字，請核心到帳號管理設定。</div>' : ''}
@@ -3919,16 +3919,19 @@ function dpStaffHTML(){
   </div>`;
 }
 const dpUpd = (id, data) => updateDoc(doc(db,'webLeads', id), stamp(data)).catch(err=>alert('儲存失敗，請檢查網路後再試一次：' + (err && err.message || err)));
+// 2026-11-11：改成加到業務自己的「我的客人紀錄」（personalProgress），不再建進度追蹤案件（進度追蹤是行政在用）
+// 名單上的狀態值仍是「已轉案件」（舊資料不動）；convertedCaseId 存客人紀錄的 id（pl_ 開頭＝客人紀錄，其他＝舊的進度追蹤案件），沿用欄位所以資料庫規則不用改
 async function dpConvert(id, btn){
   const l = (APP.data.webLeads||[]).find(x=>x.id===id); if(!l || l.convertedCaseId) return;
-  btn.disabled = true; btn.textContent = '建立中…';
-  const note = ['官網表單', '希望金額 ' + (l.amount||''), '方便聯絡 ' + (l.contactTime||'') + (l.wantLine ? '（希望用 LINE）' : ''), l.lineId ? 'LINE ' + l.lineId : '', '廣告 ' + dpSrc(l), l.staffNote || ''].filter(Boolean).join('｜');
-  const rec = stamp({ id:uid(), date:todayStr(), customer:l.name||'', phone:l.phone||'', plan:'', staff:myStaffName(), status:STATUS_OPTIONS[0], note, fromWebLead:l.id });
+  btn.disabled = true; btn.textContent = '加入中…';
+  const detail = ['官網表單', '希望金額 ' + (l.amount||''), '方便聯絡 ' + (l.contactTime||'') + (l.wantLine ? '（希望用 LINE）' : ''), '廣告 ' + dpSrc(l), l.staffNote ? '備註 ' + l.staffNote : ''].filter(Boolean).join('｜');
+  const rec = stamp({ id:'pl_' + uid(), staffUid:APP.user.uid, staffName:myStaffName(), date:todayStr(), customer:l.name||'', phone:l.phone||'', source:'官網', lineId:l.lineId||'',
+    dealProduct:'', contactStatus:'已聯絡', transferTo:'', caseStatus:'', latestNote:detail, caseRemark:'', wizardHatNote:'', fromWebLead:l.id });
   try{
-    await saveProgressAdCase(rec);
+    await savePersonalProgress(rec);
     await updateDoc(doc(db,'webLeads', id), stamp({ convertedCaseId:rec.id, status:'已轉案件' }));
-    plToast('已建立進度追蹤案件');
-  }catch(err){ alert('轉成案件失敗，請檢查網路後再試一次：' + (err && err.message || err)); btn.disabled = false; btn.textContent = '客人有意願，轉成案件'; }
+    plToast('已加到我的客人紀錄');
+  }catch(err){ alert('加到我的客人紀錄失敗，請檢查網路後再試一次：' + (err && err.message || err)); btn.disabled = false; btn.textContent = '客人有意願，加到我的客人紀錄'; }
 }
 document.addEventListener('click', e=>{
   const t = e.target; if(!t.closest || APP.view!=='dispatch') return;
