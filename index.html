@@ -1846,7 +1846,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-12-02';
+const APP_BUILD = '2026-11-12-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -12505,10 +12505,12 @@ document.addEventListener('click', (e)=>{
       return;
     }
     if(action==='nav'){
-      const personalViews = ['progress','personalLog','attendance','calendar','personalDashboard'];
-      if(!personalViews.includes(el.dataset.view)) APP.viewingStaff=null;
+      // 房間（核心進業務的房間）裡的頁面；點到這些以外的頁面＝離開房間，左邊選單要整個重畫，不然會停在房間的樣子
+      const personalViews = ['progress','personalLog','attendance','calendar','personalDashboard','customerFollowupPersonal'];
+      const leftRoom = !!APP.viewingStaff && !personalViews.includes(el.dataset.view);
+      if(leftRoom) APP.viewingStaff=null;
       if(el.dataset.view==='xiaojiangInbox') APP.xjActiveThread = null;
-      APP.view = el.dataset.view; render(); closeSidebar(); return;
+      APP.view = el.dataset.view; if(leftRoom) renderRoot(); else render(); closeSidebar(); return;
     }
     if(action==='close-modal'){ closeModal(); return; }
     if(action==='open-stale-cases-modal'){ openStaleCasesModal(); return; }
