@@ -1823,7 +1823,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-11-01';
+const APP_BUILD = '2026-11-12-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -5162,7 +5162,8 @@ function myDashboardView(){
   const myAd = APP.data.progressAd.filter(c=>c.staff===me && monthKey(c.date)===thisMonth);
   const myCh = APP.data.progressChannel.filter(c=>c.staff===me && monthKey(c.date)===thisMonth);
   const myAll = [...myAd, ...myCh];
-  const myDone = myAll.filter(c=>STATUS_DONE.includes(c.status)).length;
+  // 撥款完成：跟業務總覽卡片一樣，用「撥款完成當天」判斷是不是本月（舊資料沒有撥款日期就用案件日期），不受送件月份影響
+  const myDone = [...APP.data.progressAd, ...APP.data.progressChannel].filter(c=>c.staff===me && STATUS_DONE.includes(c.status) && monthKey(c.disbursedDate || c.date)===thisMonth).length;
   const myPending = myAll.filter(c=>!STATUS_DONE.includes(c.status) && !STATUS_CLOSED.includes(c.status)).length;
   const myClosed = myAll.filter(c=>STATUS_CLOSED.includes(c.status)).length;
 
