@@ -1758,9 +1758,32 @@
   .xjs-cal .em{background:none;}
   .xjs-chart svg{width:100%;height:auto;display:block;}
   .xjs-empty{font-size:13px;color:var(--mut);padding:14px 0;}
+  /* BUG 偵查員（2026-11-12） */
+  .sc-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:16px;}
+  .sc-st{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--mut);}
+  .sc-st b{display:block;font-size:15px;color:var(--ink);margin-bottom:2px;}
+  .sc-st .xjs-dot{width:11px;height:11px;flex:none;}
+  .sc-right{margin-left:auto;}
+  .sc-strip{display:flex;gap:7px;align-items:flex-end;}
+  .sc-day{display:flex;flex-direction:column;gap:3px;align-items:center;}
+  .sc-day i{width:11px;height:11px;border-radius:3px;background:var(--g);opacity:.85;}
+  .sc-day i.m{background:var(--yel);opacity:1;} .sc-day i.h{background:var(--red);opacity:1;}
+  .sc-day i.x{background:none;box-shadow:inset 0 0 0 1.5px #55607A;} .sc-day i.f{background:#232B42;opacity:1;}
+  .sc-day span{font-size:10px;color:var(--mut);margin-top:2px;}
+  .sc-day.td span{color:var(--ink);font-weight:700;}
+  .sc-lg{display:flex;gap:12px;font-size:11px;color:var(--mut);justify-content:flex-end;margin-top:6px;}
+  .sc-lg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
+  .sc-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+  .sc-tile{font:inherit;text-align:left;border:none;cursor:pointer;background:var(--cd2);border-radius:14px;padding:12px 14px;color:var(--ink);}
+  .sc-tile:hover{background:#202842;} .sc-tile.on{box-shadow:inset 0 0 0 1.5px var(--acc);}
+  .sc-tile .v{font-size:22px;font-weight:800;margin-top:4px;} .sc-tile .v.h{color:#FF8A8A;} .sc-tile .v.m{color:var(--yel);} .sc-tile .v.ok{color:#6BE29A;font-size:17px;}
+  .sc-tile .d{font-size:11.5px;color:var(--mut);margin-top:2px;}
+  .sc-n{text-align:right;font-size:13px;font-weight:700;white-space:nowrap;} .sc-n small{display:block;font-weight:400;font-size:11px;color:var(--mut);}
+  .xjs-sys1{grid-template-columns:1fr 1.6fr;}
   @media (max-width:1000px){
     body.xjs-on #main{padding:14px 10px 60px;}
-    .xjs-g2,.xjs-g3,.xjs-g4,.xjs-row2{grid-template-columns:1fr;}
+    .xjs-g2,.xjs-g3,.xjs-g4,.xjs-row2,.xjs-sys1{grid-template-columns:1fr;}
+    .sc-tiles{grid-template-columns:1fr 1fr;} .sc-right{margin-left:0;width:100%;} .sc-strip{justify-content:space-between;} .sc-lg{justify-content:flex-start;flex-wrap:wrap;}
     .xjs-kp{grid-template-columns:repeat(2,1fr);}
     .xjs-hdr{gap:10px;} .xjs-hdr .tx{flex:1 1 0;min-width:0;} .xjs-hdr h1{font-size:17px;}
     .xjs-tn{order:5;width:100%;margin-left:0;} .xjs-tn button{padding:8px 12px;font-size:13px;}
@@ -1823,7 +1846,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-12-01';
+const APP_BUILD = '2026-11-12-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -1878,6 +1901,20 @@ let fcmMessaging = null;
    ================================================================ */
 
 /* ---------------- State ---------------- */
+/* BUG 偵查員：每個人的畫面如果程式出錯，記一筆到 clientErrors（只記哪一頁、哪一版、錯誤訊息前 160 字，不記客人資料）；
+   同一個錯誤同一頁只記一次、一次開頁最多 5 筆。偵查員巡視時彙整，顯示在小江個人空間 → 系統狀態 */
+function installErrorScout(){
+  if(window.__esOn) return; window.__esOn = true;
+  const seen = new Set(); let n = 0;
+  const rep = (msg, src) => { try{
+    msg = String(msg || '').replace(/\s+/g, ' ').replace(/^Uncaught\s+/, '').slice(0, 160);
+    if(!msg || /ResizeObserver|^Script error\.?$/.test(msg)) return;
+    const k = msg + '|' + (APP.view || ''); if(seen.has(k) || n >= 5) return; seen.add(k); n++;
+    addDoc(collection(db, 'clientErrors'), { msg, src:String(src || '').slice(0, 80), view:APP.view || '', build:APP_BUILD, uid:(APP.user && APP.user.uid) || '', mobile:innerWidth < 760, _at:new Date().toISOString() }).catch(()=>{});
+  }catch(e){} };
+  addEventListener('error', e => rep(e.message, e.filename ? e.filename.split('/').pop() + ':' + e.lineno : ''));
+  addEventListener('unhandledrejection', e => { const r = e.reason; if(r && /permission|offline|unavailable|network|quota/i.test(String(r.code || r.message || ''))) return; rep(r && (r.message || r), 'promise'); });
+}
 function formatDateLocal(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 const todayStr = () => formatDateLocal(new Date());
 const DEFAULT_LOGO_B64 = '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';
@@ -2131,9 +2168,14 @@ function subscribeAll(){
     APP.role = me ? me.role : 'pending';
     if(!personalSubsInitialized && APP.role){
       personalSubsInitialized = true;
+      installErrorScout();
       if(me && (me.isXiaojiang || me.isHuang)){
         const prefix = me.isXiaojiang ? '' : 'huang';
         const collName = (base)=> prefix ? prefix+base.charAt(0).toUpperCase()+base.slice(1) : base;
+        if(me.isXiaojiang){
+          unsubs.push(onSnapshot(doc(db,'appdata','bugScout'), s2=>{ APP.data.bugScout = s2.data() || null; if(APP.view==='xiaojiangDashboard') render(); }, ()=>{}));
+          unsubs.push(onSnapshot(doc(db,'appdata','systemBeats'), s2=>{ APP.data.systemBeats = s2.data() || null; if(APP.view==='xiaojiangDashboard' && xjsState().tab==='sys') render(); }, ()=>{}));
+        }
         unsubs.push(onSnapshot(collection(db,collName('socialAccounts')), snap2=>{
           APP.data.socialAccounts = snap2.docs.map(d=>({id:d.id, ...d.data()}));
           render();
@@ -4027,12 +4069,61 @@ function profileEditCardHtml(){
    獎金、淨利都照原本的式子，這頁只顯示，不改任何規則。投手獎金跟廣告支出報表一致：先扣客戶賠錢（2026-11-02 使用者要求的規則）。 ---- */
 const XJS_STAGE = ['審核中', '對保', '等撥款', '本月撥款'];
 const XJS_SCHED = [ // 後端排程（照 shangyi-push/functions/index.js）
-  { n:'關懷提醒', at:9 * 60, node:0, note:'今天該聯絡的客人 → 負責人；每週週報給核心' }, { n:'社群帳號檢查', at:10 * 60, node:0, note:'帳號太久沒登入 → 提醒你' },
-  { n:'對保追蹤', at:12 * 60, node:0, note:'對保第 1、2 天提醒業務和核心' }, { n:'未登記提醒', at:16 * 60, wd:1, node:0, note:'平日還沒登記客人的業務 → 提醒' },
-  { n:'未發獎金提醒', at:18 * 60, node:0, note:'還沒發的獎金 → 提醒核心' },
-  { n:'聊天通知', live:'新訊息時', node:0 }, { n:'對保推播', live:'狀態改成對保時', node:0 }, { n:'通知推播', live:'有新通知時', node:0 },
-  { n:'估價推播', live:'估價填了方案時', node:1 }, { n:'LINE 查詢', live:'有人打 @姓名', node:1 },
+  { n:'關懷提醒', fn:'checkCustomerFollowupReminders', at:9 * 60, node:1, note:'今天該聯絡的客人 → 負責人；每週週報給核心' }, { n:'社群帳號檢查', fn:'checkSocialAccountHealth', at:10 * 60, node:1, note:'帳號太久沒登入 → 提醒你' },
+  { n:'對保追蹤', fn:'checkGuarantorFollowups', at:12 * 60, node:1, note:'對保第 1、2 天提醒業務和核心' }, { n:'未登記提醒', fn:'checkDailyProgressLog', at:16 * 60, wd:1, node:1, note:'平日還沒登記客人的業務 → 提醒' },
+  { n:'未發獎金提醒', fn:'checkUnpaidBonusReminder', at:18 * 60, node:1, note:'還沒發的獎金 → 提醒核心' },
+  { n:'BUG 偵查員', fn:'bugScout', live:'每 3 小時', node:1 }, { n:'派單逾時檢查', fn:'checkWebLeadSLA', live:'平日上班每 10 分鐘', node:1 },
+  { n:'聊天通知', fn:'notifyDirectMessage', live:'新訊息時', node:1 }, { n:'對保推播', fn:'notifyProgressAdGuarantorStatus', live:'狀態改成對保時', node:1 }, { n:'通知推播', fn:'notifyAnnouncement', live:'有新通知時', node:1 },
+  { n:'估價推播', fn:'onValuationCaseWritten', live:'估價填了方案時', node:1 }, { n:'LINE 查詢', fn:'lineWebhook', live:'有人打 @姓名', node:1 },
+  { n:'官網表單收件', fn:'submitWebLead', live:'官網有人填表', node:1 }, { n:'改派通知', fn:'onWebLeadReassigned', live:'名單改派時', node:1 },
 ];
+/* BUG 偵查員（後端 bugScout 每 3 小時巡一次，報告寫在 appdata/bugScout） */
+const SCOUT_HOURS = [8, 11, 14, 17, 20];
+const SCOUT_CAT = [['data', '資料', '有沒有壞掉的資料'], ['num', '數字', '各處數字對不對得起來'], ['auto', '自動化', '有沒有該跑沒跑'], ['scr', '畫面', '大家的畫面有沒有出錯']];
+const scHM = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+function scoutExpected(now){ // 現在「應該已經巡完」的最近一次（給 20 分鐘緩衝）
+  const t = new Date(now.getTime() - 20 * 60000);
+  for(let back = 0; back < 2; back++){ const d = new Date(t); d.setDate(d.getDate() - back);
+    for(let i = SCOUT_HOURS.length - 1; i >= 0; i--){ const s = new Date(d); s.setHours(SCOUT_HOURS[i], 0, 0, 0); if(s <= t) return s; } }
+  return null;
+}
+function scoutStatus(){
+  const R = APP.data.bugScout, now = new Date();
+  if(!R || !R.lastRunAt) return { none:true, missed:false, F:[], hi:0, mid:0 };
+  const last = new Date(R.lastRunAt), exp = scoutExpected(now), missed = !!exp && last < new Date(exp.getTime() - 10 * 60000);
+  const nx = new Date(now), h = SCOUT_HOURS.find(x => x > now.getHours() + now.getMinutes() / 60);
+  if(h == null){ nx.setDate(nx.getDate() + 1); nx.setHours(SCOUT_HOURS[0], 0, 0, 0); } else nx.setHours(h, 0, 0, 0);
+  const F = (R.findings || []).slice().sort((a, b) => 'hml'.indexOf(a.lv) - 'hml'.indexOf(b.lv));
+  return { R, last, next:nx, missed, F, hi:F.filter(f => f.lv === 'h').length, mid:F.filter(f => f.lv === 'm').length };
+}
+function scoutStripHTML(R){
+  const now = new Date(), runs = (R.runs || []).map(r => ({ t:new Date(r.at).getTime(), h:r.h || 0, m:r.m || 0 }));
+  let out = '';
+  for(let k = 6; k >= 0; k--){ const d = new Date(now); d.setDate(d.getDate() - k); const md = (d.getMonth() + 1) + '/' + d.getDate();
+    const sq = SCOUT_HOURS.map(hr => { const s = new Date(d); s.setHours(hr, 0, 0, 0); const t = s.getTime();
+      if(t > now.getTime() - 20 * 60000) return `<i class="f" title="${md} ${hr}:00 還沒到"></i>`;
+      const r = runs.find(x => x.t >= t - 10 * 60000 && x.t < t + 90 * 60000);
+      if(!r) return `<i class="x" title="${md} ${hr}:00 沒有巡視"></i>`;
+      return `<i class="${r.h ? 'h' : r.m ? 'm' : ''}" title="${md} ${hr}:00 ${r.h ? r.h + ' 個高' : r.m ? r.m + ' 個中' : '正常'}"></i>`; }).join('');
+    out += `<div class="sc-day${k ? '' : ' td'}">${sq}<span>${k ? md : '今天'}</span></div>`; }
+  return out;
+}
+function scoutCardHTML(){
+  const S = scoutStatus(), st = xjsState();
+  const head = `<div class="xjs-ch"><h3>BUG 偵查員</h3><span class="sub">每 3 小時巡一次 · ${SCOUT_HOURS.map(h => h + ':00').join('、')}</span></div>`;
+  if(S.none) return `<div class="xjs-cd" style="margin-bottom:18px">${head}<div class="xjs-note" style="margin-top:0">偵查員還沒開始巡視。後端程式裝好後，第一次巡視完這裡就會出現報告。</div></div>`;
+  const cat = st.scCat || '', F = cat ? S.F.filter(f => f.cat === cat) : S.F;
+  const dot = S.missed || S.hi ? 'bad' : S.mid ? 'mid' : 'ok';
+  const title = S.missed ? '偵查員沒有準時巡視' : S.hi ? `發現 ${S.hi} 個要馬上處理的問題` : S.mid ? `發現 ${S.mid} 個要注意的問題` : '一切正常';
+  const tiles = SCOUT_CAT.map(([c, l, d]) => { const L = S.F.filter(f => f.cat === c), h = L.filter(f => f.lv === 'h').length, m = L.filter(f => f.lv === 'm').length, lo = L.length - h - m;
+    return `<button type="button" class="sc-tile${cat === c ? ' on' : ''}" data-action="xjs-sc-cat" data-c="${c}"><div class="xjs-k">${l}</div><div class="v ${h ? 'h' : m ? 'm' : L.length ? '' : 'ok'}">${L.length ? L.length + ' 個' : '正常'}</div><div class="d">${L.length ? [h && h + ' 高', m && m + ' 中', lo && lo + ' 低'].filter(Boolean).join(' · ') : d}</div></button>`; }).join('');
+  const list = F.map(f => `<div class="xjs-al ${f.lv}"><span class="lv">${XJS_LV[f.lv]}</span><div><b>${escHtml(f.t)}</b><small>${escHtml(f.s || '')}</small></div><span class="sc-n">${f.n ? f.n + ' ' + (f.unit || '件') : ''}<small>${f.firstAt ? xjsAgo(f.firstAt) + '發現' : ''}</small></span></div>`).join('')
+    || `<div class="xjs-empty">${cat ? '這一類沒有問題' : '這次巡視沒有發現問題'}</div>`;
+  return `<div class="xjs-cd${S.missed || S.hi ? ' bad' : ''}" style="margin-bottom:18px">${head}
+    <div class="sc-top"><div class="sc-st"><span class="xjs-dot ${dot}"></span><div><b>${title}</b>上次巡視 ${scHM(S.last)}（${xjsAgo(S.R.lastRunAt)}）· 下次 ${scHM(S.next)}${S.R.checked ? ` · 這次檢查 ${S.R.checked} 項` : ''}</div></div>
+      <div class="sc-right"><div class="sc-strip">${scoutStripHTML(S.R)}</div><div class="sc-lg"><span><i style="background:var(--g)"></i>正常</span><span><i style="background:var(--yel)"></i>有中問題</span><span><i style="background:var(--red)"></i>有高問題</span><span><i style="box-shadow:inset 0 0 0 1.5px #55607A"></i>沒巡視</span></div></div></div>
+    <div class="sc-tiles">${tiles}</div>${cat ? `<div class="xjs-ch" style="margin:0 0 8px"><span class="sub">只看「${SCOUT_CAT.find(x => x[0] === cat)[1]}」</span><button type="button" class="xjs-btn" data-action="xjs-sc-cat" data-c="${cat}">看全部</button></div>` : ''}${list}</div>`;
+}
 function xjsState(){ if(!APP.xjs) APP.xjs = { tab:'home', sort:'rev', asc:false, who:null, range:30, month:nowMonthKey }; return APP.xjs; }
 function xjsAgo(iso){ if(!iso) return '—'; const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000); return m < 1 ? '剛剛' : m < 60 ? m + ' 分鐘前' : m < 1440 ? Math.floor(m / 60) + ' 小時前' : Math.floor(m / 1440) + ' 天前'; }
 function xjsDayOff(n){ return fuAddDays(n); }
@@ -4088,10 +4179,12 @@ function xjsIssues(){
   const pg = [...APP.data.progressAd, ...APP.data.progressChannel].filter(c => c.status === '對保' && c.staff && !names.has(c.staff)).length;
   if(pg) L.push({ lv:'h', t:'對保追蹤跳過通路夥伴的案件', s:`${pg} 件對保中的案子不會提醒任何人` });
   if(weekday && hm >= 12 * 60 && !APP.data.personalProgress.some(r => r.date === todayStr())) L.push({ lv:'h', t:'今天還沒有任何客人紀錄', s:'中午過後全公司都沒登記，可能有人卡住或系統異常' });
-  L.push({ lv:'m', t:'後端 9 支程式還是舊版 Node', s:'現在能跑，停止支援後就不能再修改' });
+  const SC = scoutStatus();
+  if(SC.missed) L.push({ lv:'h', t:'BUG 偵查員沒有準時巡視', s:`上次巡視是 ${xjsAgo(SC.R.lastRunAt)}，後端可能停了` });
+  if(SC.hi || SC.mid) L.push({ lv:SC.hi ? 'h' : 'm', t:`偵查員發現 ${[SC.hi && SC.hi + ' 個高', SC.mid && SC.mid + ' 個中'].filter(Boolean).join('、')}問題`, s:'詳細在上面「BUG 偵查員」', x:SC.hi * 12 + SC.mid * 4 - (SC.hi ? 12 : 4) });
   L.push({ lv:'m', t:'8 個牌位門檻要照實收業績重填', s:'設定 → 案件分潤參數 → 業績牌位門檻' });
   const hi = L.filter(x => x.lv === 'h').length, mid = L.filter(x => x.lv === 'm').length;
-  return { L, hi, mid, score:Math.max(0, 100 - hi * 12 - mid * 4) };
+  return { L, hi, mid, score:Math.max(0, 100 - hi * 12 - mid * 4 - L.reduce((a, x) => a + (x.x || 0), 0)) };
 }
 /* 廣告：某個月的數字（式子跟廣告支出報表一樣） */
 function xjsAdMonth(mk){
@@ -4232,9 +4325,16 @@ function xiaojiangDashboardView(){
           <td>${p.deals}</td><td>${money(p.rev)}</td><td>#${p.rank}</td></tr>`).join('')}</table></div></div>`;
   } else if(st.tab === 'sys'){
     const now2 = new Date(), hm = now2.getHours() * 60 + now2.getMinutes(), we = [0, 6].includes(now2.getDay());
-    const sched = h => { if(h.at == null) return `<div class="xjs-r"><span class="xjs-dot ok"></span><div>${h.n}<small>${h.node ? '已升級 Node 22' : '舊版 Node'}</small></div><span class="rr">${h.live}</span></div>`;
-      const passed = hm >= h.at && !(h.wd && we), hh = String(h.at / 60).padStart(2, '0') + ':00';
-      return `<div class="xjs-r"><span class="xjs-dot ${passed ? 'ok' : 'wait'}"></span><div>${h.n}<small>${h.note} · ${h.node ? '已升級 Node 22' : '舊版 Node'}</small></div><span class="rr">${h.wd ? '平日 ' : '每天 '}${hh}${passed ? '（今天已過）' : ''}</span></div>`; };
+    const beats = APP.data.systemBeats || null;
+    const sched = h => { const b = beats && beats[h.fn], bAt = b && b.at ? new Date(b.at) : null, ranToday = !!bAt && formatDateLocal(bAt) === todayStr();
+      if(h.at == null){ const dt = b && b.ok === false ? 'bad' : (beats && !b ? 'wait' : 'ok');
+        return `<div class="xjs-r"><span class="xjs-dot ${dt}"></span><div>${h.n}<small>${h.live}</small></div><span class="rr">${b && b.ok === false ? '上次出錯' : bAt ? '最後 ' + xjsAgo(b.at) : (beats ? '還沒有紀錄' : h.live)}</span></div>`; }
+      const due = hm >= h.at && !(h.wd && we), hh = String(h.at / 60).padStart(2, '0') + ':00';
+      if(!beats) return `<div class="xjs-r"><span class="xjs-dot ${due ? 'ok' : 'wait'}"></span><div>${h.n}<small>${h.note}</small></div><span class="rr">${h.wd ? '平日 ' : '每天 '}${hh}${due ? '（今天已過）' : ''}</span></div>`;
+      const late = due && !ranToday && hm >= h.at + 30, bad = (b && b.ok === false && ranToday) || late;
+      const rr = b && b.ok === false && ranToday ? `今天 ${scHM(bAt)} 出錯` : ranToday ? `今天 ${scHM(bAt)} 跑完` : late ? `${hh} 該跑沒跑` : `${h.wd ? '平日 ' : '每天 '}${hh}`;
+      return `<div class="xjs-r"><span class="xjs-dot ${bad ? 'bad' : ranToday ? 'ok' : 'wait'}"></span><div>${h.n}<small>${h.note}</small></div><span class="rr">${rr}</span></div>`; };
+    const half = Math.ceil(XJS_SCHED.length / 2);
     const lastOf = list => list.reduce((m, r) => (r._at || '') > m ? r._at : m, '');
     const today = todayStr(), casesAll = [...APP.data.casesAd, ...APP.data.casesChannel];
     const FR = [['我的客人紀錄', APP.data.personalProgress.filter(r => r.date === today).length + ' 筆', lastOf(APP.data.personalProgress)],
@@ -4244,10 +4344,10 @@ function xiaojiangDashboardView(){
       ['銀行信貸', (APP.data.bankLoanCases || []).filter(r => (r._at || '').slice(0, 10) === today).length + ' 筆有更新', lastOf(APP.data.bankLoanCases || [])],
       ['獲利報表', casesAll.filter(c => c.date === today).length + ' 筆今天的案件', lastOf(casesAll)]];
     const online = APP.users.filter(u => u.id !== meUid && soPresence(u.id).online).map(u => displayNameFor(u.id, u.staffName || u.email || ''));
-    body = `<div class="xjs-g" style="grid-template-columns:1fr 1.6fr;margin-bottom:18px">
+    body = `${scoutCardHTML()}<div class="xjs-g xjs-sys1" style="margin-bottom:18px">
       <div class="xjs-cd${iss.hi ? ' bad' : ''}"><div class="xjs-ch"><h3>問題</h3><span class="sub">分數 ${iss.score}</span></div>${iss.L.map(x => `<div class="xjs-al ${x.lv}"><span class="lv">${XJS_LV[x.lv]}</span><div><b>${x.t}</b><small>${x.s}</small></div></div>`).join('')}</div>
-      <div class="xjs-cd"><div class="xjs-ch"><h3>後端自動化</h3><span class="sub">11 支 · 2 支已升級 Node 22</span></div><div class="xjs-g xjs-g2" style="gap:0 24px"><div class="xjs-rows">${XJS_SCHED.slice(0, 5).map(sched).join('')}</div><div class="xjs-rows">${XJS_SCHED.slice(5).map(sched).join('')}</div></div>
-        <div class="xjs-note">這裡先列出每支程式「什麼時候會跑」。要看到「今天真的有跑、幾點跑完」，需要改後端程式讓它每次跑完留一筆紀錄，可以跟升級 Node 22 一起做。</div></div></div>
+      <div class="xjs-cd"><div class="xjs-ch"><h3>後端自動化</h3><span class="sub">${XJS_SCHED.length} 支 · 全部 Node 22</span></div><div class="xjs-g xjs-g2" style="gap:0 24px"><div class="xjs-rows">${XJS_SCHED.slice(0, half).map(sched).join('')}</div><div class="xjs-rows">${XJS_SCHED.slice(half).map(sched).join('')}</div></div>
+        <div class="xjs-note">${beats ? '每支程式跑完都會留一筆紀錄；排定時間過了 30 分鐘還沒有紀錄會亮紅燈，偵查員也會列進問題。' : '這裡先列出每支程式「什麼時候會跑」。偵查員裝好後，會改成顯示「今天真的有跑、幾點跑完」。'}</div></div></div>
     <div class="xjs-g xjs-g2">
       <div class="xjs-cd"><div class="xjs-ch"><h3>今天的資料有沒有進來</h3><span class="sub">都沒進來＝可能有人卡住或系統異常</span></div><div class="xjs-rows">${FR.map(([n, a, at]) => `<div class="xjs-r"><span class="xjs-dot ${(at || '').slice(0, 10) === today ? 'ok' : 'wait'}"></span><div>${n}<small>今天 ${a}</small></div><span class="rr">最後 ${xjsAgo(at)}</span></div>`).join('')}</div></div>
       <div class="xjs-cd"><div class="xjs-ch"><h3>現在在線上</h3><span class="sub">${online.length} 人</span></div><div class="xjs-onl">${online.map(n => `<span>${escHtml(n)}</span>`).join('') || '<div class="xjs-empty">目前沒有其他人在線上</div>'}</div></div></div>`;
@@ -12767,6 +12867,7 @@ document.addEventListener('click', (e)=>{
     if(action==='xjs-who'){ xjsState().who = el.dataset.uid; render(); return; }
     if(action==='xjs-close'){ xjsState().who = null; render(); return; }
     if(action==='xjs-sort'){ const st = xjsState(), k = el.dataset.k; if(st.sort===k) st.asc = !st.asc; else { st.sort = k; st.asc = k==='disp' || k==='rank'; } render(); return; }
+    if(action==='xjs-sc-cat'){ const st = xjsState(); st.scCat = st.scCat === el.dataset.c ? '' : el.dataset.c; render(); return; }
     if(action==='xjs-range'){ xjsState().range = +el.dataset.n; render(); return; }
     if(action==='edit-xj-name'){
       const pub = APP.publicProfiles[APP.user.uid] || {};
