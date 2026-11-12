@@ -1779,8 +1779,13 @@
   .sc-tile .v{font-size:22px;font-weight:800;margin-top:4px;} .sc-tile .v.h{color:#FF8A8A;} .sc-tile .v.m{color:var(--yel);} .sc-tile .v.ok{color:#6BE29A;font-size:17px;}
   .sc-tile .d{font-size:11.5px;color:var(--mut);margin-top:2px;}
   .sc-n{text-align:right;font-size:13px;font-weight:700;white-space:nowrap;} .sc-n small{display:block;font-weight:400;font-size:11px;color:var(--mut);}
+  .sc-ll{margin:-4px 0 10px 40px;border-left:2px solid var(--cd2);padding-left:12px;}
+  .sc-lr{display:grid;grid-template-columns:86px 36px 1fr 70px 76px auto;gap:8px;align-items:center;padding:6px 0;font-size:12.5px;border-bottom:1px solid var(--cd2);}
+  .sc-lr .d,.sc-lr .k,.sc-lr .w{color:var(--mut);} .sc-lr .n{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .sc-lr .w{color:var(--red);}
+  .sc-ll-tip,.sc-ll-ok{font-size:11.5px;color:var(--mut);padding-top:6px;} .sc-ll-ok{color:var(--g);}
   .xjs-sys1{grid-template-columns:1fr 1.6fr;}
   @media (max-width:1000px){
+  .sc-ll{margin-left:0;} .sc-lr{grid-template-columns:80px 1fr auto;row-gap:2px;} .sc-lr .k,.sc-lr .s{display:none;} .sc-lr .w{grid-column:2;grid-row:2;} .sc-lr button{grid-row:1/3;grid-column:3;}
     body.xjs-on #main{padding:14px 10px 60px;}
     .xjs-g2,.xjs-g3,.xjs-g4,.xjs-row2,.xjs-sys1{grid-template-columns:1fr;}
     .sc-tiles{grid-template-columns:1fr 1fr;} .sc-right{margin-left:0;width:100%;} .sc-strip{justify-content:space-between;} .sc-lg{justify-content:flex-start;flex-wrap:wrap;}
@@ -1846,7 +1851,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-12-03';
+const APP_BUILD = '2026-11-12-04';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -4108,6 +4113,22 @@ function scoutStripHTML(R){
     out += `<div class="sc-day${k ? '' : ' td'}">${sq}<span>${k ? md : '今天'}</span></div>`; }
   return out;
 }
+function scoutLedgerRows(){ // 即時比對：近 90 天獲利報表案件 vs 獎金帳本（規則同後端 bugScout.js）
+  const since = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10), L = new Map((APP.data.staffBonusLedger || []).map(e => [e.id, e])), out = [];
+  const chk = (c, k, lid, need) => { if((c.date || '') < since) return; const e = L.get(lid), bb = Math.round(Number(c.businessBonus) || 0);
+    if(k === 'ch' && !(bb > 0)) return;
+    const why = !e ? '帳本裡沒有' : e.staffName !== c.staff ? '業務不一樣' : e.date !== c.date ? '日期不一樣' : Math.round(Number(e.businessBonus) || 0) !== bb ? '獎金不一樣' : '';
+    if(why) out.push({ c, k, why }); };
+  (APP.data.casesAd || []).forEach(c => chk(c, 'ad', c.id));
+  (APP.data.casesChannel || []).forEach(c => chk(c, 'ch', 'ch-' + c.id));
+  return out.sort((a, b) => (b.c.date || '').localeCompare(a.c.date || ''));
+}
+function scoutLedgerListHTML(){
+  const R = scoutLedgerRows();
+  if(!R.length) return `<div class="sc-ll"><div class="sc-ll-ok">現在已經全部對上了，下次巡視這一項就會消失</div></div>`;
+  return `<div class="sc-ll">${R.map(r => `<div class="sc-lr"><span class="d">${escHtml(r.c.date || '')}</span><span class="k">${r.k === 'ad' ? '廣告' : '通路'}</span><span class="n">${escHtml(r.c.customer || '—')}</span><span class="s">${escHtml(r.c.staff || '—')}</span><span class="w">${r.why}</span><button type="button" class="xjs-btn" data-action="${r.k === 'ad' ? 'edit-ad-case' : 'edit-channel-case'}" data-id="${escHtml(r.c.id)}">打開</button></div>`).join('')}
+    <div class="sc-ll-tip">按「打開」→ 不用改任何東西，直接按儲存，帳本就會補上</div></div>`;
+}
 function scoutCardHTML(){
   const S = scoutStatus(), st = xjsState();
   const head = `<div class="xjs-ch"><h3>BUG 偵查員</h3><span class="sub">每 3 小時巡一次 · ${SCOUT_HOURS.map(h => h + ':00').join('、')}</span></div>`;
@@ -4117,7 +4138,7 @@ function scoutCardHTML(){
   const title = S.missed ? '偵查員沒有準時巡視' : S.hi ? `發現 ${S.hi} 個要馬上處理的問題` : S.mid ? `發現 ${S.mid} 個要注意的問題` : '一切正常';
   const tiles = SCOUT_CAT.map(([c, l, d]) => { const L = S.F.filter(f => f.cat === c), h = L.filter(f => f.lv === 'h').length, m = L.filter(f => f.lv === 'm').length, lo = L.length - h - m;
     return `<button type="button" class="sc-tile${cat === c ? ' on' : ''}" data-action="xjs-sc-cat" data-c="${c}"><div class="xjs-k">${l}</div><div class="v ${h ? 'h' : m ? 'm' : L.length ? '' : 'ok'}">${L.length ? L.length + ' 個' : '正常'}</div><div class="d">${L.length ? [h && h + ' 高', m && m + ' 中', lo && lo + ' 低'].filter(Boolean).join(' · ') : d}</div></button>`; }).join('');
-  const list = F.map(f => `<div class="xjs-al ${f.lv}"><span class="lv">${XJS_LV[f.lv]}</span><div><b>${escHtml(f.t)}</b><small>${escHtml(f.s || '')}</small></div><span class="sc-n">${f.n ? f.n + ' ' + (f.unit || '件') : ''}<small>${f.firstAt ? xjsAgo(f.firstAt) + '發現' : ''}</small></span></div>`).join('')
+  const list = F.map(f => `<div class="xjs-al ${f.lv}"><span class="lv">${XJS_LV[f.lv]}</span><div><b>${escHtml(f.t)}</b><small>${escHtml(f.s || '')}</small></div><span class="sc-n">${f.n ? f.n + ' ' + (f.unit || '件') : ''}<small>${f.firstAt ? xjsAgo(f.firstAt) + '發現' : ''}</small></span></div>${f.id === 'num-ledger' ? scoutLedgerListHTML() : ''}`).join('')
     || `<div class="xjs-empty">${cat ? '這一類沒有問題' : '這次巡視沒有發現問題'}</div>`;
   return `<div class="xjs-cd${S.missed || S.hi ? ' bad' : ''}" style="margin-bottom:18px">${head}
     <div class="sc-top"><div class="sc-st"><span class="xjs-dot ${dot}"></span><div><b>${title}</b>上次巡視 ${scHM(S.last)}（${xjsAgo(S.R.lastRunAt)}）· 下次 ${scHM(S.next)}${S.R.checked ? ` · 這次檢查 ${S.R.checked} 項` : ''}</div></div>
