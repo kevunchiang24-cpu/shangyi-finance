@@ -46,8 +46,8 @@
   .pending-box p{color:var(--muted);font-size:14px;line-height:1.7;}
 
   /* 開啟通知提示（2026-11-16） */
-  #pn-wrap{position:fixed;inset:0;z-index:15000;background:rgba(20,24,38,.42);display:flex;align-items:flex-end;justify-content:center;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));animation:pnFade .2s ease;}
-  .pn-card{background:#fff;border-radius:20px;width:100%;max-width:400px;padding:26px 22px 14px;text-align:center;box-shadow:0 18px 48px rgba(20,24,38,.25);animation:pnUp .28s cubic-bezier(.2,.8,.2,1);}
+  #pn-wrap{position:fixed;inset:0;z-index:15000;background:rgba(20,24,38,.42);display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));overflow-y:auto;animation:pnFade .2s ease;}
+  .pn-card{background:#fff;border-radius:20px;width:100%;max-width:380px;margin:auto;padding:26px 22px 18px;text-align:center;box-shadow:0 18px 48px rgba(20,24,38,.25);animation:pnUp .28s cubic-bezier(.2,.8,.2,1);}
   .pn-ic{width:52px;height:52px;border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:#EEF2FE;color:var(--navy);}
   .pn-ic svg{width:26px;height:26px;} .pn-ic.ok{background:#DCFCE7;color:var(--green);} .pn-ic.warn{background:#FEF3C7;color:#B45309;}
   .pn-card h3{margin:0 0 8px;font-size:18px;}
@@ -61,8 +61,13 @@
   .pn-steps li:first-child{border-top:0;}
   .pn-steps .n{flex:none;width:22px;height:22px;border-radius:50%;background:#EEF2FE;color:var(--navy);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;}
   .pn-k{display:inline-flex;vertical-align:-5px;width:22px;height:22px;color:var(--navy);margin-left:2px;} .pn-k svg{width:100%;height:100%;}
-  @keyframes pnFade{from{opacity:0}} @keyframes pnUp{from{transform:translateY(30px);opacity:0}}
-  @media (min-width:700px){ #pn-wrap{align-items:center;} }
+  @keyframes pnFade{from{opacity:0}} @keyframes pnUp{from{transform:scale(.94);opacity:0}}
+
+  /* 強制更新（2026-11-16） */
+  #force-upd{position:fixed;inset:0;z-index:16000;background:rgba(243,245,251,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;animation:pnFade .2s ease;}
+  #force-upd .fu-box{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:16px 22px;font-size:15px;font-weight:700;color:var(--ink);box-shadow:0 12px 32px rgba(30,36,51,.14);}
+  #force-upd .fu-spin{width:18px;height:18px;border-radius:50%;border:2.5px solid #DCE4FB;border-top-color:var(--navy);animation:fuSpin .8s linear infinite;}
+  @keyframes fuSpin{to{transform:rotate(360deg)}}
 
   /* Sidebar */
   #sidebar{width:230px;background:var(--navy);color:#FFFFFF;flex-shrink:0;display:flex;flex-direction:column;padding:20px 14px;}
@@ -1870,7 +1875,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-16-03';
+const APP_BUILD = '2026-11-16-04';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2059,9 +2064,13 @@ function subscribeAll(){
   }));
   unsubs.push(onSnapshot(doc(db,'appdata','version'), snap=>{
     const d = snap.data();
+    APP._verDoc = d || null;
     if(!d || !d.build){
       // Firestore 裡還沒有任何版本紀錄，我是第一個載入的人，主動寫入
       notifyEveryoneToUpdate().catch(()=>{});
+    } else if(d.force && d.build > APP_BUILD){
+      // 2026-11-16 強制更新：核心按了「強制全公司更新」→ 不問，等畫面上沒有正在填的東西就自動重新整理
+      forceUpdateWhenSafe();
     } else if(d.build !== APP_BUILD){
       if(APP_BUILD > d.build){
         // 我執行的版本比 Firestore 記錄的還新，代表我是第一個載入這次新部署的人，
@@ -2460,7 +2469,7 @@ async function requestPushPermission(silent){
   }
 }
 /* ---- 打開 APP 時的「開啟通知」提示（2026-11-16）：手機才出現；依情況顯示 一鍵開啟／先加入主畫面／到設定打開；
-   按「稍後」這次不再出現，下次打開 APP 還會出現，直到開好為止 ---- */
+   強制：沒開好之前卡片擋住畫面、沒有「稍後」（只有系統太舊開不了的 iPhone 可以按稍後） ---- */
 const PN_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const PN_MOBILE = PN_IOS || /Android/i.test(navigator.userAgent);
 const PN_STANDALONE = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
@@ -2477,7 +2486,8 @@ const PN_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const PN_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>';
 function pushNoticeHTML(kind){
   const steps = list => `<ol class="pn-steps">${list.map((s, i) => `<li><span class="n">${i + 1}</span><div>${s}</div></li>`).join('')}</ol>`;
-  const later = '<button type="button" class="pn-later" data-action="pn-later">稍後</button>';
+  // 2026-11-16 強制：沒開好通知前不能按「稍後」（手機太舊、根本開不了的 iosOld 例外）
+  const later = kind === 'iosOld' ? '<button type="button" class="pn-later" data-action="pn-later">稍後</button>' : '';
   if(kind === 'done') return `<div class="pn-ic ok">${PN_BELL}</div><h3>通知已開啟</h3><p>之後有客人進度、聊天室訊息和系統提醒，手機會直接響。</p><button type="button" class="pn-main" data-action="pn-later">好</button>`;
   if(kind === 'ask') return `<div class="pn-ic">${PN_BELL}</div><h3>開啟手機通知</h3><p>客人進度更新、聊天室訊息、系統提醒，沒開通知手機不會響。</p><button type="button" class="pn-main" data-action="pn-enable">開啟通知</button><div class="pn-hint">按下後手機會跳出詢問，請選「允許」</div>${later}`;
   if(kind === 'home') return `<div class="pn-ic">${PN_BELL}</div><h3>先把系統加到主畫面</h3><p>iPhone 只有從主畫面的圖示打開，才收得到通知。只要做一次：</p>${steps([
@@ -2495,7 +2505,7 @@ function showPushNotice(force){
   let snoozed = false; try { snoozed = sessionStorage.getItem('pn_later') === '1'; } catch(e){}
   const kind = force || pushNoticeKind();
   const old = document.getElementById('pn-wrap');
-  if(!kind || (snoozed && !force)){ if(old) old.remove(); return; }
+  if(!kind || (snoozed && !force && kind === 'iosOld')){ if(old) old.remove(); return; }
   const wrap = old || document.createElement('div');
   wrap.id = 'pn-wrap'; wrap.innerHTML = `<div class="pn-card" role="dialog" aria-modal="true">${pushNoticeHTML(kind)}</div>`;
   if(!old) document.body.appendChild(wrap);
@@ -3619,7 +3629,11 @@ function usersHTML(){
     <div class="card" style="margin-bottom:16px;background:#EEF1FB;">
       <div class="card-head-row"><h3>通知全公司系統更新</h3></div>
       <p style="color:var(--muted);font-size:12.5px;margin:0 0 10px;">上傳新版 index.html 之後，<b>先自己把這個網頁強制重新整理一次(Ctrl+Shift+R)</b>確認你自己已經是最新版，再按下面這個按鈕——所有目前開著網頁的人（不管是業務、行政還是其他核心）畫面下方都會跳出「有新版本可以用」的提示，點一下就能更新，不用自己按 F5 或猜有沒有更新到最新版。</p>
-      <button class="btn ghost" data-action="notify-everyone-update">🔄 通知全公司更新</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn ghost" data-action="notify-everyone-update">🔄 通知全公司更新</button>
+        <button class="btn" data-action="force-everyone-update">強制全公司更新</button>
+      </div>
+      <p style="color:var(--muted);font-size:12px;margin:10px 0 0;line-height:1.7;"><b>強制全公司更新</b>：大家不用按，畫面會自己重新整理成最新版。有人正在填表單或打字，會等他存完、關掉視窗才更新，資料不會不見；手機 APP 放在背景的人，下次切回來就會更新。</p>
     </div>
     ${isAdmin() && salaryStaff.length>0 ? `
     <div class="card" style="margin-bottom:16px;background:#F5F7FC;">
@@ -3698,8 +3712,39 @@ function showUpdateBanner(){
   bar.querySelector('.ub-later').addEventListener('click', ()=>{ bar.remove(); });
   document.body.appendChild(bar);
 }
-function notifyEveryoneToUpdate(){
-  return setDoc(doc(db,'appdata','version'), { build: APP_BUILD, _at: new Date().toISOString() });
+function notifyEveryoneToUpdate(force){
+  return setDoc(doc(db,'appdata','version'), Object.assign({ build: APP_BUILD, _at: new Date().toISOString() }, force ? { force: true, forceBy: APP.user ? APP.user.uid : '' } : {}));
+}
+/* ---- 強制更新（2026-11-16）：畫面上沒有開著的編輯視窗、也沒有正在打字的欄位，才自動重新整理；
+   不安全就每 3 秒再看一次，所以正在填的資料不會不見 ---- */
+let forceUpdTimer = null;
+function forceUpdateSafeNow(){
+  const ov = document.getElementById('modal-overlay');
+  if(ov && ov.style.display && ov.style.display !== 'none') return false;
+  const a = document.activeElement;
+  if(a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !['button','submit','checkbox','radio','file'].includes(a.type))) && a.value) return false;
+  return true;
+}
+function forceUpdateWhenSafe(){
+  if(forceUpdTimer) return;
+  const target = (APP._verDoc && APP._verDoc.build) || '';
+  // 防止無限重整：剛上線時網站主機可能還給舊版，同一個版本最多強制重整 3 次，之後改成一般的更新提示
+  let tries = 0; try { tries = +(sessionStorage.getItem('fu_try_' + target) || 0); } catch(e){}
+  if(tries >= 3){ showUpdateBanner(); return; }
+  const go = ()=>{ try { sessionStorage.setItem('fu_try_' + target, String(tries + 1)); } catch(e){}
+    location.replace(location.pathname + '?v=' + encodeURIComponent(target) + location.hash); }; // 換網址＝不拿瀏覽器快取裡的舊版
+  const tryNow = ()=>{
+    if(document.visibilityState === 'visible' && !forceUpdateSafeNow()) return;
+    clearInterval(forceUpdTimer);
+    if(document.visibilityState !== 'visible'){ go(); return; }
+    const o = document.createElement('div');
+    o.id = 'force-upd';
+    o.innerHTML = '<div class="fu-box"><span class="fu-spin"></span>系統更新中，馬上好</div>';
+    document.body.appendChild(o);
+    setTimeout(go, tries ? 4000 : 1200);
+  };
+  forceUpdTimer = setInterval(tryNow, 3000);
+  tryNow();
 }
 /* ---- 分頁沒在看時，工作列(瀏覽器分頁/工作列縮圖)閃黃色圖示提醒 ---- */
 let taskbarFlashTimer = null;
@@ -11168,13 +11213,14 @@ function openStaleCasesModal(){
     <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">關閉</button>
     <button type="button" class="btn primary" data-action="goto-progress-from-modal">前往進度追蹤</button></div>`;
 }
-function openConfirm(message, onConfirm){
+function openConfirm(message, onConfirm, opts){
+  const o = opts || {};
   document.getElementById('modal-overlay').style.display = 'flex';
   document.getElementById('modal-box').innerHTML = `
-    <div class="modal-head"><h3>確認刪除</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
+    <div class="modal-head"><h3>${escHtml(o.title || '確認刪除')}</h3><button type="button" class="icon-btn" data-action="close-modal">✕</button></div>
     <div class="confirm-text">${escHtml(message)}</div>
     <div class="modal-actions"><button type="button" class="btn ghost" data-action="close-modal">取消</button>
-    <button type="button" class="btn primary" id="confirm-yes-btn" style="background:var(--red);">刪除</button></div>`;
+    <button type="button" class="btn primary" id="confirm-yes-btn"${o.yes ? '' : ' style="background:var(--red);"'}>${escHtml(o.yes || '刪除')}</button></div>`;
   document.getElementById('confirm-yes-btn').addEventListener('click', ()=>{ closeModal(); onConfirm(); });
 }
 
@@ -12752,6 +12798,14 @@ document.addEventListener('click', (e)=>{
       APP.data.optionColors = oc;
       saveOptionColors(oc);
       render();
+      return;
+    }
+    if(action==='force-everyone-update'){
+      const cur = APP._verDoc && APP._verDoc.build;
+      if(cur && cur > APP_BUILD){ alert('你現在的畫面不是最新版（' + APP_BUILD + '），請先重新整理自己的畫面，再按一次。'); return; }
+      openConfirm(`確定要強制全公司更新到 ${APP_BUILD} 嗎？大家的畫面會自動重新整理（正在填資料的人會等他存完）。`, ()=>{
+        notifyEveryoneToUpdate(true).then(()=>{ alert('已送出！大家的畫面會在幾秒內自動更新。'); });
+      }, { title:'強制全公司更新', yes:'強制更新' });
       return;
     }
     if(action==='notify-everyone-update'){
