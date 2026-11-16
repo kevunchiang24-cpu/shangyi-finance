@@ -1875,7 +1875,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-16-04';
+const APP_BUILD = '2026-11-16-05';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -3713,7 +3713,10 @@ function showUpdateBanner(){
   document.body.appendChild(bar);
 }
 function notifyEveryoneToUpdate(force){
-  return setDoc(doc(db,'appdata','version'), Object.assign({ build: APP_BUILD, _at: new Date().toISOString() }, force ? { force: true, forceBy: APP.user ? APP.user.uid : '' } : {}));
+  // 同一個版本已經按過「強制更新」的話，之後再按一般的「通知全公司更新」不會把強制取消掉（不然還沒更新到的人會變回只看到提示）
+  const v = APP._verDoc;
+  const keep = !force && v && v.force && v.build === APP_BUILD ? { force: true, forceBy: v.forceBy || '' } : {};
+  return setDoc(doc(db,'appdata','version'), Object.assign({ build: APP_BUILD, _at: new Date().toISOString() }, force ? { force: true, forceBy: APP.user ? APP.user.uid : '' } : keep));
 }
 /* ---- 強制更新（2026-11-16）：畫面上沒有開著的編輯視窗、也沒有正在打字的欄位，才自動重新整理；
    不安全就每 3 秒再看一次，所以正在填的資料不會不見 ---- */
