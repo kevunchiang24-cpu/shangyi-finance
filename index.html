@@ -1875,7 +1875,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-16-06';
+const APP_BUILD = '2026-11-16-07';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2001,6 +2001,8 @@ const APP = {
   }
 };
 const AI_WORKER_URL = 'https://shangyi-finance-ai.kevunchiang24.workers.dev';
+/* 2026-11-16 資安：呼叫 AI 時附上登入憑證，Worker 驗證過才回答（外人拿到網址也不能用） */
+async function aiIdToken(){ try{ return auth.currentUser ? await auth.currentUser.getIdToken() : ''; }catch(e){ return ''; } }
 function canEdit(){ return APP.role==='admin' || APP.role==='editor'; }
 function isAdmin(){ return APP.role==='admin'; }
 function isCore(){ return APP.role==='admin' || APP.role==='editor'; }
@@ -7495,7 +7497,7 @@ async function paRun(){
   let list = null, fail = '', live = null;
   const ctrl = window.AbortController ? new AbortController() : null;
   try{
-    const resp = await fetch(AI_WORKER_URL, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ ...paPayload(px, text), stream:true }), signal: ctrl ? ctrl.signal : undefined });
+    const resp = await fetch(AI_WORKER_URL, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ ...paPayload(px, text), stream:true, idToken: await aiIdToken() }), signal: ctrl ? ctrl.signal : undefined });
     // 新版 Worker 回 text/plain＝邊寫邊傳；舊版或出錯回 JSON（照原本處理）
     if(resp.ok && resp.body && /text\/plain/.test(resp.headers.get('content-type')||'')){
       const still0 = document.getElementById('pa-dlg');
@@ -11500,6 +11502,7 @@ function openAiImportModal(){
       const resp = await fetch(AI_WORKER_URL, {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
+          idToken: await aiIdToken(),
           mode:'extract', text, today: todayStr(),
           categories: { expense: APP.data.categories.expense.map(c=>c.name), income: APP.data.categories.income.map(c=>c.name) }
         })
@@ -12482,6 +12485,7 @@ async function sendChatMessage(question){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
+        idToken: await aiIdToken(),
         question, context: ctx, today: todayStr(),
         role: APP.role,
         categories: isCore() ? { expense: APP.data.categories.expense.map(c=>c.name), income: APP.data.categories.income.map(c=>c.name) } : { expense:[], income:[] },
