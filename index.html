@@ -1870,7 +1870,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-16-01';
+const APP_BUILD = '2026-11-16-02';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2198,6 +2198,7 @@ function subscribeAll(){
         const collName = (base)=> prefix ? prefix+base.charAt(0).toUpperCase()+base.slice(1) : base;
         if(me.isXiaojiang){
           unsubs.push(onSnapshot(doc(db,'appdata','bugScout'), s2=>{ APP.data.bugScout = s2.data() || null; if(APP.view==='xiaojiangDashboard') render(); }, ()=>{}));
+          unsubs.push(onSnapshot(doc(db,'appdata','pushStatus'), s2=>{ APP.data.pushStatus = s2.data() || null; if(APP.view==='xiaojiangDashboard' && xjsState().tab==='sys') render(); }, ()=>{}));
           unsubs.push(onSnapshot(doc(db,'appdata','systemBeats'), s2=>{ APP.data.systemBeats = s2.data() || null; if(APP.view==='xiaojiangDashboard' && xjsState().tab==='sys') render(); }, ()=>{}));
         }
         unsubs.push(onSnapshot(collection(db,collName('socialAccounts')), snap2=>{
@@ -4146,7 +4147,7 @@ const XJS_SCHED = [ // 後端排程（照 shangyi-push/functions/index.js）
   { n:'關懷提醒', fn:'checkCustomerFollowupReminders', at:9 * 60, node:1, note:'今天該聯絡的客人 → 負責人；每週週報給核心' }, { n:'社群帳號檢查', fn:'checkSocialAccountHealth', at:10 * 60, node:1, note:'帳號太久沒登入 → 提醒你' },
   { n:'對保追蹤', fn:'checkGuarantorFollowups', at:12 * 60, node:1, note:'對保第 1、2 天提醒業務和核心' }, { n:'未登記提醒', fn:'checkDailyProgressLog', at:16 * 60, wd:1, node:1, note:'平日還沒登記客人的業務 → 提醒' },
   { n:'未發獎金提醒', fn:'checkUnpaidBonusReminder', at:18 * 60, node:1, note:'還沒發的獎金 → 提醒核心' },
-  { n:'BUG 偵查員', fn:'bugScout', live:'每 3 小時', node:1 }, { n:'派單逾時檢查', fn:'checkWebLeadSLA', live:'平日上班每 10 分鐘', node:1 },
+  { n:'BUG 偵查員', fn:'bugScout', live:'每 3 小時', node:1 }, { n:'推播偵查員', fn:'pushScout', live:'每 10 分鐘', node:1 }, { n:'派單逾時檢查', fn:'checkWebLeadSLA', live:'平日上班每 10 分鐘', node:1 },
   { n:'聊天通知', fn:'notifyDirectMessage', live:'新訊息時', node:1 }, { n:'對保推播', fn:'notifyProgressAdGuarantorStatus', live:'狀態改成對保時', node:1 }, { n:'通知推播', fn:'notifyAnnouncement', live:'有新通知時', node:1 },
   { n:'估價推播', fn:'onValuationCaseWritten', live:'估價填了方案時', node:1 }, { n:'LINE 查詢', fn:'lineWebhook', live:'有人打 @姓名', node:1 },
   { n:'官網表單收件', fn:'submitWebLead', live:'官網有人填表', node:1 }, { n:'改派通知', fn:'onWebLeadReassigned', live:'名單改派時', node:1 },
@@ -4198,12 +4199,12 @@ function scoutLedgerListHTML(){
   return `<div class="sc-ll">${R.map(r => `<div class="sc-lr"><span class="d">${escHtml(r.c.date || '')}</span><span class="k">${r.k === 'ad' ? '廣告' : '通路'}</span><span class="n">${escHtml(r.c.customer || '—')}</span><span class="s">${escHtml(r.c.staff || '—')}</span><span class="w">${r.why}</span><button type="button" class="xjs-btn" data-action="${r.k === 'ad' ? 'edit-ad-case' : 'edit-channel-case'}" data-id="${escHtml(r.c.id)}">打開</button></div>`).join('')}
     <div class="sc-ll-tip">按「打開」→ 不用改任何東西，直接按儲存，帳本就會補上</div></div>`;
 }
-/* 系統狀態 → 誰的手機收得到推播（2026-11-16）：資料由 BUG 偵查員每 3 小時統計（推播登記前端讀不到，只看偵查員彙整的結果）
+/* 系統狀態 → 誰的手機收得到推播（2026-11-16）：資料由推播偵查員（後端 pushScout）每 10 分鐘統計到 appdata/pushStatus（推播登記前端讀不到，只看彙整結果）
    手機登記 14 天內有更新＝收得到；超過 14 天＝可能收不到（很久沒從主畫面 APP 打開，或通知被關掉）；沒有手機登記＝沒開 */
 function xjsPushCardHTML(){
-  const P = APP.data.bugScout && APP.data.bugScout.push;
+  const P = APP.data.pushStatus;
   const head = sub => `<div class="xjs-ch"><h3>手機推播收得到嗎</h3><span class="sub">${sub}</span></div>`;
-  if(!P || !Array.isArray(P.people)) return `<div class="xjs-cd" style="margin-top:18px">${head('')}<div class="xjs-empty">偵查員下一次巡視（每 3 小時）後會顯示每個人的狀態</div></div>`;
+  if(!P || !Array.isArray(P.people)) return `<div class="xjs-cd" style="margin-top:18px">${head('')}<div class="xjs-empty">推播偵查員每 10 分鐘統計一次，下一次統計後會顯示每個人的狀態</div></div>`;
   const now = Date.now(), md = s => { const d = new Date(s); return (d.getMonth() + 1) + '/' + d.getDate(); };
   const rows = P.people.map(p => {
     const u0 = APP.users.find(u => u.id === p.uid) || {};
@@ -4217,7 +4218,7 @@ function xjsPushCardHTML(){
   const ok = rows.filter(r => r.st === 'ok').length, half = Math.ceil(rows.length / 2);
   return `<div class="xjs-cd" style="margin-top:18px">${head(`${ok} 人收得到 · ${rows.length - ok} 人收不到`)}
     <div class="xjs-g xjs-g2" style="gap:0 24px"><div class="xjs-rows">${rows.slice(0, half).map(r => r.html).join('')}</div><div class="xjs-rows">${rows.slice(half).map(r => r.html).join('')}</div></div>
-    <div class="xjs-note">收不到的人下次打開手機 APP，會自動跳出開啟通知的步驟。每次從手機 APP 打開都會更新日期；超過 14 天沒更新，代表那支手機可能已經收不到。偵查員 ${xjsAgo(P.at)} 統計。</div></div>`;
+    <div class="xjs-note">收不到的人下次打開手機 APP，會自動跳出開啟通知的步驟。每次從手機 APP 打開都會更新日期；超過 14 天沒更新，代表那支手機可能已經收不到。推播偵查員每 10 分鐘統計一次，上次是 ${xjsAgo(P.at)}。</div></div>`;
 }
 function scoutCardHTML(){
   const S = scoutStatus(), st = xjsState();
