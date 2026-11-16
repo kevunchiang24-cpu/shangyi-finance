@@ -45,6 +45,25 @@
   .pending-box h2{margin:0 0 10px 0;}
   .pending-box p{color:var(--muted);font-size:14px;line-height:1.7;}
 
+  /* 開啟通知提示（2026-11-16） */
+  #pn-wrap{position:fixed;inset:0;z-index:15000;background:rgba(20,24,38,.42);display:flex;align-items:flex-end;justify-content:center;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px));animation:pnFade .2s ease;}
+  .pn-card{background:#fff;border-radius:20px;width:100%;max-width:400px;padding:26px 22px 14px;text-align:center;box-shadow:0 18px 48px rgba(20,24,38,.25);animation:pnUp .28s cubic-bezier(.2,.8,.2,1);}
+  .pn-ic{width:52px;height:52px;border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:#EEF2FE;color:var(--navy);}
+  .pn-ic svg{width:26px;height:26px;} .pn-ic.ok{background:#DCFCE7;color:var(--green);} .pn-ic.warn{background:#FEF3C7;color:#B45309;}
+  .pn-card h3{margin:0 0 8px;font-size:18px;}
+  .pn-card p{margin:0 auto 18px;font-size:14px;line-height:1.65;color:var(--muted);max-width:300px;}
+  .pn-main{display:block;width:100%;padding:14px;border:0;border-radius:12px;background:var(--navy);color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .pn-main:disabled{opacity:.6;}
+  .pn-hint{font-size:12px;color:var(--muted);margin-top:9px;}
+  .pn-later{display:block;width:100%;margin-top:6px;padding:12px;border:0;background:none;color:var(--muted);font-size:14px;cursor:pointer;font-family:inherit;}
+  .pn-steps{list-style:none;margin:0 0 16px;padding:0;text-align:left;}
+  .pn-steps li{display:flex;gap:12px;align-items:flex-start;padding:11px 2px;border-top:1px solid var(--border);font-size:14px;line-height:1.6;}
+  .pn-steps li:first-child{border-top:0;}
+  .pn-steps .n{flex:none;width:22px;height:22px;border-radius:50%;background:#EEF2FE;color:var(--navy);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  .pn-k{display:inline-flex;vertical-align:-5px;width:22px;height:22px;color:var(--navy);margin-left:2px;} .pn-k svg{width:100%;height:100%;}
+  @keyframes pnFade{from{opacity:0}} @keyframes pnUp{from{transform:translateY(30px);opacity:0}}
+  @media (min-width:700px){ #pn-wrap{align-items:center;} }
+
   /* Sidebar */
   #sidebar{width:230px;background:var(--navy);color:#FFFFFF;flex-shrink:0;display:flex;flex-direction:column;padding:20px 14px;}
   .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 20px 8px;border-bottom:1px solid #4A78F5;margin-bottom:14px;}
@@ -1851,7 +1870,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-12-04';
+const APP_BUILD = '2026-11-16-01';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2415,13 +2434,14 @@ function savePushToken(token){
     updatedAt: new Date().toISOString()
   });
 }
-async function requestPushPermission(){
+async function requestPushPermission(silent){
   try{
-    if(!('Notification' in window)) { alert('這個瀏覽器不支援推播通知'); return; }
-    const supported = await isMessagingSupported().catch(()=>false);
-    if(!supported){ alert('這個瀏覽器/裝置不支援推播通知（iPhone需先「加入主畫面」變成APP後才能開啟）'); return; }
-    const perm = await Notification.requestPermission();
+    if(!('Notification' in window)) { if(!silent) alert('這個瀏覽器不支援推播通知（iPhone 要先「加入主畫面」，從主畫面的圖示打開）'); return; }
+    // 2026-11-16：先問權限再做其他事 —— iPhone 規定要在「按下按鈕的當下」問，中間先等別的東西會被擋掉
+    const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
     if(perm !== 'granted'){ hidePushBanner(); return; }
+    const supported = await isMessagingSupported().catch(()=>false);
+    if(!supported){ if(!silent) alert('這個瀏覽器/裝置不支援推播通知（iPhone需先「加入主畫面」變成APP後才能開啟）'); return; }
     const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './firebase-cloud-messaging-push-scope' });
     if(!fcmMessaging) fcmMessaging = getMessaging(fbApp);
     const token = await getToken(fcmMessaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
@@ -2432,8 +2452,57 @@ async function requestPushPermission(){
     hidePushBanner();
   }catch(err){
     console.error('推播設定失敗', err);
-    alert('推播設定失敗，請確認網路連線後再試一次');
+    if(!silent) alert('推播設定失敗，請確認網路連線後再試一次');
   }
+}
+/* ---- 打開 APP 時的「開啟通知」提示（2026-11-16）：手機才出現；依情況顯示 一鍵開啟／先加入主畫面／到設定打開；
+   按「稍後」這次不再出現，下次打開 APP 還會出現，直到開好為止 ---- */
+const PN_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const PN_MOBILE = PN_IOS || /Android/i.test(navigator.userAgent);
+const PN_STANDALONE = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const PN_LINE = /\bLine\//i.test(navigator.userAgent);
+function pushNoticeKind(){
+  if(!PN_MOBILE) return null;
+  if(PN_IOS && !PN_STANDALONE) return 'home';
+  if(!('Notification' in window)) return PN_IOS ? 'iosOld' : null;
+  if(Notification.permission === 'granted') return null;
+  return Notification.permission === 'denied' ? 'denied' : 'ask';
+}
+const PN_BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+const PN_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 7 4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+const PN_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>';
+function pushNoticeHTML(kind){
+  const steps = list => `<ol class="pn-steps">${list.map((s, i) => `<li><span class="n">${i + 1}</span><div>${s}</div></li>`).join('')}</ol>`;
+  const later = '<button type="button" class="pn-later" data-action="pn-later">稍後</button>';
+  if(kind === 'done') return `<div class="pn-ic ok">${PN_BELL}</div><h3>通知已開啟</h3><p>之後有客人進度、聊天室訊息和系統提醒，手機會直接響。</p><button type="button" class="pn-main" data-action="pn-later">好</button>`;
+  if(kind === 'ask') return `<div class="pn-ic">${PN_BELL}</div><h3>開啟手機通知</h3><p>客人進度更新、聊天室訊息、系統提醒，沒開通知手機不會響。</p><button type="button" class="pn-main" data-action="pn-enable">開啟通知</button><div class="pn-hint">按下後手機會跳出詢問，請選「允許」</div>${later}`;
+  if(kind === 'home') return `<div class="pn-ic">${PN_BELL}</div><h3>先把系統加到主畫面</h3><p>iPhone 只有從主畫面的圖示打開，才收得到通知。只要做一次：</p>${steps([
+      ...(PN_LINE ? ['按右下角 <b>⋯</b>，選「<b>用 Safari 開啟</b>」'] : []),
+      `按下方的分享鈕 <span class="pn-k">${PN_SHARE}</span>`,
+      `往下滑，選「<b>加入主畫面</b>」<span class="pn-k">${PN_PLUS}</span>`,
+      '回到桌面，點「<b>尚益財務</b>」的圖示打開，再按「開啟通知」'])}${later}`;
+  if(kind === 'iosOld') return `<div class="pn-ic">${PN_BELL}</div><h3>手機系統需要更新</h3><p>這支 iPhone 的系統太舊，收不到通知。請到「設定 → 一般 → 軟體更新」更新到最新版，再打開一次。</p>${later}`;
+  return `<div class="pn-ic warn">${PN_BELL}</div><h3>通知被關掉了</h3><p>之前選了「不允許」，要到手機設定裡打開：</p>${steps(PN_IOS
+      ? ['打開 iPhone 的「<b>設定</b>」', '點「<b>通知</b>」，在清單裡找到「<b>尚益財務</b>」', '打開「<b>允許通知</b>」，回來重新打開系統']
+      : ['在桌面<b>長按「尚益財務」的圖示</b>，點「<b>應用程式資訊</b>」（或 ⓘ）', '點「<b>通知</b>」', '打開「<b>顯示通知</b>」，回來重新打開系統'])}<button type="button" class="pn-main" data-action="pn-recheck">我設定好了</button>${later}`;
+}
+function showPushNotice(force){
+  if(!APP.user || !APP.role || APP.role === 'pending') return;
+  let snoozed = false; try { snoozed = sessionStorage.getItem('pn_later') === '1'; } catch(e){}
+  const kind = force || pushNoticeKind();
+  const old = document.getElementById('pn-wrap');
+  if(!kind || (snoozed && !force)){ if(old) old.remove(); return; }
+  const wrap = old || document.createElement('div');
+  wrap.id = 'pn-wrap'; wrap.innerHTML = `<div class="pn-card" role="dialog" aria-modal="true">${pushNoticeHTML(kind)}</div>`;
+  if(!old) document.body.appendChild(wrap);
+}
+function pushNoticeEnable(){
+  const btn = document.querySelector('#pn-wrap [data-action="pn-enable"]'); if(btn){ btn.disabled = true; btn.textContent = '設定中…'; }
+  requestPushPermission(true).then(()=>{
+    const p = ('Notification' in window) ? Notification.permission : 'default';
+    showPushNotice(p === 'granted' ? 'done' : p === 'denied' ? 'denied' : 'ask');
+    if(p === 'granted') renderRoot();
+  });
 }
 function hidePushBanner(){
   const el = document.getElementById('push-banner');
@@ -2506,10 +2575,10 @@ function renderRoot(){
       if(!ok) return;
       fcmMessaging = getMessaging(fbApp);
       initPushForegroundListener();
-      if(localStorage.getItem('xj_push_enabled')==='1' && Notification.permission==='granted'){
-        requestPushPermission(); // token可能過期/換裝置，每次登入靜默刷新一次
-      }
+      // 2026-11-16：只要手機已允許通知就每次打開都靜默刷新（不再看 localStorage 旗標，旗標被清掉的人原本永遠不會刷新）
+      if('Notification' in window && Notification.permission==='granted') requestPushPermission(true);
     }).catch(()=>{});
+    setTimeout(showPushNotice, 1200);
   }
   render();
 }
@@ -2657,7 +2726,7 @@ function shellHTML(){
     <div class="sidebar-footer">
       <div class="user-chip">${escHtml(APP.userEmail)}</div>
       <span class="role-chip ${APP.role}">${roleLabel}</span>
-      ${(localStorage.getItem('xj_push_enabled')!=='1')?`<button class="logout-btn" data-action="enable-push" style="margin-bottom:8px;">🔔 開啟推播通知</button>`:''}
+      ${(localStorage.getItem('xj_push_enabled')!=='1' && !(('Notification' in window) && Notification.permission==='granted'))?`<button class="logout-btn" data-action="enable-push" style="margin-bottom:8px;">🔔 開啟推播通知</button>`:''}
       <button class="logout-btn" id="logout-btn">登出</button>
       <div class="app-version" title="系統版本（每次正式更新都會換）">版本 ${APP_BUILD}</div>
     </div>
@@ -4129,6 +4198,27 @@ function scoutLedgerListHTML(){
   return `<div class="sc-ll">${R.map(r => `<div class="sc-lr"><span class="d">${escHtml(r.c.date || '')}</span><span class="k">${r.k === 'ad' ? '廣告' : '通路'}</span><span class="n">${escHtml(r.c.customer || '—')}</span><span class="s">${escHtml(r.c.staff || '—')}</span><span class="w">${r.why}</span><button type="button" class="xjs-btn" data-action="${r.k === 'ad' ? 'edit-ad-case' : 'edit-channel-case'}" data-id="${escHtml(r.c.id)}">打開</button></div>`).join('')}
     <div class="sc-ll-tip">按「打開」→ 不用改任何東西，直接按儲存，帳本就會補上</div></div>`;
 }
+/* 系統狀態 → 誰的手機收得到推播（2026-11-16）：資料由 BUG 偵查員每 3 小時統計（推播登記前端讀不到，只看偵查員彙整的結果）
+   手機登記 14 天內有更新＝收得到；超過 14 天＝可能收不到（很久沒從主畫面 APP 打開，或通知被關掉）；沒有手機登記＝沒開 */
+function xjsPushCardHTML(){
+  const P = APP.data.bugScout && APP.data.bugScout.push;
+  const head = sub => `<div class="xjs-ch"><h3>手機推播收得到嗎</h3><span class="sub">${sub}</span></div>`;
+  if(!P || !Array.isArray(P.people)) return `<div class="xjs-cd" style="margin-top:18px">${head('')}<div class="xjs-empty">偵查員下一次巡視（每 3 小時）後會顯示每個人的狀態</div></div>`;
+  const now = Date.now(), md = s => { const d = new Date(s); return (d.getMonth() + 1) + '/' + d.getDate(); };
+  const rows = P.people.map(p => {
+    const u0 = APP.users.find(u => u.id === p.uid) || {};
+    const name = displayNameFor(p.uid, u0.staffName || '') || (u0.isXiaojiang ? '小江' : (u0.email || '').split('@')[0]) || '（未命名帳號）';
+    const days = p.phone ? Math.floor((now - new Date(p.phone.at)) / 864e5) : null;
+    const st = !p.phone ? 'bad' : days > 14 ? 'wait' : 'ok';
+    const sm = p.phone ? `${p.phone.os} · 最後更新 ${md(p.phone.at)}` : (p.pc ? '只有電腦有開，手機沒開' : '手機、電腦都沒開');
+    const rr = st === 'ok' ? '收得到' : st === 'wait' ? `可能收不到 · ${days} 天沒更新` : '收不到';
+    return { st, html: `<div class="xjs-r"><span class="xjs-dot ${st === 'wait' ? 'mid' : st}" style="animation:none"></span><div>${escHtml(name)}<small>${sm}</small></div><span class="rr"${st === 'ok' ? '' : ` style="color:${st === 'bad' ? '#FF4D6D' : '#FFB547'}"`}>${rr}</span></div>` };
+  }).sort((a, b) => ({ bad:0, wait:1, ok:2 })[a.st] - ({ bad:0, wait:1, ok:2 })[b.st]);
+  const ok = rows.filter(r => r.st === 'ok').length, half = Math.ceil(rows.length / 2);
+  return `<div class="xjs-cd" style="margin-top:18px">${head(`${ok} 人收得到 · ${rows.length - ok} 人收不到`)}
+    <div class="xjs-g xjs-g2" style="gap:0 24px"><div class="xjs-rows">${rows.slice(0, half).map(r => r.html).join('')}</div><div class="xjs-rows">${rows.slice(half).map(r => r.html).join('')}</div></div>
+    <div class="xjs-note">收不到的人下次打開手機 APP，會自動跳出開啟通知的步驟。每次從手機 APP 打開都會更新日期；超過 14 天沒更新，代表那支手機可能已經收不到。偵查員 ${xjsAgo(P.at)} 統計。</div></div>`;
+}
 function scoutCardHTML(){
   const S = scoutStatus(), st = xjsState();
   const head = `<div class="xjs-ch"><h3>BUG 偵查員</h3><span class="sub">每 3 小時巡一次 · ${SCOUT_HOURS.map(h => h + ':00').join('、')}</span></div>`;
@@ -4371,7 +4461,7 @@ function xiaojiangDashboardView(){
         <div class="xjs-note">${beats ? '每支程式跑完都會留一筆紀錄；排定時間過了 30 分鐘還沒有紀錄會亮紅燈，偵查員也會列進問題。' : '這裡先列出每支程式「什麼時候會跑」。偵查員裝好後，會改成顯示「今天真的有跑、幾點跑完」。'}</div></div></div>
     <div class="xjs-g xjs-g2">
       <div class="xjs-cd"><div class="xjs-ch"><h3>今天的資料有沒有進來</h3><span class="sub">都沒進來＝可能有人卡住或系統異常</span></div><div class="xjs-rows">${FR.map(([n, a, at]) => `<div class="xjs-r"><span class="xjs-dot ${(at || '').slice(0, 10) === today ? 'ok' : 'wait'}"></span><div>${n}<small>今天 ${a}</small></div><span class="rr">最後 ${xjsAgo(at)}</span></div>`).join('')}</div></div>
-      <div class="xjs-cd"><div class="xjs-ch"><h3>現在在線上</h3><span class="sub">${online.length} 人</span></div><div class="xjs-onl">${online.map(n => `<span>${escHtml(n)}</span>`).join('') || '<div class="xjs-empty">目前沒有其他人在線上</div>'}</div></div></div>`;
+      <div class="xjs-cd"><div class="xjs-ch"><h3>現在在線上</h3><span class="sub">${online.length} 人</span></div><div class="xjs-onl">${online.map(n => `<span>${escHtml(n)}</span>`).join('') || '<div class="xjs-empty">目前沒有其他人在線上</div>'}</div></div></div>${xjsPushCardHTML()}`;
   } else if(st.tab === 'ads'){
     const months = Array.from(new Set([nowMonthKey, ...APP.data.adSpend.map(a => a.month).filter(Boolean)])).sort().reverse();
     if(!months.includes(st.month)) st.month = months[0];
@@ -5668,7 +5758,7 @@ function xiaojiangChatView(threadUid, threadName){
         <p class="page-sub">訊息只保留 1 小時，過了會自動清除</p>
       </div>
       <div style="display:flex;gap:8px;flex-shrink:0;">
-        ${(localStorage.getItem('xj_push_enabled')!=='1')?`<button class="btn ghost sm" data-action="enable-push">🔔 開啟通知</button>`:''}
+        ${(localStorage.getItem('xj_push_enabled')!=='1' && !(('Notification' in window) && Notification.permission==='granted'))?`<button class="btn ghost sm" data-action="enable-push">🔔 開啟通知</button>`:''}
         ${messages.length>0?`<button class="btn ghost sm" data-action="clear-xj-thread" data-thread="${escAttr(threadUid)}" data-name="${escAttr(isCore()&&threadName?threadName:xjName)}" style="color:var(--red);">🗑 清空對話</button>`:''}
         ${isCore()?`<button class="btn ghost sm" data-action="nav" data-view="xiaojiangInbox">← 回信箱列表</button>`:''}
       </div>
@@ -12771,6 +12861,9 @@ document.addEventListener('click', (e)=>{
       return;
     }
     if(action==='enable-push'){ requestPushPermission().then(()=>renderRoot()); return; }
+    if(action==='pn-enable'){ pushNoticeEnable(); return; }
+    if(action==='pn-later'){ try { sessionStorage.setItem('pn_later', '1'); } catch(e){} const w = document.getElementById('pn-wrap'); if(w) w.remove(); return; }
+    if(action==='pn-recheck'){ location.reload(); return; }
     if(action==='clear-xj-thread'){
       const threadUid = el.dataset.thread;
       if(!isCore() && threadUid!==effectiveUid()) return;
