@@ -1870,7 +1870,7 @@ import {
   getMessaging, getToken, onMessage, isSupported as isMessagingSupported
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
 
-const APP_BUILD = '2026-11-16-02';
+const APP_BUILD = '2026-11-16-03';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB527mQtDRdH4BYW4WIB0lDOOqHUpff2Ws",
@@ -2428,6 +2428,9 @@ function deleteXiaojiangUpload(id){ return deleteDoc(doc(db,'xiaojiangInbox', id
 function tokenDocId(token){ return token.replace(/[^a-zA-Z0-9_-]/g, '_'); }
 function savePushToken(token){
   if(!APP.user) return Promise.resolve();
+  // 2026-11-16：同一個 APP 換了新登記時，把這個 APP 上一次的舊登記刪掉，避免同一支手機收到兩則一樣的通知
+  let prev = null; try { prev = localStorage.getItem('xj_push_token'); localStorage.setItem('xj_push_token', token); } catch(e){}
+  if(prev && prev !== token) deleteDoc(doc(db,'pushTokens', tokenDocId(prev))).catch(()=>{});
   return setDoc(doc(db,'pushTokens', tokenDocId(token)), {
     uid: APP.user.uid,
     token,
